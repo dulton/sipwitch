@@ -1,0 +1,48 @@
+UCommon is meant as a very light-weight C++ library to facilitate using 
+C++ design patterns even with deeply embedded applications for Linux 
+kernel based systems using uclibc, and with optional posix threading 
+support.  For this reason, UCommon disables language features that 
+consume memory or introduce runtime overhead, such as rtti and exception 
+handling, and assumes one will mostly be linking applications with other 
+pure C based libraries rather than using the overhead of the standard 
+C++ library and other class frameworks.
+
+UCommon introduces some common Objective-C based design patterns, such 
+as reference counted objects, memory pools, smart pointers, and dynamic 
+typing through very light use of inline templates for pure type 
+translation that are then tied to concrete base classes to avoid 
+template instanciation issues.  C++ auto-variable automation is also 
+used to enable referenced objects to be deleted and threading locks to 
+be released that are aquired automatically when methods return rather 
+than requiring one to explicitly code for these things.
+
+UCommon also introduces some portable C support replacement functions, 
+especially for sockets, such as adding getaddrinfo for platforms which 
+do not have it, or when threadsafe versions of existing C library 
+functions are needed.  Basic socket support for connecting to named 
+destinations and binding to interfaces with IPV4 and IPV6 addresses is 
+directly supported, although no socket class is used.  Support for high 
+resolution timing and Posix realtime clocks are also used when 
+available.
+
+While UCommon has been influenced by GNU Common C++, it also introduces 
+some new concepts for handling of thread locking and sychonization.  
+First, a common and consistent call methodology is now used for all 
+locks, whether mutex, rw, or semaphore, based on whether used for 
+exclusive or "shared" locking.  The UCommon dynamically cast iterative 
+pointer class can be used to "reference" to a thread lock, which is then 
+released when the pointer goes out of scope such, as returning from a 
+method that instanciated it in an auto-variable.  This methodlogy and 
+more consistent usage will also be introduced in GNU Common C++ 2 2.0.
+
+UCommon requires some knowledge of compiler switches and options to 
+disable language features, the C++ runtime and stdlibs, and associated 
+C++ headers.  The current version supports compiling with GCC, which is 
+commonly found on GNU/Linux, OS/X, and BSD based systems; and the Sun 
+Workshop compiler, which is offered as an example how to adapt UCommon 
+for other compilers.  It is assumed that when not targetting to support 
+deeply embedded uses and platforms where memory and processing 
+constraints are critical, one might instead use GNU Common C++ (2.0 
+releases and later).  UCommon may also be built with GCC cross compiling 
+for mingw32.  You will also need the Redhat pthread library for win32.
+
