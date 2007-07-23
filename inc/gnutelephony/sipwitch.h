@@ -50,8 +50,16 @@ public:
 	profile_t profile;			// profile at time of registration
 	LinkedObject *targets;		// active registrations (can be multiple)
 	LinkedObject *routes;		// active route records
-	LinkedObject *sessions;		// active call sessions
-	LinkedObject *subscribed;	// subscriptions
+};
+
+class __EXPORT MappedCall : public ReusableObject
+{
+public:
+	time_t	created;
+	time_t	active;
+	char	source[64];
+	char	target[64];
+	unsigned count;				// active segments
 };
 
 END_NAMESPACE

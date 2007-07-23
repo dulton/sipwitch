@@ -3,6 +3,8 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+static mempager mempool(16384);
+
 config::config(char *id) :
 service(id, 0)
 {
@@ -21,6 +23,11 @@ service::keynode *config::find(const char *id)
 	}
 	return NULL;
 } 
+
+void *config::allocate(size_t size)
+{
+	return mempool.alloc(size);
+}
 
 bool config::create(const char *id, keynode *node)
 {

@@ -3,6 +3,15 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+static volatile unsigned allocated_segments = 0;
+static volatile unsigned active_segments = 0;
+static volatile unsigned allocated_calls = 0;
+static volatile unsigned active_calls = 0;
+static LinkedObject *freesegs = NULL;
+static LinkedObject *freecalls = NULL;
+static LinkedObject *freemaps = NULL;
+static LinkedObject *active = NULL;
+
 static bool tobool(const char *s)
 {
 	switch(*s)
@@ -20,7 +29,7 @@ static bool tobool(const char *s)
 stack stack::sip;
 
 stack::stack() :
-service::callback(1)
+service::callback(1), mapped_reuse<MappedCall>()
 {
 	stacksize = 0;
 	threading = 2;
@@ -35,12 +44,151 @@ service::callback(1)
 	agent = "sipwitch";
 }
 
+void stack::destroy(session *s)
+{
+	linked_pointer<segment> sp;
+
+	if(!s || !s->parent)
+		return;
+
+	call *cr = s->parent;
+	sp = cr->segments;
+	while(sp) {
+		--active_segments;
+		segment *next = sp.getNext();
+		if(sp->sid.cid != -1)
+			sp->sid.delist(&sip.hash[sp->sid.cid]);
+		sp->enlist(&freesegs);
+		sp = next;
+	}
+	if(cr->map)
+		cr->map->enlist(&freemaps);
+	cr->delist(&active);
+	cr->enlist(&freecalls);
+	--active_calls;
+	sip.release();
+}
+
+stack::session *stack::createSession(call *cr, int cid)
+{
+	segment *sp;
+
+	if(freesegs) {
+		sp = static_cast<segment *>(freesegs);
+		freesegs = sp->getNext();
+	}
+	else {
+		++allocated_segments;
+		sp = static_cast<segment *>(config::allocate(sizeof(segment)));
+	}
+	sp->enlist(&cr->segments);
+	sp->sid.enlist(&sip.hash[cid / CONFIG_KEY_SIZE]);
+	sp->sid.cid = cid;
+	return &sp->sid;
+}
+
+stack::session *stack::create(MappedRegistry *rr, int cid)
+{
+	MappedCall *map;
+	call *cr;
+
+	sip.exlock();
+	if(freemaps) {
+		map = static_cast<MappedCall*>(freemaps);
+		freemaps = map->getNext();
+	}
+	else
+		map = sip.getLocked();
+	if(!map) {
+		sip.unlock();
+		return NULL;
+	}
+	if(freecalls) {
+		cr = static_cast<call*>(freecalls);
+		freecalls = cr->getNext();
+	}
+	else {
+		++allocated_calls;
+		cr = static_cast<call*>(config::allocate(sizeof(call)));
+	}
+	++active_calls;
+	time(&cr->map->created);
+	cr->map->active = 0;
+	cr->map->target[0] = 0;
+	cr->map->count = 0;
+	cr->source = createSession(cr, cid);
+	cr->target = NULL;
+	cr->segments = NULL;
+	cr->enlist(&active);
+	cr->count = 0;
+	cr->map = map;
+	strcpy(map->source, rr->userid); 
+	return cr->source;
+}
+
+stack::session *stack::modify(int cid)
+{
+	linked_pointer<session> sp;
+
+	sip.exlock();
+	sp = sip.hash[cid / CONFIG_KEY_SIZE];
+	while(sp) {
+		if(sp->cid == cid)
+			break;
+		sp.next();
+	}
+	if(!sp) {
+		sip.unlock();
+		return NULL;
+	}
+	return *sp;
+}
+
+stack::session *stack::find(int cid)
+{
+	linked_pointer<session> sp;
+
+	sip.access();
+	sp = sip.hash[cid / CONFIG_KEY_SIZE];
+	while(sp) {
+		if(sp->cid == cid)
+			break;
+		sp.next();
+	}
+	if(!sp) {
+		sip.release();
+		return NULL;
+	}
+	sp->parent->mutex.lock();
+	return *sp;
+}
+
+void stack::commit(session *s)
+{
+	if(s)
+		sip.unlock();
+}
+
+void stack::release(session *s)
+{
+	if(s) {
+		s->parent->mutex.release();
+		sip.release();
+	}
+}
+	
 void stack::start(service *cfg)
 {
 	thread *thr;
 	unsigned thidx = 0;
 	service::errlog(service::DEBUG, "sip stack starting; creating %d threads at priority %d", threading, priority);
 	eXosip_init();
+
+	memset(hash, 0, sizeof(hash));
+
+	MappedReuse::create("sipwitch.callmap", registry::getCalls());
+	if(!sip)
+		service::errlog(service::FAILURE, "calls could not be mapped");
 
 #ifdef	AF_INET6
 	if(protocol == AF_INET6)
@@ -76,6 +224,9 @@ void stack::stop(service *cfg)
 	thread::shutdown();
 	Thread::yield();
 	eXosip_quit();
+	MappedMemory::release();
+	MappedMemory::remove("sipwitch.callmap");
+
 }
 
 bool stack::check(void)
@@ -88,7 +239,19 @@ bool stack::check(void)
 
 void stack::snapshot(FILE *fp) 
 { 
+	linked_pointer<call> cp;
 	fprintf(fp, "SIP Stack:\n"); 
+	access();
+	fprintf(fp, "  mapped calls: %d\n", registry::getCalls());
+	fprintf(fp, "  active calls: %d\n", active_calls);
+	fprintf(fp, "  active segments: %d\n", active_segments);
+	fprintf(fp, "  allocated calls: %d\n", allocated_calls);
+	fprintf(fp, "  allocated segments: %d\n", allocated_segments);
+	cp = active;
+	while(cp) {
+		cp.next();
+	}
+	release();
 } 
 
 bool stack::reload(service *cfg)

@@ -28,6 +28,7 @@ service::callback(0), mapped_reuse<MappedRegistry>()
 	prefix = 100;
 	range = 600;
 	expires = 300l;
+	calls = 0;
 }
 
 void registry::exclusive(MappedRegistry *rr)
@@ -239,8 +240,10 @@ bool registry::reload(service *cfg)
 		key = sp->getId();
 		value = sp->getPointer();
 		if(key && value) {
-			if(!stricmp(key, "entries") && !isConfigured())
+			if(!stricmp(key, "entries") && !isConfigured()) 
 				entries = atoi(value);
+			else if(!stricmp(key, "calls") && !isConfigured()) 
+				calls = atoi(value);
 			else if(!stricmp(key, "digest") && !isConfigured()) {
 				digest = strdup(value);
 				string::upper((char *)digest);
@@ -260,6 +263,9 @@ bool registry::reload(service *cfg)
 		}
 		sp.next();
 	}
+
+	if(!calls)
+		calls = entries;
 
 	if(isConfigured())
 		return true;
@@ -579,7 +585,7 @@ registry::target *registry::createTarget(void)
 	targetlock.release();
 	if(!t) {
 		++allocated_targets;
-		t = new target;
+		t = static_cast<target *>(config::allocate(sizeof(target)));
 	}
 	++active_targets;
 	return t;

@@ -9,10 +9,46 @@ using namespace UCOMMON_NAMESPACE;
 
 class thread;
 
-class __LOCAL stack : private service::callback
+class __LOCAL stack : private service::callback, private mapped_reuse<MappedCall>
 {
 private:
 	friend class thread;
+
+	class call;
+
+	class __LOCAL session : public LinkedObject
+	{
+	public:
+		int cid, did;
+		time_t activates;
+		call *parent;
+		sockaddr_internet address, interface;
+
+		inline bool isSource(void)
+			{return (this == parent->source);};
+
+		inline bool isTarget(void)
+			{return (this == parent->target);};
+
+	};
+
+	class __LOCAL segment : public LinkedObject
+	{
+	public:
+		session sid;
+	};
+
+	class __LOCAL call : public LinkedObject
+	{
+	public:
+		LinkedObject *segments;
+		session *source;
+		session *target;
+		MappedCall *map;
+		unsigned count;
+		mutex_t mutex;
+		Timer timer;
+	};
 
 	bool reload(service *cfg);
 	void start(service *cfg);
@@ -27,6 +63,7 @@ private:
 
 	volatile int timing;
 
+	LinkedObject *hash[CONFIG_KEY_SIZE];
 	const char *interface;
 	const char *agent;
 	short port;
@@ -38,6 +75,19 @@ public:
 
 	stack();
 
+	inline void access(void)
+		{MappedReuse::access();};
+
+	inline void release(void)
+		{MappedReuse::release();};
+
+	__EXPORT static session *createSession(call *cp, int cid);
+	__EXPORT static session *create(MappedRegistry *rr, int cid);
+	__EXPORT static void destroy(session *s);
+	__EXPORT static void release(session *s);
+	__EXPORT static void commit(session *s);
+	__EXPORT static session *find(int cid);
+	__EXPORT static session *modify(int cid);
 	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, size_t size);
 	__EXPORT static address *getAddress(const char *uri);
 };
@@ -68,6 +118,7 @@ private:
 public:
 	config(char *id);
 
+	__EXPORT static void *allocate(size_t size);
 	__EXPORT static bool check(void);
 	__EXPORT static profile_t *getProfile(const char *id); 
 	__EXPORT static keynode *getProvision(const char *id);
@@ -122,6 +173,7 @@ private:
 	const char *realm;
 	unsigned prefix;
 	unsigned range;
+	unsigned calls;
 
 public:
 	registry();
@@ -140,6 +192,9 @@ public:
 
 	inline static unsigned getRange(void)
 		{return reg.range;};
+
+	inline static unsigned getCalls(void)
+		{return reg.calls;};
 
 	inline void access(void)
 		{MappedReuse::access();};
