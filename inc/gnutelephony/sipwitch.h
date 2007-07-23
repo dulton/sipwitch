@@ -57,8 +57,10 @@ class __EXPORT MappedCall : public ReusableObject
 public:
 	time_t	created;
 	time_t	active;
-	char	source[64];
-	char	target[64];
+	char	sourceid[32];
+	char	targetid[32];
+	unsigned sourceext, targetext;
+	sockaddr_internet source, target;
 	unsigned count;				// active segments
 };
 

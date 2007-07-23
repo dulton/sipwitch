@@ -1,12 +1,14 @@
 #include "server.h"
 
+#define	PAGING	8192
+
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-static mempager mempool(16384);
+static mempager mempool(PAGING);
 
 config::config(char *id) :
-service(id, 0)
+service(id, PAGING)
 {
 	memset(keys, 0, sizeof(keys));
 }
@@ -303,6 +305,8 @@ bool config::check(void)
 void config::dump(FILE *fp)
 {
 	fprintf(fp, "Config Database:\n");
+	fprintf(fp, "  Allocated pages: %d\n", mempool.getPages());
+	fprintf(fp, "  Configured pages: %d\n", cfg->getPages());
 	keynode *reg = getPath("registry");
 	if(reg && reg->getFirst()) {
 		fprintf(fp, "  registry keys:\n");
@@ -332,6 +336,10 @@ void config::reload(void)
 	if(!cfgp->commit()) {
 		errlog(ERROR, "config rejected");
 		delete cfgp;
+	}
+	if(!cfg) {
+		errlog(FAILURE, "no configuration");
+		exit(2);
 	}
 }
 

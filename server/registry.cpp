@@ -6,10 +6,10 @@ using namespace UCOMMON_NAMESPACE;
 static volatile unsigned active_entries = 0;
 static volatile unsigned active_targets = 0;
 static volatile unsigned allocated_targets = 0;
+static unsigned mapped_entries = 999;
 
 static unsigned priorities = 10;
 static unsigned keysize = 177;
-static unsigned entries = 999;
 static MappedRegistry **extmap = NULL;
 static LinkedObject **primap = NULL;
 static LinkedObject *freeroutes = NULL;
@@ -28,7 +28,6 @@ service::callback(0), mapped_reuse<MappedRegistry>()
 	prefix = 100;
 	range = 600;
 	expires = 300l;
-	calls = 0;
 }
 
 void registry::exclusive(MappedRegistry *rr)
@@ -39,7 +38,7 @@ void registry::exclusive(MappedRegistry *rr)
 		return;
 	}
 	idx = getIndex(rr);
-	if(idx >= entries) {
+	if(idx >= mapped_entries) {
 		service::errlog(service::ERROR, "lock out of range");
 		return;
 	}
@@ -69,12 +68,12 @@ unsigned registry::getIndex(MappedRegistry *rr)
 
 void registry::start(service *cfg)
 {
-	service::errlog(service::DEBUG, "registry starting; mapping %d entries", entries);
-	MappedReuse::create("sipwitch.regmap", entries);
+	service::errlog(service::DEBUG, "registry starting; mapping %d entries", mapped_entries);
+	MappedReuse::create("sipwitch.regmap", mapped_entries);
 	if(!reg)
 		service::errlog(service::FAILURE, "registry could not be mapped");
 	initialize();
-	reglock = new mutex_t[entries];
+	reglock = new mutex_t[mapped_entries];
 }
 
 bool registry::check(void)
@@ -102,12 +101,12 @@ void registry::snapshot(FILE *fp)
 
 	access();
 	fprintf(fp, "Registry:\n"); 
-	fprintf(fp, "  mapped entries: %d\n", entries);
+	fprintf(fp, "  mapped entries: %d\n", mapped_entries);
 	fprintf(fp, "  active entries: %d\n", active_entries);
 	fprintf(fp, "  active targets: %d\n", active_targets);
 	fprintf(fp, "  allocated targets: %d\n", allocated_targets);
 
-	while(count < entries) {
+	while(count < mapped_entries) {
 		time(&now);
 		rr = reg.pos(count++);
 		exclusive(rr);
@@ -220,7 +219,7 @@ void registry::cleanup(void)
 	unsigned count = 0;
 	time_t now;
 
-	while(count < entries) {
+	while(count < mapped_entries) {
 		time(&now);
 		rr = reg.pos(count++);
 		reg.exlock();
@@ -240,10 +239,8 @@ bool registry::reload(service *cfg)
 		key = sp->getId();
 		value = sp->getPointer();
 		if(key && value) {
-			if(!stricmp(key, "entries") && !isConfigured()) 
-				entries = atoi(value);
-			else if(!stricmp(key, "calls") && !isConfigured()) 
-				calls = atoi(value);
+			if(!stricmp(key, "mapped") && !isConfigured()) 
+				mapped_entries = atoi(value);
 			else if(!stricmp(key, "digest") && !isConfigured()) {
 				digest = strdup(value);
 				string::upper((char *)digest);
@@ -264,9 +261,6 @@ bool registry::reload(service *cfg)
 		sp.next();
 	}
 
-	if(!calls)
-		calls = entries;
-
 	if(isConfigured())
 		return true;
 
@@ -280,6 +274,11 @@ bool registry::reload(service *cfg)
 	memset(keys, 0, sizeof(LinkedObject *) * keysize);
 	service::errlog(service::INFO, "realm %s", realm);
 	return true;
+}
+
+unsigned registry::getEntries(void)
+{
+	return mapped_entries;
 }
 
 MappedRegistry *registry::modify(const char *id)

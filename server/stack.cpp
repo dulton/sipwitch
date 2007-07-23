@@ -7,6 +7,7 @@ static volatile unsigned allocated_segments = 0;
 static volatile unsigned active_segments = 0;
 static volatile unsigned allocated_calls = 0;
 static volatile unsigned active_calls = 0;
+static unsigned mapped_calls = 0;
 static LinkedObject *freesegs = NULL;
 static LinkedObject *freecalls = NULL;
 static LinkedObject *freemaps = NULL;
@@ -28,6 +29,10 @@ static bool tobool(const char *s)
 
 stack stack::sip;
 
+stack::call::call() : LinkedObject(), segments()
+{
+}
+
 stack::stack() :
 service::callback(1), mapped_reuse<MappedCall>()
 {
@@ -47,18 +52,20 @@ service::callback(1), mapped_reuse<MappedCall>()
 void stack::destroy(session *s)
 {
 	linked_pointer<segment> sp;
+	LinkedObject *lo;
 
 	if(!s || !s->parent)
 		return;
 
 	call *cr = s->parent;
-	sp = cr->segments;
+	sp = cr->segments.begin();
 	while(sp) {
 		--active_segments;
 		segment *next = sp.getNext();
 		if(sp->sid.cid != -1)
 			sp->sid.delist(&sip.hash[sp->sid.cid]);
-		sp->enlist(&freesegs);
+		lo = static_cast<LinkedObject*>(*sp);
+		lo->enlist(&freesegs);
 		sp = next;
 	}
 	if(cr->map)
@@ -81,6 +88,7 @@ stack::session *stack::createSession(call *cr, int cid)
 		++allocated_segments;
 		sp = static_cast<segment *>(config::allocate(sizeof(segment)));
 	}
+	memset(sp, 0, sizeof(session));
 	sp->enlist(&cr->segments);
 	sp->sid.enlist(&sip.hash[cid / CONFIG_KEY_SIZE]);
 	sp->sid.cid = cid;
@@ -89,40 +97,25 @@ stack::session *stack::createSession(call *cr, int cid)
 
 stack::session *stack::create(MappedRegistry *rr, int cid)
 {
-	MappedCall *map;
 	call *cr;
+	caddr_t mp;
 
 	sip.exlock();
-	if(freemaps) {
-		map = static_cast<MappedCall*>(freemaps);
-		freemaps = map->getNext();
-	}
-	else
-		map = sip.getLocked();
-	if(!map) {
-		sip.unlock();
-		return NULL;
-	}
 	if(freecalls) {
-		cr = static_cast<call*>(freecalls);
-		freecalls = cr->getNext();
+		mp = reinterpret_cast<caddr_t>(freecalls);
+		freecalls = freecalls->getNext();
 	}
 	else {
 		++allocated_calls;
-		cr = static_cast<call*>(config::allocate(sizeof(call)));
+		mp = static_cast<caddr_t>(config::allocate(sizeof(call)));
 	}
+	memset(mp, 0, sizeof(call));
+	cr = new(mp) call();
 	++active_calls;
-	time(&cr->map->created);
-	cr->map->active = 0;
-	cr->map->target[0] = 0;
-	cr->map->count = 0;
 	cr->source = createSession(cr, cid);
 	cr->target = NULL;
-	cr->segments = NULL;
 	cr->enlist(&active);
 	cr->count = 0;
-	cr->map = map;
-	strcpy(map->source, rr->userid); 
 	return cr->source;
 }
 
@@ -186,7 +179,7 @@ void stack::start(service *cfg)
 
 	memset(hash, 0, sizeof(hash));
 
-	MappedReuse::create("sipwitch.callmap", registry::getCalls());
+	MappedReuse::create("sipwitch.callmap", mapped_calls);
 	if(!sip)
 		service::errlog(service::FAILURE, "calls could not be mapped");
 
@@ -242,7 +235,7 @@ void stack::snapshot(FILE *fp)
 	linked_pointer<call> cp;
 	fprintf(fp, "SIP Stack:\n"); 
 	access();
-	fprintf(fp, "  mapped calls: %d\n", registry::getCalls());
+	fprintf(fp, "  mapped calls: %d\n", mapped_calls);
 	fprintf(fp, "  active calls: %d\n", active_calls);
 	fprintf(fp, "  active segments: %d\n", active_segments);
 	fprintf(fp, "  allocated calls: %d\n", allocated_calls);
@@ -286,6 +279,8 @@ bool stack::reload(service *cfg)
 				agent = strdup(value);
 			else if(!stricmp(key, "port") && !isConfigured())
 				port = atoi(value);
+			else if(!stricmp(key, "mapped") && !isConfigured())
+				mapped_calls = atoi(value);
 			else if(!stricmp(key, "transport") && !isConfigured()) {
 				if(!stricmp(value, "tcp") || !stricmp(value, "tls"))
 					protocol = IPPROTO_TCP;
@@ -295,6 +290,8 @@ bool stack::reload(service *cfg)
 		}
 		sp.next();
 	}
+	if(!mapped_calls)
+		mapped_calls = registry::getEntries();
 	return true;
 }
 

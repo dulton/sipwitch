@@ -3,6 +3,7 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+static volatile bool warning_registry = false;
 static bool shutdown_flag = false;
 static unsigned shutdown_count = 0;
 static unsigned startup_count = 0;
@@ -39,14 +40,20 @@ bool thread::authorize(void)
 
 	registry = registry::access(identity);
 	if(registry) {
+		warning_registry = false;
 		if(!registry->expires)
 			return true;
 		time(&current);
 		if(registry->expires < current)
 			return true;
 	}
-	else
+	else {
+		if(!warning_registry) {
+			warning_registry = true;
+			service::errlog(service::WARN, "registry capacity reached");
+		}
 		error = 480;
+	}
 
 	eXosip_lock();
 	eXosip_message_build_answer(sevent->tid, error, &reply);
@@ -185,11 +192,15 @@ void thread::reregister(time_t interval, stack::address *addr)
 
 	registry = registry::create(identity);
 	if(!registry) {
-		service::errlog(service::ERROR, "cannot authorize %s; capacity exceeded", identity);
+		if(!warning_registry) {
+			warning_registry = true;
+			service::errlog(service::ERROR, "registry capacity reached");
+		}
 		answer = 480;
 		interval = 0;
 		goto reply;
 	}
+	warning_registry = false;
 	time(&expire);
 	expire += interval + 3;	// overdraft 3 seconds...
 	if(registry->type == REG_USER && (registry->profile.features & USER_PROFILE_MULTITARGET))

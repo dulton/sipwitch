@@ -32,7 +32,7 @@ private:
 
 	};
 
-	class __LOCAL segment : public LinkedObject
+	class __LOCAL segment : public OrderedObject
 	{
 	public:
 		session sid;
@@ -41,13 +41,25 @@ private:
 	class __LOCAL call : public LinkedObject
 	{
 	public:
-		LinkedObject *segments;
+		typedef enum
+		{
+			DIRECTED,
+			CIRCULAR,
+			TERMINAL,
+			REDIRECTED,
+			DISTRIBUTED
+		} mode_t;
+
+		call();
+
+		OrderedIndex segments;
 		session *source;
 		session *target;
 		MappedCall *map;
 		unsigned count;
 		mutex_t mutex;
 		Timer timer;
+		mode_t mode;
 	};
 
 	bool reload(service *cfg);
@@ -173,7 +185,6 @@ private:
 	const char *realm;
 	unsigned prefix;
 	unsigned range;
-	unsigned calls;
 
 public:
 	registry();
@@ -193,15 +204,13 @@ public:
 	inline static unsigned getRange(void)
 		{return reg.range;};
 
-	inline static unsigned getCalls(void)
-		{return reg.calls;};
-
 	inline void access(void)
 		{MappedReuse::access();};
 
 	inline void release(void)
 		{MappedReuse::release();};
 
+	__EXPORT static unsigned getEntries(void);
 	__EXPORT static unsigned getIndex(MappedRegistry *rr);
 	__EXPORT static unsigned setTargets(MappedRegistry *rr, stack::address *addr);
 	__EXPORT static unsigned addTarget(MappedRegistry *rr, stack::address *addr, time_t expires);
