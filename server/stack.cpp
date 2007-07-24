@@ -78,6 +78,7 @@ void stack::destroy(session *s)
 
 stack::session *stack::createSession(call *cr, int cid)
 {
+	volatile static unsigned ref = 0;
 	segment *sp;
 
 	if(freesegs) {
@@ -92,6 +93,7 @@ stack::session *stack::createSession(call *cr, int cid)
 	sp->enlist(&cr->segments);
 	sp->sid.enlist(&sip.hash[cid / CONFIG_KEY_SIZE]);
 	sp->sid.cid = cid;
+	sp->sid.sequence = ++ref;
 	return &sp->sid;
 }
 
@@ -250,7 +252,7 @@ void stack::snapshot(FILE *fp)
 bool stack::reload(service *cfg)
 {
 	const char *key = NULL, *value;
-	linked_pointer<service::keynode> sp = cfg->getList("sip");
+	linked_pointer<service::keynode> sp = cfg->getList("stack");
 
 	while(sp) {
 		key = sp->getId();

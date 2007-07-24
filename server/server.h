@@ -22,6 +22,7 @@ private:
 		int cid, did;
 		time_t activates;
 		call *parent;
+		unsigned sequence;
 		sockaddr_internet address, interface;
 
 		inline bool isSource(void)
@@ -55,6 +56,7 @@ private:
 		OrderedIndex segments;
 		session *source;
 		session *target;
+		session *select;
 		MappedCall *map;
 		unsigned count;
 		mutex_t mutex;
