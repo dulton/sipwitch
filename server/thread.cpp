@@ -1,3 +1,18 @@
+// Copyright (C) 2006-2007 David Sugar, Tycho Softworks.
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "server.h"
 
 NAMESPACE_SIPWITCH
@@ -28,6 +43,7 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 {
 	config = NULL;
 	registry = NULL;
+	via = NULL;
 }
 
 bool thread::authorize(void)
@@ -153,7 +169,7 @@ void thread::registration(void)
 	osip_contact_t *contact = NULL;
 	osip_uri_param_t *param = NULL;
 	int interval = -1;
-	int pos = 0;
+	int pos = 0, vpos = 0;
 
 	osip_message_get_expires(sevent->request, 0, &header);
 	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
@@ -165,25 +181,24 @@ void thread::registration(void)
 			break;
 		}
 	}
+
 	if(!contact) {
-		deregister(NULL);
+		deregister();
 		return;
 	}
-
-	stack::address addr(contact->url->host, contact->url->port);
 
 	if(interval < 0 && header && header->hvalue)
 		interval = atoi(header->hvalue);
 	if(interval < 0)
 		interval = registry::getExpires();
 	if(!interval || !contact) {
-		deregister(&addr);
+		deregister();
 		return;
 	}
-	reregister(interval, &addr);
+	reregister(interval);
 }
 
-void thread::reregister(time_t interval, stack::address *addr)
+void thread::reregister(time_t interval)
 {
 	int answer = 200;
 	osip_message_t *reply = NULL;
@@ -204,11 +219,11 @@ void thread::reregister(time_t interval, stack::address *addr)
 	time(&expire);
 	expire += interval + 3;	// overdraft 3 seconds...
 	if(registry->type == REG_USER && (registry->profile.features & USER_PROFILE_MULTITARGET))
-		count = registry::addTarget(registry, addr, expire);
+		count = registry::addTarget(registry, via, expire);
 	else
-		count = registry::setTarget(registry, addr, expire);
+		count = registry::setTarget(registry, via, expire);
 
-	Socket::getaddress(addr->getAddr(), buffer, sizeof(buffer));
+	Socket::getaddress(via->getAddr(), buffer, sizeof(buffer));
 	if(count)
 		service::errlog(service::DEBUG, "authorizing %s for %ld seconds from %s", identity, interval, buffer);
 	else {
@@ -223,7 +238,7 @@ reply:
 	eXosip_unlock();
 }
 
-void thread::deregister(stack::address *addr)
+void thread::deregister()
 {
 	service::errlog(service::DEBUG, "deauthorize %s", identity);
 }
@@ -252,6 +267,8 @@ void thread::run(void)
 {
 	static volatile time_t last = 0;
 	time_t now;
+	int cpos, vpos;
+	osip_via_t *hvia;
 
 	instance = ++startup_count;
 	service::errlog(service::DEBUG, "starting thread %d", instance);
@@ -280,8 +297,21 @@ void thread::run(void)
 			continue;
 		}
 
-		service::errlog(service::DEBUG, "sip: event %d; cid=%d, did=%d, rid=%d, instance=%d",
-			sevent->type, sevent->cid, sevent->did, sevent->rid, instance);
+		vpos = 0;
+		hvia = NULL;
+		while(sevent->request && osip_list_eol(OSIP2_LIST_PTR sevent->request->vias, vpos) == 0) 
+			hvia = (osip_via_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->vias, vpos++);
+
+		if(hvia) {
+			service::errlog(service::DEBUG, "sip: event %d; cid=%d, did=%d, instance=%d, via=%s:%s",
+				sevent->type, sevent->cid, sevent->did, instance, hvia->host, hvia->port);
+
+			via = new stack::address(hvia->host, hvia->port);
+		}
+		else
+			service::errlog(service::DEBUG, "sip: event %d; cid=%d, did=%d, instance=%d",
+				sevent->type, sevent->cid, sevent->did, instance);
+
 
 		switch(sevent->type) {
 		case EXOSIP_MESSAGE_NEW:
@@ -294,6 +324,10 @@ void thread::run(void)
 			break;
 		default:
 			service::errlog(service::WARN, "unknown message");
+		}
+		if(via) {
+			delete via;
+			via = NULL;
 		}
 		if(registry) {
 			registry::release(registry);

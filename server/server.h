@@ -1,3 +1,17 @@
+// Copyright (C) 2006-2007 David Sugar, Tycho Softworks.
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <gnutelephony/sipwitch.h>
 #include <eXosip2/eXosip.h>
 #include <config.h>
@@ -215,8 +229,8 @@ public:
 	__EXPORT static unsigned getEntries(void);
 	__EXPORT static unsigned getIndex(MappedRegistry *rr);
 	__EXPORT static unsigned setTargets(MappedRegistry *rr, stack::address *addr);
-	__EXPORT static unsigned addTarget(MappedRegistry *rr, stack::address *addr, time_t expires);
-	__EXPORT static unsigned setTarget(MappedRegistry *rr, stack::address *addr, time_t expires);
+	__EXPORT static unsigned addTarget(MappedRegistry *rr, stack::address *via, time_t expires);
+	__EXPORT static unsigned setTarget(MappedRegistry *rr, stack::address *via, time_t expires);
 	__EXPORT static MappedRegistry *extension(const char *id);
 	__EXPORT static MappedRegistry *create(const char *id);
 	__EXPORT static MappedRegistry *access(const char *id);
@@ -241,14 +255,15 @@ private:
 	MappedRegistry *registry;
 	eXosip_event_t *sevent;
 	char buffer[256];	
+	stack::address *via;
 
 	thread();
 
 	bool authenticate(void);
 	bool authorize(void);
 	void registration(void);
-	void reregister(time_t interval, stack::address *addr);
-	void deregister(stack::address *addr);
+	void reregister(time_t interval);
+	void deregister(void);
 	void challenge(void);
 	void options(void);
 	void run(void);
