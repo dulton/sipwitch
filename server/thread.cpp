@@ -186,8 +186,10 @@ void thread::registration(void)
 	osip_header_t *header = NULL;
 	osip_contact_t *contact = NULL;
 	osip_uri_param_t *param = NULL;
+	osip_uri_t *uri;
 	int interval = -1;
-	int pos = 0, vpos = 0;
+	int pos = 0;
+	char buffer[256];
 
 	if(!getsource()) {
 		service::errlog(service::ERROR, "cannot determine origin for registration");
@@ -210,6 +212,10 @@ void thread::registration(void)
 		return;
 	}
 
+	uri = contact->url;
+	snprintf(buffer, sizeof(buffer), "%s:%s@%s:%s", 
+		uri->scheme, uri->username, uri->host, uri->port);
+
 	if(interval < 0 && header && header->hvalue)
 		interval = atoi(header->hvalue);
 	if(interval < 0)
@@ -218,10 +224,10 @@ void thread::registration(void)
 		deregister();
 		return;
 	}
-	reregister(interval);
+	reregister(buffer, interval);
 }
 
-void thread::reregister(time_t interval)
+void thread::reregister(const char *contact, time_t interval)
 {
 	int answer = 200;
 	osip_message_t *reply = NULL;
@@ -242,9 +248,9 @@ void thread::reregister(time_t interval)
 	time(&expire);
 	expire += interval + 3;	// overdraft 3 seconds...
 	if(registry->type == REG_USER && (registry->profile.features & USER_PROFILE_MULTITARGET))
-		count = registry::addTarget(registry, via, expire);
+		count = registry::addTarget(registry, via, expire, contact);
 	else
-		count = registry::setTarget(registry, via, expire);
+		count = registry::setTarget(registry, via, expire, contact);
 
 	if(count)
 		service::errlog(service::DEBUG, "authorizing %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
@@ -289,7 +295,6 @@ void thread::run(void)
 {
 	static volatile time_t last = 0;
 	time_t now;
-	int cpos;
 
 	instance = ++startup_count;
 	service::errlog(service::DEBUG, "starting thread %d", instance);

@@ -312,11 +312,12 @@ bool stack::reload(service *cfg)
 	return true;
 }
 
-char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, size_t size)
+char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, size_t size, const char *user)
 {
 	char pbuf[8];
 	unsigned port;
 	*buf = 0;
+	size_t len;
 
 	if(!addr)
 		return NULL;
@@ -335,14 +336,19 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, size_t size)
 	}
 	if(!port)
 		port = sip.port;
-	if(sip.tlsmode) {
+
+	if(sip.tlsmode)
 		string::set(buf, sizeof(buf), "sips:");
-		Socket::getaddress((struct sockaddr *)addr, buf + 5, size - 5);
-	}
-	else {
+	else 
 		string::set(buf, sizeof(buf), "sip:");
-		Socket::getaddress((struct sockaddr *)addr, buf + 4, size - 4);
+
+	if(user) {
+		string::add(buf, sizeof(buf), user);
+		string::add(buf, sizeof(buf), "@");
 	}
+
+	len = strlen(buf);
+	Socket::getaddress((struct sockaddr *)addr, buf + len, size - len);
 	snprintf(pbuf, sizeof(buf), ":%u", port);
 	string::add(buf, size, pbuf);
 	return buf;

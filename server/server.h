@@ -116,7 +116,7 @@ public:
 	__EXPORT static void commit(session *s);
 	__EXPORT static session *find(int cid);
 	__EXPORT static session *modify(int cid);
-	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, size_t size);
+	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, size_t size, const char *user = NULL);
 	__EXPORT static address *getAddress(const char *uri);
 };
 
@@ -165,6 +165,7 @@ private:
 	public:
 		sockaddr_internet address, interface;
 		time_t expires;
+		char contact[256];
 	};
 
 	class __LOCAL pattern : public LinkedObject
@@ -229,8 +230,8 @@ public:
 	__EXPORT static unsigned getEntries(void);
 	__EXPORT static unsigned getIndex(MappedRegistry *rr);
 	__EXPORT static unsigned setTargets(MappedRegistry *rr, stack::address *addr);
-	__EXPORT static unsigned addTarget(MappedRegistry *rr, stack::address *via, time_t expires);
-	__EXPORT static unsigned setTarget(MappedRegistry *rr, stack::address *via, time_t expires);
+	__EXPORT static unsigned addTarget(MappedRegistry *rr, stack::address *via, time_t expires, const char *contact);
+	__EXPORT static unsigned setTarget(MappedRegistry *rr, stack::address *via, time_t expires, const char *contact);
 	__EXPORT static MappedRegistry *extension(const char *id);
 	__EXPORT static MappedRegistry *create(const char *id);
 	__EXPORT static MappedRegistry *access(const char *id);
@@ -264,7 +265,7 @@ private:
 	bool authenticate(void);
 	bool authorize(void);
 	void registration(void);
-	void reregister(time_t interval);
+	void reregister(const char *contact, time_t interval);
 	void deregister(void);
 	void challenge(void);
 	void options(void);
