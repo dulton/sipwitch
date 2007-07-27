@@ -163,6 +163,24 @@ void thread::challenge(void)
 	eXosip_unlock();
 }
 
+bool thread::getsource(void)
+{
+	int vpos = 0;
+
+	if(via)
+		return true;
+
+	via_header = NULL;
+	while(sevent->request && osip_list_eol(OSIP2_LIST_PTR sevent->request->vias, vpos) == 0) 
+		via_header = (osip_via_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->vias, vpos++);
+
+	if(!via_header)
+		return false;
+
+	via = new stack::address(via_header->host, via_header->port);
+	return true;
+}
+
 void thread::registration(void)
 {	
 	osip_header_t *header = NULL;
@@ -170,6 +188,11 @@ void thread::registration(void)
 	osip_uri_param_t *param = NULL;
 	int interval = -1;
 	int pos = 0, vpos = 0;
+
+	if(!getsource()) {
+		service::errlog(service::ERROR, "cannot determine origin for registration");
+		return;
+	}
 
 	osip_message_get_expires(sevent->request, 0, &header);
 	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
@@ -223,9 +246,8 @@ void thread::reregister(time_t interval)
 	else
 		count = registry::setTarget(registry, via, expire);
 
-	Socket::getaddress(via->getAddr(), buffer, sizeof(buffer));
 	if(count)
-		service::errlog(service::DEBUG, "authorizing %s for %ld seconds from %s", identity, interval, buffer);
+		service::errlog(service::DEBUG, "authorizing %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
 	else {
 		service::errlog(service::ERROR, "cannot authorize %s from %s", identity, buffer);
 		answer = 403;
@@ -267,14 +289,15 @@ void thread::run(void)
 {
 	static volatile time_t last = 0;
 	time_t now;
-	int cpos, vpos;
-	osip_via_t *hvia;
+	int cpos;
 
 	instance = ++startup_count;
 	service::errlog(service::DEBUG, "starting thread %d", instance);
 
 	for(;;) {
 		sevent = eXosip_event_wait(0, stack::sip.timing);
+		via_header = NULL;
+
 		if(shutdown_flag) {
 			++shutdown_count;
 			service::errlog(service::DEBUG, "stopping thread %d", instance);
@@ -297,21 +320,8 @@ void thread::run(void)
 			continue;
 		}
 
-		vpos = 0;
-		hvia = NULL;
-		while(sevent->request && osip_list_eol(OSIP2_LIST_PTR sevent->request->vias, vpos) == 0) 
-			hvia = (osip_via_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->vias, vpos++);
-
-		if(hvia) {
-			service::errlog(service::DEBUG, "sip: event %d; cid=%d, did=%d, instance=%d, via=%s:%s",
-				sevent->type, sevent->cid, sevent->did, instance, hvia->host, hvia->port);
-
-			via = new stack::address(hvia->host, hvia->port);
-		}
-		else
-			service::errlog(service::DEBUG, "sip: event %d; cid=%d, did=%d, instance=%d",
-				sevent->type, sevent->cid, sevent->did, instance);
-
+		service::errlog(service::DEBUG, "sip: event %d; cid=%d, did=%d, instance=%d",
+			sevent->type, sevent->cid, sevent->did, instance);
 
 		switch(sevent->type) {
 		case EXOSIP_MESSAGE_NEW:

@@ -256,9 +256,11 @@ private:
 	eXosip_event_t *sevent;
 	char buffer[256];	
 	stack::address *via;
+	osip_via_t *via_header;
 
 	thread();
 
+	bool getsource(void);
 	bool authenticate(void);
 	bool authorize(void);
 	void registration(void);
