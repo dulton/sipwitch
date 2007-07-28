@@ -39,10 +39,8 @@ private:
 		unsigned sequence;
 		sockaddr_internet address, interface;
 
-		// uri of our 'effective' address here, uri of who we send to, 
-		// and uri of final destination (registration contact, etc).
-
-		char from[MAX_URI_SIZE], via[MAX_URI_SIZE], to[MAX_URI_SIZE];
+		char contact[MAX_URI_SIZE];	// who the real destination is
+		char via[MAX_URI_SIZE];		// how we get to the real destination
 
 		inline bool isSource(void)
 			{return (this == parent->source);};
@@ -56,6 +54,7 @@ private:
 	{
 	public:
 		session sid;
+		unsigned gid;
 	};
 
 	class __LOCAL call : public LinkedObject
@@ -71,6 +70,9 @@ private:
 		} mode_t;
 
 		call();
+
+		char from[MAX_URI_SIZE];	// who the call is from
+		char to[MAX_URI_SIZE];		// who is being called
 
 		OrderedIndex segments;
 		session *source;
