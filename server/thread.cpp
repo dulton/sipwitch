@@ -49,7 +49,7 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 bool thread::authorize(void)
 {
 	osip_message_t *reply = NULL;
-	int error = 401;
+	int error = SIP_UNAUTHORIZED;
 
 	if(!authenticate())
 		return false;
@@ -68,7 +68,7 @@ bool thread::authorize(void)
 			warning_registry = true;
 			service::errlog(service::WARN, "registry capacity reached");
 		}
-		error = 480;
+		error = SIP_TEMPORARILY_UNAVAILABLE;
 	}
 
 	eXosip_lock();
@@ -84,8 +84,9 @@ bool thread::authenticate(void)
 	osip_authorization_t *auth = NULL;
 	service::keynode *node = NULL, *leaf;
 	stringbuf<64> digest;
-	int error = 407;
+	int error = SIP_PROXY_AUTHENTICATION_REQUIRED;
 
+	extension = 0;
 	auth = NULL;
 	if(!sevent->request || osip_message_get_authorization(sevent->request, 0, &auth) != 0 || !auth || !auth->username || !auth->response) {
 		service::errlog(service::DEBUG, "challenge request required");
@@ -101,14 +102,18 @@ bool thread::authenticate(void)
 	node = config::getProvision(auth->username);
 	if(!node) {
 		service::errlog(service::NOTICE, "rejecting unknown %s", auth->username);
-		error = 404;
+		error = SIP_NOT_FOUND;
 		goto failed;
 	}
+
+	leaf = node->leaf("extension");
+	if(leaf && leaf->getPointer())
+		extension = atoi(leaf->getPointer());
 
 	leaf = node->leaf("digest");
 	if(!leaf || !leaf->getPointer()) {
 		service::errlog(service::NOTICE, "rejecting unsupported %s", auth->username);
-		error = 403;
+		error = SIP_FORBIDDEN;
 		goto failed;
 	}
 
@@ -157,9 +162,9 @@ void thread::challenge(void)
 				registry::getRealm(), nonce, registry::getDigest());
 
 	eXosip_lock();
-	eXosip_message_build_answer(sevent->tid, 407, &reply);
-	osip_message_set_header(reply, "WWW-Authenticate", buffer);
-	eXosip_message_send_answer(sevent->tid, 407, reply);
+	eXosip_message_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
+	osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
+	eXosip_message_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
 	eXosip_unlock();
 }
 
@@ -229,10 +234,16 @@ void thread::registration(void)
 
 void thread::reregister(const char *contact, time_t interval)
 {
-	int answer = 200;
+	int answer = SIP_OK;
 	osip_message_t *reply = NULL;
 	time_t expire;
 	unsigned count;
+	
+	if(extension && (extension < registry::getPrefix() || extension >= registry::getPrefix() + registry::getRange())) {
+		answer = SIP_NOT_ACCEPTABLE_HERE;
+		interval = 0;
+		goto reply;
+	}
 
 	registry = registry::create(identity);
 	if(!registry) {
@@ -240,7 +251,7 @@ void thread::reregister(const char *contact, time_t interval)
 			warning_registry = true;
 			service::errlog(service::ERROR, "registry capacity reached");
 		}
-		answer = 480;
+		answer = SIP_TEMPORARILY_UNAVAILABLE;
 		interval = 0;
 		goto reply;
 	}
@@ -256,7 +267,7 @@ void thread::reregister(const char *contact, time_t interval)
 		service::errlog(service::DEBUG, "authorizing %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
 	else {
 		service::errlog(service::ERROR, "cannot authorize %s from %s", identity, buffer);
-		answer = 403;
+		answer = SIP_FORBIDDEN;
 	}		
 
 reply:
@@ -276,10 +287,10 @@ void thread::options(void)
     osip_message_t *reply = NULL;
 
     eXosip_lock();
-    if(eXosip_options_build_answer(sevent->tid, 200, &reply) == 0) {
-		osip_message_set_header(reply, "Accept", "application/sdp, text/plain");
-		osip_message_set_header(reply, "Allow", "INVITE,ACK,CANCEL,OPTIONS,INFO,REFER,MESSAGE,SUBSCRIBE,NOTIFY,REGISTER,PRACK"); 
-        eXosip_options_send_answer(sevent->tid, 200, reply);
+    if(eXosip_options_build_answer(sevent->tid, SIP_OK, &reply) == 0) {
+		osip_message_set_header(reply, ACCEPT, "application/sdp, text/plain");
+		osip_message_set_header(reply, ALLOW, "INVITE,ACK,CANCEL,OPTIONS,INFO,REFER,MESSAGE,SUBSCRIBE,NOTIFY,REGISTER,PRACK"); 
+        eXosip_options_send_answer(sevent->tid, SIP_OK, reply);
 	}
 	eXosip_unlock();
 }

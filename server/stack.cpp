@@ -312,12 +312,15 @@ bool stack::reload(service *cfg)
 	return true;
 }
 
-char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, size_t size, const char *user)
+char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *user, size_t size)
 {
 	char pbuf[8];
 	unsigned port;
 	*buf = 0;
 	size_t len;
+
+	if(!size)
+		size = MAX_URI_SIZE;
 
 	if(!addr)
 		return NULL;
@@ -356,7 +359,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, size_t size, 
 
 stack::address *stack::getAddress(const char *addr)
 {
-	char buffer[256];
+	char buffer[MAX_URI_SIZE];
 	char *svc;
 	address *ap;
 	int proto = SOCK_DGRAM;

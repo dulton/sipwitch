@@ -39,6 +39,11 @@ private:
 		unsigned sequence;
 		sockaddr_internet address, interface;
 
+		// uri of our 'effective' address here, uri of who we send to, 
+		// and uri of final destination (registration contact, etc).
+
+		char from[MAX_URI_SIZE], via[MAX_URI_SIZE], to[MAX_URI_SIZE];
+
 		inline bool isSource(void)
 			{return (this == parent->source);};
 
@@ -116,7 +121,7 @@ public:
 	__EXPORT static void commit(session *s);
 	__EXPORT static session *find(int cid);
 	__EXPORT static session *modify(int cid);
-	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, size_t size, const char *user = NULL);
+	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
 	__EXPORT static address *getAddress(const char *uri);
 };
 
@@ -165,7 +170,7 @@ private:
 	public:
 		sockaddr_internet address, interface;
 		time_t expires;
-		char contact[256];
+		char contact[MAX_URI_SIZE];
 	};
 
 	class __LOCAL pattern : public LinkedObject
@@ -251,11 +256,12 @@ private:
 
 	unsigned instance;
 	time_t current;
+	unsigned extension;
 	const char *identity;
 	service::keynode *config;
 	MappedRegistry *registry;
 	eXosip_event_t *sevent;
-	char buffer[256];	
+	char buffer[MAX_URI_SIZE];	
 	stack::address *via;
 	osip_via_t *via_header;
 

@@ -38,10 +38,12 @@ using namespace UCOMMON_NAMESPACE;
 #define	USER_PROFILE_DEFAULT		0x0fff
 #define	USER_PROFILE_RESTRICTED	(0)
 
-#define	ROUTING_PATTERN_SIZE	16
+#define	MAX_PATTERN_SIZE	16
+#define	MAX_USERID_SIZE		32
+#define	MAX_URI_SIZE		256
 
 typedef struct {
-	char id[32];
+	char id[MAX_USERID_SIZE];
 	unsigned short features;
 	unsigned level;
 } profile_t;
@@ -56,7 +58,7 @@ typedef enum {
 class __EXPORT MappedRegistry : public ReusableObject
 {
 public:
-	char	userid[32];
+	char	userid[MAX_USERID_SIZE];
 	unsigned ext;				// 0 or extnum
 	unsigned count;				// active regs count
 	regtype_t type;				// registry type
@@ -72,8 +74,8 @@ class __EXPORT MappedCall : public ReusableObject
 public:
 	time_t	created;
 	time_t	active;
-	char	sourceid[32];
-	char	targetid[32];
+	char	sourceid[MAX_USERID_SIZE];
+	char	targetid[MAX_USERID_SIZE];
 	unsigned sourceext, targetext;
 	sockaddr_internet source, target;
 	unsigned count;				// active segments
