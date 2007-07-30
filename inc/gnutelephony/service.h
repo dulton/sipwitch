@@ -156,7 +156,7 @@ public:
 	static void util(const char *id);
 	static void foreground(const char *id, const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
 	static void background(const char *id, const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
-	static FILE *open(const char *id, const char *cfgpath = NULL);
+	static FILE *open(const char *id, const char *uid = NULL, const char *cfgpath = NULL);
 	static void startup(bool restarable = false);
 	static void shutdown(void);
 

@@ -404,7 +404,7 @@ extern "C" int main(int argc, char **argv)
 				exit(-1);
 			}
 
-			config::utils();
+			config::utils(user);
 			printf("<!-- provision template example for realm %s -->\n", registry::getRealm());
 			printf("<provision>\n");
 			printf("  <user><id>%s</id>\n", userid);
@@ -483,7 +483,7 @@ extern "C" int main(int argc, char **argv)
 	else
 		service::foreground("sipwitch", user, cfgfile, priority);
 
-	config::reload();
+	config::reload(user);
 	config::startup();
 
 #ifdef	USES_SIGNALS
@@ -495,7 +495,7 @@ extern "C" int main(int argc, char **argv)
 
 	while(NULL != (cp = service::receive())) {
         if(!stricmp(cp, "reload")) {
-            config::reload();
+            config::reload(user);
             continue;
         }
 

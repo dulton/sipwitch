@@ -159,8 +159,8 @@ public:
 	__EXPORT static keynode *getProvision(const char *id);
 	__EXPORT static keynode *getExtension(const char *id);
 	__EXPORT static void release(keynode *node);
-	__EXPORT static void reload(void);
-	__EXPORT static void utils(void);
+	__EXPORT static void reload(const char *uid);
+	__EXPORT static void utils(const char *uid);
 	__EXPORT static stack::address *getContact(const char *id);
 };
 

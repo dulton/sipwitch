@@ -272,9 +272,9 @@ service::keynode *config::getProvision(const char *uid)
 	return node;
 }
 
-void config::utils(void)
+void config::utils(const char *uid)
 {
-	FILE *fp = service::open("sipwitch");
+	FILE *fp = service::open("sipwitch", uid);
 	const char *key = NULL, *value;
 	linked_pointer<keynode> sp;
 
@@ -334,9 +334,9 @@ void config::dump(FILE *fp)
 	}
 }
 		
-void config::reload(void)
+void config::reload(const char *uid)
 {
-	FILE *fp = service::open("sipwitch");
+	FILE *fp = service::open("sipwitch", uid);
 	config *cfgp = new config("sipwitch");
 	
 	crit(cfgp != NULL);

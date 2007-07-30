@@ -1105,7 +1105,7 @@ bool service::commit(void)
 	return true;
 }
 
-FILE *service::open(const char *id, const char *cfgfile)
+FILE *service::open(const char *id, const char *uid, const char *cfgfile)
 {
 	char buf[128];
 	struct stat ino;
@@ -1114,14 +1114,13 @@ FILE *service::open(const char *id, const char *cfgfile)
 	if(!cfgfile)
 		cfgfile = getenv("CFG");
 
-
 	if(cfgfile && *cfgfile) {
 		errlog(DEBUG, "loading config from %s", cfgfile);
 		return fopen(cfgfile, "r");
 	}
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", id);
-	if(!stat(buf, &ino) && S_ISDIR(ino.st_mode)) {
+	if(uid && !stat(buf, &ino) && S_ISDIR(ino.st_mode)) {
 		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/config.xml", id);
 		fp = fopen(buf, "r");
 		if(fp) {
@@ -1130,7 +1129,10 @@ FILE *service::open(const char *id, const char *cfgfile)
 		}
 	}
 
-	snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s.xml", id);
+	if(uid)
+		snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s.xml", id);
+	else
+		snprintf(buf, sizeof(buf), "%s/.%s/config.xml", getenv("HOME"), id); 
 	errlog(DEBUG, "loading config from %s", buf);
 	return fopen(buf, "r");
 }
