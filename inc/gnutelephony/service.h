@@ -164,8 +164,8 @@ public:
 	static keynode *getProtected(const char *path);
 
 	virtual void dump(FILE *fp);
-	virtual bool confirm(void);
-	bool commit(void);
+	virtual bool confirm(const char *user);
+	bool commit(const char *user);
 
 	static bool check(void);
 	static void release(keynode *node);

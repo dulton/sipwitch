@@ -147,7 +147,7 @@ private:
 	bool create(const char *id, keynode *node);
 	keynode *find(const char *id);
 
-	bool confirm(void);
+	bool confirm(const char *user);
 	void dump(FILE *fp);
 
 public:

@@ -60,7 +60,7 @@ bool config::create(const char *id, keynode *node)
 	return false;
 }
 
-bool config::confirm(void)
+bool config::confirm(const char *user)
 {
 	provision = getPath("provision");
 	char *id = NULL, *secret = NULL;
@@ -78,6 +78,7 @@ bool config::confirm(void)
 	unsigned range = registry::getRange();
 	unsigned number;
 	string_t digest;
+	const char *dirpath = ".";
 
 	// construct default profiles
 
@@ -100,14 +101,17 @@ bool config::confirm(void)
 	pp->value.level = 0;
 	pp->value.features = USER_PROFILE_RESTRICTED;
 
-	mkdir("provision", 0770);
-	dir = opendir("provision");
+	if(user) {
+		mkdir("provision", 0770);
+		dirpath = "provision";
+	}
+	dir = opendir(dirpath);
 
 	while(dir && NULL != (dno = readdir(dir))) {
 		ext = strrchr(dno->d_name, '.');
 		if(!ext || stricmp(ext, ".xml"))
 			continue;
-		snprintf(buf, sizeof(buf), "provision/%s", dno->d_name);
+		snprintf(buf, sizeof(buf), "%s/%s", dirpath, dno->d_name);
 		fp = fopen(buf, "r");
 		if(fp)
 			if(!load(fp, provision))
@@ -348,7 +352,7 @@ void config::reload(const char *uid)
 			return;
 		}
 
-	if(!cfgp->commit()) {
+	if(!cfgp->commit(uid)) {
 		errlog(ERROR, "config rejected");
 		delete cfgp;
 	}

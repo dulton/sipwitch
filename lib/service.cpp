@@ -1045,7 +1045,7 @@ void service::snapshot(const char *id, const char *uid)
 	errlog(DEBUG, "snapshot completed");
 }
 
-bool service::confirm(void)
+bool service::confirm(const char *user)
 {
 	return true;
 }
@@ -1082,7 +1082,7 @@ bool service::check(void)
 	return rtn;
 }
 
-bool service::commit(void)
+bool service::commit(const char *user)
 {
 	linked_pointer<callback> cb;
 	unsigned rl = 0;
@@ -1096,7 +1096,7 @@ bool service::commit(void)
 		}
 	}
 
-	if(!rtn || !confirm())
+	if(!rtn || !confirm(user))
 		return false;
 
 	locking.modify();
@@ -1132,7 +1132,7 @@ FILE *service::open(const char *id, const char *uid, const char *cfgfile)
 	if(uid)
 		snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s.xml", id);
 	else
-		snprintf(buf, sizeof(buf), "%s/.%s/config.xml", getenv("HOME"), id); 
+		snprintf(buf, sizeof(buf), "%s/.gnutelephony/%s.xml", getenv("HOME"), id); 
 	errlog(DEBUG, "loading config from %s", buf);
 	return fopen(buf, "r");
 }
