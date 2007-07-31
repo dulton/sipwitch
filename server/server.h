@@ -41,6 +41,7 @@ private:
 
 		char contact[MAX_URI_SIZE];	// who the real destination is
 		char via[MAX_URI_SIZE];		// how we get to the real destination
+		char to[MAX_URI_SIZE];		// alternate "to" based on type...
 
 		inline bool isSource(void)
 			{return (this == parent->source);};
@@ -54,7 +55,6 @@ private:
 	{
 	public:
 		session sid;
-		unsigned gid;
 	};
 
 	class __LOCAL call : public LinkedObject
@@ -77,7 +77,7 @@ private:
 		OrderedIndex segments;
 		session *source;
 		session *target;
-		session *select;
+		segment *select;
 		MappedCall *map;
 		unsigned count;
 		mutex_t mutex;
