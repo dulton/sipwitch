@@ -1,0 +1,7 @@
+Name: libgnutelephony
+Description: 
+Version: @VERSION@
+Requires: ucommon >= 0.6.0
+Libs:  @EXPORT_LIBS@ -lgnutelephony 
+Cflags: @EXPORT_FLAGS@
+ 

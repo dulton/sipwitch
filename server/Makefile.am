@@ -9,11 +9,11 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
-AM_CXXFLAGS = -I$(top_srcdir)/inc @TRESTLE_FLAGS@
+AM_CXXFLAGS = -I$(top_srcdir)/inc @GNUTELEPHONY_FLAGS@
 MODEL=@UCOMMON_MODEL@
 CXXLINK = $(LIBTOOL) --tag=$(MODEL) --mode=link $(CXX) $(AM_CXXFLAGS) $(CFLAGS) \
     $(AM_LDFLAGS) $(LDFLAGS) -o $@
-LDADD = ../lib/libtrestle.la -leXosip2 @TRESTLE_LIBS@
+LDADD = ../lib/libgnutelephony.la -leXosip2 @GNUTELEPHONY_LIBS@
 
 sbin_PROGRAMS = sipw
 pkglibdir=$(libdir)/sipw

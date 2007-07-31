@@ -46,8 +46,8 @@ export PKG_CONFIG_PATH
 
 EXPORT_LIBS=""
 EXPORT_FLAGS=""
-TRESTLE_LIBS=""
-TRESTLE_FLAGS=""
+GNUTELEPHONY_LIBS=""
+GNUTELEPHONY_FLAGS=""
 SERVER_FLAGS=""
 SERVER_LIBS=""
 BUILD_SUBDIRS="lib"
@@ -263,8 +263,8 @@ for flag in $CXXFLAGS ; do
 done
 export CXXFLAGS="$COMPILER_FLAGS"
 
-TRESTLE_FLAGS="$EXPORT_FLAGS $UCOMMON_CFLAGS"
-TRESTLE_LIBS="$EXPORT_LIBS $UCOMMON_LIBS $ac_with_malloc $UCOMMON_CLINK"
+GNUTELEPHONY_FLAGS="$EXPORT_FLAGS $UCOMMON_CFLAGS"
+GNUTELEPHONY_LIBS="$EXPORT_LIBS $UCOMMON_LIBS $ac_with_malloc $UCOMMON_CLINK"
 
 if test "$localstatedir" == '${prefix}/var' ; then
 	localstatedir="/var" ; fi
@@ -280,7 +280,7 @@ AC_SUBST_DIR(default_varpath, localstatedir)
 AC_SUBST_DIR(default_libpath, libdir)
 AC_SUBST_DIR(default_incpath, includedir)
 
-case "$TRESTLE_FLAGS -I/usr/include" in
+case "$GNUTELEPHONY_FLAGS -I/usr/include" in
 *-I${default_incpath}*)
 	;;
 *)
@@ -313,10 +313,10 @@ AC_SUBST(UCOMMON_MODEL)
 AC_SUBST(UCOMMON_SHARED)
 AC_SUBST(EXPORT_FLAGS)
 AC_SUBST(EXPORT_LIBS)
-AC_SUBST(TRESTLE_FLAGS)
-AC_SUBST(TRESTLE_LIBS)
+AC_SUBST(GNUTELEPHONY_FLAGS)
+AC_SUBST(GNUTELEPHONY_LIBS)
 AC_SUBST(BUILD_SUBDIRS)
 AC_SUBST(CXXFLAGS)
 AC_OUTPUT(Makefile lib/Makefile inc/Makefile inc/gnutelephony/Makefile 
-server/Makefile libtrestle.pc)
+server/Makefile libutelephony.pc)
 

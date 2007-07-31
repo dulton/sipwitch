@@ -15,7 +15,7 @@ EXTRA_DIST = autogen.sh README *.pc.in
 SUBDIRS = @BUILD_SUBDIRS@ inc
 DIST_SUBDIRS = lib server inc
 
-# pkgconfigdir = $(libdir)/pkgconfig
-# pkgconfig_DATA = ucommon.pc
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libgnutelephony.pc
 
 

@@ -11,13 +11,13 @@
 MAINTAINERCLEANFILES = Makefile.in Makefile
 RELEASE = -version-info $(LT_VERSION) -release $(LT_RELEASE)
 MODEL=@UCOMMON_MODEL@
-AM_CXXFLAGS = -I$(top_srcdir)/inc @TRESTLE_FLAGS@
+AM_CXXFLAGS = -I$(top_srcdir)/inc @GNUTELEPHONY_FLAGS@
 CXXLINK = $(LIBTOOL) --tag=$(MODEL) --mode=link $(CXX) $(AM_CFLAGS) $(CFLAGS) \
     $(AM_LDFLAGS) $(LDFLAGS) -o $@
 
-lib_LTLIBRARIES = libtrestle.la 
+lib_LTLIBRARIES = libgnutelephony.la 
 
-libtrestle_la_LDFLAGS = @TRESTLE_LIBS@ $(RELEASE) @UCOMMON_SHARED@
-libtrestle_la_SOURCES = mapped.cpp service.cpp digest.cpp
+libgnutelephony_la_LDFLAGS = @GNUTELEPHONY_LIBS@ $(RELEASE) @UCOMMON_SHARED@
+libgnutelephony_la_SOURCES = mapped.cpp service.cpp digest.cpp
 
 

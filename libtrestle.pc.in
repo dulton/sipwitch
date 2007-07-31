@@ -1,7 +1,0 @@
-Name: libtrestle
-Description: 
-Version: @VERSION@
-Requires: ucommon >= 0.4.0
-Libs:  @EXPORT_LIBS@ -ltrestle 
-Cflags: @EXPORT_FLAGS@
- 
