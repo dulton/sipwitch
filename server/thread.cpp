@@ -264,9 +264,9 @@ void thread::reregister(const char *contact, time_t interval)
 		count = registry::setTarget(registry, via, expire, contact);
 
 	if(count)
-		service::errlog(service::DEBUG, "authorizing %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
+		service::errlog(service::DEBUG, "registering %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
 	else {
-		service::errlog(service::ERROR, "cannot authorize %s from %s", identity, buffer);
+		service::errlog(service::ERROR, "cannot register %s from %s", identity, buffer);
 		answer = SIP_FORBIDDEN;
 	}		
 
