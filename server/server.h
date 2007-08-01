@@ -181,7 +181,6 @@ private:
 		MappedRegistry *registry;
 		unsigned priority;
 		char text[MAX_USERID_SIZE];
-		char prefix[MAX_USERID_SIZE], suffix[MAX_USERID_SIZE];
 	};
 
 	class __LOCAL route : public LinkedObject
@@ -240,6 +239,7 @@ public:
 	__EXPORT static unsigned setTargets(MappedRegistry *rr, stack::address *addr);
 	__EXPORT static unsigned addTarget(MappedRegistry *rr, stack::address *via, time_t expires, const char *contact);
 	__EXPORT static void addContact(MappedRegistry *rr, const char *id);
+	__EXPORT static void addPublished(MappedRegistry *rr, const char *id);
 	__EXPORT static void addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const char *prefix, const char *suffix);
 	__EXPORT static unsigned setTarget(MappedRegistry *rr, stack::address *via, time_t expires, const char *contact);
 	__EXPORT static MappedRegistry *extension(const char *id);

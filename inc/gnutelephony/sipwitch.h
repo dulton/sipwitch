@@ -66,6 +66,7 @@ public:
 	sockaddr_internet latest;	// last/newest created registration
 	time_t  expires;			// when registry expires as a whole
 	profile_t profile;			// profile at time of registration
+	LinkedObject *published;	// published routes
 	LinkedObject *targets;		// active registrations (can be multiple)
 	LinkedObject *routes;		// active route records
 };
@@ -75,8 +76,8 @@ class __EXPORT MappedCall : public ReusableObject
 public:
 	time_t	created;
 	time_t	active;
-	char	sourceid[MAX_USERID_SIZE];
-	char	targetid[MAX_USERID_SIZE];
+	char	authorized[MAX_USERID_SIZE];
+	char from[MAX_URI_SIZE], to[MAX_URI_SIZE];
 	unsigned sourceext, targetext;
 	sockaddr_internet source, target;
 	unsigned count;				// active segments

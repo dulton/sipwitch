@@ -21,6 +21,7 @@ using namespace UCOMMON_NAMESPACE;
 static volatile unsigned active_routes = 0;
 static volatile unsigned active_entries = 0;
 static volatile unsigned active_targets = 0;
+static volatile unsigned published_routes = 0;
 static volatile unsigned allocated_routes = 0;
 static volatile unsigned allocated_targets = 0;
 static unsigned mapped_entries = 999;
@@ -28,7 +29,8 @@ static unsigned mapped_entries = 999;
 static unsigned priorities = 10;
 static unsigned keysize = 177;
 static MappedRegistry **extmap = NULL;
-static LinkedObject *contacts = NULL;
+static LinkedObject **published = NULL;
+static LinkedObject **contacts = NULL;
 static LinkedObject **primap = NULL;
 static LinkedObject *freeroutes = NULL;
 static LinkedObject *freetargets = NULL;
@@ -124,6 +126,7 @@ void registry::snapshot(FILE *fp)
 	fprintf(fp, "  active entries: %d\n", active_entries);
 	fprintf(fp, "  active routes:  %d\n", active_routes);
 	fprintf(fp, "  active targets: %d\n", active_targets);
+	fprintf(fp, "  published routes:  %d\n", published_routes);
 	fprintf(fp, "  allocated routes:  %d\n", allocated_routes);
 	fprintf(fp, "  allocated targets: %d\n", allocated_targets);
 
@@ -163,6 +166,7 @@ void registry::snapshot(FILE *fp)
 				fputc('\n', fp);
 				tp.next();
 			}
+			rp = rr->routes;
 			if(rp && rr->type == REG_SERVICE)
 				fprintf(fp, "      services=");
 			else if(rp && rr->type == REG_GATEWAY)
@@ -173,6 +177,18 @@ void registry::snapshot(FILE *fp)
 					fputc(',', fp);
 				else
 					fputc('\n', fp);
+				rp.next();
+			}
+			rp = rr->published;
+			if(rp)
+				fprintf(fp, "      published=");
+			while(rp) {
+				fputs(rp->entry.text, fp);
+				if(rp->getNext())
+					fputc(',', fp);
+				else
+					fputc('\n', fp);
+				rp.next();
 			}
 		}
 		reglock[getIndex(rr)].release();
@@ -201,21 +217,34 @@ void registry::expire(MappedRegistry *rr)
 {
 	linked_pointer<target> tp = rr->targets;
 	linked_pointer<route> rp = rr->routes;
-	unsigned path = NamedObject::keyindex(rr->userid, keysize);
+	unsigned path;
 
 	--active_entries;
 
 	while(rp) {
 		route *nr = rp.getNext();
 		--active_routes;
-		if(rr->type == REG_SERVICE)
-			rp->entry.delist(&contacts);
+		if(rr->type == REG_SERVICE) {
+			path = NamedObject::keyindex(rp->entry.text, keysize);
+			rp->entry.delist(&contacts[path]);
+		}
 		else
 			rp->entry.delist(&primap[rp->entry.priority]);
 		rp->entry.text[0] = 0;
 		rp->enlist(&freeroutes);
 		rp = nr;
-	}			
+	}	
+	rp = rr->published;
+	while(rp) {
+		route *nr = rp.getNext();
+		--active_routes;
+		--published_routes;
+		path = NamedObject::keyindex(rp->entry.text, keysize);
+		rp->entry.delist(&published[path]);
+		rp->entry.text[0] = 0;
+		rp->enlist(&freeroutes);
+		rp = nr;
+	}		
 	while(tp) {
 		target *nt = tp.getNext();
 		--active_targets;
@@ -226,6 +255,7 @@ void registry::expire(MappedRegistry *rr)
 	}
 	rr->routes = NULL;
 	rr->targets = NULL;
+	rr->published = NULL;
 	rr->count = 0;
 	if(reg.range && rr->ext) {
 		if(extmap[rr->ext - reg.prefix] == rr) {
@@ -239,6 +269,7 @@ void registry::expire(MappedRegistry *rr)
 	else
 		service::errlog(service::INFO, "expiring %s", rr->userid);
 
+	path = NamedObject::keyindex(rr->userid, keysize);
 	rr->ext = 0;
 	rr->userid[0] = 0;
 	rr->type = REG_EXPIRED;
@@ -306,7 +337,11 @@ bool registry::reload(service *cfg)
 	primap = new LinkedObject *[priorities];
 	memset(primap, 0, sizeof(LinkedObject *) * priorities);
 	keys = new LinkedObject *[keysize];
+	contacts = new LinkedObject *[keysize];
+	published = new LinkedObject *[keysize];
 	memset(keys, 0, sizeof(LinkedObject *) * keysize);
+	memset(contacts, 0, sizeof(LinkedObject *) * keysize);
+	memset(published, 0, sizeof(LinkedObject *) * keysize);
 	service::errlog(service::INFO, "realm %s", realm);
 	return true;
 }
@@ -388,6 +423,26 @@ MappedRegistry *registry::create(const char *id)
 		rp.next();
 	}
 
+	// add published uris
+	rp = node->leaf("published");
+	if(!rp)
+		node->leaf("publish");
+
+	if(rp && rp->getPointer())
+		addPublished(rr, rp->getPointer());
+
+	if(rp && !rp->getPointer() && !rp->getFirst())
+		addPublished(rr, rr->userid);
+
+	if(rp)
+		rp = rp->getFirst();
+
+	while(rp) {
+		if(!stricmp(rp->getId(), "contact") && rp->getPointer())
+			addPublished(rr, rp->getPointer());
+		rp.next();
+	}
+	
 	// we add routes while still exclusive owner of registry since
 	// they update priority indexes.
 	rp = node->leaf("routes");
@@ -395,8 +450,8 @@ MappedRegistry *registry::create(const char *id)
 		rp = rp->getFirst();
 	
 	while(rp) {
-		const char *pattern, *prefix, *suffix;
-		unsigned priority;
+		const char *pattern = NULL, *prefix = NULL, *suffix = NULL;
+		unsigned priority = 0;
 		linked_pointer<service::keynode> route;
 
 		route = (LinkedObject*)NULL;
@@ -406,9 +461,6 @@ MappedRegistry *registry::create(const char *id)
 			const char *id = route->getId();
 			const char *value = route->getPointer();
 
-			prefix = suffix = pattern = NULL;
-			priority = 0;
-
 			if(id && value && !stricmp(id, "pattern"))
 				pattern = value;
 			else if(id && value && !stricmp(id, "priority"))
@@ -417,6 +469,7 @@ MappedRegistry *registry::create(const char *id)
 				prefix = value;
 			else if(id && value && !stricmp(id, "suffix"))
 				suffix = value;
+			route.next();
 		}
 		if(pattern)
 			addRoute(rr, pattern, priority, prefix, suffix);
@@ -559,25 +612,45 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	return 1;
 }
 
-void registry::addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const char *pre, const char *suf)
+void registry::addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const char *prefix, const char *suffix)
 {
+	char buffer[MAX_USERID_SIZE];
 	route *rp = createRoute();
-	string::set(rp->entry.text, MAX_USERID_SIZE, pat);
-	string::set(rp->entry.prefix, MAX_USERID_SIZE, pre);
-	string::set(rp->entry.suffix, MAX_USERID_SIZE, suf);
+
+	if(!prefix)
+		prefix = "";
+	if(!suffix)
+		suffix = "";
+
+	snprintf(buffer, sizeof(buffer), "%s;%s,%s", pat, prefix, suffix);
+	string::set(rp->entry.text, MAX_USERID_SIZE, buffer);
 	rp->entry.priority = pri;
 	rp->entry.registry = rr;
 	rp->entry.enlist(&primap[pri]);
 	rp->enlist(&rr->routes);
 }
 
-void registry::addContact(MappedRegistry *rr, const char *id)
+void registry::addPublished(MappedRegistry *rr, const char *id)
 {
+	unsigned path = NamedObject::keyindex(id, keysize);
 	route *rp = createRoute();
 	string::set(rp->entry.text, MAX_USERID_SIZE, id);
 	rp->entry.priority = 0;
 	rp->entry.registry = rr;
-	rp->entry.enlist(&contacts);
+	rp->entry.enlist(&published[path]);
+	rp->enlist(&rr->published);
+	++published_routes;
+}
+
+void registry::addContact(MappedRegistry *rr, const char *id)
+{
+	unsigned path = NamedObject::keyindex(id, keysize);
+
+	route *rp = createRoute();
+	string::set(rp->entry.text, MAX_USERID_SIZE, id);
+	rp->entry.priority = 0;
+	rp->entry.registry = rr;
+	rp->entry.enlist(&contacts[path]);
 	rp->enlist(&rr->routes);
 }
 
@@ -655,7 +728,7 @@ unsigned registry::setTargets(MappedRegistry *rr, stack::address *addr)
 		tp->enlist(&freetargets);
 		targetlock.release();
 		tp.next();
-	}
+	}	
 	rr->targets = NULL;
 	rr->count = 0;
 	while(al) {
