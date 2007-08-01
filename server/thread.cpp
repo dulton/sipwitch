@@ -43,7 +43,7 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 {
 	config = NULL;
 	registry = NULL;
-	via = NULL;
+	via_address = from_address = to_address = NULL;
 }
 
 bool thread::authorize(void)
@@ -172,7 +172,7 @@ bool thread::getsource(void)
 {
 	int vpos = 0;
 
-	if(via)
+	if(via_address)
 		return true;
 
 	via_header = NULL;
@@ -186,7 +186,7 @@ bool thread::getsource(void)
 	if(!via_header)
 		return false;
 
-	via = new stack::address(via_header->host, via_header->port);
+	via_address = new stack::address(via_header->host, via_header->port);
 	return true;
 }
 
@@ -264,9 +264,9 @@ void thread::reregister(const char *contact, time_t interval)
 	time(&expire);
 	expire += interval + 3;	// overdraft 3 seconds...
 	if(registry->type == REG_USER && (registry->profile.features & USER_PROFILE_MULTITARGET))
-		count = registry::addTarget(registry, via, expire, contact);
+		count = registry::addTarget(registry, via_address, expire, contact);
 	else
-		count = registry::setTarget(registry, via, expire, contact);
+		count = registry::setTarget(registry, via_address, expire, contact);
 
 	if(count)
 		service::errlog(service::DEBUG, "registering %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
@@ -370,10 +370,19 @@ void thread::run(void)
 		default:
 			service::errlog(service::WARN, "unknown message");
 		}
-		if(via) {
-			delete via;
-			via = NULL;
+		if(via_address) {
+			delete via_address;
+			via_address = NULL;
 		}
+		if(from_address) {
+			delete from_address;
+			from_address = NULL;
+		}
+		if(to_address) {
+			delete to_address;
+			to_address = NULL;
+		}
+
 		if(registry) {
 			registry::release(registry);
 			registry = NULL;

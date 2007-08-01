@@ -242,7 +242,8 @@ public:
 	__EXPORT static void addPublished(MappedRegistry *rr, const char *id);
 	__EXPORT static void addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const char *prefix, const char *suffix);
 	__EXPORT static unsigned setTarget(MappedRegistry *rr, stack::address *via, time_t expires, const char *contact);
-	__EXPORT static MappedRegistry *contact(const char *id, struct sockaddr *address);
+	__EXPORT static MappedRegistry *contact(const char *uri);
+	__EXPORT static MappedRegistry *contact(struct sockaddr *addr, const char *uid);
 	__EXPORT static MappedRegistry *extension(const char *id);
 	__EXPORT static MappedRegistry *create(const char *id);
 	__EXPORT static MappedRegistry *access(const char *id);
@@ -268,7 +269,7 @@ private:
 	MappedRegistry *registry;
 	eXosip_event_t *sevent;
 	char buffer[MAX_URI_SIZE];	
-	stack::address *via;
+	stack::address *via_address, *from_address, *to_address;
 	osip_via_t *via_header, *origin_header;
 
 	thread();

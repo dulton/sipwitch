@@ -520,31 +520,49 @@ MappedRegistry *registry::create(const char *id)
 	return rr;
 }	
 
-MappedRegistry *registry::contact(const char *id, struct sockaddr *addr)
+MappedRegistry *registry::contact(const char *uri)
 {
-	unsigned path = NamedObject::keyindex(id, keysize);
-	linked_pointer<route> rp;
+	MappedRegistry *rr = NULL;
+	struct sockaddr *addr = NULL;
 	stack::address *target = NULL;
+	char buffer[MAX_USERID_SIZE];
+	char *cp;
 
-	if(strchr(id, '@')) {
-		target = stack::getAddress(id);
+	if(!strnicmp(uri, "sip:", 4))
+		uri += 4;
+	else if(!strnicmp(uri, "sips:", 5))
+		uri += 5;
+
+	string::set(buffer, sizeof(buffer), uri);
+	cp = strchr(buffer, '@');
+	if(cp)
+		*cp = 0;
+	if(strchr(uri, '@')) {
+		target = stack::getAddress(uri);
 		if(target)
 			addr = target->getAddr();
 	}
 
-	if(!addr)
-		return NULL;
-		
-	reg.access();
-	rp = contacts[path];
-	while(rp) {
-		if(!stricmp(id, rp->entry.text) && Socket::equal(addr, (struct sockaddr *)&rp->entry.registry->contact))
-			break;
-		rp.next();
-	}
+	if(addr)
+		rr = contact(addr, buffer);
 
 	if(target)
 		delete target;
+
+	return rr;
+}
+
+MappedRegistry *registry::contact(struct sockaddr *addr, const char *uid)
+{
+	linked_pointer<route> rp;
+	unsigned path = NamedObject::keyindex(uid, keysize);
+	reg.access();
+	rp = contacts[path];
+	while(rp) {
+		if(!stricmp(uid, rp->entry.text) && Socket::equal(addr, (struct sockaddr *)&rp->entry.registry->contact))
+			break;
+		rp.next();
+	}
 
 	if(!rp) {
 		reg.release();
@@ -557,6 +575,15 @@ MappedRegistry *registry::extension(const char *id)
 {
 	MappedRegistry *rr = NULL;
 	unsigned ext = atoi(id);
+	const char *nid = id;
+
+	while(*nid) {
+		if(*nid < '0' || *nid > '9') {
+			ext = 0;
+			break;
+		}
+		++nid;
+	}
 
 	reg.access();
 	if(reg.range && ext >= reg.prefix && ext < reg.prefix + reg.range)

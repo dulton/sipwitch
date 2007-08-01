@@ -356,7 +356,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 	string::add(buf, size, pbuf);
 	return buf;
 }
-
+	
 stack::address *stack::getAddress(const char *addr)
 {
 	char buffer[MAX_URI_SIZE];
