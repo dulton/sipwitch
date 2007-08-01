@@ -165,6 +165,9 @@ static void regdump(void)
 		case REG_GATEWAY:
 			type = "gw";
 			break;
+		case REG_SERVICE:
+			type = "peer";
+			break;
 		default:
 			type = "user";
 		};
@@ -346,6 +349,15 @@ extern "C" int main(int argc, char **argv)
 			user = *argv + 6;
 			continue;
 		} 
+
+		if(!stricmp(*argv, "-help")) {
+#ifdef	USES_COMMANDS
+			printf("Usage: sipw [options] [command...]\n");
+#else
+			printf("Usage: sipw [options\n");
+#endif
+			exit(0);
+		}
 
 		if(!strnicmp(*argv, "-x", 2)) {
 			if(*argv + 2)

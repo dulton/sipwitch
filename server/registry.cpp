@@ -524,7 +524,17 @@ MappedRegistry *registry::contact(const char *id, struct sockaddr *addr)
 {
 	unsigned path = NamedObject::keyindex(id, keysize);
 	linked_pointer<route> rp;
+	stack::address *target = NULL;
 
+	if(strchr(id, '@')) {
+		target = stack::getAddress(id);
+		if(target)
+			addr = target->getAddr();
+	}
+
+	if(!addr)
+		return NULL;
+		
 	reg.access();
 	rp = contacts[path];
 	while(rp) {
@@ -532,6 +542,10 @@ MappedRegistry *registry::contact(const char *id, struct sockaddr *addr)
 			break;
 		rp.next();
 	}
+
+	if(target)
+		delete target;
+
 	if(!rp) {
 		reg.release();
 		return NULL;
