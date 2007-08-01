@@ -164,15 +164,15 @@ public:
 	__EXPORT static stack::address *getContact(const char *id);
 };
 
-class __LOCAL registry : private service::callback, private mapped_reuse<MappedRegistry>
-{
-private:
-	class __LOCAL target : public LinkedObject
-	{
-	public:
-		sockaddr_internet address, interface;
+class __LOCAL registry : private service::callback, private mapped_reuse<MappedRegistry> 
+{ 
+private: 
+	class __LOCAL target : public LinkedObject 
+	{ 
+	public: 
+		sockaddr_internet address, interface; 
 		time_t expires;
-		char contact[MAX_URI_SIZE];
+		char contact[MAX_URI_SIZE]; 
 	};
 
 	class __LOCAL pattern : public LinkedObject
@@ -242,6 +242,7 @@ public:
 	__EXPORT static void addPublished(MappedRegistry *rr, const char *id);
 	__EXPORT static void addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const char *prefix, const char *suffix);
 	__EXPORT static unsigned setTarget(MappedRegistry *rr, stack::address *via, time_t expires, const char *contact);
+	__EXPORT static MappedRegistry *contact(const char *id, struct sockaddr *address);
 	__EXPORT static MappedRegistry *extension(const char *id);
 	__EXPORT static MappedRegistry *create(const char *id);
 	__EXPORT static MappedRegistry *access(const char *id);
@@ -268,7 +269,7 @@ private:
 	eXosip_event_t *sevent;
 	char buffer[MAX_URI_SIZE];	
 	stack::address *via;
-	osip_via_t *via_header;
+	osip_via_t *via_header, *origin_header;
 
 	thread();
 

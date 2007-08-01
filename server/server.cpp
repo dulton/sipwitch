@@ -169,7 +169,7 @@ static void regdump(void)
 			type = "user";
 		};
 		printf("%7s %-32s %-4s %-32s  %7s ", ext, buffer.userid, type, buffer.profile.id, exp);
-		paddress(&buffer.latest, NULL);
+		paddress(&buffer.contact, NULL);
 		fflush(stdout);
 	}
 

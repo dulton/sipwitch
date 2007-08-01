@@ -520,6 +520,25 @@ MappedRegistry *registry::create(const char *id)
 	return rr;
 }	
 
+MappedRegistry *registry::contact(const char *id, struct sockaddr *addr)
+{
+	unsigned path = NamedObject::keyindex(id, keysize);
+	linked_pointer<route> rp;
+
+	reg.access();
+	rp = contacts[path];
+	while(rp) {
+		if(!stricmp(id, rp->entry.text) && Socket::equal(addr, (struct sockaddr *)&rp->entry.registry->contact))
+			break;
+		rp.next();
+	}
+	if(!rp) {
+		reg.release();
+		return NULL;
+	}
+	return rp->entry.registry;
+}
+	
 MappedRegistry *registry::extension(const char *id)
 {
 	MappedRegistry *rr = NULL;
@@ -575,7 +594,8 @@ void registry::release(MappedRegistry *rr)
 
 unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t expires, const char *contact)
 {
-	struct sockaddr *ai;
+	stack::address *origin = NULL;
+	struct sockaddr *ai, *oi = NULL;
 	linked_pointer<target> tp = rr->targets;
 	socklen_t len;
 
@@ -604,9 +624,16 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	}
 	rr->expires = tp->expires = expires;
 	if(!Socket::equal((struct sockaddr *)(&tp->address), ai)) {
+		origin = stack::getAddress(contact);
+		if(origin)
+			oi = origin->getAddr();
+		if(!oi)
+			oi = ai;
 		memcpy(&tp->address, ai, len);
-		memcpy(&rr->latest, ai, len);
+		memcpy(&rr->contact, oi, len);
 		Socket::getinterface((struct sockaddr *)&tp->interface, ((struct sockaddr *)&tp->address));
+		if(origin)
+			delete origin;
 	}
 	string::set(tp->contact, MAX_URI_SIZE, contact);
 	return 1;
@@ -656,7 +683,8 @@ void registry::addContact(MappedRegistry *rr, const char *id)
 
 unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t expires, const char *contact)
 {
-	struct sockaddr *ai;
+	stack::address *origin;
+	struct sockaddr *ai, *oi = NULL;
 	linked_pointer<target> tp = rr->targets;
 	target *expired = NULL;
 	time_t now;
@@ -694,9 +722,16 @@ unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 		return rr->count;
 	}
 	if(!expired) {
+		origin = stack::getAddress(contact);
+		if(origin)
+			oi = origin->getAddr();
+		if(!oi)
+			oi = ai;
 		expired = createTarget();
 		expired->enlist(&rr->targets);
-		memcpy(&rr->latest, ai, len);
+		memcpy(&rr->contact, oi, len);
+		if(origin)
+			delete origin;
 		++rr->count;
 	}
 	string::set(expired->contact, sizeof(expired->contact), contact);
@@ -736,7 +771,7 @@ unsigned registry::setTargets(MappedRegistry *rr, stack::address *addr)
 
 		tp = createTarget();
 		memcpy(&tp->address, al->ai_addr, len);
-		memcpy(&rr->latest, &tp->address, len);
+		memcpy(&rr->contact, &tp->address, len);
 		Socket::getinterface((struct sockaddr *)&tp->interface, (struct sockaddr *)&tp->address);
 		stack::sipAddress(&tp->address, tp->contact, rr->userid);
 		tp->expires = 0l;

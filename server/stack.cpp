@@ -368,6 +368,11 @@ stack::address *stack::getAddress(const char *addr)
 
 	if(!strnicmp(addr, "sip:", 4))
 		addr += 4;
+	else if(!strnicmp(addr, "sips:", 5))
+		addr += 5;
+
+	if(strchr(addr, '@'))
+		addr = strchr(addr, '@') + 1;	
 
 	if(*addr == '[') {
 		svc = strchr(addr, ']');

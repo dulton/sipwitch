@@ -63,7 +63,7 @@ public:
 	unsigned ext;				// 0 or extnum
 	unsigned count;				// active regs count
 	regtype_t type;				// registry type
-	sockaddr_internet latest;	// last/newest created registration
+	sockaddr_internet contact;	// last/newest created contact registration
 	time_t  expires;			// when registry expires as a whole
 	profile_t profile;			// profile at time of registration
 	LinkedObject *published;	// published routes

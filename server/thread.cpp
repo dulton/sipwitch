@@ -176,8 +176,12 @@ bool thread::getsource(void)
 		return true;
 
 	via_header = NULL;
-	while(sevent->request && osip_list_eol(OSIP2_LIST_PTR sevent->request->vias, vpos) == 0) 
+	origin_header = NULL;
+	while(sevent->request && osip_list_eol(OSIP2_LIST_PTR sevent->request->vias, vpos) == 0) {
 		via_header = (osip_via_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->vias, vpos++);
+		if(!origin_header)
+			origin_header = via_header;
+	}
 
 	if(!via_header)
 		return false;
@@ -194,7 +198,6 @@ void thread::registration(void)
 	osip_uri_t *uri;
 	int interval = -1;
 	int pos = 0;
-	char buffer[256];
 
 	if(!getsource()) {
 		service::errlog(service::ERROR, "cannot determine origin for registration");
@@ -212,14 +215,14 @@ void thread::registration(void)
 		}
 	}
 
-	if(!contact) {
-		deregister();
-		return;
+	if(contact) {
+		uri = contact->url;
+		snprintf(buffer, sizeof(buffer), "%s:%s@%s:%s", 
+			uri->scheme, uri->username, uri->host, uri->port);
 	}
-
-	uri = contact->url;
-	snprintf(buffer, sizeof(buffer), "%s:%s@%s:%s", 
-		uri->scheme, uri->username, uri->host, uri->port);
+	else
+		snprintf(buffer, sizeof(buffer), "sip:%s:%s", 
+			origin_header->host, origin_header->port);
 
 	if(interval < 0 && header && header->hvalue)
 		interval = atoi(header->hvalue);
@@ -328,6 +331,7 @@ void thread::run(void)
 	for(;;) {
 		sevent = eXosip_event_wait(0, stack::sip.timing);
 		via_header = NULL;
+		origin_header = NULL;
 
 		if(shutdown_flag) {
 			++shutdown_count;
