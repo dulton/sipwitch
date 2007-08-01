@@ -265,8 +265,8 @@ private:
 	time_t current;
 	unsigned extension;
 	const char *identity;
-	service::keynode *config;
-	MappedRegistry *registry;
+	service::keynode *authorized;
+	MappedRegistry *destination;
 	eXosip_event_t *sevent;
 	char buffer[MAX_URI_SIZE];	
 	stack::address *via_address, *from_address, *to_address;

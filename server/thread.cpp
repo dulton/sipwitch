@@ -41,8 +41,8 @@ static char *remove_quotes(char *c)
 
 thread::thread() : DetachedThread(stack::sip.stacksize)
 {
-	config = NULL;
-	registry = NULL;
+	authorized = NULL;
+	destination = NULL;
 	via_address = from_address = to_address = NULL;
 }
 
@@ -54,13 +54,13 @@ bool thread::authorize(void)
 	if(!authenticate())
 		return false;
 
-	registry = registry::access(identity);
-	if(registry) {
+	destination = registry::access(identity);
+	if(destination) {
 		warning_registry = false;
-		if(!registry->expires)
+		if(!destination->expires)
 			return true;
 		time(&current);
-		if(registry->expires < current)
+		if(destination->expires < current)
 			return true;
 	}
 	else {
@@ -136,7 +136,7 @@ bool thread::authenticate(void)
 		service::errlog(service::NOTICE, "rejecting unauthorized %s", auth->username);
 		goto failed;
 	}
-	config = node;
+	authorized = node;
 	identity = auth->username;
 	return true;
 
@@ -250,8 +250,8 @@ void thread::reregister(const char *contact, time_t interval)
 		goto reply;
 	}
 
-	registry = registry::create(identity);
-	if(!registry) {
+	destination = registry::create(identity);
+	if(!destination) {
 		if(!warning_registry) {
 			warning_registry = true;
 			service::errlog(service::ERROR, "registry capacity reached");
@@ -263,10 +263,10 @@ void thread::reregister(const char *contact, time_t interval)
 	warning_registry = false;
 	time(&expire);
 	expire += interval + 3;	// overdraft 3 seconds...
-	if(registry->type == REG_USER && (registry->profile.features & USER_PROFILE_MULTITARGET))
-		count = registry::addTarget(registry, via_address, expire, contact);
+	if(destination->type == REG_USER && (destination->profile.features & USER_PROFILE_MULTITARGET))
+		count = registry::addTarget(destination, via_address, expire, contact);
 	else
-		count = registry::setTarget(registry, via_address, expire, contact);
+		count = registry::setTarget(destination, via_address, expire, contact);
 
 	if(count)
 		service::errlog(service::DEBUG, "registering %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
@@ -276,13 +276,13 @@ void thread::reregister(const char *contact, time_t interval)
 		goto reply;
 	}		
 
-	if(registry->type != REG_SERVICE || registry->routes)
+	if(destination->type != REG_SERVICE || destination->routes)
 		goto reply;
 
 	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
 		c = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
 		if(c && c->url && c->url->username) {
-			registry::addContact(registry, c->url->username);
+			registry::addContact(destination, c->url->username);
 			service::errlog(service::INFO, "registering service %s:%s@%s:%s",
 				c->url->scheme, c->url->username, c->url->host, c->url->port);
 		}
@@ -383,13 +383,13 @@ void thread::run(void)
 			to_address = NULL;
 		}
 
-		if(registry) {
-			registry::release(registry);
-			registry = NULL;
+		if(destination) {
+			registry::release(destination);
+			destination = NULL;
 		}
-		if(config) {
-			config::release(config);
-			config = NULL;
+		if(authorized) {
+			config::release(authorized);
+			authorized = NULL;
 		}
 		eXosip_event_free(sevent);
 	}
