@@ -238,7 +238,9 @@ void thread::reregister(const char *contact, time_t interval)
 	osip_message_t *reply = NULL;
 	time_t expire;
 	unsigned count;
-	
+	osip_contact_t *c = NULL;
+	int pos = 0;
+
 	if(extension && (extension < registry::getPrefix() || extension >= registry::getPrefix() + registry::getRange())) {
 		answer = SIP_NOT_ACCEPTABLE_HERE;
 		interval = 0;
@@ -268,7 +270,20 @@ void thread::reregister(const char *contact, time_t interval)
 	else {
 		service::errlog(service::ERROR, "cannot register %s from %s", identity, buffer);
 		answer = SIP_FORBIDDEN;
+		goto reply;
 	}		
+
+	if(registry->type != REG_SERVICE || registry->routes)
+		goto reply;
+
+	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
+		c = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
+		if(c && c->url && c->url->username) {
+			registry::addContact(registry, c->url->username);
+			service::errlog(service::INFO, "registering service %s:%s@%s:%s",
+				c->url->scheme, c->url->username, c->url->host, c->url->port);
+		}
+	}
 
 reply:
 	eXosip_lock();

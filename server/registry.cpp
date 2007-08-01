@@ -18,14 +18,17 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+static volatile unsigned active_routes = 0;
 static volatile unsigned active_entries = 0;
 static volatile unsigned active_targets = 0;
+static volatile unsigned allocated_routes = 0;
 static volatile unsigned allocated_targets = 0;
 static unsigned mapped_entries = 999;
 
 static unsigned priorities = 10;
 static unsigned keysize = 177;
 static MappedRegistry **extmap = NULL;
+static LinkedObject *contacts = NULL;
 static LinkedObject **primap = NULL;
 static LinkedObject *freeroutes = NULL;
 static LinkedObject *freetargets = NULL;
@@ -112,13 +115,16 @@ void registry::snapshot(FILE *fp)
 	unsigned count = 0;
 	time_t now;
 	linked_pointer<target> tp;
+	linked_pointer<route> rp;
 	char buffer[128];
 
 	access();
 	fprintf(fp, "Registry:\n"); 
 	fprintf(fp, "  mapped entries: %d\n", mapped_entries);
 	fprintf(fp, "  active entries: %d\n", active_entries);
+	fprintf(fp, "  active routes:  %d\n", active_routes);
 	fprintf(fp, "  active targets: %d\n", active_targets);
+	fprintf(fp, "  allocated routes:  %d\n", allocated_routes);
 	fprintf(fp, "  allocated targets: %d\n", allocated_targets);
 
 	while(count < mapped_entries) {
@@ -134,8 +140,9 @@ void registry::snapshot(FILE *fp)
 				fprintf(fp, "  user %s; extension=%s, profile=%s,",
 					rr->userid, buffer, rr->profile.id);
 			else if(rr->type == REG_GATEWAY)
-				fprintf(fp, "  gateway %s;",
-					rr->userid);
+				fprintf(fp, "  gateway %s;", rr->userid);
+			else if(rr->type == REG_SERVICE)
+				fprintf(fp, "  service %s;", rr->userid);
 			else if(rr->type == REG_REFER)
 				fprintf(fp, "  refer %s; extensions=%s,",
 					rr->userid, buffer);
@@ -155,6 +162,17 @@ void registry::snapshot(FILE *fp)
 					fputc(',', fp);
 				fputc('\n', fp);
 				tp.next();
+			}
+			if(rp && rr->type == REG_SERVICE)
+				fprintf(fp, "      services=");
+			else if(rp && rr->type == REG_GATEWAY)
+				fprintf(fp, "      routes=");
+			while(rp && (rr->type == REG_SERVICE || rr->type == REG_GATEWAY)) {
+				fputs(rp->entry.text, fp);
+				if(rp->getNext())
+					fputc(',', fp);
+				else
+					fputc('\n', fp);
 			}
 		}
 		reglock[getIndex(rr)].release();
@@ -189,7 +207,11 @@ void registry::expire(MappedRegistry *rr)
 
 	while(rp) {
 		route *nr = rp.getNext();
-		rp->entry.delist(&primap[rp->entry.priority]);
+		--active_routes;
+		if(rr->type == REG_SERVICE)
+			rp->entry.delist(&contacts);
+		else
+			rp->entry.delist(&primap[rp->entry.priority]);
 		rp->entry.text[0] = 0;
 		rp->enlist(&freeroutes);
 		rp = nr;
@@ -346,6 +368,8 @@ MappedRegistry *registry::create(const char *id)
 		rr->type = REG_REFER;
 	else if(!stricmp(cp, "gateway"))
 		rr->type = REG_GATEWAY;
+	else if(!stricmp(cp, "service"))
+		rr->type = REG_SERVICE;
 	if(!node || rr->type == REG_EXPIRED) {
 		config::release(node);
 		reg.removeLocked(rr);
@@ -353,11 +377,49 @@ MappedRegistry *registry::create(const char *id)
 		return NULL;
 	}
 
+	// add static services if exist
+	rp = node->leaf("contacts");
+	if(rp)
+		rp = rp->getFirst();
+
+	while(rp) {
+		if(!stricmp(rp->getId(), "contact") && rp->getPointer())
+			addContact(rr, rp->getPointer());
+		rp.next();
+	}
+
 	// we add routes while still exclusive owner of registry since
 	// they update priority indexes.
 	rp = node->leaf("routes");
+	if(rp)
+		rp = rp->getFirst();
 	
 	while(rp) {
+		const char *pattern, *prefix, *suffix;
+		unsigned priority;
+		linked_pointer<service::keynode> route;
+
+		route = (LinkedObject*)NULL;
+		if(!stricmp(rp->getId(), "route"))
+			route = rp->getFirst();
+		while(route) {
+			const char *id = route->getId();
+			const char *value = route->getPointer();
+
+			prefix = suffix = pattern = NULL;
+			priority = 0;
+
+			if(id && value && !stricmp(id, "pattern"))
+				pattern = value;
+			else if(id && value && !stricmp(id, "priority"))
+				priority = atoi(value);
+			else if(id && value && !stricmp(id, "prefix"))
+				prefix = value;
+			else if(id && value && !stricmp(id, "suffix"))
+				suffix = value;
+		}
+		if(pattern)
+			addRoute(rr, pattern, priority, prefix, suffix);
 		rp.next();
 	}
 
@@ -497,6 +559,28 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	return 1;
 }
 
+void registry::addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const char *pre, const char *suf)
+{
+	route *rp = createRoute();
+	string::set(rp->entry.text, MAX_USERID_SIZE, pat);
+	string::set(rp->entry.prefix, MAX_USERID_SIZE, pre);
+	string::set(rp->entry.suffix, MAX_USERID_SIZE, suf);
+	rp->entry.priority = pri;
+	rp->entry.registry = rr;
+	rp->entry.enlist(&primap[pri]);
+	rp->enlist(&rr->routes);
+}
+
+void registry::addContact(MappedRegistry *rr, const char *id)
+{
+	route *rp = createRoute();
+	string::set(rp->entry.text, MAX_USERID_SIZE, id);
+	rp->entry.priority = 0;
+	rp->entry.registry = rr;
+	rp->entry.enlist(&contacts);
+	rp->enlist(&rr->routes);
+}
+
 unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t expires, const char *contact)
 {
 	struct sockaddr *ai;
@@ -590,7 +674,21 @@ unsigned registry::setTargets(MappedRegistry *rr, stack::address *addr)
 	rr->expires = 0;
 	return rr->count;
 }
-	
+
+registry::route *registry::createRoute(void)
+{
+	route *r;
+	r = static_cast<route *>(freeroutes);
+	if(r)
+		freeroutes = r->getNext();
+	if(!r) {
+		++allocated_routes;
+		r = static_cast<route *>(config::allocate(sizeof(route)));
+	}
+	++active_routes;
+	return r;
+}
+
 registry::target *registry::createTarget(void)
 {
 	target *t;

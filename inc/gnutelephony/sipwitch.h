@@ -52,6 +52,7 @@ typedef enum {
 	REG_EXPIRED = 0,	// expired record
 	REG_USER,			// user records with profiles
 	REG_GATEWAY,		// registered and static
+	REG_SERVICE,		// routes for contacts
 	REG_REFER			// registered and static
 } regtype_t;
 
