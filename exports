@@ -1,0 +1,3 @@
+pkgname=libgnutelephony
+libname=-lgnutelephony
+bldname=lib/libgnutelephony.la

@@ -40,7 +40,7 @@ void SignalThread::run(void)
 	const char *uid = getenv("USER");
 	int signo;
 
-	service::errlog(service::DEBUG, "starting signals");
+	service::errlog(service::DEBUG1, "starting signals");
 	for(;;) {
 		alarm(900);
 #ifdef	HAVE_SIGWAIT2
@@ -49,7 +49,7 @@ void SignalThread::run(void)
 		signo = sigwait(&sigs);
 #endif
 		alarm(0);
-		service::errlog(service::DEBUG, "received signal %d", signo);
+		service::errlog(service::DEBUG1, "received signal %d", signo);
 		switch(signo) {
 		case SIGALRM:
 			service::errlog(service::INFO, "system housekeeping");

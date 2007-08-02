@@ -57,7 +57,7 @@ bool thread::authenticate(void)
 	extension = 0;
 	auth = NULL;
 	if(!sevent->request || osip_message_get_authorization(sevent->request, 0, &auth) != 0 || !auth || !auth->username || !auth->response) {
-		service::errlog(service::DEBUG, "challenge request required");
+		service::errlog(service::DEBUG1, "challenge request required");
 		challenge();
 		return false;
 	}
@@ -237,7 +237,7 @@ void thread::reregister(const char *contact, time_t interval)
 		count = registry::setTarget(destination, via_address, expire, contact);
 
 	if(count)
-		service::errlog(service::DEBUG, "registering %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
+		service::errlog(service::DEBUG1, "registering %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
 	else {
 		service::errlog(service::ERROR, "cannot register %s from %s", identity, buffer);
 		answer = SIP_FORBIDDEN;
@@ -265,7 +265,7 @@ reply:
 
 void thread::deregister()
 {
-	service::errlog(service::DEBUG, "deauthorize %s", identity);
+	service::errlog(service::DEBUG1, "deauthorize %s", identity);
 }
 
 void thread::options(void)
@@ -294,7 +294,7 @@ void thread::run(void)
 	time_t now;
 
 	instance = ++startup_count;
-	service::errlog(service::DEBUG, "starting thread %d", instance);
+	service::errlog(service::DEBUG1, "starting thread %d", instance);
 
 	for(;;) {
 		sevent = eXosip_event_wait(0, stack::sip.timing);
@@ -303,7 +303,7 @@ void thread::run(void)
 
 		if(shutdown_flag) {
 			++shutdown_count;
-			service::errlog(service::DEBUG, "stopping thread %d", instance);
+			service::errlog(service::DEBUG1, "stopping thread %d", instance);
 			delete this;
 			pthread_exit(NULL);
 		}
@@ -323,7 +323,7 @@ void thread::run(void)
 			continue;
 		}
 
-		service::errlog(service::DEBUG, "sip: event %d; cid=%d, did=%d, instance=%d",
+		service::errlog(service::DEBUG1, "sip: event %d; cid=%d, did=%d, instance=%d",
 			sevent->type, sevent->cid, sevent->did, instance);
 
 		switch(sevent->type) {

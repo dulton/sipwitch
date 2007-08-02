@@ -191,7 +191,7 @@ void stack::start(service *cfg)
 {
 	thread *thr;
 	unsigned thidx = 0;
-	service::errlog(service::DEBUG, "sip stack starting; creating %d threads at priority %d", threading, priority);
+	service::errlog(service::DEBUG1, "sip stack starting; creating %d threads at priority %d", threading, priority);
 	eXosip_init();
 
 	memset(hash, 0, sizeof(hash));
@@ -230,7 +230,7 @@ void stack::start(service *cfg)
 
 void stack::stop(service *cfg)
 {
-	service::errlog(service::DEBUG, "sip stack stopping");
+	service::errlog(service::DEBUG1, "sip stack stopping");
 	thread::shutdown();
 	Thread::yield();
 	eXosip_quit();

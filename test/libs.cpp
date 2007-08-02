@@ -15,12 +15,32 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #define	DEBUG
-#include <ucommon/ucommon.h>
+#include <gnutelephony/sipwitch.h>
 
 #include <stdio.h>
 
 using namespace UCOMMON_NAMESPACE;
 
+static int init_callback = 0;
+static int load_callback = 0;
+
+static class testCallback : public service::callback
+{
+public:
+	testCallback() : service::callback(1, "test") 
+		{if(++init_callback == 2) active_flag = true;};
+	bool reload(service *cfg) 
+		{++load_callback; return true;};
+}	testcalls, extra;
+
 extern "C" int main()
 {
+	service *cfg = new service("test");
+	assert(cfg != NULL);
+	// constructors built
+	assert(init_callback == 2);
+	// test reloading
+	assert(cfg->commit(NULL) == true);
+	assert(load_callback == 2);
+	printf("%p\n", service::getComponent("test"));
 };

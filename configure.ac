@@ -222,9 +222,6 @@ UCOMMON_SHARED=`pkg-config --variable=shared ucommon`
 UCOMMON_MODULE=`pkg-config --variable=module ucommon`
 UCOMMON_MODEL=`pkg-config --variable=model ucommon`
 
-if test ! -z "$CONFIG_WITH_UCOMMON" ; then
-	UCOMMON_LIBS=`echo $CONFIG_WITH_UCOMMON $UCOMMON_LIBS | sed -e "s/ -lucommon//"` ; fi
-
 for lib in $UCOMMON_CLINK ; do
 	case "$lib" in
 	-l*)

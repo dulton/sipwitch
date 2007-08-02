@@ -41,8 +41,7 @@ public:
 		NOTIFY,
 		NOTICE=NOTIFY,
 		INFO,
-		DEBUG,
-		DEBUG1 = DEBUG,
+		DEBUG1,
 		DEBUG2,
 		DEBUG3
 	} errlevel_t;

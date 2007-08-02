@@ -54,7 +54,7 @@ void registry::exclusive(MappedRegistry *rr)
 {
 	unsigned idx;
 	if(!rr || !reglock) {
-		service::errlog(service::DEBUG, "invalid lock reference");
+		service::errlog(service::DEBUG1, "invalid lock reference");
 		return;
 	}
 	idx = getIndex(rr);
@@ -88,7 +88,7 @@ unsigned registry::getIndex(MappedRegistry *rr)
 
 void registry::start(service *cfg)
 {
-	service::errlog(service::DEBUG, "registry starting; mapping %d entries", mapped_entries);
+	service::errlog(service::DEBUG1, "registry starting; mapping %d entries", mapped_entries);
 	MappedReuse::create("sipwitch.regmap", mapped_entries);
 	if(!reg)
 		service::errlog(service::FAILURE, "registry could not be mapped");
@@ -106,7 +106,7 @@ bool registry::check(void)
 
 void registry::stop(service *cfg)
 {
-	service::errlog(service::DEBUG, "registry stopping");
+	service::errlog(service::DEBUG1, "registry stopping");
 	MappedMemory::release();
 	MappedMemory::remove("sipwitch.regmap");
 }

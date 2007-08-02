@@ -117,7 +117,7 @@ bool config::confirm(const char *user)
 			if(!load(fp, provision))
 				errlog(ERROR, "cannot load %s", buf);		
 			else
-				errlog(DEBUG, "loaded %s", buf);
+				errlog(DEBUG1, "loaded %s", buf);
 	}
 
 	if(dir)
@@ -137,7 +137,7 @@ bool config::confirm(const char *user)
 			leaf = node->leaf("trs");
 			if(leaf && leaf->getPointer())
 				pp->value.level = atoi(leaf->getPointer());
-			service::errlog(service::DEBUG, "adding profile %s", id);
+			service::errlog(service::DEBUG1, "adding profile %s", id);
 			if(!stricmp(id, "*"))
 				ppd = pp;
 		}
@@ -146,7 +146,7 @@ bool config::confirm(const char *user)
 			if(create(id, *node))
 				service::errlog(service::WARN, "duplicate identity %s", id);
 			else
-				service::errlog(service::DEBUG, "adding %s %s", node->getId(), id);
+				service::errlog(service::DEBUG1, "adding %s %s", node->getId(), id);
 			leaf = node->leaf("secret");
 			if(leaf)
 				secret = leaf->getPointer();

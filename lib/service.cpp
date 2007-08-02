@@ -999,7 +999,7 @@ void service::dumpfile(const char *id, const char *uid)
 		return;
 	}
 
-	errlog(DEBUG, "dumping config");
+	errlog(DEBUG1, "dumping config");
 	locking.access();
 	if(cfg)
 		cfg->service::dump(fp);
@@ -1029,7 +1029,7 @@ void service::snapshot(const char *id, const char *uid)
 		return;
 	}
 
-	errlog(DEBUG, "snapshot started");
+	errlog(DEBUG1, "snapshot started");
 
 	while(rl < RUNLEVELS) {
 		cb = callback::runlevels[rl++];
@@ -1043,7 +1043,7 @@ void service::snapshot(const char *id, const char *uid)
 		cfg->dump(fp);
 	locking.release();
 	fclose(fp);
-	errlog(DEBUG, "snapshot completed");
+	errlog(DEBUG1, "snapshot completed");
 }
 
 bool service::confirm(const char *user)
@@ -1116,7 +1116,7 @@ FILE *service::open(const char *id, const char *uid, const char *cfgfile)
 		cfgfile = getenv("CFG");
 
 	if(cfgfile && *cfgfile) {
-		errlog(DEBUG, "loading config from %s", cfgfile);
+		errlog(DEBUG1, "loading config from %s", cfgfile);
 		return fopen(cfgfile, "r");
 	}
 
@@ -1125,7 +1125,7 @@ FILE *service::open(const char *id, const char *uid, const char *cfgfile)
 		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/config.xml", id);
 		fp = fopen(buf, "r");
 		if(fp) {
-			errlog(DEBUG, "loading config from %s", buf);
+			errlog(DEBUG1, "loading config from %s", buf);
 			return fp;
 		}
 	}
@@ -1134,7 +1134,7 @@ FILE *service::open(const char *id, const char *uid, const char *cfgfile)
 		snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s.xml", id);
 	else
 		snprintf(buf, sizeof(buf), "%s/.gnutelephony/%s.xml", getenv("HOME"), id); 
-	errlog(DEBUG, "loading config from %s", buf);
+	errlog(DEBUG1, "loading config from %s", buf);
 	return fopen(buf, "r");
 }
 
