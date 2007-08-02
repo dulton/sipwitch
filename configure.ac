@@ -333,5 +333,5 @@ AC_SUBST(GNUTELEPHONY_LIBS)
 AC_SUBST(BUILD_SUBDIRS)
 AC_SUBST(CXXFLAGS)
 AC_OUTPUT(Makefile lib/Makefile inc/Makefile inc/gnutelephony/Makefile 
-server/Makefile libgnutelephony.pc)
+server/Makefile test/Makefile libgnutelephony.pc)
 

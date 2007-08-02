@@ -92,6 +92,7 @@ public:
 
 		const char *id;
 		unsigned runlevel;
+		bool active_flag;
 
 		static LinkedObject *runlevels[4];
 		static unsigned count;
@@ -107,6 +108,9 @@ public:
 
 		inline bool isConfigured(void)
 			{return service::cfg != NULL;};
+
+		inline bool isActive(void)
+			{return active_flag;};
 
 		virtual bool check(void);
 		virtual void snapshot(FILE *fp);

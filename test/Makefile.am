@@ -8,14 +8,14 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-AUTOMAKE_OPTIONS = no-dependencies dist-shar dist-zip
-EXTRA_DIST = autogen.sh README *.pc.in
-#  *.pc.in *.spec.in *.spec
+MAINTAINERCLEANFILES = Makefile.in Makefile
+AM_CXXFLAGS = -I$(top_srcdir)/inc @GNUTELEPHONY_FLAGS@
+MODEL=@UCOMMON_MODEL@
+CXXLINK = $(LIBTOOL) --tag=$(MODEL) --mode=link $(CXX) $(AM_CXXFLAGS) $(CFLAGS) \
+    $(AM_LDFLAGS) $(LDFLAGS) -o $@
 
-SUBDIRS = @BUILD_SUBDIRS@ inc test
-DIST_SUBDIRS = lib server inc test
+TESTS = sipwLibrary
+check_PROGRAMS = $(TESTS)
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libgnutelephony.pc
-
-
+sipwLibrary_SOURCES = libs.cpp
+sipwLibrary_LDFLAGS = ../lib/libgnutelephony.la @GNUTELEPHONY_LIBS@

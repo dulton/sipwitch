@@ -458,6 +458,7 @@ OrderedObject()
 	crit(rl < RUNLEVELS);
 	LinkedObject::enlist(&runlevels[rl]);
 	id = name;
+	active_flag = false;
 	runlevel = rl;
 	++count;
 }
@@ -1058,7 +1059,7 @@ service::callback *service::getComponent(const char *id)
 	while(rl < RUNLEVELS) {
 		cb = callback::runlevels[rl++];
 		while(cb) {
-			if(cb->id && !stricmp(cb->id, id))
+			if(cb->isActive() && cb->id && !stricmp(cb->id, id))
 				return *cb;
 			cb.next();
 		}
