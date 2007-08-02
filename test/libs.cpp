@@ -42,5 +42,5 @@ extern "C" int main()
 	// test reloading
 	assert(cfg->commit(NULL) == true);
 	assert(load_callback == 2);
-	printf("%p\n", service::getComponent("test"));
+	assert(service::getComponent("test") == &extra);
 };
