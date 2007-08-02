@@ -35,11 +35,23 @@ AC_SUBST(LT_MAJOR)
 AC_SUBST(LT_MINOR)
 
 if test -z "$PKG_CONFIG_PATH" ; then
-        PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:/usr/lib/pkgconfig"
-fi
-
-if test "$prefix" != "NONE" ; then
-        PKG_CONFIG_PATH="$prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
+	case "$prefix" in
+	NONE|/usr/local|/usr)
+		PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:/usr/lib/pkgconfig"
+		;;
+	*)
+		PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
+		;;
+	esac
+else
+	case "$prefix" in
+	NONE|/usr/local|/usr)
+		PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig:/usr/lib/pkgconfig"
+		;;
+	*)
+		PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$prefix/lib/pkgconfig"
+		;;
+	esac
 fi
 
 export PKG_CONFIG_PATH
@@ -209,6 +221,9 @@ UCOMMON_CLINK=`pkg-config --variable=clink ucommon`
 UCOMMON_SHARED=`pkg-config --variable=shared ucommon`
 UCOMMON_MODULE=`pkg-config --variable=module ucommon`
 UCOMMON_MODEL=`pkg-config --variable=model ucommon`
+
+if test ! -z "$CONFIG_WITH_UCOMMON" ; then
+	UCOMMON_LIBS=`echo $CONFIG_WITH_UCOMMON $UCOMMON_LIBS | sed -e "s/ -lucommon//"` ; fi
 
 for lib in $UCOMMON_CLINK ; do
 	case "$lib" in
