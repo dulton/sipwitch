@@ -242,9 +242,10 @@ public:
 	__EXPORT static void addPublished(MappedRegistry *rr, const char *id);
 	__EXPORT static void addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const char *prefix, const char *suffix);
 	__EXPORT static unsigned setTarget(MappedRegistry *rr, stack::address *via, time_t expires, const char *contact);
+	__EXPORT static bool isExtension(const char *id);
 	__EXPORT static MappedRegistry *contact(const char *uri);
 	__EXPORT static MappedRegistry *contact(struct sockaddr *addr, const char *uid);
-	__EXPORT static MappedRegistry *extension(const char *id);
+	__EXPORT static MappedRegistry *getExtension(const char *id);
 	__EXPORT static MappedRegistry *create(const char *id);
 	__EXPORT static MappedRegistry *access(const char *id);
 	__EXPORT static MappedRegistry *modify(const char *id);

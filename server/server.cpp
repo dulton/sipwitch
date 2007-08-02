@@ -350,7 +350,7 @@ extern "C" int main(int argc, char **argv)
 			continue;
 		} 
 
-		if(!stricmp(*argv, "-help")) {
+		if(!stricmp(*argv, "-help") || !stricmp(*argv, "-?")) {
 #ifdef	USES_COMMANDS
 			printf("Usage: sipw [options] [command...]\n"
 #else
@@ -366,7 +366,7 @@ extern "C" int main(int argc, char **argv)
 				"  -priority=<level>     Increase process priority\n"
 				"  -v[vv], -x<n>         Select verbosity or debug level\n"
 #ifdef	USES_COMMANDS
-				"\nCommands:\n"
+				"Commands:\n"
 				"  stop                  Stop running server\n"
 				"  reload                Reload config file\n"
 				"  check                 Test for thread deadlocks\n"

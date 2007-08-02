@@ -268,6 +268,7 @@ bool stack::reload(service *cfg)
 {
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("stack");
+	int val;
 
 	while(sp) {
 		key = sp->getId();
@@ -292,6 +293,14 @@ bool stack::reload(service *cfg)
 			}
 			else if(!stricmp(key, "send101") && !isConfigured() && tobool(value))
 				send101 = 0;
+			else if(!stricmp(key, "keepalive") && !isConfigured()) {
+				val = atoi(value);
+				eXosip_set_option(EXOSIP_OPT_UDP_KEEP_ALIVE, &val);
+			} 
+			else if(!stricmp(key, "learn") && !isConfigured()) {
+				val = tobool(value);
+				eXosip_set_option(EXOSIP_OPT_UDP_LEARN_PORT, &val);
+			} 
 			else if(!stricmp(key, "agent") && !isConfigured())
 				agent = strdup(value);
 			else if(!stricmp(key, "port") && !isConfigured())
@@ -301,7 +310,7 @@ bool stack::reload(service *cfg)
 			else if(!stricmp(key, "transport") && !isConfigured()) {
 				if(!stricmp(value, "tcp") || !stricmp(value, "tls"))
 					protocol = IPPROTO_TCP;
-				if(!stricmp(value, "tls"))
+				else if(!stricmp(value, "tls"))
 					tlsmode = 1;
 			}
 		}

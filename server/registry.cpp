@@ -507,8 +507,6 @@ MappedRegistry *registry::create(const char *id)
 		service::errlog(service::INFO, "activating %s as extension %d", rr->userid, ext);
 		service::publish(NULL, "- activate %u %s %u", ext, rr->userid, getIndex(rr));
 	}
-	else
-		service::errlog(service::INFO, "registering %s", rr->userid);
 	++active_entries;
 
 	// exchange exclusive mutex lock for registry to shared before return
@@ -570,29 +568,37 @@ MappedRegistry *registry::contact(struct sockaddr *addr, const char *uid)
 	}
 	return rp->entry.registry;
 }
-	
-MappedRegistry *registry::extension(const char *id)
+
+bool registry::isExtension(const char *id)
 {
-	MappedRegistry *rr = NULL;
 	unsigned ext = atoi(id);
-	const char *nid = id;
-
-	while(*nid) {
-		if(*nid < '0' || *nid > '9') {
-			ext = 0;
-			break;
-		}
-		++nid;
+	
+	while(*id) {
+		if(*id < '0' || *id > '9')
+			return false;
+		++id;
 	}
 
+	if(!reg.range)
+		return false;
+
+	if(ext >= reg.prefix && ext < reg.prefix + reg.range)
+		return true;
+
+	return false;
+}
+	
+MappedRegistry *registry::getExtension(const char *id)
+{
+	unsigned ext = atoi(id);
+	MappedRegistry *rr = NULL;
+	time_t now;
+
+	time(&now);
 	reg.access();
-	if(reg.range && ext >= reg.prefix && ext < reg.prefix + reg.range)
-		rr = extmap[ext - reg.prefix];
-	if(!rr) {
-		rr = find(id);
-		if(rr && rr->type != REG_USER && (rr->type != REG_REFER || !rr->routes))
-			rr = NULL;
-	}
+	rr = extmap[ext - reg.prefix];
+	if(rr->expires && rr->expires < now)
+		rr = NULL;
 	if(!rr)
 		reg.MappedReuse::release();
 	else
@@ -603,7 +609,10 @@ MappedRegistry *registry::extension(const char *id)
 MappedRegistry *registry::access(const char *id)
 {
 	MappedRegistry *rr;
-	unsigned ext = atoi(id);
+	unsigned ext = 0;
+
+	if(isExtension(id))
+		ext = atoi(id);
 
 	reg.access();
 	rr = find(id);
