@@ -352,10 +352,32 @@ extern "C" int main(int argc, char **argv)
 
 		if(!stricmp(*argv, "-help")) {
 #ifdef	USES_COMMANDS
-			printf("Usage: sipw [options] [command...]\n");
+			printf("Usage: sipw [options] [command...]\n"
 #else
-			printf("Usage: sipw [options\n");
+			printf("Usage: sipw [options\n"
 #endif
+				"Options:\n"
+				"  --help                Display this information\n"
+				"  -foreground           Run server in foreground\n"
+				"  -background           Run server as daemon\n"
+                "  -config=<cfgfile>     Use cfgfile in place of default one\n"
+				"  -user=<userid>        Change to effective user from root\n" 
+				"  -concurrency=<level>  Increase thread concurrency\n"
+				"  -priority=<level>     Increase process priority\n"
+				"  -v[vv], -x<n>         Select verbosity or debug level\n"
+#ifdef	USES_COMMANDS
+				"\nCommands:\n"
+				"  stop                  Stop running server\n"
+				"  reload                Reload config file\n"
+				"  check                 Test for thread deadlocks\n"
+				"  snapshot              Create snapshot file\n"
+                "  dump                  Dump in-memory config tables\n"
+                "  digest <user> <pass>  Compute digest based on server realm\n"
+                "  registry              List registrations from shared memory\n"
+                "  activate <user>       Activate static user registration\n"
+                "  release <user>        Release registered user\n"
+#endif
+			);
 			exit(0);
 		}
 

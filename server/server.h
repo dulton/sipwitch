@@ -276,7 +276,6 @@ private:
 
 	bool getsource(void);
 	bool authenticate(void);
-	bool authorize(void);
 	void registration(void);
 	void reregister(const char *contact, time_t interval);
 	void deregister(void);

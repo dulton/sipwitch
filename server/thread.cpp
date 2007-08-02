@@ -46,38 +46,6 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	via_address = from_address = to_address = NULL;
 }
 
-bool thread::authorize(void)
-{
-	osip_message_t *reply = NULL;
-	int error = SIP_UNAUTHORIZED;
-
-	if(!authenticate())
-		return false;
-
-	destination = registry::access(identity);
-	if(destination) {
-		warning_registry = false;
-		if(!destination->expires)
-			return true;
-		time(&current);
-		if(destination->expires < current)
-			return true;
-	}
-	else {
-		if(!warning_registry) {
-			warning_registry = true;
-			service::errlog(service::WARN, "registry capacity reached");
-		}
-		error = SIP_TEMPORARILY_UNAVAILABLE;
-	}
-
-	eXosip_lock();
-	eXosip_message_build_answer(sevent->tid, error, &reply);
-	eXosip_message_send_answer(sevent->tid, error, reply);
-	eXosip_unlock();		
-	return false;
-}
-
 bool thread::authenticate(void)
 {
 	osip_message_t *reply = NULL;
