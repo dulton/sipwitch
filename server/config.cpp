@@ -79,6 +79,7 @@ bool config::confirm(const char *user)
 	unsigned number;
 	string_t digest;
 	const char *dirpath = ".";
+	const char *fn;
 
 	// construct default profiles
 
@@ -113,11 +114,16 @@ bool config::confirm(const char *user)
 			continue;
 		snprintf(buf, sizeof(buf), "%s/%s", dirpath, dno->d_name);
 		fp = fopen(buf, "r");
+		fn = strrchr(buf, '/');
+		if(fn)
+			++fn;
+		else
+			fn = buf;
 		if(fp)
 			if(!load(fp, provision))
-				errlog(ERROR, "cannot load %s", buf);		
+				errlog(ERROR, "cannot load %s", fn);		
 			else
-				errlog(DEBUG1, "loaded %s", buf);
+				errlog(DEBUG1, "loaded %s", fn);
 	}
 
 	if(dir)

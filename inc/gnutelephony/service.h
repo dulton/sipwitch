@@ -162,6 +162,8 @@ public:
 	static FILE *open(const char *id, const char *uid = NULL, const char *cfgpath = NULL);
 	static void startup(bool restarable = false);
 	static void shutdown(void);
+	static void snmptrap(unsigned id, const char *descr);
+	static long uptime(void);
 
 	static callback *getComponent(const char *id);
 	static keynode *getProtected(const char *path);
@@ -185,6 +187,15 @@ protected:
 
 private:
 	void __LOCAL addAttributes(keynode *node, char *astr);
+
+	class __LOCAL snmpserver : public LinkedObject
+	{
+	public:
+		struct sockaddr_internet server;
+	};
+
+	snmpserver *snmpservers;
+	char *community;
 };
 
 END_NAMESPACE
