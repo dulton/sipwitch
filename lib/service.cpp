@@ -1272,11 +1272,13 @@ void service::errlog(errlevel_t loglevel, const char *fmt, ...)
 {
 	char buf[256];
 	int level = LOG_ERR;
-	va_list args;
-	
+	va_list args;	
+
 	va_start(args, fmt);
 
 	assert(fmt != NULL);
+	vsnprintf(buf, sizeof(buf), fmt, args);
+	va_end(args);
 
 	switch(loglevel)
 	{
@@ -1284,13 +1286,11 @@ void service::errlog(errlevel_t loglevel, const char *fmt, ...)
 	case DEBUG2:
 	case DEBUG3:
 		if((getppid() > 1) && (loglevel <= verbose)) {
-			fprintf(stderr, "%s: ", getenv("IDENT"));
-			vfprintf(stderr, fmt, args);
+			fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
 			if(fmt[strlen(fmt) - 1] != '\n') 
 				fputc('\n', stderr);
 			fflush(stderr);
 		}
-		va_end(args);
 		return;
 	case INFO:
 		level = LOG_INFO;
@@ -1313,19 +1313,18 @@ void service::errlog(errlevel_t loglevel, const char *fmt, ...)
 
 	if(loglevel <= verbose) {
 		if(getppid() > 1) {
-			fprintf(stderr, "%s: ", getenv("IDENT"));
-			vfprintf(stderr, fmt, args);
+			fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
 			if(fmt[strlen(fmt) - 1] != '\n') 
 				fputc('\n', stderr);
 			fflush(stderr);
 		}
 
-		vsnprintf(buf, sizeof(buf), fmt, args);
 		snmptrap(loglevel + 10, buf);
 		publish(NULL, "- log %d %s", loglevel, buf); 
 		::syslog(level, "%s", buf);
 	}
 	
+end:
 	va_end(args);
 
 	if(level == LOG_CRIT)
