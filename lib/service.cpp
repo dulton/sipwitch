@@ -548,7 +548,6 @@ void service::snmptrap(unsigned id, const char *descr)
 		return;
 
 	linked_pointer<snmpserver> servers = cfg->snmpservers;
-	unsigned idx;
 	unsigned char buf[128];
 	unsigned id1 = id, id2 = 0;
 	unsigned len;
@@ -1277,6 +1276,8 @@ void service::errlog(errlevel_t loglevel, const char *fmt, ...)
 	
 	va_start(args, fmt);
 
+	assert(fmt != NULL);
+
 	switch(loglevel)
 	{
 	case DEBUG1:
@@ -1306,6 +1307,8 @@ void service::errlog(errlevel_t loglevel, const char *fmt, ...)
 	case FAILURE:
 		level = LOG_CRIT;
 		break;
+	default:
+		level = LOG_ERR;
 	}
 
 	if(loglevel <= verbose) {
@@ -1320,7 +1323,7 @@ void service::errlog(errlevel_t loglevel, const char *fmt, ...)
 		vsnprintf(buf, sizeof(buf), fmt, args);
 		snmptrap(loglevel + 10, buf);
 		publish(NULL, "- log %d %s", loglevel, buf); 
-		::vsyslog(level, fmt, args);
+		::syslog(level, "%s", buf);
 	}
 	
 	va_end(args);
