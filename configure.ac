@@ -85,11 +85,13 @@ AC_DEFUN([AC_SUBST_DIR], [
 
 # make list that is parsed...
 
-AC_ARG_ENABLE(server,  [  --disable-server          compile library only])
+AC_ARG_ENABLE(server,  
+	AC_HELP_STRING([--disable-server],[compile library only]))
 if test -z "$enable_server" ; then
 	enable_server="yes" ; fi
 
-AC_ARG_WITH(crypto, [  --with-crypto=xxx      specify crypto library],[
+AC_ARG_WITH(crypto, 
+	AC_HELP_STRING([--with-crypto=lib],[specify crypto library]),[
 	case "$with_crypto" in
 	none|openssl|gcrypt|sasl)
 		ac_with_crypto="$with_crypto"
@@ -155,7 +157,7 @@ fi
 if test "$enable_server" = "yes" ; then
 	BUILD_SUBDIRS="$BUILD_SUBDIRS server"
 	AC_ARG_WITH(malloc,
-		[  --with-malloc=xxx      specify malloc library],[
+		AC_HELP_STRING([--with-malloc=xxx],[specify malloc library]),[
 		with_malloc=`echo $with_malloc | sed -e "s/,/ /g"`
 		for malloc in $with_malloc ; do
 			AC_CHECK_LIB($malloc, malloc, [
@@ -165,14 +167,16 @@ if test "$enable_server" = "yes" ; then
 		done
 	])
 
-	AC_ARG_ENABLE(commands, [  --disable-commands        disable command options])
+	AC_ARG_ENABLE(commands, 
+		AC_HELP_STRING([--disable-commands],[disable command options]))
 	if test -z "$enable_commands" ; then
 		enable_commands="yes" ; fi
 	if test "$enable_commands" = "yes" ; then
 		AC_DEFINE(USES_COMMANDS, [1], [command options])
 	fi
 
-	AC_ARG_ENABLE(signals, [  --disable-signals         disable signal handling thread])
+	AC_ARG_ENABLE(signals, 
+		AC_HELP_STRING([--disable-signals],[disable signal handling thread]))
 	if test -z "$enable_signals" ; then
 		enable_signals="yes" ; fi
 	if test "$enable_signals" = "yes" ; then
@@ -180,7 +184,8 @@ if test "$enable_server" = "yes" ; then
 	fi
 fi
 
-AC_ARG_ENABLE(debug, [  --enable-debug          compile for debugging])
+AC_ARG_ENABLE(debug, 
+	AC_HELP_STRING([--enable-debug],[compile for debugging]))
 if test -z "$enable_debug" ; then
 	enable_debug="no"
 elif test $enable_debug = "yes" ; then
