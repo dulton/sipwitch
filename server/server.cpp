@@ -420,7 +420,7 @@ extern "C" int main(int argc, char **argv)
 
 		service::util("sipwitch");
 
-		if(!stricmp(*argv, "stop") || !stricmp(*argv, "reload")) {
+		if(!stricmp(*argv, "stop") || !stricmp(*argv, "reload") || !stricmp(*argv, "abort")) {
 			if(!service::control("sipwitch", user, *argv)) {
 				fprintf(stderr, "*** sipw: %s; server not responding\n", *argv);
 				exit(2);
@@ -558,6 +558,11 @@ extern "C" int main(int argc, char **argv)
 
 		if(!stricmp(cp, "dump")) {
 			service::dumpfile("sipwitch", user);
+			continue;
+		}
+
+		if(!stricmp(cp, "abort")) {
+			abort();
 			continue;
 		}
 

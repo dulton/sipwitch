@@ -1,0 +1,58 @@
+create table if not exists sipw_users (
+	identity varchar(32),
+	profile varchar(32),
+	secret varchar(48),
+	method enum(plain, md5, sha, rmd160),
+	extension int(10),
+	comment varchar(256),
+	primary key(identity)
+);
+
+create table if not exists sipw_gateways (
+	identity varchar(32),
+	secret varchar(48),
+	method enum(plain, md5, sha, rmd160),
+	comment varchar(256),
+	primary key(identity)
+);
+
+create table if not exists sipw_static (
+	gateway varchar(32),
+	uri varchar(256)
+);
+
+create table if not exist sipw_groups (
+	identity varchar(32),
+	comment varchar(256),
+	primary key(identity)
+);
+
+create table if not exist sipw_aliases (
+	identity varchar(32),
+	comment varchar(256),
+	primary key(identity)
+);
+
+create table if not exists sipw_members (
+	group varchar(32),
+	member varchar(32)
+);
+
+create table if not exists sipw_contacts (
+	alias varchar(32),
+	contact varchar(256)
+);
+
+
+create table if not exists sipw_routes (
+	gateway varchar(32),
+	pattern varchar(32)
+);
+
+create tablle if not exists sipw_calls (
+	from varchar(256),
+	to varchar(256),
+	start datetime,
+	duration int
+);
+

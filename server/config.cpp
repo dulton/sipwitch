@@ -69,7 +69,7 @@ bool config::confirm(const char *user)
  	service::keynode *leaf;
 	struct dirent *dno;
 	FILE *fp;
-	DIR *dir;
+	DIR *dir = NULL;
 	char buf[128];
 	caddr_t mp;
 	profile *pp, *ppd;
@@ -103,10 +103,16 @@ bool config::confirm(const char *user)
 	pp->value.features = USER_PROFILE_RESTRICTED;
 
 	if(user) {
-		mkdir("provision", 0770);
-		dirpath = "provision";
+		dir = opendir("/srv/sipw");
+		if(dir)
+			dirpath = "/srv/sipw";
+		else {
+			mkdir("provision", 0770);
+			dirpath = "provision";
+		}
 	}
-	dir = opendir(dirpath);
+	if(!dir)
+		dir = opendir(dirpath);
 
 	while(dir && NULL != (dno = readdir(dir))) {
 		ext = strrchr(dno->d_name, '.');
