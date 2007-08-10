@@ -66,7 +66,7 @@ BUILD_SUBDIRS="lib"
 
 test -z "$ac_with_malloc" && ac_with_malloc=""
 test -z "$ac_with_crypto" && ac_with_crypto="auto"
-test -z "$plugindir" && plugindir='${libdir}' ; fi
+test -z "$plugindir" && plugindir='${libdir}' 
 
 AC_DEFUN([AC_SUBST_DIR], [
 	ifelse($2,,,$1="[$]$2")
