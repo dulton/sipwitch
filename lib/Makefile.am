@@ -17,7 +17,7 @@ CXXLINK = $(LIBTOOL) --tag=$(MODEL) --mode=link $(CXX) $(AM_CFLAGS) $(CFLAGS) \
 
 lib_LTLIBRARIES = libgnutelephony.la 
 
-libgnutelephony_la_LDFLAGS = @GNUTELEPHONY_LIBS@ $(RELEASE) @UCOMMON_SHARED@
+libgnutelephony_la_LDFLAGS = @GNUTELEPHONY_LIBS@ $(RELEASE) 
 libgnutelephony_la_SOURCES = mapped.cpp service.cpp digest.cpp
 
 

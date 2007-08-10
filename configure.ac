@@ -222,11 +222,22 @@ if test "$enable_server" = "yes" ; then
 	fi
 fi
 
-PKG_CHECK_MODULES(UCOMMON, ucommon >= 0.5.1)
-UCOMMON_CLINK=`pkg-config --variable=clink ucommon`
-UCOMMON_SHARED=`pkg-config --variable=shared ucommon`
-UCOMMON_MODULE=`pkg-config --variable=module ucommon`
-UCOMMON_MODEL=`pkg-config --variable=model ucommon`
+AC_ARG_WITH(pkg-config,
+	AC_HELP_STRING([--with-pkg-config],[enable support for pkg-config]),[
+	PKG_CHECK_MODULES(UCOMMON, ucommon >= 0.5.1)
+	UCOMMON_CLINK=`pkg-config --variable=clink ucommon`
+	UCOMMON_MODEL=`pkg-config --variable=model ucommon`
+],[
+	AC_PATH_PROG([UCOMMON],[ucommon-config],[none])
+	if test $UCOMMON = "none" ; then
+		AC_ERROR("required ucommon library missing")
+	fi
+	UCOMMON_CLINK=`$UCOMMON --clink`
+	UCOMMON_MODEL=`$UCOMMON --model`
+	UCOMMON_CFLAGS=`$UCOMMON --cflags`
+	UCOMMON_LIBS=`$UCOMMON --libs`
+
+])
 
 for lib in $UCOMMON_CLINK ; do
 	case "$lib" in
@@ -329,7 +340,6 @@ AH_BOTTOM([
 
 AC_SUBST(plugindir)
 AC_SUBST(UCOMMON_MODEL)
-AC_SUBST(UCOMMON_SHARED)
 AC_SUBST(EXPORT_FLAGS)
 AC_SUBST(EXPORT_LIBS)
 AC_SUBST(GNUTELEPHONY_FLAGS)
