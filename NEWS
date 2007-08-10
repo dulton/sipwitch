@@ -1,0 +1,5 @@
+SIP Witch NEWS -- history of visible user changes. 2007-08-22
+
+The SIP Witch 0.4 codebase is ready for release to introduce SIP Witch
+concepts and theory.  This uses the ucommon library for embedded C++
+design patterns.  At the moment registration operations are most complete.

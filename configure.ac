@@ -64,8 +64,9 @@ SERVER_FLAGS=""
 SERVER_LIBS=""
 BUILD_SUBDIRS="lib"
 
-ac_with_malloc=""
-ac_with_crypto="auto"
+test -z "$ac_with_malloc" && ac_with_malloc=""
+test -z "$ac_with_crypto" && ac_with_crypto="auto"
+test -z "$plugindir" && plugindir='${libdir}' ; fi
 
 AC_DEFUN([AC_SUBST_DIR], [
 	ifelse($2,,,$1="[$]$2")
@@ -294,7 +295,7 @@ fi
 
 AC_SUBST_DIR(default_cfgpath, sysconfdir)
 AC_SUBST_DIR(default_varpath, localstatedir)
-AC_SUBST_DIR(default_libpath, libdir)
+AC_SUBST_DIR(default_libpath, plugindir)
 AC_SUBST_DIR(default_incpath, includedir)
 
 case "$GNUTELEPHONY_FLAGS -I/usr/include" in
@@ -326,6 +327,7 @@ AH_BOTTOM([
 #endif
 ])
 
+AC_SUBST(plugindir)
 AC_SUBST(UCOMMON_MODEL)
 AC_SUBST(UCOMMON_SHARED)
 AC_SUBST(EXPORT_FLAGS)

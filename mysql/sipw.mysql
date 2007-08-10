@@ -23,6 +23,7 @@ create table if not exists sipw_static (
 
 create table if not exist sipw_groups (
 	identity varchar(32),
+	type enum(distributed, circular, terminal),
 	comment varchar(256),
 	primary key(identity)
 );
