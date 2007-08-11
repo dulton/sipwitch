@@ -87,7 +87,7 @@ AC_DEFUN([AC_SUBST_DIR], [
 # make list that is parsed...
 
 AC_ARG_ENABLE(server,  
-	AC_HELP_STRING([--disable-server],[compile library only]))
+	AC_HELP_STRING([--disable-sipwitch-server],[compile library only]))
 if test -z "$enable_server" ; then
 	enable_server="yes" ; fi
 
@@ -195,7 +195,7 @@ fi
 
 if test "$enable_server" = "yes" ; then
 	AC_CHECK_HEADER(eXosip2/eXosip.h,,[
-		AC_ERROR("libeXosip2 must be installed or build --without-server")
+		AC_ERROR("libeXosip2 must be installed or build --disable-sipwitch-server")
 	])
 	AC_EGREP_HEADER(EXOSIP_OPT_DONT_SEND_101, eXosip2/eX_setup.h,[
 		AC_DEFINE(EXOSIP2_OPTION_SEND_101, 1, [new option])
