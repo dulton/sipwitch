@@ -8,16 +8,7 @@ operations or media proxying and thereby enables SIP endpoints to directly peer
 negotiate call setting and process peer to peer media streaming even when when
 multiple SIP Witch call nodes at multiple locations are involved.  This means
 GNU SIP Witch operates without introducing additional media latency or offering
-a central point for media capture, unlike "IP-PBX" solutions such as Asterisk,
-Yate, CallWeaver, FreeSwitch, etc.
-
-The key differences between GNU SIP Witch and IP PBX packages is that it acts
-as a call server only, and not a media server, application server, or media
-proxy. This means GNU SIP Witch supports peer to peer endpoint media streaming,
-which facilitates secure calling media protocols such as ZRTP, as well as
-generally intercept free media communications.  GNU SIP Witch uses destination
-routing, so unlike Asterisk, it does not establish call sessions before
-performing routing. This means faster and more scalable call handling.
+a central point for media capture.
 
 GNU SIP Witch is designed to support network scaling of telephony services,
 rather than the heavily compute-bound solutions we find in use today.  This
@@ -27,15 +18,15 @@ accept and service a call.  This allows for the possibility of live failover
 support in the future as well.
 
 GNU SIP Witch is not a SIP "router", and does not try to address the same
-things as iptel "Ser".  GNU SIP Witch is being designed to be used either to
-create an on-premise SIP telephone system, telecenter server, or call center,
-when used in combination with GNU Bayonne, or as a hosted SIP telephone
-system. One important feature will include direct use of URI routing to support
-direct peer to peer calls between service domains over the public internet
-without needing mediation of an intermediary "service provider" so that people
-can publish and call sip: uri's unconstrained.  GNU SIP Witch is about freedom
-to communicate and the removal of artifical barriers and constraints whether
-imposed by monopoly service providers or by governments.
+things as a project like iptel "Ser".  GNU SIP Witch is being designed to be
+used either to create on-premise SIP telephone systems, telecenter servers, or
+call centers, or when used in combination with GNU Bayonne, as a hosted SIP
+telephone system. One important feature will include direct use of URI routing
+to support direct peer to peer calls between service domains over the public
+internet without needing mediation of an intermediary "service provider" so
+that people can publish and call sip: uri's unconstrained.  GNU SIP Witch is
+about freedom to communicate and the removal of artifical barriers and
+constraints whether imposed by monopoly service providers or by governments.
 
 Resources for supporting GNU SIP Witch, and other GNU Telephony efforts such as
 GNU Bayonne2, will be consolidated and handled principally through Savannah,
@@ -47,4 +38,6 @@ GNU SIP Witch depends on the UCommon library, which may merge with and become
 GNU Common C++ 2.0 later this year or early next year.  CVS for and new
 distributions of UCommon will be found in the GNU Telecom project on an interum
 basis until then.  GNU SIP Witch also uses libeXosip2 and GNU oSIP, and these
-may be found at their respective sites. 
+may be found at their respective sites.  GNU SIP Witch is licensed under the
+GNU General Public License V3 or later.
+
