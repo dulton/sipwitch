@@ -1,5 +1,4 @@
-SIP Witch NEWS -- history of visible user changes. 2007-08-22
+SIP Witch NEWS -- history of visible user changes. 2007-08-10
 
-The SIP Witch 0.4 codebase is ready for release to introduce SIP Witch
-concepts and theory.  This uses the ucommon library for embedded C++
-design patterns.  At the moment registration operations are most complete.
+SIP Witch is an official package of the GNU Project as of August 10th 2007.
+GNU SIP Witch is also part of GNU Telephony & the GNU Telecom subsystem.
