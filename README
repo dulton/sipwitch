@@ -1,14 +1,14 @@
 SIP Witch is an official package of the GNU Project as of August 10th 2007.
 GNU SIP Witch is also part of GNU Telephony & the GNU Telecom subsystem.
 
-GNU SIP Witch is a Peer SIP Call Server, that is a call server for the SIP
-protocol. As a call server it services call registration for SIP devices and
-destination routing through SIP gateways.  GNU SIP Witch does not perform codec
-operations or media proxying and thereby enables SIP endpoints to directly peer
-negotiate call setting and process peer to peer media streaming even when when
-multiple SIP Witch call nodes at multiple locations are involved.  This means
-GNU SIP Witch operates without introducing additional media latency or offering
-a central point for media capture.
+GNU SIP Witch is a call and registration server for the SIP protocol. As a call
+server it services call registration for SIP devices and destination routing
+through SIP gateways.  GNU SIP Witch does not perform codec operations or media
+proxying and thereby enables SIP endpoints to directly peer negotiate call
+setting and process peer to peer media streaming even when when multiple SIP
+Witch call nodes at multiple locations are involved.  This means GNU SIP Witch
+operates without introducing additional media latency or offering a central
+point for media capture.
 
 GNU SIP Witch is designed to support network scaling of telephony services,
 rather than the heavily compute-bound solutions we find in use today.  This
@@ -18,13 +18,12 @@ accept and service a call.  This allows for the possibility of live failover
 support in the future as well.
 
 GNU SIP Witch is not a SIP "router", and does not try to address the same
-things as a project like iptel "Ser".  GNU SIP Witch is being designed to be
-used either to create on-premise SIP telephone systems, telecenter servers, or
-call centers, or when used in combination with GNU Bayonne, as a hosted SIP
-telephone system. One important feature will include direct use of URI routing
-to support direct peer to peer calls between service domains over the public
-internet without needing mediation of an intermediary "service provider" so
-that people can publish and call sip: uri's unconstrained.  GNU SIP Witch is
+things as a project like iptel "Ser".  GNU SIP Witch is being designed to
+create on-premise SIP telephone systems, telecenter servers, and Internet
+hosted SIP telephone systems.  One important feature will include use of URI
+routing to support direct peer to peer calls between service domains over the
+public internet without needing mediation of an intermediary "service provider"
+so that people can publish and call sip: uri's unconstrained.  GNU SIP Witch is
 about freedom to communicate and the removal of artifical barriers and
 constraints whether imposed by monopoly service providers or by governments.
 
