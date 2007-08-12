@@ -28,15 +28,14 @@ that people can publish and call sip: uri's unconstrained.  GNU SIP Witch is
 about freedom to communicate and the removal of artifical barriers and
 constraints whether imposed by monopoly service providers or by governments.
 
-Resources for supporting GNU SIP Witch, and other GNU Telephony efforts such as
-GNU Bayonne2, will be consolidated and handled principally through Savannah,
-and primarily using the existing GNU Telecom subsystem project found there
-(https://savannah.gnu.org/projects/gnucomm) as a central point of contact. This
-sub-project is being reorganized for this purpose.
+Resources for supporting GNU SIP Witch will be consolidated and handled
+principally through Savannah using the existing GNU Telecom subsystem project
+found there (https://savannah.gnu.org/projects/gnucomm) as a central point of
+contact. This sub-project is being reorganized for this purpose.
 
 GNU SIP Witch depends on the UCommon library, which may merge with and become
 GNU Common C++ 2.0 later this year or early next year.  CVS for and new
-distributions of UCommon will be found in the GNU Telecom project on an interum
+distributions of UCommon will be found in the GNU Telecom project on an interim
 basis until then.  GNU SIP Witch also uses libeXosip2 and GNU oSIP, and these
 may be found at their respective sites.  GNU SIP Witch is licensed under the
 GNU General Public License V3 or later.
