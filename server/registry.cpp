@@ -54,12 +54,12 @@ void registry::exclusive(MappedRegistry *rr)
 {
 	unsigned idx;
 	if(!rr || !reglock) {
-		service::errlog(service::DEBUG1, "invalid lock reference");
+		process::errlog(DEBUG1, "invalid lock reference");
 		return;
 	}
 	idx = getIndex(rr);
 	if(idx >= mapped_entries) {
-		service::errlog(service::ERROR, "lock out of range");
+		process::errlog(ERROR, "lock out of range");
 		return;
 	}
 	reglock[idx].acquire();
@@ -88,17 +88,17 @@ unsigned registry::getIndex(MappedRegistry *rr)
 
 void registry::start(service *cfg)
 {
-	service::errlog(service::DEBUG1, "registry starting; mapping %d entries", mapped_entries);
+	process::errlog(DEBUG1, "registry starting; mapping %d entries", mapped_entries);
 	MappedReuse::create("sipwitch.regmap", mapped_entries);
 	if(!reg)
-		service::errlog(service::FAILURE, "registry could not be mapped");
+		process::errlog(FAILURE, "registry could not be mapped");
 	initialize();
 	reglock = new mutex_t[mapped_entries];
 }
 
 bool registry::check(void)
 {
-	service::errlog(service::INFO, "checking registry...");
+	process::errlog(INFO, "checking registry...");
 	reg.exlock();
 	reg.unlock();
 	return true;
@@ -106,7 +106,7 @@ bool registry::check(void)
 
 void registry::stop(service *cfg)
 {
-	service::errlog(service::DEBUG1, "registry stopping");
+	process::errlog(DEBUG1, "registry stopping");
 	MappedMemory::release();
 	MappedMemory::remove("sipwitch.regmap");
 }
@@ -259,7 +259,7 @@ void registry::expire(MappedRegistry *rr)
 	rr->count = 0;
 	if(reg.range && rr->ext) {
 		if(extmap[rr->ext - reg.prefix] == rr) {
-			service::errlog(service::INFO, "expiring %s from extension %u", rr->userid, rr->ext);
+			process::errlog(INFO, "expiring %s from extension %u", rr->userid, rr->ext);
 			service::publish(NULL, "- release %u %s %u", rr->ext, rr->userid, getIndex(rr));
 			extmap[rr->ext - reg.prefix] = NULL;
 		}
@@ -267,7 +267,7 @@ void registry::expire(MappedRegistry *rr)
 			goto hold;
 	}
 	else
-		service::errlog(service::INFO, "expiring %s", rr->userid);
+		process::errlog(INFO, "expiring %s", rr->userid);
 
 	path = NamedObject::keyindex(rr->userid, keysize);
 	rr->ext = 0;
@@ -342,7 +342,7 @@ bool registry::reload(service *cfg)
 	memset(keys, 0, sizeof(LinkedObject *) * keysize);
 	memset(contacts, 0, sizeof(LinkedObject *) * keysize);
 	memset(published, 0, sizeof(LinkedObject *) * keysize);
-	service::errlog(service::INFO, "realm %s", realm);
+	process::errlog(INFO, "realm %s", realm);
 	return true;
 }
 
@@ -498,13 +498,13 @@ MappedRegistry *registry::create(const char *id)
 	if(ext >= reg.prefix && ext < reg.prefix + reg.range) {
 		prior = extmap[ext - reg.prefix];
 		if(prior && prior != rr) {
-			service::errlog(service::INFO, "releasing %s from extension %d", prior->userid, ext);
+			process::errlog(INFO, "releasing %s from extension %d", prior->userid, ext);
 			service::publish(NULL, "- release %u %s %u", ext, prior->userid, getIndex(rr)); 
 			prior->ext = 0;
 		}
 		extmap[ext - reg.prefix] = rr;
 		rr->ext = ext;
-		service::errlog(service::INFO, "activating %s as extension %d", rr->userid, ext);
+		process::errlog(INFO, "activating %s as extension %d", rr->userid, ext);
 		service::publish(NULL, "- activate %u %s %u", ext, rr->userid, getIndex(rr));
 	}
 	++active_entries;

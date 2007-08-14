@@ -40,7 +40,7 @@ void SignalThread::run(void)
 	const char *uid = getenv("USER");
 	int signo;
 
-	service::errlog(service::DEBUG1, "starting signals");
+	process::errlog(DEBUG1, "starting signals");
 	lowerPriority();
 
 	for(;;) {
@@ -51,21 +51,21 @@ void SignalThread::run(void)
 		signo = sigwait(&sigs);
 #endif
 		alarm(0);
-		service::errlog(service::DEBUG1, "received signal %d", signo);
+		process::errlog(DEBUG1, "received signal %d", signo);
 		switch(signo) {
 		case SIGALRM:
-			service::errlog(service::INFO, "system housekeeping");
+			process::errlog(INFO, "system housekeeping");
 			registry::cleanup();
 			break;
 		case SIGINT:
 		case SIGTERM:
-			service::control("sipwitch", uid, "down");
+			process::control("sipwitch", uid, "down");
 			break;
 		case SIGUSR1:
-			service::control("sipwitch", uid, "snapshot");
+			process::control("sipwitch", uid, "snapshot");
 			break;
 		case SIGHUP:
-			service::control("sipwitch", uid, "reload");
+			process::control("sipwitch", uid, "reload");
 			break;
 		}
 	}
@@ -137,7 +137,7 @@ static void regdump(void)
 	const char *type;
 
 	if(!count) {
-		service::errlog(service::FAILURE, "cannot access mapped registry");
+		process::errlog(FAILURE, "cannot access mapped registry");
 		exit(-1);
 	}
 
@@ -193,7 +193,7 @@ static void command(const char *id, const char *uid, const char *cmd, unsigned t
 	sigaddset(&sigs, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &sigs, NULL);
 
-	if(!service::control(id, uid, "%d %s", getpid(), cmd)) {
+	if(!process::control(id, uid, "%d %s", getpid(), cmd)) {
 		fprintf(stderr, "*** sipw: %s; server not responding\n", cmd);
 		exit(2);
 	}
@@ -420,10 +420,10 @@ extern "C" int main(int argc, char **argv)
 		if(!*cp)
 			continue;
 
-		service::util("sipwitch");
+		process::util("sipwitch");
 
 		if(!stricmp(*argv, "stop") || !stricmp(*argv, "reload") || !stricmp(*argv, "abort")) {
-			if(!service::control("sipwitch", user, *argv)) {
+			if(!process::control("sipwitch", user, *argv)) {
 				fprintf(stderr, "*** sipw: %s; server not responding\n", *argv);
 				exit(2);
 			}
@@ -431,7 +431,7 @@ extern "C" int main(int argc, char **argv)
 		}
 
 		if(!stricmp(*argv, "check")) {
-			if(!service::control("sipwitch", user, *argv)) {
+			if(!process::control("sipwitch", user, *argv)) {
 				fprintf(stderr, "*** sipw: %s; server cannot be checked\n", *argv);
 				exit(2);
 			}
@@ -518,15 +518,15 @@ extern "C" int main(int argc, char **argv)
 
 	if(!warned && !verbose)
 		verbose = 2;
-	service::setVerbose((service::errlevel_t)(verbose));
+	process::setVerbose((errlevel_t)(verbose));
 
 	if(!user && getuid() == 0)
 		user = "telephony";
 
 	if(daemon)
-		service::background("sipwitch", user, cfgfile, priority);
+		process::background("sipwitch", user, cfgfile, priority);
 	else
-		service::foreground("sipwitch", user, cfgfile, priority);
+		process::foreground("sipwitch", user, cfgfile, priority);
 
 	config::reload(user);
 	config::startup();
@@ -538,7 +538,7 @@ extern "C" int main(int argc, char **argv)
 	if(concurrency)
 		pthread_setconcurrency(concurrency);
 
-	while(NULL != (cp = service::receive())) {
+	while(NULL != (cp = process::receive())) {
         if(!stricmp(cp, "reload")) {
             config::reload(user);
             continue;
@@ -546,7 +546,7 @@ extern "C" int main(int argc, char **argv)
 
 		if(!stricmp(cp, "check")) {
 			if(!config::check())
-				service::reply("check failed");
+				process::reply("check failed");
 			continue;
 		}
 
@@ -580,10 +580,10 @@ extern "C" int main(int argc, char **argv)
 		if(!stricmp(args[0], "verbose")) {
 			if(argc > 2) {
 invalid:
-				service::reply("invalid argument");
+				process::reply("invalid argument");
 				continue;
 			}
-			service::setVerbose(service::errlevel_t(atoi(args[1])));
+			process::setVerbose(errlevel_t(atoi(args[1])));
 			continue;
 		}
 
@@ -610,7 +610,7 @@ invalid:
 
 		if(!stricmp(args[0], "activate")) {
 			if(!activate(argc, args))
-				service::reply("cannot activate");
+				process::reply("cannot activate");
 			continue;
 		}
 
@@ -618,11 +618,11 @@ invalid:
 			if(argc != 2)
 				goto invalid;
 			if(!registry::remove(args[1]))
-				service::reply("cannot release");
+				process::reply("cannot release");
 			continue;
 		}
 
-		service::reply("unknown command");
+		process::reply("unknown command");
 	}
 	service::shutdown();
 	exit(0);

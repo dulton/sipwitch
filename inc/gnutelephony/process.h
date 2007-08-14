@@ -1,0 +1,69 @@
+// Copyright (C) 2006-2007 David Sugar, Tycho Softworks.
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#ifndef _GNUTELEPHONY_PROCESS_H_
+#define	_GNUTELEPHONY_PROCESS_H_
+
+#ifndef _UCOMMON_LINKED_H_
+#include <ucommon/linked.h>
+#endif
+
+#ifndef	_UCOMMON_THREAD_H_
+#include <ucommon/thread.h>
+#endif
+
+#ifndef	_UCOMMON_STRING_H_
+#include <ucommon/string.h>
+#endif
+
+NAMESPACE_UCOMMON
+
+typedef enum
+{
+	FAILURE = 0,
+	ERROR,
+	WARN,
+	NOTIFY,
+	NOTICE=NOTIFY,
+	INFO,
+	DEBUG1,
+	DEBUG2,
+	DEBUG3
+} errlevel_t;
+
+class __EXPORT process
+{
+private:
+	static errlevel_t verbose;
+
+public:
+	inline static void setVerbose(errlevel_t idx)
+		{verbose = idx;};
+
+	static void errlog(errlevel_t log, const char *fmt, ...) __PRINTF(2, 3);
+	static void restart(void);
+	static bool control(const char *id, const char *uid, const char *fmt, ...) __PRINTF(3, 4);
+	static void result(const char *value);
+	static char *receive(void);
+	static void reply(const char *err = NULL);
+	static void util(const char *id);
+	static void foreground(const char *id, const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
+	static void background(const char *id, const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
+	static FILE *open(const char *id, const char *uid = NULL, const char *cfgpath = NULL);
+};
+
+END_NAMESPACE
+
+#endif

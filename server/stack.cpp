@@ -191,14 +191,14 @@ void stack::start(service *cfg)
 {
 	thread *thr;
 	unsigned thidx = 0;
-	service::errlog(service::DEBUG1, "sip stack starting; creating %d threads at priority %d", threading, priority);
+	process::errlog(DEBUG1, "sip stack starting; creating %d threads at priority %d", threading, priority);
 	eXosip_init();
 
 	memset(hash, 0, sizeof(hash));
 
 	MappedReuse::create("sipwitch.callmap", mapped_calls);
 	if(!sip)
-		service::errlog(service::FAILURE, "calls could not be mapped");
+		process::errlog(FAILURE, "calls could not be mapped");
 
 #ifdef	AF_INET6
 	if(protocol == AF_INET6)
@@ -212,7 +212,7 @@ void stack::start(service *cfg)
 #endif
 		if(!interface)
 			interface = "*";
-		service::errlog(service::FAILURE, "sip cannot bind interface %s, port %d", interface, port);
+		process::errlog(FAILURE, "sip cannot bind interface %s, port %d", interface, port);
 	}
 
 	osip_trace_initialize_syslog(TRACE_LEVEL0, "sipwitch");
@@ -230,7 +230,7 @@ void stack::start(service *cfg)
 
 void stack::stop(service *cfg)
 {
-	service::errlog(service::DEBUG1, "sip stack stopping");
+	process::errlog(DEBUG1, "sip stack stopping");
 	thread::shutdown();
 	Thread::yield();
 	eXosip_quit();
@@ -241,7 +241,7 @@ void stack::stop(service *cfg)
 
 bool stack::check(void)
 {
-	service::errlog(service::INFO, "checking sip stack...");
+	process::errlog(INFO, "checking sip stack...");
 	eXosip_lock();
 	eXosip_unlock();
 	return true;

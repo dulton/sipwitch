@@ -19,6 +19,7 @@
 #include <ucommon/ucommon.h>
 #include <gnutelephony/mapped.h>
 #include <gnutelephony/service.h>
+#include <gnutelephony/process.h>
 #include <gnutelephony/digest.h>
 
 #define SIPWITCH_NAMESPACE  sipwitch

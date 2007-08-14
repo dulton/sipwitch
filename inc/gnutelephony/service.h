@@ -33,19 +33,6 @@ NAMESPACE_UCOMMON
 class __EXPORT service : public mempager
 {
 public:
-	typedef enum
-	{
-		FAILURE = 0,
-		ERROR,
-		WARN,
-		NOTIFY,
-		NOTICE=NOTIFY,
-		INFO,
-		DEBUG1,
-		DEBUG2,
-		DEBUG3
-	} errlevel_t;
-
 	typedef treemap<char *>keynode;
 	
 	typedef struct {
@@ -142,23 +129,13 @@ public:
 	inline static bool isNode(keynode *node)
 		{return isLinked(node) && isValue(node);};
 	
-	inline static void setVerbose(errlevel_t idx)
-		{verbose = idx;};
-
 	static void dump(FILE *fp, keynode *node, unsigned level);
 	static void snapshot(const char *id, const char *uid);
 	static void dumpfile(const char *id, const char *uid);
 	static void unsubscribe(const char *path);
 	static void subscribe(const char *path);
 	static void publish(const char *path, const char *fmt, ...) __PRINTF(2, 3);
-	static void errlog(errlevel_t log, const char *fmt, ...) __PRINTF(2, 3);
-	static bool control(const char *id, const char *uid, const char *fmt, ...) __PRINTF(3, 4);
 	static void result(const char *value);
-	static char *receive(void);
-	static void reply(const char *err = NULL);
-	static void util(const char *id);
-	static void foreground(const char *id, const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
-	static void background(const char *id, const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
 	static FILE *open(const char *id, const char *uid = NULL, const char *cfgpath = NULL);
 	static void startup(bool restarable = false);
 	static void shutdown(void);
@@ -180,7 +157,6 @@ protected:
 
 	static service *cfg;
 	static condlock_t locking;
-	static errlevel_t verbose;
 	
 	keynode root;
 	stringbuf<1024> buffer;

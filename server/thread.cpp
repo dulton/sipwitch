@@ -57,7 +57,7 @@ bool thread::authenticate(void)
 	extension = 0;
 	auth = NULL;
 	if(!sevent->request || osip_message_get_authorization(sevent->request, 0, &auth) != 0 || !auth || !auth->username || !auth->response) {
-		service::errlog(service::DEBUG1, "challenge request required");
+		process::errlog(DEBUG1, "challenge request required");
 		challenge();
 		return false;
 	}
@@ -69,7 +69,7 @@ bool thread::authenticate(void)
 
 	node = config::getProvision(auth->username);
 	if(!node) {
-		service::errlog(service::NOTICE, "rejecting unknown %s", auth->username);
+		process::errlog(NOTICE, "rejecting unknown %s", auth->username);
 		error = SIP_NOT_FOUND;
 		goto failed;
 	}
@@ -80,7 +80,7 @@ bool thread::authenticate(void)
 
 	leaf = node->leaf("digest");
 	if(!leaf || !leaf->getPointer()) {
-		service::errlog(service::NOTICE, "rejecting unsupported %s", auth->username);
+		process::errlog(NOTICE, "rejecting unsupported %s", auth->username);
 		error = SIP_FORBIDDEN;
 		goto failed;
 	}
@@ -101,7 +101,7 @@ bool thread::authenticate(void)
 		digest::md5(digest, buffer);
  
 	if(stricmp(*digest, auth->response)) {
-		service::errlog(service::NOTICE, "rejecting unauthorized %s", auth->username);
+		process::errlog(NOTICE, "rejecting unauthorized %s", auth->username);
 		goto failed;
 	}
 	authorized = node;
@@ -168,7 +168,7 @@ void thread::registration(void)
 	int pos = 0;
 
 	if(!getsource()) {
-		service::errlog(service::ERROR, "cannot determine origin for registration");
+		process::errlog(ERROR, "cannot determine origin for registration");
 		return;
 	}
 
@@ -222,7 +222,7 @@ void thread::reregister(const char *contact, time_t interval)
 	if(!destination) {
 		if(!warning_registry) {
 			warning_registry = true;
-			service::errlog(service::ERROR, "registry capacity reached");
+			process::errlog(ERROR, "registry capacity reached");
 		}
 		answer = SIP_TEMPORARILY_UNAVAILABLE;
 		interval = 0;
@@ -237,9 +237,9 @@ void thread::reregister(const char *contact, time_t interval)
 		count = registry::setTarget(destination, via_address, expire, contact);
 
 	if(count)
-		service::errlog(service::DEBUG1, "registering %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
+		process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
 	else {
-		service::errlog(service::ERROR, "cannot register %s from %s", identity, buffer);
+		process::errlog(ERROR, "cannot register %s from %s", identity, buffer);
 		answer = SIP_FORBIDDEN;
 		goto reply;
 	}		
@@ -251,7 +251,7 @@ void thread::reregister(const char *contact, time_t interval)
 		c = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
 		if(c && c->url && c->url->username) {
 			registry::addContact(destination, c->url->username);
-			service::errlog(service::INFO, "registering service %s:%s@%s:%s",
+			process::errlog(INFO, "registering service %s:%s@%s:%s",
 				c->url->scheme, c->url->username, c->url->host, c->url->port);
 		}
 	}
@@ -265,7 +265,7 @@ reply:
 
 void thread::deregister()
 {
-	service::errlog(service::DEBUG1, "deauthorize %s", identity);
+	process::errlog(DEBUG1, "deauthorize %s", identity);
 }
 
 void thread::options(void)
@@ -294,7 +294,7 @@ void thread::run(void)
 	time_t now;
 
 	instance = ++startup_count;
-	service::errlog(service::DEBUG1, "starting thread %d", instance);
+	process::errlog(DEBUG1, "starting thread %d", instance);
 
 	raisePriority(stack::sip.priority);
 
@@ -305,7 +305,7 @@ void thread::run(void)
 
 		if(shutdown_flag) {
 			++shutdown_count;
-			service::errlog(service::DEBUG1, "stopping thread %d", instance);
+			process::errlog(DEBUG1, "stopping thread %d", instance);
 			delete this;
 			pthread_exit(NULL);
 		}
@@ -325,7 +325,7 @@ void thread::run(void)
 			continue;
 		}
 
-		service::errlog(service::DEBUG1, "sip: event %d; cid=%d, did=%d, instance=%d",
+		process::errlog(DEBUG1, "sip: event %d; cid=%d, did=%d, instance=%d",
 			sevent->type, sevent->cid, sevent->did, instance);
 
 		switch(sevent->type) {
@@ -338,7 +338,7 @@ void thread::run(void)
 				registration();
 			break;
 		default:
-			service::errlog(service::WARN, "unknown message");
+			process::errlog(WARN, "unknown message");
 		}
 		if(via_address) {
 			delete via_address;

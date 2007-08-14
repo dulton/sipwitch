@@ -127,9 +127,9 @@ bool config::confirm(const char *user)
 			fn = buf;
 		if(fp)
 			if(!load(fp, provision))
-				errlog(ERROR, "cannot load %s", fn);		
+				process::errlog(ERROR, "cannot load %s", fn);		
 			else
-				errlog(DEBUG1, "loaded %s", fn);
+				process::errlog(DEBUG1, "loaded %s", fn);
 	}
 
 	if(dir)
@@ -149,16 +149,16 @@ bool config::confirm(const char *user)
 			leaf = node->leaf("trs");
 			if(leaf && leaf->getPointer())
 				pp->value.level = atoi(leaf->getPointer());
-			service::errlog(service::DEBUG1, "adding profile %s", id);
+			process::errlog(DEBUG1, "adding profile %s", id);
 			if(!stricmp(id, "*"))
 				ppd = pp;
 		}
 		else if(leaf && id) {
 			id = leaf->getPointer();
 			if(create(id, *node))
-				service::errlog(service::WARN, "duplicate identity %s", id);
+				process::errlog(WARN, "duplicate identity %s", id);
 			else
-				service::errlog(service::DEBUG1, "adding %s %s", node->getId(), id);
+				process::errlog(DEBUG1, "adding %s %s", node->getId(), id);
 			leaf = node->leaf("secret");
 			if(leaf)
 				secret = leaf->getPointer();
@@ -300,7 +300,7 @@ void config::utils(const char *uid)
 
 	if(fp)
 		if(!cfg->load(fp)) {
-			errlog(ERROR, "invalid config");
+			process::errlog(ERROR, "invalid config");
 			delete cfg;
 			return;
 		}
@@ -321,15 +321,15 @@ void config::utils(const char *uid)
 
 bool config::check(void)
 {
-	errlog(INFO, "checking config...");
+	process::errlog(INFO, "checking config...");
 	locking.modify();
 	locking.commit();
-	errlog(INFO, "checking components...");
+	process::errlog(INFO, "checking components...");
 	if(service::check()) {
-		errlog(INFO, "checking complete");
+		process::errlog(INFO, "checking complete");
 		return true;
 	}
-	errlog(WARN, "checking failed");
+	process::errlog(WARN, "checking failed");
 	return false;
 }
 
@@ -359,17 +359,17 @@ void config::reload(const char *uid)
 
 	if(fp)
 		if(!cfgp->load(fp)) {
-			errlog(ERROR, "invalid config");
+			process::errlog(ERROR, "invalid config");
 			delete cfgp;
 			return;
 		}
 
 	if(!cfgp->commit(uid)) {
-		errlog(ERROR, "config rejected");
+		process::errlog(ERROR, "config rejected");
 		delete cfgp;
 	}
 	if(!cfg) {
-		errlog(FAILURE, "no configuration");
+		process::errlog(FAILURE, "no configuration");
 		exit(2);
 	}
 }
