@@ -296,6 +296,8 @@ void thread::run(void)
 	instance = ++startup_count;
 	service::errlog(service::DEBUG1, "starting thread %d", instance);
 
+	raisePriority(stack::sip.priority);
+
 	for(;;) {
 		sevent = eXosip_event_wait(0, stack::sip.timing);
 		via_header = NULL;

@@ -41,6 +41,8 @@ void SignalThread::run(void)
 	int signo;
 
 	service::errlog(service::DEBUG1, "starting signals");
+	lowerPriority();
+
 	for(;;) {
 		alarm(900);
 #ifdef	HAVE_SIGWAIT2

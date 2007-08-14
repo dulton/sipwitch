@@ -224,7 +224,7 @@ fi
 
 AC_ARG_WITH(pkg-config,
 	AC_HELP_STRING([--with-pkg-config],[enable support for pkg-config]),[
-	PKG_CHECK_MODULES(UCOMMON, ucommon >= 0.5.1)
+	PKG_CHECK_MODULES(UCOMMON, ucommon >= 0.7.0)
 	UCOMMON_CLINK=`pkg-config --variable=clink ucommon`
 	UCOMMON_MODEL=`pkg-config --variable=model ucommon`
 ],[
