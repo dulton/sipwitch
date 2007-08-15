@@ -86,10 +86,10 @@ AC_DEFUN([AC_SUBST_DIR], [
 
 # make list that is parsed...
 
-AC_ARG_ENABLE(server,  
+AC_ARG_ENABLE(sipwitch-server,  
 	AC_HELP_STRING([--disable-sipwitch-server],[compile library only]))
-if test -z "$enable_server" ; then
-	enable_server="yes" ; fi
+if test -z "$enable_sipwitch_server" ; then
+	enable_sipwitch_server="yes" ; fi
 
 AC_ARG_WITH(crypto, 
 	AC_HELP_STRING([--with-crypto=lib],[specify crypto library]),[
@@ -155,7 +155,7 @@ if test "$ac_with_crypto" = "none" ; then
 	AC_DEFINE(HAVE_NO_CRYPTO, [1], [use local])
 fi
 	
-if test "$enable_server" = "yes" ; then
+if test "$enable_sipwitch_server" = "yes" ; then
 	BUILD_SUBDIRS="$BUILD_SUBDIRS server"
 	AC_ARG_WITH(malloc,
 		AC_HELP_STRING([--with-malloc=xxx],[specify malloc library]),[
@@ -193,7 +193,7 @@ elif test $enable_debug = "yes" ; then
 	CXXFLAGS="${CXXFLAGS} -g -DDEBUG"
 fi
 
-if test "$enable_server" = "yes" ; then
+if test "$enable_sipwitch_server" = "yes" ; then
 	AC_CHECK_HEADER(eXosip2/eXosip.h,,[
 		AC_ERROR("libeXosip2 must be installed or build --disable-sipwitch-server")
 	])
