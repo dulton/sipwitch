@@ -170,6 +170,13 @@ private:
 	class __LOCAL target : public LinkedObject 
 	{ 
 	public: 
+		// internal hidden address indexing object
+		class __LOCAL index : public LinkedObject
+		{
+		public:
+			struct sockaddr *address;
+			MappedRegistry *registry;
+		} index;
 		sockaddr_internet address, interface; 
 		time_t expires;
 		char contact[MAX_URI_SIZE]; 

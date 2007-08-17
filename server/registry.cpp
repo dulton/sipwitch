@@ -29,6 +29,7 @@ static unsigned mapped_entries = 999;
 static unsigned priorities = 10;
 static unsigned keysize = 177;
 static MappedRegistry **extmap = NULL;
+static LinkedObject **addresses = NULL;
 static LinkedObject **published = NULL;
 static LinkedObject **contacts = NULL;
 static LinkedObject **primap = NULL;
@@ -246,6 +247,13 @@ void registry::expire(MappedRegistry *rr)
 		rp = nr;
 	}		
 	while(tp) {
+		// if active address index, delist & clear it
+		if(tp->index.registry) {
+			path = Socket::getservice(tp->index.address) % keysize;
+			tp->index.delist(&addresses[path]);
+			tp->index.address = NULL;
+			tp->index.registry = NULL;	
+		}
 		target *nt = tp.getNext();
 		--active_targets;
 		targetlock.acquire();
@@ -339,9 +347,11 @@ bool registry::reload(service *cfg)
 	keys = new LinkedObject *[keysize];
 	contacts = new LinkedObject *[keysize];
 	published = new LinkedObject *[keysize];
+	addresses = new LinkedObject *[keysize];
 	memset(keys, 0, sizeof(LinkedObject *) * keysize);
 	memset(contacts, 0, sizeof(LinkedObject *) * keysize);
 	memset(published, 0, sizeof(LinkedObject *) * keysize);
+	memset(addresses, 0, sizeof(LinkedObject *) * keysize);
 	process::errlog(INFO, "realm %s", realm);
 	return true;
 }
@@ -648,6 +658,7 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	struct sockaddr *ai, *oi = NULL;
 	linked_pointer<target> tp = rr->targets;
 	socklen_t len;
+	bool created = false;
 
 	if(!addr)
 		return 0;
@@ -671,9 +682,17 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 		tp->enlist(&rr->targets);
 		rr->count = 1;
 		tp->address.sa_family = 0;
+		created = true;
 	}
 	rr->expires = tp->expires = expires;
 	if(!Socket::equal((struct sockaddr *)(&tp->address), ai)) {
+		if(tp->index.registry) {
+			tp->index.delist(&addresses[Socket::getservice(tp->index.address) % keysize]);
+			tp->index.registry = NULL;
+			tp->index.address = NULL;
+			created = true;
+		}
+		
 		origin = stack::getAddress(contact);
 		if(origin)
 			oi = origin->getAddr();
@@ -681,6 +700,11 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 			oi = ai;
 		memcpy(&tp->address, ai, len);
 		memcpy(&rr->contact, oi, len);
+		if(created) {
+			tp->index.address = (struct sockaddr *)&tp->address;
+			tp->index.registry = rr;
+			tp->index.enlist(&addresses[Socket::getservice(tp->index.address) % keysize]);
+		}
 		Socket::getinterface((struct sockaddr *)&tp->interface, ((struct sockaddr *)&tp->address));
 		if(origin)
 			delete origin;
@@ -739,6 +763,7 @@ unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	target *expired = NULL;
 	time_t now;
 	socklen_t len;
+	bool created = false;
 
 	if(!addr)
 		return 0;
@@ -761,6 +786,11 @@ unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	if(tp) {
 		string::set(tp->contact, MAX_URI_SIZE, contact);
 		if(expired && expired != *tp) {
+			if(expired->index.registry) {
+				expired->index.delist(&addresses[Socket::getservice(expired->index.address) % keysize]);
+				expired->index.registry = NULL;
+				expired->index.address = NULL;
+			}
 			expired->delist(&rr->targets);
 			--rr->count;
 			--active_targets;
@@ -783,11 +813,17 @@ unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 		if(origin)
 			delete origin;
 		++rr->count;
+		created = true;
 	}
 	string::set(expired->contact, sizeof(expired->contact), contact);
 	expired->expires = expires;
 	memcpy(&expired->address, ai, len);
 	Socket::getinterface((struct sockaddr *)&expired->interface, (struct sockaddr *)&expired->address);
+	if(created) {
+		expired->index.registry = rr;
+		expired->index.address = (struct sockaddr *)&expired->address;
+		expired->index.enlist(&addresses[Socket::getservice(expired->index.address) % keysize]); 
+	}
 	return rr->count;
 }
 
