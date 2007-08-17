@@ -763,7 +763,6 @@ unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	target *expired = NULL;
 	time_t now;
 	socklen_t len;
-	bool created = false;
 
 	if(!addr)
 		return 0;
@@ -813,17 +812,14 @@ unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 		if(origin)
 			delete origin;
 		++rr->count;
-		created = true;
 	}
 	string::set(expired->contact, sizeof(expired->contact), contact);
 	expired->expires = expires;
 	memcpy(&expired->address, ai, len);
 	Socket::getinterface((struct sockaddr *)&expired->interface, (struct sockaddr *)&expired->address);
-	if(created) {
-		expired->index.registry = rr;
-		expired->index.address = (struct sockaddr *)&expired->address;
-		expired->index.enlist(&addresses[Socket::getservice(expired->index.address) % keysize]); 
-	}
+	expired->index.registry = rr;
+	expired->index.address = (struct sockaddr *)&expired->address;
+	expired->index.enlist(&addresses[Socket::getservice(expired->index.address) % keysize]); 
 	return rr->count;
 }
 
