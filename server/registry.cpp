@@ -248,11 +248,11 @@ void registry::expire(MappedRegistry *rr)
 	}		
 	while(tp) {
 		// if active address index, delist & clear it
-		if(tp->index.registry) {
+		if(tp->index.address) {
 			path = Socket::keyindex(tp->index.address, keysize);
 			tp->index.delist(&addresses[path]);
 			tp->index.address = NULL;
-			tp->index.registry = NULL;	
+			tp->index.registry = NULL;
 		}
 		target *nt = tp.getNext();
 		--active_targets;
@@ -686,10 +686,10 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	}
 	rr->expires = tp->expires = expires;
 	if(!Socket::equal((struct sockaddr *)(&tp->address), ai)) {
-		if(tp->index.registry) {
+		if(tp->index.address) {
 			tp->index.delist(&addresses[Socket::keyindex(tp->index.address, keysize)]);
-			tp->index.registry = NULL;
 			tp->index.address = NULL;
+			tp->index.registry = NULL;
 			created = true;
 		}
 		
@@ -701,8 +701,8 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 		memcpy(&tp->address, ai, len);
 		memcpy(&rr->contact, oi, len);
 		if(created) {
-			tp->index.address = (struct sockaddr *)&tp->address;
 			tp->index.registry = rr;
+			tp->index.address = (struct sockaddr *)&tp->address;
 			tp->index.enlist(&addresses[Socket::keyindex(tp->index.address, keysize)]);
 		}
 		Socket::getinterface((struct sockaddr *)&tp->interface, ((struct sockaddr *)&tp->address));
@@ -785,10 +785,10 @@ unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	if(tp) {
 		string::set(tp->contact, MAX_URI_SIZE, contact);
 		if(expired && expired != *tp) {
-			if(expired->index.registry) {
+			if(expired->index.address) {
 				expired->index.delist(&addresses[Socket::keyindex(expired->index.address, keysize)]);
-				expired->index.registry = NULL;
 				expired->index.address = NULL;
+				expired->index.registry = NULL;
 			}
 			expired->delist(&rr->targets);
 			--rr->count;
@@ -879,6 +879,20 @@ registry::route *registry::createRoute(void)
 	return r;
 }
 
+registry::target *registry::target::index::getTarget(void)
+{
+	caddr_t cp = (caddr_t)address;
+	target *tp = (target *)0;
+	size_t offset = (size_t)(&tp->address);
+
+	if(!address)
+		return NULL;
+
+
+	cp -= offset;
+	return reinterpret_cast<target *>(cp);
+}
+	
 registry::target *registry::createTarget(void)
 {
 	target *t;
