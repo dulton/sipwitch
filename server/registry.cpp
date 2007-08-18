@@ -249,7 +249,7 @@ void registry::expire(MappedRegistry *rr)
 	while(tp) {
 		// if active address index, delist & clear it
 		if(tp->index.registry) {
-			path = Socket::getservice(tp->index.address) % keysize;
+			path = Socket::keyindex(tp->index.address, keysize);
 			tp->index.delist(&addresses[path]);
 			tp->index.address = NULL;
 			tp->index.registry = NULL;	
@@ -687,7 +687,7 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	rr->expires = tp->expires = expires;
 	if(!Socket::equal((struct sockaddr *)(&tp->address), ai)) {
 		if(tp->index.registry) {
-			tp->index.delist(&addresses[Socket::getservice(tp->index.address) % keysize]);
+			tp->index.delist(&addresses[Socket::keyindex(tp->index.address, keysize)]);
 			tp->index.registry = NULL;
 			tp->index.address = NULL;
 			created = true;
@@ -703,7 +703,7 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 		if(created) {
 			tp->index.address = (struct sockaddr *)&tp->address;
 			tp->index.registry = rr;
-			tp->index.enlist(&addresses[Socket::getservice(tp->index.address) % keysize]);
+			tp->index.enlist(&addresses[Socket::keyindex(tp->index.address, keysize)]);
 		}
 		Socket::getinterface((struct sockaddr *)&tp->interface, ((struct sockaddr *)&tp->address));
 		if(origin)
@@ -786,7 +786,7 @@ unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 		string::set(tp->contact, MAX_URI_SIZE, contact);
 		if(expired && expired != *tp) {
 			if(expired->index.registry) {
-				expired->index.delist(&addresses[Socket::getservice(expired->index.address) % keysize]);
+				expired->index.delist(&addresses[Socket::keyindex(expired->index.address, keysize)]);
 				expired->index.registry = NULL;
 				expired->index.address = NULL;
 			}
@@ -819,7 +819,7 @@ unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	Socket::getinterface((struct sockaddr *)&expired->interface, (struct sockaddr *)&expired->address);
 	expired->index.registry = rr;
 	expired->index.address = (struct sockaddr *)&expired->address;
-	expired->index.enlist(&addresses[Socket::getservice(expired->index.address) % keysize]); 
+	expired->index.enlist(&addresses[Socket::keyindex(expired->index.address, keysize)]); 
 	return rr->count;
 }
 
