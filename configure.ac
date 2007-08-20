@@ -162,7 +162,7 @@ if test "$enable_sipwitch_server" = "yes" ; then
 		with_malloc=`echo $with_malloc | sed -e "s/,/ /g"`
 		for malloc in $with_malloc ; do
 			AC_CHECK_LIB($malloc, malloc, [
-				ac_with_malloc="-l$malloc"])
+				ac_with_malloc="-l$malloc])
 			if test ! -z "$ac_with_malloc" ; then
 				break ; fi
 		done
