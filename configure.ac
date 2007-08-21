@@ -161,13 +161,16 @@ if test "$enable_sipwitch_server" = "yes" ; then
 		AC_HELP_STRING([--with-malloc=xxx],[specify malloc library]),[
 		with_malloc=`echo $with_malloc | sed -e "s/,/ /g"`
 		for malloc in $with_malloc ; do
-			AC_CHECK_LIB($malloc, malloc, [
-				ac_with_malloc="-l$malloc])
+			AC_CHECK_LIB($malloc, malloc, 
+				[ac_with_malloc="-l$malloc"])
 			if test ! -z "$ac_with_malloc" ; then
 				break ; fi
 		done
 	])
 
+	AC_ARG_WITH(libeXosip2,
+		AC_HELP_STRING([--with-libeXosip2=xxx],[specify eXosip2 library]),
+			[SIPWITCH_EXOSIP2="$with_libeXosip2"],[SIPWITCH_EXOSIP2="-leXosip2"])
 	AC_ARG_ENABLE(commands, 
 		AC_HELP_STRING([--disable-commands],[disable command options]))
 	if test -z "$enable_commands" ; then
@@ -344,6 +347,7 @@ AC_SUBST(EXPORT_FLAGS)
 AC_SUBST(EXPORT_LIBS)
 AC_SUBST(GNUTELEPHONY_FLAGS)
 AC_SUBST(GNUTELEPHONY_LIBS)
+AC_SUBST(SIPWITCH_EXOSIP2)
 AC_SUBST(BUILD_SUBDIRS)
 AC_SUBST(CXXFLAGS)
 AC_OUTPUT(Makefile lib/Makefile inc/Makefile inc/gnutelephony/Makefile 
