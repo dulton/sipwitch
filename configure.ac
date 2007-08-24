@@ -203,11 +203,9 @@ if test "$enable_sipwitch_server" = "yes" ; then
 	AC_EGREP_HEADER(EXOSIP_OPT_DONT_SEND_101, eXosip2/eX_setup.h,[
 		AC_DEFINE(EXOSIP2_OPTION_SEND_101, 1, [new option])
 	])
-	PKG_CHECK_MODULES(libosip2, libosip2 >= 3.0.0, [
-		AC_DEFINE(OSIP2_LIST_PTR, [&], [define pointer mode])],[
-		echo "<3.0.0"
-		AC_DEFINE(OSIP2_LIST_PTR, [])
-	])
+	PKG_CHECK_MODULES(LIBOSIP2, libosip2 >= 3.0.0)
+	AC_DEFINE(OSIP2_LIST_PTR, [&], [define pointer mode])
+	SIPWITCH_EXOSIP2="$SIPWITCH_EXOSIP2 $LIBOSIP2_LIBS"
 
 	AC_CACHE_CHECK(whether sigwait has 2 arguments,
 		ac_cv_libc_sigwait2,
