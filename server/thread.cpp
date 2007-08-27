@@ -291,7 +291,6 @@ void thread::shutdown(void)
 void thread::run(void)
 {
 	static volatile time_t last = 0;
-	time_t now;
 
 	instance = ++startup_count;
 	process::errlog(DEBUG1, "starting thread %d", instance);
@@ -306,24 +305,11 @@ void thread::run(void)
 		if(shutdown_flag) {
 			++shutdown_count;
 			process::errlog(DEBUG1, "stopping thread %d", instance);
-			delete this;
-			pthread_exit(NULL);
+			DetachedThread::exit();
 		}
 
 		if(!sevent)
-		{
-			time(&now);
-			if(now != current) {
-				current = now;
-				eXosip_lock();
-				if(now != last) {
-					eXosip_automatic_action();
-					last = current;
-				}
-				eXosip_unlock();
-			}
 			continue;
-		}
 
 		process::errlog(DEBUG1, "sip: event %d; cid=%d, did=%d, instance=%d",
 			sevent->type, sevent->cid, sevent->did, instance);

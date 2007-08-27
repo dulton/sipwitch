@@ -31,6 +31,24 @@ private:
 
 	class call;
 
+	class __LOCAL background : public DetachedThread, public Conditional
+	{
+	public:
+		static void create(timeout_t interval);
+		static void signal(void);
+		static void cancel(void);
+
+	private:
+		static background *thread;
+
+		bool cancelled;
+		bool signalled;
+		timeout_t interval;
+
+		background(timeout_t sync);
+		void run(void);
+	};
+
 	class __LOCAL session : public LinkedObject
 	{
 	public:
@@ -272,7 +290,6 @@ private:
 	friend class stack;
 
 	unsigned instance;
-	time_t current;
 	unsigned extension;
 	const char *identity;
 	service::keynode *authorized;

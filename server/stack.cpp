@@ -28,6 +28,8 @@ static LinkedObject *freecalls = NULL;
 static LinkedObject *freemaps = NULL;
 static LinkedObject *active = NULL;
 
+stack::background *stack::background::thread = NULL;
+
 static bool tobool(const char *s)
 {
 	switch(*s)
@@ -46,6 +48,57 @@ stack stack::sip;
 
 stack::call::call() : LinkedObject(), segments()
 {
+}
+
+stack::background::background(timeout_t iv) : DetachedThread(), Conditional()
+{
+	cancelled = false;
+	signalled = false;
+	interval = iv;
+}
+
+void stack::background::create(timeout_t iv)
+{
+	thread = new background(iv);
+	thread->start();
+}
+
+void stack::background::cancel(void)
+{
+	thread->Conditional::lock();
+	thread->cancelled = true;
+	thread->Conditional::signal();
+	thread->Conditional::unlock();
+}
+
+void stack::background::signal(void)
+{
+	thread->Conditional::lock();
+	thread->signalled = true;
+	thread->Conditional::signal();
+	thread->Conditional::unlock();
+}
+
+void stack::background::run(void)
+{
+	process::errlog(DEBUG1, "starting background thread");
+
+	for(;;) {
+		Conditional::lock();
+		if(cancelled) {
+			Conditional::unlock();
+			process::errlog(DEBUG1, "stopping background thread");
+			thread = NULL;
+			DetachedThread::exit();
+		}
+		if(!signalled)
+			Conditional::wait(interval);
+		signalled = false;
+		Conditional::unlock();
+		eXosip_lock();		
+		eXosip_automatic_action();
+		eXosip_unlock();
+	}
 }
 
 stack::stack() :
@@ -226,11 +279,14 @@ void stack::start(service *cfg)
 		thr = new thread();
 		thr->start();
 	}
+	
+	background::create(timing);
 }
 
 void stack::stop(service *cfg)
 {
 	process::errlog(DEBUG1, "sip stack stopping");
+	background::cancel();
 	thread::shutdown();
 	Thread::yield();
 	eXosip_quit();
