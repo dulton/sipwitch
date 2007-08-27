@@ -26,6 +26,7 @@ config::config(char *id) :
 service(id, PAGING)
 {
 	memset(keys, 0, sizeof(keys));
+	acl = NULL;
 }
 
 service::keynode *config::find(const char *id)
@@ -62,7 +63,7 @@ bool config::create(const char *id, keynode *node)
 
 bool config::confirm(const char *user)
 {
-	provision = getPath("provision");
+	keynode *access = getPath("access");
 	char *id = NULL, *secret = NULL;
 	const char *ext;
 	linked_pointer<service::keynode> node;
@@ -83,6 +84,7 @@ bool config::confirm(const char *user)
 
 	// construct default profiles
 
+	provision = getPath("provision");
 	extmap = NULL;
 	if(range) {
 		extmap = new keynode*[range];
@@ -134,6 +136,16 @@ bool config::confirm(const char *user)
 
 	if(dir)
 		closedir(dir);
+
+	node = access->getFirst();
+	while(node) {
+		id = node->getId();
+		if(id && node->getPointer()) {
+			mp = (caddr_t)alloc_locked(sizeof(cidr));
+			new(mp) cidr(&acl, node->getPointer(), id);
+		}
+		node.next();
+	}
 
 	node = provision->getFirst();
 	while(node) {
@@ -191,6 +203,26 @@ void config::release(keynode *node)
 {
 	if(node)
 		locking.release();
+}
+
+void config::release(cidr *access)
+{
+	if(access)
+		locking.release();
+}
+
+cidr *config::getPolicy(struct sockaddr *addr)
+{
+	cidr *policy;
+
+	if(!cfg)
+		return NULL;
+
+	locking.access();
+	policy = cidr::find(((config *)(cfg))->acl, addr);
+	if(!policy)
+		locking.release();
+	return policy;
 }
 
 profile_t *config::getProfile(const char *pro)

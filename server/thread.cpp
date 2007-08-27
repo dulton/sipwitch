@@ -41,6 +41,7 @@ static char *remove_quotes(char *c)
 
 thread::thread() : DetachedThread(stack::sip.stacksize)
 {
+	access = NULL;
 	authorized = NULL;
 	destination = NULL;
 	via_address = from_address = to_address = NULL;
@@ -155,6 +156,7 @@ bool thread::getsource(void)
 		return false;
 
 	via_address = new stack::address(via_header->host, via_header->port);
+	access = config::getPolicy(via_address->getAddr());
 	return true;
 }
 
@@ -290,8 +292,6 @@ void thread::shutdown(void)
 
 void thread::run(void)
 {
-	static volatile time_t last = 0;
-
 	instance = ++startup_count;
 	process::errlog(DEBUG1, "starting thread %d", instance);
 
@@ -343,6 +343,11 @@ void thread::run(void)
 			registry::release(destination);
 			destination = NULL;
 		}
+		if(access) {
+			config::release(access);
+			access = NULL;
+		}
+
 		if(authorized) {
 			config::release(authorized);
 			authorized = NULL;

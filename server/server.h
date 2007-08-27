@@ -158,7 +158,8 @@ private:
 		const char *id;
 	};
 
-	LinkedObject  *keys[CONFIG_KEY_SIZE];
+	LinkedObject *keys[CONFIG_KEY_SIZE];
+	cidr::policy *acl;
 	keynode **extmap;
 	keynode *provision;
 	LinkedObject *profiles;
@@ -177,6 +178,8 @@ public:
 	__EXPORT static profile_t *getProfile(const char *id); 
 	__EXPORT static keynode *getProvision(const char *id);
 	__EXPORT static keynode *getExtension(const char *id);
+	__EXPORT static cidr *getPolicy(struct sockaddr *addr);
+	__EXPORT static void release(cidr *access);
 	__EXPORT static void release(keynode *node);
 	__EXPORT static void reload(const char *uid);
 	__EXPORT static void utils(const char *uid);
@@ -292,6 +295,7 @@ private:
 	unsigned instance;
 	unsigned extension;
 	const char *identity;
+	cidr *access;
 	service::keynode *authorized;
 	MappedRegistry *destination;
 	eXosip_event_t *sevent;
