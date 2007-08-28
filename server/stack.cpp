@@ -115,6 +115,7 @@ service::callback(1), mapped_reuse<MappedCall>()
 	tlsmode = 0;
 	send101 = 1;
 	agent = "sipwitch";
+	restricted = trusted = NULL;
 }
 
 void stack::destroy(session *s)

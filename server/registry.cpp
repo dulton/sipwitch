@@ -533,6 +533,35 @@ MappedRegistry *registry::create(const char *id)
 	return rr;
 }	
 
+MappedRegistry *registry::address(struct sockaddr *addr)
+{
+	target *target;
+	linked_pointer<target::indexing> ind;
+	MappedRegistry *rr = NULL;
+	unsigned path = Socket::keyindex(addr, keysize);
+	time_t now;
+
+	reg.access();
+
+	time(&now);
+	ind = addresses[path];
+
+	while(ind) {
+		target = ind->getTarget();
+		if(target && target->expires > now && Socket::equal(addr, ind->address)) {
+			rr = ind->registry;
+			break;
+		}
+		ind.next();
+	}
+
+	if(!rr)
+		reg.release();
+
+	return rr;
+}
+
+
 MappedRegistry *registry::contact(const char *uri)
 {
 	MappedRegistry *rr = NULL;
@@ -609,8 +638,8 @@ MappedRegistry *registry::getExtension(const char *id)
 	MappedRegistry *rr = NULL;
 	time_t now;
 
-	time(&now);
 	reg.access();
+	time(&now);
 	rr = extmap[ext - reg.prefix];
 	if(rr->expires && rr->expires < now)
 		rr = NULL;
@@ -884,7 +913,7 @@ registry::route *registry::createRoute(void)
 	return r;
 }
 
-registry::target *registry::target::index::getTarget(void)
+registry::target *registry::target::indexing::getTarget(void)
 {
 	caddr_t cp = (caddr_t)address;
 	target *tp = (target *)0;

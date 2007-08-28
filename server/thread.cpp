@@ -47,6 +47,32 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	via_address = from_address = to_address = NULL;
 }
 
+bool thread::unauthenticated(void)
+{
+	MappedRegistry *registry = NULL;
+
+	if(!stack::sip.trusted || !getsource() || !access)
+		goto untrusted;
+
+	if(!string::ifind(stack::sip.trusted, access->getName(), ",; \t\n"))
+		goto untrusted;
+
+	registry = registry::address(via_address->getAddr());
+	if(!registry)
+		goto untrusted;
+
+	string::set(identity, sizeof(identity), registry->userid);
+	authorized = config::getProvision(identity);
+	registry::release(registry);
+	if(authorized)
+		return true;
+
+untrusted:
+	process::errlog(DEBUG1, "challenge request required");
+	challenge();
+	return false;
+}
+
 bool thread::authenticate(void)
 {
 	osip_message_t *reply = NULL;
@@ -57,16 +83,24 @@ bool thread::authenticate(void)
 
 	extension = 0;
 	auth = NULL;
-	if(!sevent->request || osip_message_get_authorization(sevent->request, 0, &auth) != 0 || !auth || !auth->username || !auth->response) {
-		process::errlog(DEBUG1, "challenge request required");
-		challenge();
-		return false;
-	}
+
+	if(!sevent->request || osip_message_get_authorization(sevent->request, 0, &auth) != 0 || !auth || !auth->username || !auth->response) 
+		return unauthenticated();
 
 	remove_quotes(auth->username);
 	remove_quotes(auth->uri);
 	remove_quotes(auth->nonce);
 	remove_quotes(auth->response);
+
+	// if subnet restrictions and authenticated from outside, reject
+
+	if(stack::sip.restricted) {
+		if(!getsource() || !access || !string::ifind(stack::sip.restricted, access->getName(), ",; \t\n")) {
+			process::errlog(NOTICE, "rejecting restricted %s", auth->username);
+			error = SIP_FORBIDDEN;
+			goto failed;
+		}
+	}
 
 	node = config::getProvision(auth->username);
 	if(!node) {
@@ -116,7 +150,7 @@ bool thread::authenticate(void)
 		goto failed;
 	}
 	authorized = node;
-	identity = auth->username;
+	string::set(identity, sizeof(identity), auth->username);
 	return true;
 
 failed:

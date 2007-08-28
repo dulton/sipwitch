@@ -195,7 +195,7 @@ private:
 	{ 
 	public: 
 		// internal hidden address indexing object
-		class __LOCAL index : public LinkedObject
+		class __LOCAL indexing : public LinkedObject
 		{
 		public:
 			struct sockaddr *address;
@@ -275,6 +275,7 @@ public:
 	__EXPORT static void addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const char *prefix, const char *suffix);
 	__EXPORT static unsigned setTarget(MappedRegistry *rr, stack::address *via, time_t expires, const char *contact);
 	__EXPORT static bool isExtension(const char *id);
+	__EXPORT static MappedRegistry *address(struct sockaddr *addr);
 	__EXPORT static MappedRegistry *contact(const char *uri);
 	__EXPORT static MappedRegistry *contact(struct sockaddr *addr, const char *uid);
 	__EXPORT static MappedRegistry *getExtension(const char *id);
@@ -285,8 +286,6 @@ public:
 	__EXPORT static void update(MappedRegistry *m);
 	__EXPORT static bool remove(const char *id);
 	__EXPORT static void cleanup(void); 
-public:
-//	__EXPORT static ...
 };
 
 class __LOCAL thread : private DetachedThread
@@ -296,18 +295,19 @@ private:
 
 	unsigned instance;
 	unsigned extension;
-	const char *identity;
 	cidr *access;
 	service::keynode *authorized;
 	MappedRegistry *destination;
 	eXosip_event_t *sevent;
 	char buffer[MAX_URI_SIZE];	
+	char identity[MAX_USERID_SIZE];
 	stack::address *via_address, *from_address, *to_address;
 	osip_via_t *via_header, *origin_header;
 
 	thread();
 
 	bool getsource(void);
+	bool unauthenticated(void);
 	bool authenticate(void);
 	void registration(void);
 	void reregister(const char *contact, time_t interval);
