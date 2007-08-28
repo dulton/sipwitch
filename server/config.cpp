@@ -386,6 +386,7 @@ void config::reload(const char *uid)
 {
 	FILE *fp = service::open("sipwitch", uid);
 	config *cfgp = new config("sipwitch");
+	static config *reclaim = NULL;
 	
 	crit(cfgp != NULL);
 
@@ -398,11 +399,20 @@ void config::reload(const char *uid)
 
 	if(!cfgp->commit(uid)) {
 		process::errlog(ERROR, "config rejected");
-		delete cfgp;
+		if(reclaim) {
+			locking.modify();
+			delete reclaim;
+			locking.commit();
+		}
+		reclaim = cfgp;
 	}
 	if(!cfg) {
 		process::errlog(FAILURE, "no configuration");
 		exit(2);
+	}
+	if(reclaim) {
+		delete reclaim;
+		reclaim = NULL;
 	}
 }
 
