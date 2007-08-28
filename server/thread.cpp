@@ -75,6 +75,16 @@ bool thread::authenticate(void)
 		goto failed;
 	}
 
+	// reject can be used as a placeholder when manually editing
+	// provisioning records for a user that is being disabled but which
+	// one doesn't want to loose configuration info
+
+	if(!stricmp(node->getId(), "reject")) {
+		process::errlog(NOTICE, "rejecting unauthorized %s", auth->username);
+		error = SIP_FORBIDDEN;
+		goto failed;
+	}
+
 	leaf = node->leaf("extension");
 	if(leaf && leaf->getPointer())
 		extension = atoi(leaf->getPointer());

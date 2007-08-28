@@ -150,6 +150,9 @@ void registry::snapshot(FILE *fp)
 			else if(rr->type == REG_REFER)
 				fprintf(fp, "  refer %s; extensions=%s,",
 					rr->userid, buffer);
+			else if(rr->type == REG_REJECT)
+				fprintf(fp, "  reject %s; extension=%s,",
+					rr->userid, buffer);
 			if(!rr->count)
 				fprintf(fp, " address=none\n");
 			else
@@ -411,6 +414,8 @@ MappedRegistry *registry::create(const char *id)
 		rr->type = REG_USER;
 	else if(!stricmp(cp, "refer"))
 		rr->type = REG_REFER;
+	else if(!stricmp(cp, "reject"))
+		rr->type = REG_REJECT;
 	else if(!stricmp(cp, "gateway"))
 		rr->type = REG_GATEWAY;
 	else if(!stricmp(cp, "service"))

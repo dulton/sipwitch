@@ -54,6 +54,7 @@ typedef enum {
 	REG_USER,			// user records with profiles
 	REG_GATEWAY,		// registered and static
 	REG_SERVICE,		// routes for contacts
+	REG_REJECT,			// rejection record
 	REG_REFER			// registered and static
 } regtype_t;
 

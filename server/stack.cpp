@@ -356,7 +356,11 @@ bool stack::reload(service *cfg)
 			else if(!stricmp(key, "learn") && !isConfigured()) {
 				val = tobool(value);
 				eXosip_set_option(EXOSIP_OPT_UDP_LEARN_PORT, &val);
-			} 
+			}
+			else if(!stricmp(key, "restricted"))
+				restricted = cfg->dup(value);
+			else if(!stricmp(key, "trusted"))
+				trusted = cfg->dup(value);
 			else if(!stricmp(key, "agent") && !isConfigured())
 				agent = strdup(value);
 			else if(!stricmp(key, "port") && !isConfigured())

@@ -118,6 +118,8 @@ private:
 	volatile int timing;
 
 	LinkedObject *hash[CONFIG_KEY_SIZE];
+	const char *volatile restricted;
+	const char *volatile trusted;
 	const char *interface;
 	const char *agent;
 	short port;

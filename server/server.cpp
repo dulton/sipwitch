@@ -161,6 +161,9 @@ static void regdump(void)
 		if(buffer.expires)
 			snprintf(exp, sizeof(exp), "%ld", buffer.expires - now);
 		switch(buffer.type) {
+		case REG_REJECT:
+			type = "rej";
+			break;
 		case REG_REFER:
 			type = "ref";
 			break;
