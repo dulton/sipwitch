@@ -49,10 +49,9 @@ private:
 		void run(void);
 	};
 
-	class __LOCAL session : public LinkedObject
+	class __LOCAL session : public OrderedObject
 	{
 	public:
-		int cid, did;
 		time_t activates;
 		call *parent;
 		unsigned sequence;
@@ -68,12 +67,6 @@ private:
 		inline bool isTarget(void)
 			{return (this == parent->target);};
 
-	};
-
-	class __LOCAL segment : public OrderedObject
-	{
-	public:
-		session sid;
 	};
 
 	class __LOCAL call : public LinkedObject
@@ -93,10 +86,10 @@ private:
 		char from[MAX_URI_SIZE];	// who the call is from
 		char to[MAX_URI_SIZE];		// who is being called
 
-		OrderedIndex segments;
+		OrderedIndex sessions;
 		session *source;
 		session *target;
-		segment *select;
+		session *select;
 		MappedCall *map;
 		unsigned count;
 		mutex_t mutex;
@@ -117,7 +110,6 @@ private:
 
 	volatile int timing;
 
-	LinkedObject *hash[CONFIG_KEY_SIZE];
 	const char *volatile restricted;
 	const char *volatile trusted;
 	const char *interface;
@@ -137,13 +129,11 @@ public:
 	inline void release(void)
 		{MappedReuse::release();};
 
-	__EXPORT static session *createSession(call *cp, int cid);
-	__EXPORT static session *create(MappedRegistry *rr, int cid);
+	__EXPORT static session *createSession(call *cp);
+	__EXPORT static session *create(MappedRegistry *rr);
 	__EXPORT static void destroy(session *s);
 	__EXPORT static void release(session *s);
 	__EXPORT static void commit(session *s);
-	__EXPORT static session *find(int cid);
-	__EXPORT static session *modify(int cid);
 	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
 	__EXPORT static address *getAddress(const char *uri);
 };

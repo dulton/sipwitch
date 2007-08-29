@@ -18,12 +18,12 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-static volatile unsigned allocated_segments = 0;
-static volatile unsigned active_segments = 0;
+static volatile unsigned allocated_sessions = 0;
+static volatile unsigned active_sessions = 0;
 static volatile unsigned allocated_calls = 0;
 static volatile unsigned active_calls = 0;
 static unsigned mapped_calls = 0;
-static LinkedObject *freesegs = NULL;
+static LinkedObject *freesessions = NULL;
 static LinkedObject *freecalls = NULL;
 static LinkedObject *freemaps = NULL;
 static LinkedObject *active = NULL;
@@ -46,7 +46,7 @@ static bool tobool(const char *s)
 
 stack stack::sip;
 
-stack::call::call() : LinkedObject(), segments()
+stack::call::call() : LinkedObject(), sessions()
 {
 }
 
@@ -121,21 +121,19 @@ service::callback(1), mapped_reuse<MappedCall>()
 
 void stack::destroy(session *s)
 {
-	linked_pointer<segment> sp;
+	linked_pointer<session> sp;
 	LinkedObject *lo;
 
 	if(!s || !s->parent)
 		return;
 
 	call *cr = s->parent;
-	sp = cr->segments.begin();
+	sp = cr->sessions.begin();
 	while(sp) {
-		--active_segments;
-		segment *next = sp.getNext();
-		if(sp->sid.cid != -1)
-			sp->sid.delist(&sip.hash[sp->sid.cid]);
-		lo = static_cast<LinkedObject*>(*sp);
-		lo->enlist(&freesegs);
+		--active_sessions;
+		session *next = sp.getNext();
+		lo = static_cast<LinkedObject *>(*sp);
+		lo->enlist(&freesessions);
 		sp = next;
 	}
 	if(cr->map)
@@ -146,28 +144,26 @@ void stack::destroy(session *s)
 	sip.release();
 }
 
-stack::session *stack::createSession(call *cr, int cid)
+stack::session *stack::createSession(call *cr)
 {
 	volatile static unsigned ref = 0;
-	segment *sp;
+	session *sp;
 
-	if(freesegs) {
-		sp = static_cast<segment *>(freesegs);
-		freesegs = sp->getNext();
+	if(freesessions) {
+		sp = static_cast<session *>(freesessions);
+		freesessions = sp->getNext();
 	}
 	else {
-		++allocated_segments;
-		sp = static_cast<segment *>(config::allocate(sizeof(segment)));
+		++allocated_sessions;
+		sp = static_cast<session *>(config::allocate(sizeof(session)));
 	}
 	memset(sp, 0, sizeof(session));
-	sp->enlist(&cr->segments);
-	sp->sid.enlist(&sip.hash[cid / CONFIG_KEY_SIZE]);
-	sp->sid.cid = cid;
-	sp->sid.sequence = ++ref;
-	return &sp->sid;
+	sp->enlist(&cr->sessions);
+	sp->sequence = ++ref;
+	return sp;
 }
 
-stack::session *stack::create(MappedRegistry *rr, int cid)
+stack::session *stack::create(MappedRegistry *rr)
 {
 	call *cr;
 	caddr_t mp;
@@ -184,48 +180,11 @@ stack::session *stack::create(MappedRegistry *rr, int cid)
 	memset(mp, 0, sizeof(call));
 	cr = new(mp) call();
 	++active_calls;
-	cr->source = createSession(cr, cid);
+	cr->source = createSession(cr);
 	cr->target = NULL;
 	cr->enlist(&active);
 	cr->count = 0;
 	return cr->source;
-}
-
-stack::session *stack::modify(int cid)
-{
-	linked_pointer<session> sp;
-
-	sip.exlock();
-	sp = sip.hash[cid / CONFIG_KEY_SIZE];
-	while(sp) {
-		if(sp->cid == cid)
-			break;
-		sp.next();
-	}
-	if(!sp) {
-		sip.unlock();
-		return NULL;
-	}
-	return *sp;
-}
-
-stack::session *stack::find(int cid)
-{
-	linked_pointer<session> sp;
-
-	sip.access();
-	sp = sip.hash[cid / CONFIG_KEY_SIZE];
-	while(sp) {
-		if(sp->cid == cid)
-			break;
-		sp.next();
-	}
-	if(!sp) {
-		sip.release();
-		return NULL;
-	}
-	sp->parent->mutex.lock();
-	return *sp;
 }
 
 void stack::commit(session *s)
@@ -248,8 +207,6 @@ void stack::start(service *cfg)
 	unsigned thidx = 0;
 	process::errlog(DEBUG1, "sip stack starting; creating %d threads at priority %d", threading, priority);
 	eXosip_init();
-
-	memset(hash, 0, sizeof(hash));
 
 	MappedReuse::create("sipwitch.callmap", mapped_calls);
 	if(!sip)
@@ -312,9 +269,9 @@ void stack::snapshot(FILE *fp)
 	access();
 	fprintf(fp, "  mapped calls: %d\n", mapped_calls);
 	fprintf(fp, "  active calls: %d\n", active_calls);
-	fprintf(fp, "  active segments: %d\n", active_segments);
+	fprintf(fp, "  active sessions: %d\n", active_sessions);
 	fprintf(fp, "  allocated calls: %d\n", allocated_calls);
-	fprintf(fp, "  allocated segments: %d\n", allocated_segments);
+	fprintf(fp, "  allocated sessions: %d\n", allocated_sessions);
 	cp = active;
 	while(cp) {
 		cp.next();
