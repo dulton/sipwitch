@@ -19,5 +19,6 @@ sbin_PROGRAMS = sipw
 pkglibdir=$(libdir)/sipw
 noinst_HEADERS = server.h
 
-sipw_SOURCES = server.cpp config.cpp registry.cpp stack.cpp thread.cpp
+sipw_SOURCES = server.cpp config.cpp registry.cpp stack.cpp thread.cpp \
+	messages.cpp
 

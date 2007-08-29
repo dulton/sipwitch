@@ -95,6 +95,7 @@ void stack::background::run(void)
 			Conditional::wait(interval);
 		signalled = false;
 		Conditional::unlock();
+		messages::automatic();
 		eXosip_lock();		
 		eXosip_automatic_action();
 		eXosip_unlock();

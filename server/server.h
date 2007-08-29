@@ -190,7 +190,7 @@ public:
 
 class __LOCAL registry : private service::callback, private mapped_reuse<MappedRegistry> 
 { 
-private: 
+public: 
 	class __LOCAL target : public LinkedObject 
 	{ 
 	public: 
@@ -207,6 +207,7 @@ private:
 		char contact[MAX_URI_SIZE]; 
 	};
 
+private:
 	class __LOCAL pattern : public LinkedObject
 	{
 	public:
@@ -286,6 +287,40 @@ public:
 	__EXPORT static void update(MappedRegistry *m);
 	__EXPORT static bool remove(const char *id);
 	__EXPORT static void cleanup(void); 
+};
+
+class __LOCAL messages : public service::callback
+{
+private:
+	class __LOCAL message : public LinkedObject
+	{
+	public:
+		time_t expires;
+		enum {
+			SMS
+		}	type;
+		char user[MAX_USERID_SIZE];
+		char from[MAX_USERID_SIZE];
+		char reply[MAX_URI_SIZE];
+		char text[MAX_URI_SIZE];
+		
+		message();
+	};
+
+	static messages manager;
+
+	bool check(void);
+	bool reload(service *cfg);
+	void cleanup(void);
+
+	static bool send(message *msg);
+
+public:
+	messages();
+
+	static void automatic(void);
+	static void update(const char *userid);
+	static void sms(const char *from, const char *to, const char *text, const char *display = NULL);
 };
 
 class __LOCAL thread : private DetachedThread

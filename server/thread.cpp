@@ -328,6 +328,8 @@ reply:
 	eXosip_message_build_answer(sevent->tid, answer, &reply);
 	eXosip_message_send_answer(sevent->tid, answer, reply);
 	eXosip_unlock();
+	if(destination && destination->type == REG_USER && answer == SIP_OK)
+		messages::update(identity);
 }
 
 void thread::deregister()

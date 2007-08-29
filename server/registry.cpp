@@ -470,7 +470,7 @@ MappedRegistry *registry::create(const char *id)
 		unsigned priority = 0;
 		linked_pointer<service::keynode> route;
 
-		route = (LinkedObject*)NULL;
+		route = static_cast<LinkedObject*>(NULL);
 		if(!stricmp(rp->getId(), "route"))
 			route = rp->getFirst();
 		while(route) {
@@ -602,7 +602,7 @@ MappedRegistry *registry::contact(struct sockaddr *addr, const char *uid)
 	reg.access();
 	rp = contacts[path];
 	while(rp) {
-		if(!stricmp(uid, rp->entry.text) && Socket::equal(addr, (struct sockaddr *)&rp->entry.registry->contact))
+		if(!stricmp(uid, rp->entry.text) && Socket::equal(addr, (struct sockaddr *)(&rp->entry.registry->contact)))
 			break;
 		rp.next();
 	}
@@ -737,10 +737,10 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 		memcpy(&rr->contact, oi, len);
 		if(created) {
 			tp->index.registry = rr;
-			tp->index.address = (struct sockaddr *)&tp->address;
+			tp->index.address = (struct sockaddr *)(&tp->address);
 			tp->index.enlist(&addresses[Socket::keyindex(tp->index.address, keysize)]);
 		}
-		Socket::getinterface((struct sockaddr *)&tp->interface, ((struct sockaddr *)&tp->address));
+		Socket::getinterface((struct sockaddr *)(&tp->interface), (struct sockaddr *)(&tp->address));
 		if(origin)
 			delete origin;
 	}
@@ -851,9 +851,9 @@ unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	string::set(expired->contact, sizeof(expired->contact), contact);
 	expired->expires = expires;
 	memcpy(&expired->address, ai, len);
-	Socket::getinterface((struct sockaddr *)&expired->interface, (struct sockaddr *)&expired->address);
+	Socket::getinterface((struct sockaddr *)(&expired->interface), (struct sockaddr *)(&expired->address));
 	expired->index.registry = rr;
-	expired->index.address = (struct sockaddr *)&expired->address;
+	expired->index.address = (struct sockaddr *)(&expired->address);
 	expired->index.enlist(&addresses[Socket::keyindex(expired->index.address, keysize)]); 
 	return rr->count;
 }
@@ -889,7 +889,7 @@ unsigned registry::setTargets(MappedRegistry *rr, stack::address *addr)
 		tp = createTarget();
 		memcpy(&tp->address, al->ai_addr, len);
 		memcpy(&rr->contact, &tp->address, len);
-		Socket::getinterface((struct sockaddr *)&tp->interface, (struct sockaddr *)&tp->address);
+		Socket::getinterface((struct sockaddr *)(&tp->interface), (struct sockaddr *)(&tp->address));
 		stack::sipAddress(&tp->address, tp->contact, rr->userid);
 		tp->expires = 0l;
 		tp->enlist(&rr->targets);
@@ -917,7 +917,7 @@ registry::route *registry::createRoute(void)
 registry::target *registry::target::indexing::getTarget(void)
 {
 	caddr_t cp = (caddr_t)address;
-	target *tp = (target *)0;
+	target *tp = NULL;
 	size_t offset = (size_t)(&tp->address);
 
 	if(!address)
