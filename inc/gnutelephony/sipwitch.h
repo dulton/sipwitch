@@ -35,6 +35,7 @@ using namespace UCOMMON_NAMESPACE;
 #define	USER_PROFILE_SUBSCRIPTIONS	0x0010	// user can subscribe to others
 #define	USER_PROFILE_SUBSCRIBERS	0x0020	// user can be subscribed
 #define	USER_PROFILE_MULTITARGET	0x0800	// multi-target registration
+#define	USER_PROFILE_PUBLISHED		0x1000  // user "name" id may be accessed
 
 #define	USER_PROFILE_DEFAULT		0x0fff
 #define	USER_PROFILE_RESTRICTED	(0)
@@ -66,6 +67,7 @@ public:
 	unsigned count;				// active regs count
 	regtype_t type;				// registry type
 	sockaddr_internet contact;	// last/newest created contact registration
+	time_t	created;			// initial registration
 	time_t  expires;			// when registry expires as a whole
 	profile_t profile;			// profile at time of registration
 	LinkedObject *published;	// published routes

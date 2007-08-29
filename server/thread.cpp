@@ -47,6 +47,25 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	via_address = from_address = to_address = NULL;
 }
 
+void thread::identify(void)
+{
+	MappedRegistry *registry = NULL;
+
+	if(!stack::sip.trusted || !getsource() || !access)
+		return;
+
+	if(!string::ifind(stack::sip.trusted, access->getName(), ",; \t\n"))
+		return;
+
+	registry = registry::address(via_address->getAddr());
+	if(!registry)
+		return;
+
+	string::set(identity, sizeof(identity), registry->userid);
+	authorized = config::getProvision(identity);
+	registry::release(registry);
+}
+
 bool thread::unauthenticated(void)
 {
 	MappedRegistry *registry = NULL;
@@ -276,6 +295,8 @@ void thread::reregister(const char *contact, time_t interval)
 	}
 	warning_registry = false;
 	time(&expire);
+	if(destination->expires < expire)
+		destination->created = expire;
 	expire += interval + 3;	// overdraft 3 seconds...
 	if(destination->type == REG_USER && (destination->profile.features & USER_PROFILE_MULTITARGET))
 		count = registry::addTarget(destination, via_address, expire, contact);

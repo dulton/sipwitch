@@ -137,6 +137,12 @@ bool config::confirm(const char *user)
 	if(dir)
 		closedir(dir);
 
+	mp = (caddr_t)alloc_locked(sizeof(cidr));
+	new(mp) cidr(&acl, "127.0.0.1/32", "loopback");
+
+	mp = (caddr_t)alloc_locked(sizeof(cidr));
+	new(mp) cidr(&acl, "::1", "loopback");
+
 	node = access->getFirst();
 	while(node) {
 		id = node->getId();

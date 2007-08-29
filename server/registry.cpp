@@ -407,6 +407,7 @@ MappedRegistry *registry::create(const char *id)
 	cp = "none";
 	rr->type = REG_EXPIRED;
 	rr->expires = 0;
+	rr->created = 0;
 
 	if(node)
 		cp = node->getId();

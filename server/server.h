@@ -306,6 +306,7 @@ private:
 
 	thread();
 
+	void identify(void);
 	bool getsource(void);
 	bool unauthenticated(void);
 	bool authenticate(void);
