@@ -299,12 +299,13 @@ private:
 		enum {
 			SMS
 		}	type;
+		bool self;
 		char user[MAX_USERID_SIZE];
 		char from[MAX_USERID_SIZE];
 		char reply[MAX_URI_SIZE];
 		char text[MAX_URI_SIZE];
 		
-		message();
+		void create();
 	};
 
 	static messages manager;
@@ -312,7 +313,9 @@ private:
 	bool check(void);
 	bool reload(service *cfg);
 	void cleanup(void);
+	void snapshot(FILE *fp);
 
+	static message *create(const char *reply, const char *display);
 	static bool send(message *msg);
 
 public:
@@ -320,8 +323,9 @@ public:
 
 	static void automatic(void);
 	static void update(const char *userid);
-	static void sms(const char *from, const char *to, const char *text, const char *display = NULL);
+	static bool sms(const char *reply, const char *to, const char *text, const char *from = NULL);
 };
+
 
 class __LOCAL thread : private DetachedThread
 {

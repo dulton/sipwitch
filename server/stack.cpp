@@ -412,18 +412,18 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 		port = sip.port;
 
 	if(sip.tlsmode)
-		string::set(buf, sizeof(buf), "sips:");
+		string::set(buf, size, "sips:");
 	else 
-		string::set(buf, sizeof(buf), "sip:");
+		string::set(buf, size, "sip:");
 
 	if(user) {
-		string::add(buf, sizeof(buf), user);
-		string::add(buf, sizeof(buf), "@");
+		string::add(buf, size, user);
+		string::add(buf, size, "@");
 	}
 
 	len = strlen(buf);
 	Socket::getaddress((struct sockaddr *)addr, buf + len, size - len);
-	snprintf(pbuf, sizeof(buf), ":%u", port);
+	snprintf(pbuf, sizeof(pbuf), ":%u", port);
 	string::add(buf, size, pbuf);
 	return buf;
 }

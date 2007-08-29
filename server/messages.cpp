@@ -22,14 +22,19 @@ static mutex_t msglock;
 static unsigned keysize = 177;
 static LinkedObject **msgs = NULL;
 static LinkedObject *sending = NULL;
+static LinkedObject *freelist = NULL;
 static unsigned volatile pending = 0;
+static unsigned volatile allocated = 0;
 static time_t volatile duration = 900;
 
-messages::message::message() :
-LinkedObject()
+void messages::message::create(void) 
 {
 	time(&expires);
 	expires += duration; 
+	from[0] = 0;
+	user[0] = 0;
+	reply[0] = 0;
+	self = true;
 }
 
 messages::messages() :
@@ -63,7 +68,7 @@ void messages::cleanup(void)
 			next = mp->getNext();
 			if(mp->expires < now) {
 				mp->delist(&msgs[count]);
-				delete *mp;
+				mp->enlist(&freelist);
 			}
 			mp = next;
 		}
@@ -97,6 +102,13 @@ bool messages::reload(service *cfg)
 	return true;
 }
 
+void messages::snapshot(FILE *fp) 
+{
+	fprintf(fp, "Messaging:\n"); 
+	fprintf(fp, "  allocated messages: %d\n", allocated);
+	fprintf(fp, "  pending messages:   %d\n", pending);
+}
+
 void messages::update(const char *uid)
 {
 	linked_pointer<message> mp;
@@ -116,7 +128,7 @@ void messages::update(const char *uid)
 			--pending;
 			mp->delist(&msgs[path]);
 			if(mp->expires < now)
-				delete *mp;
+				mp->enlist(&freelist);
 			else
 				mp->enlist(&sending);
 		}
@@ -125,15 +137,52 @@ void messages::update(const char *uid)
 	msglock.unlock();
 }
 
+messages::message *messages::create(const char *reply, const char *display)
+{
+	message *msg;
+	char *ep;
+
+	msglock.lock();
+	msg = static_cast<message *>(freelist);
+	if(msg) 
+		freelist = msg->getNext();
+	msglock.unlock();
+	if(!msg) {
+		++allocated;
+		msg = new message();
+	}
+	msg->create();
+
+	if(msg->reply) {
+		msg->self = false;
+		string::set(msg->reply, sizeof(msg->reply), reply);
+	}
+	if(reply && !display) {
+		if(!strnicmp(reply, "sip:", 4))
+			reply += 4;
+		else if(!strnicmp(reply, "sips:", 5))
+			reply += 5;
+		string::set(msg->from, sizeof(msg->from), reply);
+		ep = strchr(msg->from, '@');
+		if(ep)
+			*ep = 0;
+	}	
+	else
+		string::set(msg->from, sizeof(msg->from), display);
+	return msg;
+}
+
 bool messages::send(message *msg)
 {
 	linked_pointer<registry::target> tp;
 	MappedRegistry *rr = registry::access(msg->user);
 	unsigned path = NamedObject::keyindex(msg->user, keysize);
 	time_t now;
+	unsigned count = 0;
 
 	time(&now);
 	if(!rr || (rr->expires && rr->expires < now)) {
+delay:
 		registry::release(rr);
 		msglock.lock();
 		++pending;
@@ -145,21 +194,35 @@ bool messages::send(message *msg)
 	tp = rr->targets;
 	while(tp) {
 		if(!rr->expires || tp->expires > now) {
+			if(msg->self) 
+				stack::sipAddress(&tp->interface, msg->reply, NULL, sizeof(msg->reply)); 
 			eXosip_lock();
 			eXosip_unlock();
 		}
 		tp.next();
 	}
 
+	if(!count)
+		goto delay;
+
 	registry::release(rr);
-	delete msg;
+	msglock.lock();
+	msg->enlist(&freelist);
+	msglock.release();
 	return true;
+}
+
+bool messages::sms(const char *reply, const char *to, const char *text, const char *display)
+{
+	message *msg = create(reply, display);
+	string::set(msg->user, sizeof(msg->user), to);
+	string::set(msg->text, sizeof(msg->text), text);
+	msg->type = message::SMS;
+	return send(msg);
 }
 
 void messages::automatic(void)
 {
-	linked_pointer<registry::target> tp;
-	MappedRegistry *rr;
 	message *msg = NULL;
 	time_t now;
 
@@ -172,7 +235,7 @@ void messages::automatic(void)
 			sending = msg->getNext();
 			if(msg->expires > now)
 				break;
-			delete msg;
+			msg->enlist(&freelist);
 			msg = NULL;	
 		}
 		msglock.release();
