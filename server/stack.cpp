@@ -18,15 +18,17 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-static volatile unsigned allocated_sessions = 0;
-static volatile unsigned active_sessions = 0;
+static volatile unsigned allocated_segments = 0;
+static volatile unsigned active_segments = 0;
 static volatile unsigned allocated_calls = 0;
 static volatile unsigned active_calls = 0;
 static unsigned mapped_calls = 0;
-static LinkedObject *freesessions = NULL;
+static LinkedObject *freesegs = NULL;
 static LinkedObject *freecalls = NULL;
 static LinkedObject *freemaps = NULL;
 static LinkedObject *active = NULL;
+static LinkedObject **hash = NULL;
+static unsigned keysize = 177;
 
 stack::background *stack::background::thread = NULL;
 
@@ -46,7 +48,7 @@ static bool tobool(const char *s)
 
 stack stack::sip;
 
-stack::call::call() : LinkedObject(), sessions()
+stack::call::call() : LinkedObject(), segments()
 {
 }
 
@@ -121,19 +123,21 @@ service::callback(1), mapped_reuse<MappedCall>()
 
 void stack::destroy(session *s)
 {
-	linked_pointer<session> sp;
+	linked_pointer<segment> sp;
 	LinkedObject *lo;
 
 	if(!s || !s->parent)
 		return;
 
 	call *cr = s->parent;
-	sp = cr->sessions.begin();
+	sp = cr->segments.begin();
 	while(sp) {
-		--active_sessions;
-		session *next = sp.getNext();
-		lo = static_cast<LinkedObject *>(*sp);
-		lo->enlist(&freesessions);
+		--active_segments;
+		segment *next = sp.getNext();
+		if(sp->sid.cid != -1)
+			sp->sid.delist(&hash[sp->sid.cid % keysize]);
+		lo = static_cast<LinkedObject*>(*sp);
+		lo->enlist(&freesegs);
 		sp = next;
 	}
 	if(cr->map)
@@ -144,26 +148,28 @@ void stack::destroy(session *s)
 	sip.release();
 }
 
-stack::session *stack::createSession(call *cr)
+stack::session *stack::createSession(call *cr, int cid)
 {
 	volatile static unsigned ref = 0;
-	session *sp;
+	segment *sp;
 
-	if(freesessions) {
-		sp = static_cast<session *>(freesessions);
-		freesessions = sp->getNext();
+	if(freesegs) {
+		sp = static_cast<segment *>(freesegs);
+		freesegs = sp->getNext();
 	}
 	else {
-		++allocated_sessions;
-		sp = static_cast<session *>(config::allocate(sizeof(session)));
+		++allocated_segments;
+		sp = static_cast<segment *>(config::allocate(sizeof(segment)));
 	}
 	memset(sp, 0, sizeof(session));
-	sp->enlist(&cr->sessions);
-	sp->sequence = ++ref;
-	return sp;
+	sp->enlist(&cr->segments);
+	sp->sid.enlist(&hash[cid % keysize]);
+	sp->sid.cid = cid;
+	sp->sid.sequence = ++ref;
+	return &sp->sid;
 }
 
-stack::session *stack::create(MappedRegistry *rr)
+stack::session *stack::create(MappedRegistry *rr, int cid)
 {
 	call *cr;
 	caddr_t mp;
@@ -180,11 +186,48 @@ stack::session *stack::create(MappedRegistry *rr)
 	memset(mp, 0, sizeof(call));
 	cr = new(mp) call();
 	++active_calls;
-	cr->source = createSession(cr);
+	cr->source = createSession(cr, cid);
 	cr->target = NULL;
 	cr->enlist(&active);
 	cr->count = 0;
 	return cr->source;
+}
+
+stack::session *stack::modify(int cid)
+{
+	linked_pointer<session> sp;
+
+	sip.exlock();
+	sp = hash[cid % keysize];
+	while(sp) {
+		if(sp->cid == cid)
+			break;
+		sp.next();
+	}
+	if(!sp) {
+		sip.unlock();
+		return NULL;
+	}
+	return *sp;
+}
+
+stack::session *stack::find(int cid)
+{
+	linked_pointer<session> sp;
+
+	sip.access();
+	sp = hash[cid % keysize];
+	while(sp) {
+		if(sp->cid == cid)
+			break;
+		sp.next();
+	}
+	if(!sp) {
+		sip.release();
+		return NULL;
+	}
+	sp->parent->mutex.lock();
+	return *sp;
 }
 
 void stack::commit(session *s)
@@ -269,9 +312,9 @@ void stack::snapshot(FILE *fp)
 	access();
 	fprintf(fp, "  mapped calls: %d\n", mapped_calls);
 	fprintf(fp, "  active calls: %d\n", active_calls);
-	fprintf(fp, "  active sessions: %d\n", active_sessions);
+	fprintf(fp, "  active sessions: %d\n", active_segments);
 	fprintf(fp, "  allocated calls: %d\n", allocated_calls);
-	fprintf(fp, "  allocated sessions: %d\n", allocated_sessions);
+	fprintf(fp, "  allocated sessions: %d\n", allocated_segments);
 	cp = active;
 	while(cp) {
 		cp.next();
@@ -295,6 +338,8 @@ bool stack::reload(service *cfg)
 				priority = atoi(value);
 			else if(!stricmp(key, "timing"))
 				timing = atoi(value);
+			else if(!stricmp(key, "keysize") && !isConfigured())
+				keysize = atoi(value);
 			else if(!stricmp(key, "interface") && !isConfigured()) {
 #ifdef	AF_INET6
 				if(strchr(value, ':') != NULL)
@@ -335,8 +380,12 @@ bool stack::reload(service *cfg)
 		}
 		sp.next();
 	}
-	if(!mapped_calls)
+	if(!mapped_calls) 
 		mapped_calls = registry::getEntries();
+	if(!hash) {
+		hash = new LinkedObject*[keysize];
+		memset(hash, 0, sizeof(LinkedObject *) * keysize);
+	}
 	return true;
 }
 
