@@ -117,6 +117,8 @@ service::callback(1), mapped_reuse<MappedCall>()
 	family = AF_INET;
 	tlsmode = 0;
 	send101 = 1;
+	inbound = false;
+	outbound = false;
 	agent = "sipwitch";
 	restricted = trusted = NULL;
 }
@@ -211,7 +213,7 @@ stack::session *stack::modify(int cid)
 	return *sp;
 }
 
-stack::session *stack::find(int cid)
+stack::session *stack::access(int cid)
 {
 	linked_pointer<session> sp;
 
@@ -338,6 +340,10 @@ bool stack::reload(service *cfg)
 				priority = atoi(value);
 			else if(!stricmp(key, "timing"))
 				timing = atoi(value);
+			else if(!stricmp(key, "inbound"))
+				inbound = tobool(value);
+			else if(!stricmp(key, "outbound"))
+				outbound = tobool(value);
 			else if(!stricmp(key, "keysize") && !isConfigured())
 				keysize = atoi(value);
 			else if(!stricmp(key, "interface") && !isConfigured()) {

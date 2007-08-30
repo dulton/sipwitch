@@ -212,34 +212,6 @@ static struct passwd *getuserenv(const char *id, const char *uid, const char *cf
 	return pwd;
 }
 
-static bool control(const char *id, const char *uid, const char *fmt, va_list args)
-{
-	char buf[512];
-	int fd, len;
-	bool rtn = true;
-
-	if(!uid)
-		uid = getenv("USER");
-
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/control", id);
-	fd = open(buf, O_WRONLY | O_NONBLOCK);
-	if(fd < 0) {
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s/control", id, uid);
-		fd = open(buf, O_WRONLY | O_NONBLOCK);
-	}
-	if(fd < 0)
-		return false;
-
-	vsnprintf(buf, sizeof(buf) - 1, fmt, args);
-	len = strlen(buf);
-	if(buf[len - 1] != '\n')
-		buf[len++] = '\n';
-	if(write(fd, buf, len) < len)
-		rtn = false;
-	close(fd);
-	return rtn;
-}
-
 static size_t ctrlfile(const char *id, const char *uid)
 {
 	char buf[65];
@@ -398,7 +370,6 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 		::syslog(level, "%s", buf);
 	}
 	
-end:
 	va_end(args);
 
 	if(level == LOG_CRIT)
@@ -433,12 +404,35 @@ restart:
 
 bool process::control(const char *id, const char *uid, const char *fmt, ...)
 {
-	bool rtn;
+	char buf[512];
+	int fd, len;
+	bool rtn = true;
 	va_list args;
 
 	va_start(args, fmt);
-	rtn = ::control(id, uid, fmt, args);
+	if(!id)
+		id = getenv("IDENT");
+
+	if(!uid)
+		uid = getenv("USER");
+
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/control", id);
+	fd = ::open(buf, O_WRONLY | O_NONBLOCK);
+	if(fd < 0) {
+		snprintf(buf, sizeof(buf), "/tmp/%s-%s/control", id, uid);
+		fd = ::open(buf, O_WRONLY | O_NONBLOCK);
+	}
+	if(fd < 0)
+		return false;
+
+	vsnprintf(buf, sizeof(buf) - 1, fmt, args);
 	va_end(args);
+	len = strlen(buf);
+	if(buf[len - 1] != '\n')
+		buf[len++] = '\n';
+	if(::write(fd, buf, len) < len)
+		rtn = false;
+	::close(fd);
 	return rtn;
 }
 

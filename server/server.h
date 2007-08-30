@@ -122,6 +122,7 @@ private:
 	const char *interface;
 	const char *agent;
 	short port;
+	bool inbound, outbound;
 	int send101;
 	int family, tlsmode, protocol;
 
@@ -141,7 +142,7 @@ public:
 	__EXPORT static void destroy(session *s);
 	__EXPORT static void release(session *s);
 	__EXPORT static void commit(session *s);
-	__EXPORT static session *find(int cid);
+	__EXPORT static session *access(int cid);
 	__EXPORT static session *modify(int cid);
 	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
 	__EXPORT static address *getAddress(const char *uri);

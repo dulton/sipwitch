@@ -252,6 +252,7 @@ extern "C" int main(int argc, char **argv)
 	static unsigned verbose = 0;
 	static unsigned priority = 0;
 	static unsigned concurrency = 0;
+	static int exit_code = 0;
 
 	char *cp, *tokens;
 	char *args[65];
@@ -374,6 +375,7 @@ extern "C" int main(int argc, char **argv)
 				"Commands:\n"
 				"  stop                  Stop running server\n"
 				"  reload                Reload config file\n"
+				"  restart               Restart server\n"
 				"  check                 Test for thread deadlocks\n"
 				"  snapshot              Create snapshot file\n"
                 "  dump                  Dump in-memory config tables\n"
@@ -423,9 +425,10 @@ extern "C" int main(int argc, char **argv)
 		if(!*cp)
 			continue;
 
+#ifdef	USES_COMMANDS
 		process::util("sipwitch");
 
-		if(!stricmp(*argv, "stop") || !stricmp(*argv, "reload") || !stricmp(*argv, "abort")) {
+		if(!stricmp(*argv, "stop") || !stricmp(*argv, "reload") || !stricmp(*argv, "abort") || !stricmp(*argv, "restart")) {
 			if(!process::control("sipwitch", user, *argv)) {
 				fprintf(stderr, "*** sipw: %s; server not responding\n", *argv);
 				exit(2);
@@ -441,7 +444,6 @@ extern "C" int main(int argc, char **argv)
 			exit(0);
 		}
 
-#ifdef	USES_COMMANDS
 		if(!stricmp(*argv, "digest")) {
 			const char *userid = *(++argv);
 			const char *secret = *(++argv);
@@ -556,6 +558,11 @@ extern "C" int main(int argc, char **argv)
         if(!stricmp(cp, "stop") || !stricmp(cp, "down") || !strcmp(cp, "exit"))
             break;
 
+		if(!stricmp(cp, "restart")) {
+			exit_code = SIGABRT;
+			break;
+		}
+
 		if(!stricmp(cp, "snapshot")) {
 			service::snapshot("sipwitch", user);
 			continue;
@@ -628,7 +635,7 @@ invalid:
 		process::reply("unknown command");
 	}
 	service::shutdown();
-	exit(0);
+	exit(exit_code);
 }
 
 END_NAMESPACE

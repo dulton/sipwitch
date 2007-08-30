@@ -175,8 +175,11 @@ bool config::confirm(const char *user)
 			id = leaf->getPointer();
 			if(create(id, *node))
 				process::errlog(WARN, "duplicate identity %s", id);
-			else
+			else {
 				process::errlog(DEBUG1, "adding %s %s", node->getId(), id);
+				if(!stricmp(node->getId(), "reject"))
+					registry::remove(id);
+			}
 			leaf = node->leaf("secret");
 			if(leaf)
 				secret = leaf->getPointer();
