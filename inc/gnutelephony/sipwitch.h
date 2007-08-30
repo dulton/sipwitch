@@ -30,12 +30,12 @@ using namespace UCOMMON_NAMESPACE;
 
 #define	USER_PROFILE_DIALABLE		0x0001	// user may be dialed
 #define	USER_PROFILE_REACHABLE		0x0002	// user may be reached by gateway
-#define	USER_PROFILE_EXTERNAL		0x0004	// user may route external
 #define	USER_PROFILE_INTERNAL		0x0008	// user may use dialing/routing
 #define	USER_PROFILE_SUBSCRIPTIONS	0x0010	// user can subscribe to others
 #define	USER_PROFILE_SUBSCRIBERS	0x0020	// user can be subscribed
 #define	USER_PROFILE_MULTITARGET	0x0800	// multi-target registration
-#define	USER_PROFILE_PUBLISHED		0x1000  // user "name" id may be accessed
+#define	USER_PROFILE_INCOMING		0x1000  // user "name" id may be accessed
+#define	USER_PROFILE_OUTGOING		0x2000	// may use generic uri
 
 #define	USER_PROFILE_DEFAULT		0x0fff
 #define	USER_PROFILE_RESTRICTED	(0)

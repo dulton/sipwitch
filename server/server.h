@@ -122,7 +122,7 @@ private:
 	const char *interface;
 	const char *agent;
 	short port;
-	bool inbound, outbound;
+	bool incoming, outgoing;
 	int send101;
 	int family, tlsmode, protocol;
 
