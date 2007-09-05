@@ -408,13 +408,14 @@ bool process::control(const char *id, const char *uid, const char *fmt, ...)
 	int fd, len;
 	bool rtn = true;
 	va_list args;
+	service::keynode *env = service::getEnviron();
 
 	va_start(args, fmt);
 	if(!id)
-		id = getenv("IDENT");
+		id = service::getValue(env, "IDENT");
 
 	if(!uid)
-		uid = getenv("USER");
+		uid = service::getValue(env, "USER");
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/control", id);
 	fd = ::open(buf, O_WRONLY | O_NONBLOCK);
@@ -422,6 +423,7 @@ bool process::control(const char *id, const char *uid, const char *fmt, ...)
 		snprintf(buf, sizeof(buf), "/tmp/%s-%s/control", id, uid);
 		fd = ::open(buf, O_WRONLY | O_NONBLOCK);
 	}
+	service::release(env);
 	if(fd < 0)
 		return false;
 

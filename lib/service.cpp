@@ -192,12 +192,26 @@ service::instance::~instance()
 service::service(char *name, size_t s) :
 mempager(s), root()
 {
+	keynode *env;
+	
+	static char *vars[] = {"HOME", "USER", "IDENT", "PATH", "LANG", "PWD", "TZ", NULL};
+	char **varp = vars;
+	const char *cp;
+
 	root.setId(name);
 	root.setPointer(NULL);
 	snmpservers = NULL;
 	community = "public";
 	if(!started)
 		time(&started);
+
+	env = addNode(&root, "environ", NULL);
+	while(varp && *varp) {
+		cp = getenv(*varp);
+		if(cp)
+			addNode(env, *varp, dup(getenv(cp)));
+		++varp;
+	}
 }
 
 service::~service()
@@ -391,12 +405,9 @@ service::keynode *service::addNode(keynode *base, const char *id, const char *va
 	return node;
 }
 
-const char *service::getValue(keynode *node, const char *id, keynode *alt)
+const char *service::getValue(keynode *node, const char *id)
 {
 	node = node->getChild(id);
-	if(!node && alt)
-		node = alt->getChild(id);
-
 	if(!node)
 		return NULL;
 
@@ -767,9 +778,13 @@ void service::dumpfile(const char *id, const char *uid)
 	FILE *fp;
 	char buf[256];
 	linked_pointer<callback> cb;
+	keynode *env = getEnviron();
+
+	if(!id)
+		id = getValue(env, "IDENT");
 
 	if(!uid)
-		uid = getenv("USER");
+		uid = getValue(env, "USER");
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/dumpfile", id);
 	fp = fopen(buf, "w");
@@ -777,6 +792,8 @@ void service::dumpfile(const char *id, const char *uid)
 		snprintf(buf, sizeof(buf), "/tmp/%s-%s/dumpfile", id, uid);
 		fp = fopen(buf, "w");
 	}
+
+	release(env);
 
 	if(!fp) {
 		process::errlog(ERROR, "dump cannot access file");
@@ -797,9 +814,13 @@ void service::snapshot(const char *id, const char *uid)
 	char buf[256];
 	linked_pointer<callback> cb;
 	unsigned rl = 0;
+	keynode *env = getEnviron();
+
+	if(!id)
+		id = getValue(env, "IDENT");
 
 	if(!uid)
-		uid = getenv("USER");
+		uid = getValue(env, "USER");
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/snapshot", id);
 	fp = fopen(buf, "w");
@@ -807,6 +828,8 @@ void service::snapshot(const char *id, const char *uid)
 		snprintf(buf, sizeof(buf), "/tmp/%s-%s/snapshot", id, uid);
 		fp = fopen(buf, "w");
 	}
+
+	release(env);
 
 	if(!fp) {
 		process::errlog(ERROR, "snapshot; cannot access file");

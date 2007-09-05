@@ -114,7 +114,6 @@ public:
 	keynode *addNode(keynode *base, define *defs);
 	keynode *addNode(keynode *base, const char *id, const char *value);
 	keynode *getNode(keynode *base, const char *grp, const char *attr, const char *value);
-	const char *getValue(keynode *base, const char *id, keynode *copy = NULL);
 	keynode *getList(const char *path);
 
 	inline static bool isLinked(keynode *node)
@@ -128,7 +127,8 @@ public:
 
 	inline static bool isNode(keynode *node)
 		{return isLinked(node) && isValue(node);};
-	
+
+	static const char *getValue(keynode *base, const char *id);
 	static void dump(FILE *fp, keynode *node, unsigned level);
 	static void snapshot(const char *id, const char *uid);
 	static void dumpfile(const char *id, const char *uid);
@@ -144,6 +144,9 @@ public:
 
 	static callback *getComponent(const char *id);
 	static keynode *getProtected(const char *path);
+
+	inline static keynode *getEnviron(void)
+		{return getProtected("environ");};
 
 	virtual void dump(FILE *fp);
 	virtual bool confirm(const char *user);

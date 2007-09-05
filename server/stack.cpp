@@ -150,6 +150,21 @@ void stack::destroy(session *s)
 	sip.release();
 }
 
+void stack::getinterface(struct sockaddr *iface, struct sockaddr *dest)
+{
+	Socket::getinterface(iface, dest);
+	switch(iface->sa_family) {
+	case AF_INET:
+		((struct sockaddr_in*)(iface))->sin_port = htons(sip.port);
+		break;
+#ifdef	AF_INET6
+	case AF_INET6:
+		((struct sockaddr_in6*)(iface))->sin6_port = htons(sip.port);
+		break;
+#endif
+	}
+}
+	
 stack::session *stack::createSession(call *cr, int cid)
 {
 	volatile static unsigned ref = 0;

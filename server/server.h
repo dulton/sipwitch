@@ -137,6 +137,7 @@ public:
 	inline void release(void)
 		{MappedReuse::release();};
 
+	__EXPORT static void getinterface(struct sockaddr *iface, struct sockaddr *dest);
 	__EXPORT static session *createSession(call *cp, int cid);
 	__EXPORT static session *create(MappedRegistry *rr, int cid);
 	__EXPORT static void destroy(session *s);
