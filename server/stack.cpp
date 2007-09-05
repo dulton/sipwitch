@@ -150,7 +150,7 @@ void stack::destroy(session *s)
 	sip.release();
 }
 
-void stack::getinterface(struct sockaddr *iface, struct sockaddr *dest)
+void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 {
 	Socket::getinterface(iface, dest);
 	switch(iface->sa_family) {
@@ -455,11 +455,12 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 	return buf;
 }
 	
-stack::address *stack::getAddress(const char *addr)
+stack::address *stack::getAddress(const char *addr, address *ap)
 {
 	char buffer[MAX_URI_SIZE];
-	char *svc;
-	address *ap;
+	int family = sip.family;
+	const char *svc = "sip";
+	char *ep;
 	int proto = SOCK_DGRAM;
 	if(sip.protocol == IPPROTO_TCP)
 		proto = SOCK_STREAM;
@@ -472,25 +473,31 @@ stack::address *stack::getAddress(const char *addr)
 	if(strchr(addr, '@'))
 		addr = strchr(addr, '@') + 1;	
 
+#ifdef	AF_INET6
 	if(*addr == '[') {
-		svc = strchr(addr, ']');
-		if(svc)
-			++svc;
-		if(!svc || !*svc) {
-			snprintf(buffer, sizeof(buffer), "%s:5060", addr);
-			addr = buffer;
-		}
+		string::set(buffer, sizeof(buffer), ++addr);
+		family = AF_INET6;
+		ep = strchr(buffer, ']');
+		if(ep)
+			*(ep++) = 0;
+		if(*ep == ':')
+			svc = ++ep;
+		goto set;
 	} 
-	else if(strchr(addr, ':') != strrchr(addr, ':')) {
-		snprintf(buffer, sizeof(buffer), "[%s]:5060", addr);
-		addr = buffer;
-	}
-	else if(!strchr(addr, ':')) {
-		snprintf(buffer, sizeof(buffer), "%s:5060", addr);
-		addr = buffer;
+#endif
+	string::set(buffer, sizeof(buffer), addr);
+	ep = strchr(buffer, ':');
+	if(ep) {
+		*(ep++) = 0;
+		svc = ep;
 	}
 
-	ap = new address(addr, sip.family, proto);
+set:
+	if(ap)
+		ap->add(buffer, svc, family);
+	else
+		ap = new address(family, buffer, svc);
+
 	if(ap && !ap->getList()) {
 		delete ap;
 		addr = NULL;

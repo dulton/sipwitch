@@ -99,6 +99,7 @@ bool thread::authenticate(void)
 	service::keynode *node = NULL, *leaf;
 	stringbuf<64> digest;
 	int error = SIP_PROXY_AUTHENTICATION_REQUIRED;
+	const char *cp;
 
 	extension = 0;
 	auth = NULL;
@@ -135,6 +136,9 @@ bool thread::authenticate(void)
 	if(!stricmp(node->getId(), "reject")) {
 		process::errlog(NOTICE, "rejecting unauthorized %s", auth->username);
 		error = SIP_FORBIDDEN;
+		cp = service::getValue(node, "error");
+		if(cp)
+			error = atoi(cp);
 		goto failed;
 	}
 

@@ -137,7 +137,7 @@ public:
 	inline void release(void)
 		{MappedReuse::release();};
 
-	__EXPORT static void getinterface(struct sockaddr *iface, struct sockaddr *dest);
+	__EXPORT static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
 	__EXPORT static session *createSession(call *cp, int cid);
 	__EXPORT static session *create(MappedRegistry *rr, int cid);
 	__EXPORT static void destroy(session *s);
@@ -146,7 +146,7 @@ public:
 	__EXPORT static session *access(int cid);
 	__EXPORT static session *modify(int cid);
 	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
-	__EXPORT static address *getAddress(const char *uri);
+	__EXPORT static address *getAddress(const char *uri, address *addr = NULL);
 };
 
 class __LOCAL config : public service
