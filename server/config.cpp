@@ -82,6 +82,9 @@ bool config::confirm(const char *user)
 	const char *dirpath = ".";
 	const char *fn;
 
+	snprintf(buf, sizeof(buf), "- welcome prefix=%d range=%d", prefix, range);
+	setHeader(buf);
+
 	// construct default profiles
 
 	provision = getPath("provision");

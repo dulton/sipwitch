@@ -212,26 +212,29 @@ static struct passwd *getuserenv(const char *id, const char *uid, const char *cf
 	return pwd;
 }
 
+static char fifopath[128] = "";
+
 static size_t ctrlfile(const char *id, const char *uid)
 {
-	char buf[65];
 	struct stat ino;
 
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", id);
-	if(!stat(buf, &ino) && S_ISDIR(ino.st_mode)) 
-		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/control", id);
+	snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/%s", id);
+	if(!stat(fifopath, &ino) && S_ISDIR(ino.st_mode)) 
+		snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/%s/control", id);
 	else
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s/control", id, uid);
+		snprintf(fifopath, sizeof(fifopath), "/tmp/%s-%s/control", id, uid);
 
-	remove(buf);
-	if(mkfifo(buf, 0660))
+	remove(fifopath);
+	if(mkfifo(fifopath, 0660)) {
+		fifopath[0] = 0;
 		return 0;
+	}
 
-	fifo = fopen(buf, "r+");
+	fifo = fopen(fifopath, "r+");
 	if(fifo) 
 		return 512;
-	else
-		return 0;
+	fifopath[0] = 0;
+	return 0;
 }
 
 static pid_t pidfile(const char *id, const char *uid)
@@ -374,6 +377,15 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 
 	if(level == LOG_CRIT)
 		abort();
+}
+
+void process::release(void)
+{
+	errlog(INFO, "shutdown");
+	if(fifopath[0]) {
+		::remove(fifopath);
+		fifopath[0] = 0;
+	}
 }
 
 void process::restart(void)

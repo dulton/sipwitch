@@ -61,6 +61,7 @@ public:
 	static void util(const char *id);
 	static void foreground(const char *id, const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
 	static void background(const char *id, const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
+	static void release(void);
 	static FILE *open(const char *id, const char *uid = NULL, const char *cfgpath = NULL);
 };
 

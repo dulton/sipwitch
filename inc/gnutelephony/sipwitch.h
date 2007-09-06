@@ -68,13 +68,6 @@ public:
 	LinkedObject *routes;		// active route records
 };
 
-class __EXPORT MappedExtension
-{
-public:
-	unsigned extid;
-	unsigned mapid;
-};
-
 class __EXPORT MappedCall : public ReusableObject
 {
 public:

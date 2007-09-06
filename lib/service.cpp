@@ -33,6 +33,7 @@ unsigned service::callback::count = 0;
 condlock_t service::locking;
 service *service::cfg = NULL;
 
+static char header[80] = "- welcome";
 static SOCKET trap4 = -1;
 static SOCKET trap6 = -1;
 static time_t started = 0l;
@@ -82,6 +83,7 @@ LinkedObject(&list)
 #else
 	fd = ::open(path, O_RDWR);
 #endif
+	write(header);
 }
 
 void service::subscriber::close(void)
@@ -105,6 +107,7 @@ void service::subscriber::reopen(void)
 #else
 	fd = ::open(path, O_RDWR);
 #endif
+	write(header);
 }
 
 void service::subscriber::write(char *str)
@@ -217,6 +220,11 @@ mempager(s), root()
 service::~service()
 {
 	mempager::purge();
+}
+
+void service::setHeader(const char *h)
+{
+	string::set(header, sizeof(header) - 1, h);
 }
 
 long service::uptime(void)
@@ -729,7 +737,8 @@ void service::shutdown(void)
 	linked_pointer<callback> sp;
 	unsigned level = RUNLEVELS;
 
-	process::errlog(NOTICE, "shutdown");
+	process::release();
+	publish(NULL, "- shutdown");
 
 	while(level--) {
 		sp = callback::runlevels[level];
