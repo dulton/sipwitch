@@ -696,7 +696,7 @@ control:
 	if(!path && (*fmt == '-' || *fmt == '-') && isspace(fmt[1])) {
 		cp = fmt + 1;
 		while(isspace(*cp))
-			++fmt;
+			++cp;
 		len = 0;
 		while(len < sizeof(cmdbuf) - 1 && isalnum(*cp)) {
 			cmdbuf[len++] = tolower(*cp);

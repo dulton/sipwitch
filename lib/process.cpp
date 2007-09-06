@@ -373,8 +373,6 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 		::syslog(level, "%s", buf);
 	}
 	
-	va_end(args);
-
 	if(level == LOG_CRIT)
 		abort();
 }
