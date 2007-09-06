@@ -61,13 +61,14 @@ public:
 		static rwlock_t locking;
 		static LinkedObject *list;
 
-		subscriber(const char *p);
-		void reopen(void);
+		subscriber(const char *p, const char *listen = NULL);
+		void reopen(const char *listen);
 		void write(char *str);
 		void close(void);
 
 		mutex_t mutex;
 		fd_t fd;
+		char listen[80];
 		char path[1];
 	};
 
@@ -133,7 +134,7 @@ public:
 	static void snapshot(const char *id, const char *uid);
 	static void dumpfile(const char *id, const char *uid);
 	static void unsubscribe(const char *path);
-	static void subscribe(const char *path);
+	static void subscribe(const char *path, const char *cmds = NULL);
 	static void publish(const char *path, const char *fmt, ...) __PRINTF(2, 3);
 	static void result(const char *value);
 	static FILE *open(const char *id, const char *uid = NULL, const char *cfgpath = NULL);

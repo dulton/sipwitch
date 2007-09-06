@@ -74,7 +74,7 @@ static size_t xmldecode(char *out, size_t limit, const char *src)
 	return out - ret;
 }
 
-service::subscriber::subscriber(const char *name) :
+service::subscriber::subscriber(const char *name, const char *cmds) :
 LinkedObject(&list)
 {
 	strcpy(path, name);
@@ -83,6 +83,9 @@ LinkedObject(&list)
 #else
 	fd = ::open(path, O_RDWR);
 #endif
+	if(!cmds)
+		cmds = "";
+	string::set(listen, sizeof(listen), cmds);
 	write(header);
 }
 
@@ -99,7 +102,7 @@ void service::subscriber::close(void)
 #endif
 }
 
-void service::subscriber::reopen(void)
+void service::subscriber::reopen(const char *cmds)
 {
 	close();
 #ifdef	_MSWINDOWS_
@@ -108,6 +111,10 @@ void service::subscriber::reopen(void)
 	fd = ::open(path, O_RDWR);
 #endif
 	write(header);
+
+	if(!cmds)
+		cmds = "";
+	string::set(listen, sizeof(listen), cmds);
 }
 
 void service::subscriber::write(char *str)
@@ -657,10 +664,11 @@ void service::publish(const char *path, const char *fmt, ...)
 {
 	linked_pointer<subscriber> sb;
 	char buf[512];
+	char cmdbuf[16];
 	va_list args;
 	int fd;
 	unsigned len;
-	char *cp;
+	const char *cp;
 
 	va_start(args, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, args);
@@ -684,21 +692,41 @@ void service::publish(const char *path, const char *fmt, ...)
 control:
 	protected_access(subscriber::locking);
 
+	cmdbuf[0] = 0;
+	if(!path && (*fmt == '-' || *fmt == '-') && isspace(fmt[1])) {
+		cp = fmt + 1;
+		while(isspace(*cp))
+			++fmt;
+		len = 0;
+		while(len < sizeof(cmdbuf) - 1 && isalnum(*cp)) {
+			cmdbuf[len++] = tolower(*cp);
+			++cp;
+		}
+		cmdbuf[len] = 0;
+	}
+
 	sb = subscriber::list;
 	while(sb) {
-		if(!path || !stricmp(sb->path, path))
+		if(path) {
+			if(stricmp(sb->path, path))
+				sb->write(buf);
+		}
+		else if(!cmdbuf[0] || string::ifind(sb->listen, cmdbuf, " ,;: \t\n"))
 			sb->write(buf);
 		sb.next();
 	}
 }
 
-void service::subscribe(const char *path)
+void service::subscribe(const char *path, const char *listen)
 {
 	exclusive_access(subscriber::locking);
 	linked_pointer<subscriber> sb;
 	caddr_t mp;
 
 	crit(cfg != NULL);
+
+	if(!listen || !stricmp(listen, "*") || !stricmp(listen, "all"))
+		listen = "";
 
 	sb = subscriber::list;
 	while(sb) {
@@ -707,11 +735,11 @@ void service::subscribe(const char *path)
 		sb.next();
 	}
 	if(sb) {
-		sb->reopen();
+		sb->reopen(listen);
 		return;
 	}
 	mp = (caddr_t)cfg->alloc(sizeof(subscriber) + strlen(path));
-	new(mp) subscriber(path);
+	new(mp) subscriber(path, listen);
 }
 
 void service::startup(bool restartable)

@@ -605,9 +605,9 @@ invalid:
 		}
 
 		if(!stricmp(args[0], "subscribe")) {
-			if(argc != 2)
+			if(argc < 2 || argc > 3)
 				goto invalid;
-			service::subscribe(args[1]);
+			service::subscribe(args[1], args[2]);
 			continue;
 		}
 
