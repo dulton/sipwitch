@@ -50,22 +50,15 @@ typedef struct {
 	unsigned level;
 } profile_t;
 
-typedef enum {
-	REG_EXPIRED = 0,	// expired record
-	REG_USER,			// user records with profiles
-	REG_GATEWAY,		// registered and static
-	REG_SERVICE,		// routes for contacts
-	REG_REJECT,			// rejection record
-	REG_REFER			// registered and static
-} regtype_t;
-
 class __EXPORT MappedRegistry : public ReusableObject
 {
 public:
 	char	userid[MAX_USERID_SIZE];
+	enum {OFFLINE = 0, IDLE, BUSY, AWAY, DND} status;
+	enum {EXPIRED = 0, USER, GATEWAY, SERVICE, REJECT, REFER} type;
+	bool hidden;
 	unsigned ext;				// 0 or extnum
 	unsigned count;				// active regs count
-	regtype_t type;				// registry type
 	sockaddr_internet contact;	// last/newest created contact registration
 	time_t	created;			// initial registration
 	time_t  expires;			// when registry expires as a whole
@@ -73,6 +66,13 @@ public:
 	LinkedObject *published;	// published routes
 	LinkedObject *targets;		// active registrations (can be multiple)
 	LinkedObject *routes;		// active route records
+};
+
+class __EXPORT MappedExtension
+{
+public:
+	unsigned extid;
+	unsigned mapid;
 };
 
 class __EXPORT MappedCall : public ReusableObject

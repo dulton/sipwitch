@@ -125,6 +125,77 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 	printf("%s:%u\n", buf, p2);
 }
 
+static void extdump(void)
+{
+	mapped_view<MappedRegistry> reg("sipwitch.regmap");
+	mapped_view<MappedExtension> extmap("sipwitch.extmap");
+	unsigned count = extmap.getCount();
+	unsigned found = 0, index = 0;
+	volatile const MappedRegistry *member;
+	volatile const MappedExtension *ep;
+	MappedRegistry buffer;
+	MappedExtension extbuf;
+	time_t now;
+	char ext[8], exp[8];
+	const char *type;
+
+	if(!count) {
+		process::errlog(WARN, "no mapped extensions");
+		exit(-1);
+	}
+
+	time(&now);
+	while(index < count) {
+		ep = extmap(index++);
+		do {
+			memcpy(&extbuf, (const void *)ep, sizeof(extbuf));
+		} while(memcmp(&extbuf, (const void *)ep, sizeof(extbuf)));
+		if(!extbuf.extid)
+			continue;
+		member = reg(extbuf.mapid);
+		do {	
+			memcpy(&buffer, (const void *)member, sizeof(buffer));
+		} while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
+		if(buffer.type == MappedRegistry::EXPIRED)
+			continue;
+		if(buffer.expires && buffer.expires < now)
+			continue;
+		if(buffer.type == MappedRegistry::REJECT)
+			continue;
+		if(!found++)
+			printf("%7s %-32s type %-32s  expires address\n", "ext", "user", "profile");
+		ext[0] = 0;
+		if(buffer.ext)
+			snprintf(ext, sizeof(ext), "%7d", buffer.ext); 
+		exp[0] = '-';
+		exp[1] = 0;
+		if(buffer.expires)
+			snprintf(exp, sizeof(exp), "%ld", buffer.expires - now);
+		switch(buffer.type) {
+		case MappedRegistry::REJECT:
+			type = "rej";
+			break;
+		case MappedRegistry::REFER:
+			type = "ref";
+			break;
+		case MappedRegistry::GATEWAY:
+			type = "gw";
+			break;
+		case MappedRegistry::SERVICE:
+			type = "peer";
+			break;
+		default:
+			type = "user";
+		};
+		printf("%7s %-32s %-4s %-32s  %7s ", ext, buffer.userid, type, buffer.profile.id, exp);
+		paddress(&buffer.contact, NULL);
+		fflush(stdout);
+	}
+
+	printf("found %d entries active of %d\n", found, count);  
+	exit(0);
+}
+
 static void regdump(void)
 {
 	mapped_view<MappedRegistry> reg("sipwitch.regmap");
@@ -147,7 +218,7 @@ static void regdump(void)
 		do {	
 			memcpy(&buffer, (const void *)member, sizeof(buffer));
 		} while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
-		if(buffer.type == REG_EXPIRED)
+		if(buffer.type == MappedRegistry::EXPIRED)
 			continue;
 	//	if(buffer.expires && buffer.expires < now)
 	//		continue;
@@ -161,16 +232,16 @@ static void regdump(void)
 		if(buffer.expires)
 			snprintf(exp, sizeof(exp), "%ld", buffer.expires - now);
 		switch(buffer.type) {
-		case REG_REJECT:
+		case MappedRegistry::REJECT:
 			type = "rej";
 			break;
-		case REG_REFER:
+		case MappedRegistry::REFER:
 			type = "ref";
 			break;
-		case REG_GATEWAY:
+		case MappedRegistry::GATEWAY:
 			type = "gw";
 			break;
-		case REG_SERVICE:
+		case MappedRegistry::SERVICE:
 			type = "peer";
 			break;
 		default:
@@ -474,6 +545,9 @@ extern "C" int main(int argc, char **argv)
 
 		if(!stricmp(*argv, "registry")) 
 			regdump();
+
+		if(!stricmp(*argv, "extensions"))
+			extdump();
 
 		if(!stricmp(*argv, "activate")) {
 			if(!argv[1]) {

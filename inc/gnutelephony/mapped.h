@@ -110,6 +110,9 @@ public:
 
 	inline mapped_array() : MappedMemory() {};
 
+	inline void create(const char *fn, unsigned members)
+		{MappedMemory::create(fn, members * sizeof(T));};
+
 	inline void initialize(void)
 		{new((caddr_t)offset(0)) T[size / sizeof(T)];};
 

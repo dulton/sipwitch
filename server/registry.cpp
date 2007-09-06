@@ -38,6 +38,7 @@ static LinkedObject *freetargets = NULL;
 static LinkedObject **keys = NULL;
 static mutex_t targetlock;
 static mutex_t *reglock;
+static mapped_array<MappedExtension> extensions;
 
 registry registry::reg;
 
@@ -94,6 +95,10 @@ void registry::start(service *cfg)
 	if(!reg)
 		process::errlog(FAILURE, "registry could not be mapped");
 	initialize();
+	if(range) {
+		extensions.create("sipwitch.extmap", range);
+		extensions.initialize();
+	}
 	reglock = new mutex_t[mapped_entries];
 }
 
@@ -110,6 +115,10 @@ void registry::stop(service *cfg)
 	process::errlog(DEBUG1, "registry stopping");
 	MappedMemory::release();
 	MappedMemory::remove("sipwitch.regmap");
+	if(range) {
+		extensions.release();
+		MappedMemory::remove("sipwitch.extmap");
+	}
 }
 
 void registry::snapshot(FILE *fp) 
@@ -135,22 +144,22 @@ void registry::snapshot(FILE *fp)
 		time(&now);
 		rr = reg.pos(count++);
 		exclusive(rr);
-		if(rr->type != REG_EXPIRED && (!rr->expires || rr->expires >= now)) {
+		if(rr->type != MappedRegistry::EXPIRED && (!rr->expires || rr->expires >= now)) {
 			if(rr->ext)
 				snprintf(buffer, sizeof(buffer), "%d", rr->ext);
 			else
 				string::set(buffer, sizeof(buffer), "none");
-			if(rr->type == REG_USER)
+			if(rr->type == MappedRegistry::USER)
 				fprintf(fp, "  user %s; extension=%s, profile=%s,",
 					rr->userid, buffer, rr->profile.id);
-			else if(rr->type == REG_GATEWAY)
+			else if(rr->type == MappedRegistry::GATEWAY)
 				fprintf(fp, "  gateway %s;", rr->userid);
-			else if(rr->type == REG_SERVICE)
+			else if(rr->type == MappedRegistry::SERVICE)
 				fprintf(fp, "  service %s;", rr->userid);
-			else if(rr->type == REG_REFER)
+			else if(rr->type == MappedRegistry::REFER)
 				fprintf(fp, "  refer %s; extensions=%s,",
 					rr->userid, buffer);
-			else if(rr->type == REG_REJECT)
+			else if(rr->type == MappedRegistry::REJECT)
 				fprintf(fp, "  reject %s; extension=%s,",
 					rr->userid, buffer);
 			if(!rr->count)
@@ -171,11 +180,11 @@ void registry::snapshot(FILE *fp)
 				tp.next();
 			}
 			rp = rr->routes;
-			if(rp && rr->type == REG_SERVICE)
+			if(rp && rr->type == MappedRegistry::SERVICE)
 				fprintf(fp, "      services=");
-			else if(rp && rr->type == REG_GATEWAY)
+			else if(rp && rr->type == MappedRegistry::GATEWAY)
 				fprintf(fp, "      routes=");
-			while(rp && (rr->type == REG_SERVICE || rr->type == REG_GATEWAY)) {
+			while(rp && (rr->type == MappedRegistry::SERVICE || rr->type == MappedRegistry::GATEWAY)) {
 				fputs(rp->entry.text, fp);
 				if(rp->getNext())
 					fputc(',', fp);
@@ -219,6 +228,7 @@ bool registry::remove(const char *id)
 
 void registry::expire(MappedRegistry *rr)
 {
+	MappedExtension *ep;
 	linked_pointer<target> tp = rr->targets;
 	linked_pointer<route> rp = rr->routes;
 	unsigned path;
@@ -228,7 +238,7 @@ void registry::expire(MappedRegistry *rr)
 	while(rp) {
 		route *nr = rp.getNext();
 		--active_routes;
-		if(rr->type == REG_SERVICE) {
+		if(rr->type == MappedRegistry::SERVICE) {
 			path = NamedObject::keyindex(rp->entry.text, keysize);
 			rp->entry.delist(&contacts[path]);
 		}
@@ -268,10 +278,12 @@ void registry::expire(MappedRegistry *rr)
 	rr->targets = NULL;
 	rr->published = NULL;
 	rr->count = 0;
+	rr->status = MappedRegistry::OFFLINE;
 	if(reg.range && rr->ext) {
 		if(extmap[rr->ext - reg.prefix] == rr) {
+			ep = extensions(rr->ext - reg.prefix);
+			memset(ep, 0, sizeof(MappedExtension));
 			process::errlog(INFO, "expiring %s from extension %u", rr->userid, rr->ext);
-			service::publish(NULL, "- release %u %s %u", rr->ext, rr->userid, getIndex(rr));
 			extmap[rr->ext - reg.prefix] = NULL;
 		}
 		else
@@ -283,7 +295,8 @@ void registry::expire(MappedRegistry *rr)
 	path = NamedObject::keyindex(rr->userid, keysize);
 	rr->ext = 0;
 	rr->userid[0] = 0;
-	rr->type = REG_EXPIRED;
+	rr->status = MappedRegistry::OFFLINE;
+	rr->type = MappedRegistry::EXPIRED;
 	rp->delist(&keys[path]);
 
 hold:
@@ -300,7 +313,7 @@ void registry::cleanup(void)
 		time(&now);
 		rr = reg.pos(count++);
 		reg.exlock();
-		if(rr->type != REG_EXPIRED && rr->expires && rr->expires < now)
+		if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires < now)
 			expire(rr);
 		reg.unlock();
 		Thread::yield();
@@ -381,6 +394,7 @@ MappedRegistry *registry::modify(const char *id)
 
 MappedRegistry *registry::create(const char *id)
 {
+	MappedExtension *ep;
 	MappedRegistry *rr, *prior;
 	unsigned path = NamedObject::keyindex(id, keysize);
 	linked_pointer<service::keynode> rp;
@@ -405,23 +419,23 @@ MappedRegistry *registry::create(const char *id)
 
 	node = config::getProvision(id);
 	cp = "none";
-	rr->type = REG_EXPIRED;
+	rr->type = MappedRegistry::EXPIRED;
 	rr->expires = 0;
 	rr->created = 0;
 
 	if(node)
 		cp = node->getId();
 	if(!stricmp(cp, "user"))
-		rr->type = REG_USER;
+		rr->type = MappedRegistry::USER;
 	else if(!stricmp(cp, "refer"))
-		rr->type = REG_REFER;
+		rr->type = MappedRegistry::REFER;
 	else if(!stricmp(cp, "reject"))
-		rr->type = REG_REJECT;
+		rr->type = MappedRegistry::REJECT;
 	else if(!stricmp(cp, "gateway"))
-		rr->type = REG_GATEWAY;
+		rr->type = MappedRegistry::GATEWAY;
 	else if(!stricmp(cp, "service"))
-		rr->type = REG_SERVICE;
-	if(!node || rr->type == REG_EXPIRED) {
+		rr->type = MappedRegistry::SERVICE;
+	if(!node || rr->type == MappedRegistry::EXPIRED) {
 		config::release(node);
 		reg.removeLocked(rr);
 		reg.unlock();
@@ -496,7 +510,7 @@ MappedRegistry *registry::create(const char *id)
 	if(leaf && leaf->getPointer())
 		ext = atoi(leaf->getPointer());
 
-	if(rr->type == REG_USER) {
+	if(rr->type == MappedRegistry::USER) {
 		pro = NULL;
 		leaf = node->leaf("profile");
 		if(leaf)
@@ -511,17 +525,19 @@ MappedRegistry *registry::create(const char *id)
 	strcpy(rr->userid, id);
 	rr->ext = 0;
 	rr->enlist(&keys[path]);
+	rr->status = MappedRegistry::IDLE;
 	if(ext >= reg.prefix && ext < reg.prefix + reg.range) {
 		prior = extmap[ext - reg.prefix];
 		if(prior && prior != rr) {
 			process::errlog(INFO, "releasing %s from extension %d", prior->userid, ext);
-			service::publish(NULL, "- release %u %s %u", ext, prior->userid, getIndex(rr)); 
 			prior->ext = 0;
 		}
 		extmap[ext - reg.prefix] = rr;
 		rr->ext = ext;
+		ep = extensions(ext - reg.prefix);
+		ep->mapid = getIndex(rr);
+		ep->extid = ext;
 		process::errlog(INFO, "activating %s as extension %d", rr->userid, ext);
-		service::publish(NULL, "- activate %u %s %u", ext, rr->userid, getIndex(rr));
 	}
 	++active_entries;
 

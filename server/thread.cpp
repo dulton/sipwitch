@@ -302,7 +302,7 @@ void thread::reregister(const char *contact, time_t interval)
 	if(destination->expires < expire)
 		destination->created = expire;
 	expire += interval + 3;	// overdraft 3 seconds...
-	if(destination->type == REG_USER && (destination->profile.features & USER_PROFILE_MULTITARGET))
+	if(destination->type == MappedRegistry::USER && (destination->profile.features & USER_PROFILE_MULTITARGET))
 		count = registry::addTarget(destination, via_address, expire, contact);
 	else
 		count = registry::setTarget(destination, via_address, expire, contact);
@@ -315,7 +315,7 @@ void thread::reregister(const char *contact, time_t interval)
 		goto reply;
 	}		
 
-	if(destination->type != REG_SERVICE || destination->routes)
+	if(destination->type != MappedRegistry::SERVICE || destination->routes)
 		goto reply;
 
 	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
@@ -332,7 +332,7 @@ reply:
 	eXosip_message_build_answer(sevent->tid, answer, &reply);
 	eXosip_message_send_answer(sevent->tid, answer, reply);
 	eXosip_unlock();
-	if(destination && destination->type == REG_USER && answer == SIP_OK)
+	if(destination && destination->type == MappedRegistry::USER && answer == SIP_OK)
 		messages::update(identity);
 }
 
