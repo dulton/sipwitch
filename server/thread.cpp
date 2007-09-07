@@ -41,15 +41,19 @@ static char *remove_quotes(char *c)
 
 thread::thread() : DetachedThread(stack::sip.stacksize)
 {
+	to = NULL;
+	from = NULL;
 	access = NULL;
+	dialed = NULL;
 	authorized = NULL;
-	destination = NULL;
+	registry = NULL;
 	via_address = from_address = to_address = NULL;
+	local_uri = remote_uri = NULL;
 }
 
 void thread::identify(void)
 {
-	MappedRegistry *registry = NULL;
+	MappedRegistry *rr = NULL;
 
 	if(!stack::sip.trusted || !getsource() || !access)
 		return;
@@ -57,18 +61,18 @@ void thread::identify(void)
 	if(!string::ifind(stack::sip.trusted, access->getName(), ",; \t\n"))
 		return;
 
-	registry = registry::address(via_address->getAddr());
-	if(!registry)
+	rr = registry::address(via_address->getAddr());
+	if(!rr)
 		return;
 
-	string::set(identity, sizeof(identity), registry->userid);
+	string::set(identity, sizeof(identity), rr->userid);
 	authorized = config::getProvision(identity);
-	registry::release(registry);
+	registry::release(rr);
 }
 
 bool thread::unauthenticated(void)
 {
-	MappedRegistry *registry = NULL;
+	MappedRegistry *rr = NULL;
 
 	if(!stack::sip.trusted || !getsource() || !access)
 		goto untrusted;
@@ -76,19 +80,160 @@ bool thread::unauthenticated(void)
 	if(!string::ifind(stack::sip.trusted, access->getName(), ",; \t\n"))
 		goto untrusted;
 
-	registry = registry::address(via_address->getAddr());
-	if(!registry)
+	rr = registry::address(via_address->getAddr());
+	if(!rr)
 		goto untrusted;
 
-	string::set(identity, sizeof(identity), registry->userid);
+	string::set(identity, sizeof(identity), rr->userid);
 	authorized = config::getProvision(identity);
-	registry::release(registry);
+	registry::release(rr);
 	if(authorized)
 		return true;
 
 untrusted:
 	process::errlog(DEBUG1, "challenge request required");
 	challenge();
+	return false;
+}
+
+bool thread::authorize(void)
+{
+	int error = SIP_UNDECIPHERABLE;
+	const char *scheme = "sip";
+	const char *from_port, *to_port;
+	osip_message_t *reply = NULL;
+	struct sockaddr_internet iface;
+	const char *cp;
+	time_t now;
+
+	if(!sevent->request || !sevent->request->to || !sevent->request->from)
+		goto invalid;
+
+	error = SIP_ADDRESS_INCOMPLETE;
+
+	osip_to_to_str(sevent->request->to, &local_uri);
+
+	if(!local_uri)
+		goto invalid;
+
+	osip_from_to_str(sevent->request->from, &remote_uri);
+	if(!remote_uri)
+		goto invalid;
+
+	osip_to_init(&to);
+	osip_to_parse(to, local_uri);
+	if(!to)
+		goto invalid;
+
+	osip_from_init(&from);
+	osip_from_parse(from, remote_uri);		
+	if(!from)
+		goto invalid;
+
+	if(stack::sip.tlsmode)
+		scheme = "sips";
+
+	if(!from->url->host || !to->url->host)
+		goto invalid;
+
+	if(!from->url->username || !to->url->username)
+		goto invalid;
+
+	if(!from->url->scheme || !to->url->scheme)
+		goto invalid;
+
+	error = SIP_UNSUPPORTED_URI_SCHEME;
+	if(stricmp(from->url->scheme, scheme) || stricmp(to->url->scheme, scheme))
+		goto invalid;
+
+	from_port = from->url->port;
+	to_port = to->url->port;
+	if(!from_port || !atoi(from_port))
+		from_port = "5060";
+	if(!to_port || !atoi(to_port))
+		to_port = "5060";
+
+	from_address = new stack::address(from->url->host, from_port);
+	to_address = new stack::address(to->url->host, to_port);
+
+	if(!from_address->getAddr() || !to_address->getAddr())
+		goto invalid;
+
+	if(atoi(to_port) != stack::sip.port)
+		goto remote;
+
+	if(string::ifind(stack::sip.localnames, to->url->host, " ,;:\t\n"))
+		goto local;
+
+	stack::getInterface((struct sockaddr *)&iface, to_address->getAddr());
+	if(Socket::equal((struct sockaddr *)&iface, to_address->getAddr()))
+		goto local;
+
+	goto remote;
+
+local:
+	error = SIP_NOT_FOUND;
+	destination = LOCAL;
+	registry = registry::access(to->url->username);
+
+	if(!registry)
+		dialed = config::getProvision(to->url->username);
+
+	if(!registry && !dialed)
+		goto invalid;
+
+	// reject nodes with defined errors
+	if(dialed && !stricmp(dialed->getId(), "reject")) {
+		cp = service::getValue(dialed, "error");
+		if(cp)
+			error = atoi(cp);
+		goto invalid;
+	}
+
+	time(&now);
+	if(registry && registry->expires && registry->expires < now)
+		goto invalid;
+
+	// extension references always require authentication
+	if(registry::isExtension(to->url->username)) {
+		if(!authenticate())
+			return false;
+		if(!registry)
+			goto invalid;
+		return true;
+	}
+
+	if(registry && registry->type == MappedRegistry::USER && (registry->profile.features & USER_PROFILE_INCOMING))
+		goto anonymous;
+
+	return authenticate();
+
+anonymous:
+	destination = PUBLIC;
+	return true;
+
+remote:
+	destination = REMOTE;
+	if(!authenticate())
+		return false;
+
+	// must be active registration to dial out...
+	error = SIP_FORBIDDEN;
+	registry = registry::access(identity);
+	time(&now);
+	if(!registry || (registry->expires && registry->expires < now))
+		goto invalid;
+
+	if(registry->type == MappedRegistry::USER && !(registry->profile.features & USER_PROFILE_OUTGOING))
+		goto invalid;
+
+	return true;
+
+invalid:
+	eXosip_lock();
+	eXosip_message_build_answer(sevent->tid, error, &reply);
+	eXosip_message_send_answer(sevent->tid, error, reply);
+	eXosip_unlock();		
 	return false;
 }
 
@@ -287,8 +432,8 @@ void thread::reregister(const char *contact, time_t interval)
 		goto reply;
 	}
 
-	destination = registry::create(identity);
-	if(!destination) {
+	registry = registry::create(identity);
+	if(!registry) {
 		if(!warning_registry) {
 			warning_registry = true;
 			process::errlog(ERROR, "registry capacity reached");
@@ -299,13 +444,13 @@ void thread::reregister(const char *contact, time_t interval)
 	}
 	warning_registry = false;
 	time(&expire);
-	if(destination->expires < expire)
-		destination->created = expire;
+	if(registry->expires < expire)
+		registry->created = expire;
 	expire += interval + 3;	// overdraft 3 seconds...
-	if(destination->type == MappedRegistry::USER && (destination->profile.features & USER_PROFILE_MULTITARGET))
-		count = registry::addTarget(destination, via_address, expire, contact);
+	if(registry->type == MappedRegistry::USER && (registry->profile.features & USER_PROFILE_MULTITARGET))
+		count = registry::addTarget(registry, via_address, expire, contact);
 	else
-		count = registry::setTarget(destination, via_address, expire, contact);
+		count = registry::setTarget(registry, via_address, expire, contact);
 
 	if(count)
 		process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
@@ -315,13 +460,13 @@ void thread::reregister(const char *contact, time_t interval)
 		goto reply;
 	}		
 
-	if(destination->type != MappedRegistry::SERVICE || destination->routes)
+	if(registry->type != MappedRegistry::SERVICE || registry->routes)
 		goto reply;
 
 	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
 		c = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
 		if(c && c->url && c->url->username) {
-			registry::addContact(destination, c->url->username);
+			registry::addContact(registry, c->url->username);
 			process::errlog(INFO, "registering service %s:%s@%s:%s",
 				c->url->scheme, c->url->username, c->url->host, c->url->port);
 		}
@@ -332,7 +477,7 @@ reply:
 	eXosip_message_build_answer(sevent->tid, answer, &reply);
 	eXosip_message_send_answer(sevent->tid, answer, reply);
 	eXosip_unlock();
-	if(destination && destination->type == MappedRegistry::USER && answer == SIP_OK)
+	if(registry && registry->type == MappedRegistry::USER && answer == SIP_OK)
 		messages::update(identity);
 }
 
@@ -410,19 +555,37 @@ void thread::run(void)
 			to_address = NULL;
 		}
 
-		if(destination) {
-			registry::release(destination);
-			destination = NULL;
+		if(registry) {
+			registry::release(registry);
+			registry = NULL;
 		}
 		if(access) {
 			config::release(access);
 			access = NULL;
 		}
 
+		if(dialed) {
+			config::release(dialed);
+			dialed = NULL;
+		}
+
 		if(authorized) {
 			config::release(authorized);
 			authorized = NULL;
 		}
+
+		if(from) 	                                                             
+			osip_from_free(from);
+
+		if(to)
+			osip_to_free(to);
+
+		if(remote_uri)
+			osip_free(remote_uri);
+
+		if(local_uri)
+			osip_free(local_uri);
+
 		eXosip_event_free(sevent);
 	}
 }
