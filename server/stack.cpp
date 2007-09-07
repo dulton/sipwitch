@@ -121,6 +121,7 @@ service::callback(1), mapped_reuse<MappedCall>()
 	outgoing = false;
 	agent = "sipwitch";
 	restricted = trusted = NULL;
+	localnames = "localhost, localhost.localdomain";
 }
 
 void stack::destroy(session *s)
@@ -344,6 +345,7 @@ bool stack::reload(service *cfg)
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("stack");
 	int val;
+	const char *localhosts = "localhost, localhost.localdomain";
 
 	while(sp) {
 		key = sp->getId();
@@ -384,6 +386,8 @@ bool stack::reload(service *cfg)
 			}
 			else if(!stricmp(key, "restricted"))
 				restricted = cfg->dup(value);
+			else if(!stricmp(key, "localnames"))
+				localhosts = cfg->dup(value);
 			else if(!stricmp(key, "trusted"))
 				trusted = cfg->dup(value);
 			else if(!stricmp(key, "agent") && !isConfigured())
@@ -401,6 +405,8 @@ bool stack::reload(service *cfg)
 		}
 		sp.next();
 	}
+	localnames = localhosts;
+
 	if(!mapped_calls) 
 		mapped_calls = registry::getEntries();
 	if(!hash) {
