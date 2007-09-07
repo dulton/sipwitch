@@ -204,7 +204,7 @@ mempager(s), root()
 {
 	keynode *env;
 	
-	static char *vars[] = {"HOME", "USER", "IDENT", "PATH", "LANG", "PWD", "TZ", NULL};
+	static char *vars[] = {"HOME", "USER", "IDENT", "PATH", "LANG", "PWD", "TZ", "TMP", "SHELL", "CFG", NULL};
 	char **varp = vars;
 	const char *cp;
 

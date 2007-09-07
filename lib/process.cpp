@@ -146,6 +146,7 @@ static struct passwd *getuserenv(const char *id, const char *uid, const char *cf
 	struct group *grp;
 	char buf[128];
 	struct stat ino;
+	const char *cp;
 	
 	if(!cfgfile || !*cfgfile) 
 		setenv("CFG", "", 1);
@@ -209,6 +210,9 @@ static struct passwd *getuserenv(const char *id, const char *uid, const char *cf
 	setenv("UID", buf, 1);
 	setenv("USER", pwd->pw_name, 1);
 	setenv("HOME", pwd->pw_dir, 1);
+	cp = getenv("SHELL");
+	if(!cp)
+		setenv("SHELL", "/bin/sh", 1);
 	return pwd;
 }
 
