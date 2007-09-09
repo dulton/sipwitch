@@ -13,6 +13,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Support for memory mapped objects.
+ * Memory mapped objects are used to publish GNU Telephony services state
+ * information and statistics so that it may be accessible by external
+ * management processes.  The mapped memory objects are usually treated as
+ * a UCommon vector or reusable type factory, in the latter case using the
+ * shared memory block itself as a local heap.  Memory access is managed
+ * through a form of shared locking formed through conditionals.
+ * @file gnutelephony/mapped.h
+ */
+
 #ifndef _GNUTELEPHONY_MAPPED_H_
 #define	_GNUTELEPHONY_MAPPED_H_
 

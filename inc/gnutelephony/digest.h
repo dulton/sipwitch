@@ -13,6 +13,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Compute cryptographic hashes and cipher memory.
+ * Common cryptographic hash support depends on the underlying crypto
+ * library that we are linked with.  This is used to compute hashes for
+ * digest authentication.
+ * @file gnutelephony/digest.h
+ */
+
 #ifndef _GNUTELEPHONY_DIGEST_H_
 #define	_GNUTELEPHONY_DIGEST_H_
 

@@ -13,6 +13,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Classes related to sipwitch server.
+ * This covers the published interfaces to the sipwitch server itself.  These
+ * are mostly classes that are mapped into shared memory blocks, and for
+ * defining sipwitch specific plugin interfaces.
+ * @file gnutelephony/sipwitch.h
+ */
+
 #ifndef	_GNUTELEPHONY_SIPWITCH_H_
 #define	_GNUTELEPHONY_SIPWITCH_H_
 
@@ -21,6 +29,17 @@
 #include <gnutelephony/service.h>
 #include <gnutelephony/process.h>
 #include <gnutelephony/digest.h>
+
+/**
+ * Common namespace for sipwitch server.
+ * We use a sipwitch specific namespace to easily seperate sipwitch
+ * interfaces from other parts of GNU Telephony.  This namespace
+ * is controlled by the namespace macros (SIPWITCH_NAMESPACE and 
+ * NAMESPACE_SIPWITCH) and are used in place of direct namespace
+ * declarations to make parsing of tab levels simpler and to allow easy
+ * changes to the namespace name later if needed.
+ * @namespace sipwitch
+ */
 
 #define SIPWITCH_NAMESPACE  sipwitch
 #define NAMESPACE_SIPWITCH  namespace sipwitch {

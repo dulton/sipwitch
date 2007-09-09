@@ -13,6 +13,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Portable process management.
+ * This offers a portable abstract interface class for process & ipc related
+ * services that may be used by GNU Telephony servers.  This includes
+ * management of the deamon environment, executing child processes, and basic
+ * IPC services.  IPC services are offered through control ports which are
+ * implimented as fifo's on Posix platforms, and as mailslots on w32.
+ * @file gnutelephony/process.h
+ */
+
 #ifndef _GNUTELEPHONY_PROCESS_H_
 #define	_GNUTELEPHONY_PROCESS_H_
 

@@ -13,6 +13,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Service configuration and component callbacks.
+ * The service class offers tree based configuration subsystem that is
+ * parsed from XML configuration files.  The service class also offers a
+ * callback bus for attaching server components and for controlling
+ * component startup and shutdown.  This service bus can be extended through
+ * plugins as well as local objects in your server, all of which derive from 
+ * the callback member class of service.  Other features include support of
+ * snapshot dumps and checking functions to determine state of running
+ * servers.
+ * @file gnutelephony/service.h
+ */
+
 #ifndef _GNUTELEPHONY_SERVICE_H_
 #define	_GNUTELEPHONY_SERVICE_H_
 
