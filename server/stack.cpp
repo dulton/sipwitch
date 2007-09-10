@@ -117,12 +117,8 @@ void stack::background::run(void)
 				timeout = interval;
 			Conditional::wait(interval);
 		}
-		if(signalled || !expires.get()) {
-			Conditional::unlock();
-			timeout = expire();
-			Conditional::lock();
-			expires = timeout;
-		}
+		if(signalled || !expires.get())
+			expires = expire();
 		signalled = false;
 		Conditional::unlock();
 		messages::automatic();
@@ -160,6 +156,8 @@ void stack::destroy(session *s)
 	if(!s || !s->parent)
 		return;
 
+	background::access();
+	sip.exlock();
 	call *cr = s->parent;
 	sp = cr->segments.begin();
 	while(sp) {
@@ -173,10 +171,11 @@ void stack::destroy(session *s)
 	}
 	if(cr->map)
 		cr->map->enlist(&freemaps);
-	cr->detach();
+	cr->delist();
 	cr->LinkedObject::enlist(&freecalls);
 	--active_calls;
 	sip.release();
+	background::release();
 }
 
 void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
@@ -220,6 +219,7 @@ stack::session *stack::create(MappedRegistry *rr, int cid)
 	call *cr;
 	caddr_t mp;
 
+	background::access();
 	sip.exlock();
 	if(freecalls) {
 		mp = reinterpret_cast<caddr_t>(freecalls);
@@ -232,10 +232,13 @@ stack::session *stack::create(MappedRegistry *rr, int cid)
 	memset(mp, 0, sizeof(call));
 	cr = new(mp) call();
 	++active_calls;
+	cr->disarm();
 	cr->source = createSession(cr, cid);
 	cr->target = NULL;
-	cr->attach(stack::background::thread);
 	cr->count = 0;
+	cr->enlist(stack::background::thread);
+	sip.release();
+	background::release();
 	return cr->source;
 }
 
