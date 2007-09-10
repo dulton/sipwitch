@@ -160,8 +160,13 @@ bool config::confirm(const char *user)
 	while(node) {
 		number = 0;
 		leaf = node->leaf("id");
+		id = NULL;
 		if(leaf)
 			id = leaf->getPointer();
+
+		if(leaf && !registry::isUserid(id))
+			id = NULL;
+
 		if(leaf && id && !strcmp(node->getId(), "profile")) {
 			mp = (caddr_t)alloc_locked(sizeof(profile));
 			pp = new(mp) profile(&profiles);

@@ -26,7 +26,6 @@ static unsigned mapped_calls = 0;
 static LinkedObject *freesegs = NULL;
 static LinkedObject *freecalls = NULL;
 static LinkedObject *freemaps = NULL;
-static LinkedObject *active = NULL;
 static LinkedObject **hash = NULL;
 static unsigned keysize = 177;
 
@@ -48,7 +47,11 @@ static bool tobool(const char *s)
 
 stack stack::sip;
 
-stack::call::call() : LinkedObject(), segments()
+stack::call::call() : TimerQueue::event(Timer::reset), segments()
+{
+}
+
+void stack::call::expired(void)
 {
 }
 
@@ -105,7 +108,7 @@ void stack::background::run(void)
 }
 
 stack::stack() :
-service::callback(1), mapped_reuse<MappedCall>()
+service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 {
 	stacksize = 0;
 	threading = 2;
@@ -122,6 +125,14 @@ service::callback(1), mapped_reuse<MappedCall>()
 	agent = "sipwitch";
 	restricted = trusted = NULL;
 	localnames = "localhost, localhost.localdomain";
+}
+
+void stack::update(void)
+{
+}
+
+void stack::modify(void)
+{
 }
 
 void stack::destroy(session *s)
@@ -145,8 +156,8 @@ void stack::destroy(session *s)
 	}
 	if(cr->map)
 		cr->map->enlist(&freemaps);
-	cr->delist(&active);
-	cr->enlist(&freecalls);
+	cr->detach();
+	cr->LinkedObject::enlist(&freecalls);
 	--active_calls;
 	sip.release();
 }
@@ -206,7 +217,7 @@ stack::session *stack::create(MappedRegistry *rr, int cid)
 	++active_calls;
 	cr->source = createSession(cr, cid);
 	cr->target = NULL;
-	cr->enlist(&active);
+	cr->attach(&stack::sip);
 	cr->count = 0;
 	return cr->source;
 }
@@ -333,7 +344,7 @@ void stack::snapshot(FILE *fp)
 	fprintf(fp, "  active sessions: %d\n", active_segments);
 	fprintf(fp, "  allocated calls: %d\n", allocated_calls);
 	fprintf(fp, "  allocated sessions: %d\n", allocated_segments);
-	cp = active;
+	cp = begin();
 	while(cp) {
 		cp.next();
 	}

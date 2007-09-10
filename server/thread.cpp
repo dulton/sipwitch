@@ -207,14 +207,14 @@ rewrite:
 
 	if(fwd) {
 		cp = service::getValue(fwd, "all");
-		if(cp && *cp)
+		if(registry::isUserid(cp))
 			goto forwarding;
 	}
 
 	if(!registry && dialed) {
 		if(fwd) {
 			cp = service::getValue(fwd, "offline");
-			if(cp && *cp)
+			if(registry::isUserid(cp))
 				goto forwarding;
 		}
 		if(!stricmp(dialed->getId(), "group"))
@@ -232,7 +232,7 @@ rewrite:
 			goto invalid;
 		if(fwd)
 			cp = service::getValue(fwd, "offline");
-		if(fwd && cp && *cp) {
+		if(fwd && registry::isUserid(cp)) {
 forwarding:
 			string::set(dbuf, sizeof(dbuf), cp);
 			config::release(dialed);
@@ -250,7 +250,7 @@ forwarding:
 		error = SIP_BUSY_HERE;
 		if(fwd) {
 			cp = service::getValue(fwd, "dnd");
-			if(cp && *cp)
+			if(registry::isUserid(cp))
 				goto forwarding;
 		}
 		goto invalid;

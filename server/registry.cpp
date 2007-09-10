@@ -606,6 +606,20 @@ MappedRegistry *registry::contact(struct sockaddr *addr, const char *uid)
 	return rp->entry.registry;
 }
 
+bool registry::isUserid(const char *id)
+{
+	if(!id || !*id)
+		return false;
+
+	if(strlen(id) >= MAX_USERID_SIZE)
+		return false;
+
+	if(strchr(id, '@') || strchr(id, ':'))
+		return false;
+
+	return true;
+}
+
 bool registry::isExtension(const char *id)
 {
 	unsigned ext = atoi(id);

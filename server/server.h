@@ -24,7 +24,7 @@ using namespace UCOMMON_NAMESPACE;
 
 class thread;
 
-class __LOCAL stack : private service::callback, private mapped_reuse<MappedCall>
+class __LOCAL stack : private service::callback, private mapped_reuse<MappedCall>, public TimerQueue
 {
 private:
 	friend class thread;
@@ -67,7 +67,6 @@ private:
 
 		inline bool isTarget(void)
 			{return (this == parent->target);};
-
 	};
 
 	class __LOCAL segment : public OrderedObject
@@ -76,7 +75,7 @@ private:
 		session sid;
 	};
 
-	class __LOCAL call : public LinkedObject
+	class __LOCAL call : public TimerQueue::event
 	{
 	public:
 		typedef enum
@@ -93,6 +92,8 @@ private:
 		char from[MAX_URI_SIZE];	// who the call is from
 		char to[MAX_URI_SIZE];		// who is being called
 
+		void expired(void);
+
 		OrderedIndex segments;
 		session *source;
 		session *target;
@@ -100,7 +101,6 @@ private:
 		MappedCall *map;
 		unsigned count;
 		mutex_t mutex;
-		Timer timer;
 		mode_t mode;
 	};
 
@@ -126,6 +126,9 @@ private:
 	bool incoming, outgoing;
 	int send101;
 	int family, tlsmode, protocol;
+
+	void update(void);
+	void modify(void);
 
 public:
 	typedef	Socket::address address;
@@ -285,6 +288,7 @@ public:
 	__EXPORT static void addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const char *prefix, const char *suffix);
 	__EXPORT static unsigned setTarget(MappedRegistry *rr, stack::address *via, time_t expires, const char *contact);
 	__EXPORT static bool isExtension(const char *id);
+	__EXPORT static bool isUserid(const char *id);
 	__EXPORT static MappedRegistry *address(struct sockaddr *addr);
 	__EXPORT static MappedRegistry *contact(const char *uri);
 	__EXPORT static MappedRegistry *contact(struct sockaddr *addr, const char *uid);
