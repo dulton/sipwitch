@@ -310,6 +310,35 @@ stack::address *config::getContact(const char *uid)
 	return addr;
 }
 
+service::keynode *config::getRouting(const char *id)
+{
+	linked_pointer<keynode> node;
+	keynode *routing;
+	config *cfgp;
+	const char *cp;
+
+	if(!cfg)
+		return NULL;
+
+	locking.access();
+	cfgp = static_cast<config*>(cfg);
+	routing = cfgp->root.getLeaf("routing");
+	if(!routing) {
+		locking.release();
+		return NULL;
+	}
+
+	node = routing->getFirst();
+	while(node) {
+		cp = getValue(*node, "pattern");
+		if(cp && match(id, cp, false))
+			return *node; 
+		node.next();
+	}
+	locking.release();
+	return NULL;
+}
+	
 service::keynode *config::getProvision(const char *uid)
 {
 	keynode *node;

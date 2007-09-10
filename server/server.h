@@ -180,6 +180,7 @@ public:
 	__EXPORT static void *allocate(size_t size);
 	__EXPORT static bool check(void);
 	__EXPORT static profile_t *getProfile(const char *id); 
+	__EXPORT static keynode *getRouting(const char *id);
 	__EXPORT static keynode *getProvision(const char *id);
 	__EXPORT static keynode *getExtension(const char *id);
 	__EXPORT static cidr *getPolicy(struct sockaddr *addr);
@@ -347,6 +348,7 @@ private:
 	eXosip_event_t *sevent;
 	char buffer[MAX_URI_SIZE];	
 	char identity[MAX_USERID_SIZE];
+	char dialing[MAX_USERID_SIZE];
 	stack::address *via_address, *from_address, *to_address;
 	char *local_uri, *remote_uri;
 	osip_via_t *via_header, *origin_header;

@@ -107,6 +107,8 @@ bool thread::authorize(void)
 	time_t now;
 	unsigned level;
 	profile_t *pro;
+	const char *target;
+	char dbuf[MAX_USERID_SIZE];
 
 	if(!sevent->request || !sevent->request->to || !sevent->request->from)
 		goto invalid;
@@ -175,11 +177,14 @@ bool thread::authorize(void)
 
 local:
 	error = SIP_NOT_FOUND;
+	target = to->url->username;
+
+rewrite:
 	destination = LOCAL;
-	registry = registry::access(to->url->username);
+	registry = registry::access(target);
 
 	if(!registry)
-		dialed = config::getProvision(to->url->username);
+		dialed = config::getProvision(target);
 
 	if(!registry && !dialed)
 		goto routing;
@@ -197,7 +202,7 @@ local:
 		goto invalid;
 
 	// extension references always require authentication
-	if(registry::isExtension(to->url->username)) {
+	if(registry::isExtension(target)) {
 		if(!authenticate())
 			return false;
 		if(!registry)
@@ -216,7 +221,7 @@ routing:
 		return false;
 
 	if(!stricmp(authorized->getId(), "user")) {
-		cp = authorized->getValue("profile");
+		cp = service::getValue(authorized, "profile");
 		if(!cp)
 			cp = "*";
 		pro = config::getProfile(cp);
@@ -231,6 +236,44 @@ routing:
 	if(!level)
 		goto invalid;
 
+	// TODO: routing by registry
+
+	dialed = config::getRouting(target);
+	if(!dialed)
+		goto invalid;
+
+	if(!stricmp(dialed->getId(), "refuse")) {
+		cp = service::getValue(dialed, "error");
+		if(cp)
+			error = atoi(cp);
+		goto invalid;
+	}
+
+	// adjust dialing & processing based on routing properties
+// dialing:
+	dialing[0] = 0;
+	cp = service::getValue(dialed, "prefix");
+	if(cp && *cp == '-') {
+		--cp;
+		if(!strnicmp(target, cp, strlen(cp)))
+			target += strlen(cp);
+	} else if(cp) {
+		if(!strnicmp(target, cp, strlen(cp)))
+			string::set(dialing, sizeof(dialing), cp);
+	}
+	string::add(dialing, sizeof(dialing), target);
+	cp = service::getValue(dialed, "suffix");
+	if(cp && *cp == '-') {
+		--cp;
+		if(strlen(dialing) >= strlen(cp) && !stricmp(dialing + strlen(dialing) - strlen(cp), cp))	
+			dialing[strlen(dialing) - strlen(cp)] = 0;
+	} else if(cp)
+		string::add(dialing, sizeof(dialing), cp);
+	if(!stricmp(dialed->getId(), "rewrite")) {
+		string::set(dbuf, sizeof(dbuf), dialing);
+		target = dbuf;
+		goto rewrite;
+	}
 	return true;
 		
 anonymous:
@@ -270,6 +313,9 @@ bool thread::authenticate(void)
 	stringbuf<64> digest;
 	int error = SIP_PROXY_AUTHENTICATION_REQUIRED;
 	const char *cp;
+
+	if(authorized != NULL)
+		return true;
 
 	extension = 0;
 	auth = NULL;
