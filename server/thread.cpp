@@ -109,6 +109,7 @@ bool thread::authorize(void)
 	profile_t *pro;
 	const char *target;
 	char dbuf[MAX_USERID_SIZE];
+	registry::pattern *pp;
 
 	if(!sevent->request || !sevent->request->to || !sevent->request->from)
 		goto invalid;
@@ -178,9 +179,9 @@ bool thread::authorize(void)
 local:
 	error = SIP_NOT_FOUND;
 	target = to->url->username;
+	destination = LOCAL;
 
 rewrite:
-	destination = LOCAL;
 	registry = registry::access(target);
 
 	if(!registry)
@@ -197,9 +198,51 @@ rewrite:
 		goto invalid;
 	}
 
-	time(&now);
-	if(registry && registry->expires && registry->expires < now)
+	if(!registry && dialed) {
+		cp = service::getValue(dialed, "forwarding");
+		if(cp && *cp)
+			goto forwarding;
+		if(!stricmp(dialed->getId(), "group"))
+			return authenticate();
+		if(!stricmp(dialed->getId(), "refer"))
+			return authenticate();
+		if(!stricmp(dialed->getId(), "queue"))
+			goto anonymous;
 		goto invalid;
+	}
+
+	time(&now);
+	if(registry && registry->expires && registry->expires < now) {
+		if(!dialed)
+			dialed = config::getProvision(target);	
+		if(!dialed)
+			goto invalid;
+		cp = service::getValue(dialed, "forwarding");
+		if(cp && *cp) {
+forwarding:
+			string::set(dbuf, sizeof(dbuf), cp);
+			config::release(dialed);
+			registry::release(registry);
+			destination = FORWARD;
+			string::set(dialing, sizeof(dialing), target);
+			dialed = NULL;
+			registry = NULL;
+			target = dbuf;
+			goto rewrite;
+		}
+	}
+
+	if(registry && registry->status == MappedRegistry::DND) {
+		error = SIP_BUSY_HERE;
+		if(!dialed)
+			dialed = config::getProvision(target);	
+		if(!dialed)
+			goto invalid;
+		cp = service::getValue(dialed, "dnd");
+		if(cp && *cp)
+			goto forwarding;
+		goto invalid;
+	}
 
 	// extension references always require authentication
 	if(registry::isExtension(target)) {
@@ -240,8 +283,28 @@ routing:
 	if(!level)
 		goto invalid;
 
-	// TODO: routing by registry
+	pp = registry::getRouting(level, target);
+	if(!pp)
+		goto static_routing;
 
+	registry = pp->registry;
+	dialing[0] = 0;
+	if(pp->prefix[0] == '-') {
+		if(!strnicmp(target, pp->prefix + 1, strlen(pp->prefix) - 1))
+			target += strlen(pp->prefix) - 1;
+	} else if(pp->prefix[0]) {
+		if(strnicmp(target, pp->prefix, strlen(pp->prefix)))
+			string::set(dialing, sizeof(dialing), pp->prefix);
+	}
+	string::add(dialing, sizeof(dialing), target);
+	if(pp->suffix[0] == '-') {
+		if(strlen(dialing) > strlen(pp->suffix) && !stricmp(dialing + strlen(dialing) - strlen(pp->suffix) + 1, pp->suffix + 1))	
+			dialing[strlen(dialing) - strlen(pp->suffix) + 1] = 0;
+	} else
+		string::add(dialing, sizeof(dialing), pp->suffix);
+	return true;
+
+static_routing:
 	dialed = config::getRouting(target);
 	if(!dialed)
 		goto invalid;
@@ -254,7 +317,6 @@ routing:
 	}
 
 	// adjust dialing & processing based on routing properties
-// dialing:
 	dialing[0] = 0;
 	cp = service::getValue(dialed, "prefix");
 	if(cp && *cp == '-') {
@@ -262,7 +324,7 @@ routing:
 		if(!strnicmp(target, cp, strlen(cp)))
 			target += strlen(cp);
 	} else if(cp) {
-		if(!strnicmp(target, cp, strlen(cp)))
+		if(strnicmp(target, cp, strlen(cp)))
 			string::set(dialing, sizeof(dialing), cp);
 	}
 	string::add(dialing, sizeof(dialing), target);
@@ -281,6 +343,7 @@ routing:
 			registry::release(registry);
 		dialed = NULL;
 		registry = NULL;
+		destination = LOCAL;
 		goto rewrite;
 	}
 	return true;

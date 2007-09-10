@@ -210,15 +210,17 @@ public:
 		char contact[MAX_URI_SIZE]; 
 	};
 
-private:
 	class __LOCAL pattern : public LinkedObject
 	{
 	public:
 		MappedRegistry *registry;
 		unsigned priority;
 		char text[MAX_USERID_SIZE];
+		char prefix[MAX_USERID_SIZE];
+		char suffix[MAX_USERID_SIZE];
 	};
 
+private:
 	class __LOCAL route : public LinkedObject
 	{
 	public:
@@ -290,6 +292,7 @@ public:
 	__EXPORT static MappedRegistry *create(const char *id);
 	__EXPORT static MappedRegistry *access(const char *id);
 	__EXPORT static MappedRegistry *modify(const char *id);
+	__EXPORT static pattern *getRouting(unsigned trs, const char *id);
 	__EXPORT static void release(MappedRegistry *m);
 	__EXPORT static void update(MappedRegistry *m);
 	__EXPORT static bool remove(const char *id);
@@ -355,7 +358,7 @@ private:
 	osip_from_t *from;
 	osip_to_t *to;
 
-	enum {REMOTE, LOCAL, PUBLIC, ROUTED} destination;
+	enum {REMOTE, LOCAL, PUBLIC, ROUTED, FORWARD} destination;
 
 	thread();
 

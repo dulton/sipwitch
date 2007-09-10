@@ -624,6 +624,28 @@ bool registry::isExtension(const char *id)
 
 	return false;
 }
+
+registry::pattern *registry::getRouting(unsigned trs, const char *id)
+{
+	linked_pointer<pattern> pp;
+	if(trs > reg.routes)
+		trs = reg.routes;
+
+	if(!trs)
+		return NULL;
+
+	reg.access();
+	while(trs--) {
+		pp = primap[trs];
+		while(pp) {
+			if(service::match(id, pp->text, false) && pp->registry)
+				return *pp;
+			pp.next();
+		}
+	}
+	reg.release();
+	return NULL;
+}
 	
 MappedRegistry *registry::getExtension(const char *id)
 {
@@ -742,7 +764,6 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 
 void registry::addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const char *prefix, const char *suffix)
 {
-	char buffer[MAX_USERID_SIZE];
 	route *rp = createRoute();
 
 	if(!prefix)
@@ -750,8 +771,9 @@ void registry::addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const
 	if(!suffix)
 		suffix = "";
 
-	snprintf(buffer, sizeof(buffer), "%s;%s,%s", pat, prefix, suffix);
-	string::set(rp->entry.text, MAX_USERID_SIZE, buffer);
+	string::set(rp->entry.text, MAX_USERID_SIZE, pat);
+	string::set(rp->entry.prefix, MAX_USERID_SIZE, prefix);
+	string::set(rp->entry.suffix, MAX_USERID_SIZE, suffix);
 	rp->entry.priority = pri;
 	rp->entry.registry = rr;
 	rp->entry.enlist(&primap[pri]);
