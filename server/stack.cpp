@@ -55,7 +55,7 @@ void stack::call::expired(void)
 {
 }
 
-stack::background::background(timeout_t iv) : DetachedThread(), Conditional(), expires(Timer::inf)
+stack::background::background(timeout_t iv) : DetachedThread(), Conditional(), TimerQueue(), expires(Timer::inf)
 {
 	cancelled = false;
 	signalled = false;
@@ -76,16 +76,26 @@ void stack::background::cancel(void)
 	thread->Conditional::unlock();
 }
 
-void stack::background::modify(void)
+void stack::background::access(void)
 {
 	thread->Conditional::lock();
 }
 
+void stack::background::release(void)
+{
+	thread->Conditional::unlock();
+}
+
+void stack::background::modify(void)
+{
+	Conditional::lock();
+}
+
 void stack::background::update(void)
 {
-	thread->signalled = true;
-	thread->Conditional::signal();
-	thread->Conditional::unlock();
+	signalled = true;
+	Conditional::signal();
+	Conditional::unlock();
 }
 
 void stack::background::run(void)
@@ -107,8 +117,12 @@ void stack::background::run(void)
 				timeout = interval;
 			Conditional::wait(interval);
 		}
-		if(signalled || !expires.get())
-			expires = stack::sip.expire();
+		if(signalled || !expires.get()) {
+			Conditional::unlock();
+			timeout = expire();
+			Conditional::lock();
+			expires = timeout;
+		}
 		signalled = false;
 		Conditional::unlock();
 		messages::automatic();
@@ -119,7 +133,7 @@ void stack::background::run(void)
 }
 
 stack::stack() :
-service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
+service::callback(1), mapped_reuse<MappedCall>()
 {
 	stacksize = 0;
 	threading = 2;
@@ -136,16 +150,6 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	agent = "sipwitch";
 	restricted = trusted = NULL;
 	localnames = "localhost, localhost.localdomain";
-}
-
-void stack::update(void)
-{
-	background::update();
-}
-
-void stack::modify(void)
-{
-	background::modify();
 }
 
 void stack::destroy(session *s)
@@ -230,7 +234,7 @@ stack::session *stack::create(MappedRegistry *rr, int cid)
 	++active_calls;
 	cr->source = createSession(cr, cid);
 	cr->target = NULL;
-	cr->attach(&stack::sip);
+	cr->attach(stack::background::thread);
 	cr->count = 0;
 	return cr->source;
 }
@@ -330,8 +334,9 @@ void stack::start(service *cfg)
 void stack::stop(service *cfg)
 {
 	process::errlog(DEBUG1, "sip stack stopping");
-	background::cancel();
 	thread::shutdown();
+	// background thread may hold active call sessions, must be last
+	background::cancel();
 	Thread::yield();
 	eXosip_quit();
 	MappedMemory::release();
@@ -351,17 +356,17 @@ void stack::snapshot(FILE *fp)
 { 
 	linked_pointer<call> cp;
 	fprintf(fp, "SIP Stack:\n"); 
-	access();
+	background::access();
 	fprintf(fp, "  mapped calls: %d\n", mapped_calls);
 	fprintf(fp, "  active calls: %d\n", active_calls);
 	fprintf(fp, "  active sessions: %d\n", active_segments);
 	fprintf(fp, "  allocated calls: %d\n", allocated_calls);
 	fprintf(fp, "  allocated sessions: %d\n", allocated_segments);
-	cp = begin();
+	cp = background::thread->begin();
 	while(cp) {
 		cp.next();
 	}
-	release();
+	background::release();
 } 
 
 bool stack::reload(service *cfg)
