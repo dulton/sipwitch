@@ -229,7 +229,7 @@ routing:
 	}
 	else
 		level = registry::getRoutes();
-	cp = authorized->getValue("trs");
+	cp = service::getValue(authorized, "trs");
 	if(cp)
 		level = atoi(cp);
 
@@ -272,6 +272,11 @@ routing:
 	if(!stricmp(dialed->getId(), "rewrite")) {
 		string::set(dbuf, sizeof(dbuf), dialing);
 		target = dbuf;
+		config::release(dialed);
+		if(registry)
+			registry::release(registry);
+		dialed = NULL;
+		registry = NULL;
 		goto rewrite;
 	}
 	return true;

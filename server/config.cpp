@@ -332,7 +332,11 @@ service::keynode *config::getRouting(const char *id)
 	while(node) {
 		cp = getValue(*node, "pattern");
 		if(cp && match(id, cp, false))
-			return *node; 
+			return *node;
+		// we can use fixed identities instead of patterns... 
+		cp = getValue(*node, "identity");
+		if(cp && !stricmp(cp, id))
+			return *node;
 		node.next();
 	}
 	locking.release();
