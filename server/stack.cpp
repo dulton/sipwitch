@@ -55,7 +55,7 @@ void stack::call::expired(void)
 {
 }
 
-stack::background::background(timeout_t iv) : DetachedThread(), Conditional()
+stack::background::background(timeout_t iv) : DetachedThread(), Conditional(), expires(Timer::inf)
 {
 	cancelled = false;
 	signalled = false;
@@ -76,9 +76,13 @@ void stack::background::cancel(void)
 	thread->Conditional::unlock();
 }
 
-void stack::background::signal(void)
+void stack::background::modify(void)
 {
 	thread->Conditional::lock();
+}
+
+void stack::background::update(void)
+{
 	thread->signalled = true;
 	thread->Conditional::signal();
 	thread->Conditional::unlock();
@@ -87,6 +91,7 @@ void stack::background::signal(void)
 void stack::background::run(void)
 {
 	process::errlog(DEBUG1, "starting background thread");
+	timeout_t timeout;
 
 	for(;;) {
 		Conditional::lock();
@@ -96,8 +101,14 @@ void stack::background::run(void)
 			thread = NULL;
 			DetachedThread::exit();
 		}
-		if(!signalled)
+		timeout = expires.get();
+		if(!signalled && timeout) {
+			if(timeout > interval)
+				timeout = interval;
 			Conditional::wait(interval);
+		}
+		if(signalled || !expires.get())
+			expires = stack::sip.expire();
 		signalled = false;
 		Conditional::unlock();
 		messages::automatic();
@@ -129,10 +140,12 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 
 void stack::update(void)
 {
+	background::update();
 }
 
 void stack::modify(void)
 {
+	background::modify();
 }
 
 void stack::destroy(session *s)

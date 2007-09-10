@@ -35,7 +35,8 @@ private:
 	{
 	public:
 		static void create(timeout_t interval);
-		static void signal(void);
+		static void modify(void);
+		static void update(void);
 		static void cancel(void);
 
 	private:
@@ -44,6 +45,7 @@ private:
 		bool cancelled;
 		bool signalled;
 		timeout_t interval;
+		Timer expires;
 
 		background(timeout_t sync);
 		void run(void);
