@@ -24,27 +24,24 @@ using namespace UCOMMON_NAMESPACE;
 
 class thread;
 
-class __LOCAL stack : private service::callback, private mapped_reuse<MappedCall>
+class __LOCAL stack : private service::callback, private mapped_reuse<MappedCall>, public TimerQueue
 {
 private:
 	friend class thread;
 
 	class call;
 
-	class __LOCAL background : public DetachedThread, public Conditional, public TimerQueue
+	class __LOCAL background : public DetachedThread, public Conditional
 	{
 	public:
 		static void create(timeout_t interval);
 		static void cancel(void);
-		static void access(void);
-		static void release(void);
 
 		static background *thread;
 
+		static void signal(void);
+	
 	private:
-		void modify(void);
-		void update(void);
-
 		bool cancelled;
 		bool signalled;
 		timeout_t interval;
@@ -114,6 +111,8 @@ private:
 	void stop(service *cfg);
 	void snapshot(FILE *fp);
 	bool check(void);
+	void modify(void);
+	void update(void);
 
 	static stack sip;
 
