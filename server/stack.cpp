@@ -236,7 +236,6 @@ stack::session *stack::create(MappedRegistry *rr, int cid)
 	cr->target = NULL;
 	cr->count = 0;
 	cr->enlist(&stack::sip);
-	sip.release();
 	return cr->source;
 }
 
