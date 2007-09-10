@@ -180,8 +180,12 @@ local:
 	error = SIP_NOT_FOUND;
 	target = to->url->username;
 	destination = LOCAL;
+	string::set(dialing, sizeof(dialing), target);
 
 rewrite:
+	if(!target || !*target || strlen(target) >= MAX_USERID_SIZE)
+		goto invalid;
+
 	registry = registry::access(target);
 
 	if(!registry)
