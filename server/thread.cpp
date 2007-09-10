@@ -110,6 +110,7 @@ bool thread::authorize(void)
 	const char *target;
 	char dbuf[MAX_USERID_SIZE];
 	registry::pattern *pp;
+	service::keynode *fwd;
 
 	if(!sevent->request || !sevent->request->to || !sevent->request->from)
 		goto invalid;
@@ -177,19 +178,17 @@ bool thread::authorize(void)
 	goto remote;
 
 local:
-	error = SIP_NOT_FOUND;
 	target = to->url->username;
 	destination = LOCAL;
 	string::set(dialing, sizeof(dialing), target);
 
 rewrite:
+	error = SIP_NOT_FOUND;
 	if(!target || !*target || strlen(target) >= MAX_USERID_SIZE)
 		goto invalid;
 
 	registry = registry::access(target);
-
-	if(!registry)
-		dialed = config::getProvision(target);
+	dialed = config::getProvision(target);
 
 	if(!registry && !dialed)
 		goto routing;
@@ -215,10 +214,18 @@ rewrite:
 		goto invalid;
 	}
 
+	fwd = NULL;
+	if(dialed)
+		fwd = dialed->leaf("forward");
+
+	if(fwd) {
+		cp = service::getValue(fwd, "all");
+		if(cp && *cp)
+			goto forwarding;
+	}
+
 	time(&now);
 	if(registry && registry->expires && registry->expires < now) {
-		if(!dialed)
-			dialed = config::getProvision(target);	
 		if(!dialed)
 			goto invalid;
 		cp = service::getValue(dialed, "forwarding");
@@ -238,13 +245,11 @@ forwarding:
 
 	if(registry && registry->status == MappedRegistry::DND) {
 		error = SIP_BUSY_HERE;
-		if(!dialed)
-			dialed = config::getProvision(target);	
-		if(!dialed)
-			goto invalid;
-		cp = service::getValue(dialed, "dnd");
-		if(cp && *cp)
-			goto forwarding;
+		if(fwd) {
+			cp = service::getValue(fwd, "dnd");
+			if(cp && *cp)
+				goto forwarding;
+		}
 		goto invalid;
 	}
 
