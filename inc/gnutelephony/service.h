@@ -155,6 +155,7 @@ public:
 	static void shutdown(void);
 	static void snmptrap(unsigned id, const char *descr);
 	static long uptime(void);
+	static bool match(const char *digits, const char *pattern, bool partial);
 
 	static callback *getComponent(const char *id);
 	static keynode *getProtected(const char *path);

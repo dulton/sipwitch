@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 AUTOMAKE_OPTIONS = no-dependencies dist-shar dist-zip
-EXTRA_DIST = autogen.sh README *.pc.in TODO
+EXTRA_DIST = autogen.sh README *.pc.in TODO Doxyfile
 #  *.pc.in *.spec.in *.spec
 
 SUBDIRS = @BUILD_SUBDIRS@ inc test

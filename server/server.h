@@ -244,6 +244,7 @@ private:
 	const char *realm;
 	unsigned prefix;
 	unsigned range;
+	unsigned routes;
 
 public:
 	registry();
@@ -262,6 +263,9 @@ public:
 
 	inline static unsigned getRange(void)
 		{return reg.range;};
+
+	inline static unsigned getRoutes(void)
+		{return reg.routes;};
 
 	inline void access(void)
 		{MappedReuse::access();};

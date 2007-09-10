@@ -26,7 +26,6 @@ static volatile unsigned allocated_routes = 0;
 static volatile unsigned allocated_targets = 0;
 static unsigned mapped_entries = 999;
 
-static unsigned priorities = 10;
 static unsigned keysize = 177;
 static MappedRegistry **extmap = NULL;
 static LinkedObject **addresses = NULL;
@@ -49,6 +48,7 @@ service::callback(0), mapped_reuse<MappedRegistry>()
 	prefix = 100;
 	range = 600;
 	expires = 300l;
+	routes = 10;
 }
 
 void registry::exclusive(MappedRegistry *rr)
@@ -320,7 +320,7 @@ bool registry::reload(service *cfg)
 			else if(!stricmp(key, "range") && !isConfigured())
 				range = atoi(value);
 			else if(!stricmp(key, "priorities") && !isConfigured())
-				priorities = atoi(value);
+				routes = atoi(value);
 			else if(!stricmp(key, "expires"))
 				expires = atoi(value);
 			else if(!stricmp(key, "keysize") && !isConfigured())
@@ -336,8 +336,8 @@ bool registry::reload(service *cfg)
 		extmap = new MappedRegistry *[range];
 		memset(extmap, 0, sizeof(MappedRegistry *) * range);
 	}
-	primap = new LinkedObject *[priorities];
-	memset(primap, 0, sizeof(LinkedObject *) * priorities);
+	primap = new LinkedObject *[routes];
+	memset(primap, 0, sizeof(LinkedObject *) * routes);
 	keys = new LinkedObject *[keysize];
 	contacts = new LinkedObject *[keysize];
 	published = new LinkedObject *[keysize];

@@ -105,6 +105,8 @@ bool thread::authorize(void)
 	struct sockaddr_internet iface;
 	const char *cp;
 	time_t now;
+	unsigned level;
+	profile_t *pro;
 
 	if(!sevent->request || !sevent->request->to || !sevent->request->from)
 		goto invalid;
@@ -210,8 +212,27 @@ local:
 
 routing:
 	destination = ROUTED;
-	return authenticate();
+	if(!authenticate() || !authorized)
+		return false;
 
+	if(!stricmp(authorized->getId(), "user")) {
+		cp = authorized->getValue("profile");
+		if(!cp)
+			cp = "*";
+		pro = config::getProfile(cp);
+		level = pro->level;
+	}
+	else
+		level = registry::getRoutes();
+	cp = authorized->getValue("trs");
+	if(cp)
+		level = atoi(cp);
+
+	if(!level)
+		goto invalid;
+
+	return true;
+		
 anonymous:
 	destination = PUBLIC;
 	return true;

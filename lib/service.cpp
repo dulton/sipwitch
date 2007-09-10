@@ -982,4 +982,93 @@ FILE *service::open(const char *id, const char *uid, const char *cfgfile)
 	return fopen(buf, "r");
 }
 
+bool service::match(const char *digits, const char *match, bool partial)
+{
+	unsigned len = strlen(match);
+	unsigned dlen = 0;
+	bool inc;
+	const char *d = digits;
+	char dbuf[32];
+
+	if(*d == '+')
+		++d;
+
+	while(*d && dlen < sizeof(dbuf) - 1) {
+		if(isdigit(*d) || *d == '*' || *d == '#') {
+			dbuf[dlen++] = *(d++);
+			continue;
+		}
+
+		if(*d == ' ' || *d == ',') {
+			++d;
+			continue;
+		}
+
+		if(*d == '!')
+			break;
+
+		if(!stricmp(digits, match))
+			return true;
+
+		return false;
+	}
+
+	if(*d && *d != '!')
+		return false;
+
+	digits = dbuf;
+	dbuf[dlen] = 0;
+
+	if(*match == '+') {
+		++match;
+		--len;
+		if(dlen < len)
+			return false;
+		digits += (len - dlen);
+	}
+
+	while(*match && *digits) {
+		inc = true;
+		switch(*match) {
+		case 'x':
+		case 'X':
+			if(!isdigit(*digits))
+				return false;
+			break;
+		case 'N':
+		case 'n':
+			if(*digits < '2' || *digits > '9')
+				return false;
+			break;
+		case 'O':
+		case 'o':
+			if(*digits && *digits != '1')
+				inc = false;
+			break;
+		case 'Z':
+		case 'z':
+			if(*digits < '1' || *digits > '9')
+				return false;
+			break;
+		case '?':
+			if(!*digits)
+				return false;
+			break;
+		default:
+			if(*digits != *match)
+				return false;
+		}
+		if(*digits && inc)
+			++digits;
+		++match;
+	}
+	if(*match && !*digits)
+		return partial;
+
+	if(*match && *digits)
+		return false;
+
+	return true;
+}
+
 
