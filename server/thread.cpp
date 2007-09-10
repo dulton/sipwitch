@@ -216,6 +216,10 @@ rewrite:
 	return authenticate();
 
 routing:
+	// cannot re-route extension #s...
+	if(registry::isExtension(target))
+		goto invalid;
+
 	destination = ROUTED;
 	if(!authenticate() || !authorized)
 		return false;
