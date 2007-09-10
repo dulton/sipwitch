@@ -180,7 +180,7 @@ local:
 		dialed = config::getProvision(to->url->username);
 
 	if(!registry && !dialed)
-		goto invalid;
+		goto routing;
 
 	// reject nodes with defined errors
 	if(dialed && !stricmp(dialed->getId(), "reject")) {
@@ -206,6 +206,10 @@ local:
 	if(registry && registry->type == MappedRegistry::USER && (registry->profile.features & USER_PROFILE_INCOMING))
 		goto anonymous;
 
+	return authenticate();
+
+routing:
+	destination = ROUTED;
 	return authenticate();
 
 anonymous:

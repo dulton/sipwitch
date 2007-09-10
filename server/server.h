@@ -349,7 +349,7 @@ private:
 	osip_from_t *from;
 	osip_to_t *to;
 
-	enum {REMOTE, LOCAL, PUBLIC} destination;
+	enum {REMOTE, LOCAL, PUBLIC, ROUTED} destination;
 
 	thread();
 
