@@ -201,10 +201,22 @@ rewrite:
 		goto invalid;
 	}
 
-	if(!registry && dialed) {
-		cp = service::getValue(dialed, "forwarding");
+	fwd = NULL;
+	if(dialed)
+		fwd = dialed->leaf("forwarding");
+
+	if(fwd) {
+		cp = service::getValue(fwd, "all");
 		if(cp && *cp)
 			goto forwarding;
+	}
+
+	if(!registry && dialed) {
+		if(fwd) {
+			cp = service::getValue(fwd, "offline");
+			if(cp && *cp)
+				goto forwarding;
+		}
 		if(!stricmp(dialed->getId(), "group"))
 			return authenticate();
 		if(!stricmp(dialed->getId(), "refer"))
@@ -214,22 +226,13 @@ rewrite:
 		goto invalid;
 	}
 
-	fwd = NULL;
-	if(dialed)
-		fwd = dialed->leaf("forward");
-
-	if(fwd) {
-		cp = service::getValue(fwd, "all");
-		if(cp && *cp)
-			goto forwarding;
-	}
-
 	time(&now);
 	if(registry && registry->expires && registry->expires < now) {
 		if(!dialed)
 			goto invalid;
-		cp = service::getValue(dialed, "forwarding");
-		if(cp && *cp) {
+		if(fwd)
+			cp = service::getValue(fwd, "offline");
+		if(fwd && cp && *cp) {
 forwarding:
 			string::set(dbuf, sizeof(dbuf), cp);
 			config::release(dialed);
