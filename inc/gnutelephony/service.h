@@ -159,6 +159,8 @@ public:
 
 	static callback *getComponent(const char *id);
 	static keynode *getProtected(const char *path);
+	static keynode *path(const char *p);
+	static keynode *list(const char *p);
 
 	inline static keynode *getEnviron(void)
 		{return getProtected("environ");};

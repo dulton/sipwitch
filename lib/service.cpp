@@ -352,6 +352,28 @@ send:
 	}
 }
 
+service::keynode *service::path(const char *id)
+{
+	if(!cfg)
+		return NULL;
+
+	return cfg->getPath(id);
+}
+
+service::keynode *service::list(const char *id)
+{
+	keynode *node;
+
+	if(!cfg)
+		return NULL;
+
+	node = cfg->getPath(id);
+	if(node)
+		return node->getFirst();
+	return NULL;
+}
+
+
 service::keynode *service::getProtected(const char *id)
 {
 	keynode *node;
