@@ -378,6 +378,7 @@ private:
 	void challenge(void);
 	void options(void);
 	void run(void);
+	void getDevice(MappedRegistry *rr);
 
 public:
 	__EXPORT static void shutdown(void);

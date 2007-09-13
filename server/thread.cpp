@@ -599,8 +599,11 @@ void thread::reregister(const char *contact, time_t interval)
 	}
 	warning_registry = false;
 	time(&expire);
-	if(registry->expires < expire)
+	if(registry->expires < expire) {
 		registry->created = expire;
+		getDevice(registry);
+	}
+
 	expire += interval + 3;	// overdraft 3 seconds...
 	if(registry->type == MappedRegistry::USER && (registry->profile.features & USER_PROFILE_MULTITARGET))
 		count = registry::addTarget(registry, via_address, expire, contact);
@@ -639,6 +642,24 @@ reply:
 void thread::deregister()
 {
 	process::errlog(DEBUG1, "deauthorize %s", identity);
+}
+
+void thread::getDevice(MappedRegistry *rr)
+{
+	linked_pointer<service::keynode> device = config::list("devices");
+
+	while(device) {
+		linked_pointer<service::keynode> node = device->getFirst();
+		const char *id, *value;
+		while(node) {
+			id = node->getId();
+			value = node->getPointer();
+			if(id && value && !stricmp(id, "match")) {
+			}
+			node.next();
+		}
+		device.next();
+	}		
 }
 
 void thread::options(void)

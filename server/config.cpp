@@ -85,6 +85,9 @@ bool config::confirm(const char *user)
 	snprintf(buf, sizeof(buf), "- welcome prefix=%d range=%d", prefix, range);
 	setHeader(buf);
 
+	// add any missing keys
+	getPath("devices");
+
 	// construct default profiles
 
 	provision = getPath("provision");
@@ -112,8 +115,8 @@ bool config::confirm(const char *user)
 		if(dir)
 			dirpath = "/srv/sipw";
 		else {
-			mkdir("provision", 0770);
-			dirpath = "provision";
+			mkdir("sipusers", 0770);
+			dirpath = "sipusers";
 		}
 	}
 	if(!dir)
