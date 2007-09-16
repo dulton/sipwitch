@@ -641,7 +641,7 @@ reply:
 
 void thread::deregister()
 {
-	process::errlog(DEBUG1, "deauthorize %s", identity);
+	process::errlog(DEBUG1, "unregister %s", identity);
 }
 
 void thread::getDevice(MappedRegistry *rr)

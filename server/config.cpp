@@ -144,7 +144,7 @@ bool config::confirm(const char *user)
 		closedir(dir);
 
 	mp = (caddr_t)alloc_locked(sizeof(cidr));
-	new(mp) cidr(&acl, "127.0.0.1/32", "loopback");
+	new(mp) cidr(&acl, "127.0.0.0/8", "loopback");
 
 	mp = (caddr_t)alloc_locked(sizeof(cidr));
 	new(mp) cidr(&acl, "::1", "loopback");
@@ -231,6 +231,9 @@ void config::release(cidr *access)
 		locking.release();
 }
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 cidr *config::getPolicy(struct sockaddr *addr)
 {
 	cidr *policy;
