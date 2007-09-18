@@ -103,10 +103,11 @@ public:
 	ReusableObject *getLocked(void);
 	void removeLocked(ReusableObject *obj);
 	
-	void exlock(void);
+	void exclusive(void);
 	void share(void);
 	void access(void);
 	void release(void);
+	void exlock(void);
 
 	inline void unlock(void)
 		{ReusableAllocator::unlock();};

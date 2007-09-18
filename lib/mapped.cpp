@@ -408,6 +408,17 @@ ReusableObject *MappedReuse::getTimed(timeout_t timeout)
 	return obj;
 }
 
+void MappedReuse::exclusive(void)
+{
+	lock();
+	--reading;
+	while(reading) {
+		++waiting;
+		wait();
+		--waiting;
+	}
+}
+
 void MappedReuse::exlock(void)
 {
 	lock();

@@ -237,7 +237,6 @@ private:
 	void stop(service *cfg);
 	void snapshot(FILE *fp);
 
-	static void exclusive(MappedRegistry *rr);
 	static target *createTarget(void);
 	static route *createRoute(void);
 	static void expire(MappedRegistry *rr);
@@ -296,10 +295,8 @@ public:
 	__EXPORT static MappedRegistry *getExtension(const char *id);
 	__EXPORT static MappedRegistry *create(const char *id);
 	__EXPORT static MappedRegistry *access(const char *id);
-	__EXPORT static MappedRegistry *modify(const char *id);
 	__EXPORT static pattern *getRouting(unsigned trs, const char *id);
 	__EXPORT static void release(MappedRegistry *m);
-	__EXPORT static void update(MappedRegistry *m);
 	__EXPORT static bool remove(const char *id);
 	__EXPORT static void cleanup(void); 
 };
