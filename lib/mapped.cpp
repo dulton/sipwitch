@@ -431,8 +431,15 @@ void MappedReuse::exlock(void)
 
 void MappedReuse::share(void)
 {
-	++reading;
-	unlock();
+	if(waiting) {
+		broadcast();
+		unlock();
+		access();
+	} 
+	else {
+		++reading;
+		unlock();
+	}
 }
 
 void MappedReuse::access(void)
