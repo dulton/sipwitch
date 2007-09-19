@@ -577,7 +577,7 @@ void thread::reregister(const char *contact, time_t interval)
 	int answer = SIP_OK;
 	osip_message_t *reply = NULL;
 	time_t expire;
-	unsigned count;
+	unsigned count = 1;
 	osip_contact_t *c = NULL;
 	int pos = 0;
 
@@ -605,11 +605,13 @@ void thread::reregister(const char *contact, time_t interval)
 	}
 
 	expire += interval + 3;	// overdraft 3 seconds...
-	if(registry->type == MappedRegistry::USER && (registry->profile.features & USER_PROFILE_MULTITARGET))
-		count = registry::addTarget(registry, via_address, expire, contact);
-	else
-		count = registry::setTarget(registry, via_address, expire, contact);
 
+	if(!registry::refresh(registry, via_address, expire)) {
+		if(registry->type == MappedRegistry::USER && (registry->profile.features & USER_PROFILE_MULTITARGET))
+			count = registry::addTarget(registry, via_address, expire, contact);
+		else
+			count = registry::setTarget(registry, via_address, expire, contact);
+	}
 	if(count)
 		process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
 	else {
