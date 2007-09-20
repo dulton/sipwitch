@@ -88,7 +88,6 @@ class __EXPORT MappedReuse : protected ReusableAllocator, protected MappedMemory
 private:
 	unsigned objsize;
 	unsigned reading;
-	unsigned locking;
 
 public:
 	MappedReuse(const char *name, size_t osize, unsigned count);
@@ -109,9 +108,7 @@ public:
 	void access(void);
 	void release(void);
 	void exlock(void);
-
-	inline void unlock(void)
-		{ReusableAllocator::unlock();};
+	void commit(void);
 };
 
 template <class T>

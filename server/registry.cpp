@@ -83,7 +83,7 @@ bool registry::check(void)
 {
 	process::errlog(INFO, "checking registry...");
 	reg.exlock();
-	reg.unlock();
+	reg.commit();
 	return true;
 }
 
@@ -193,7 +193,7 @@ bool registry::remove(const char *id)
 		expire(rr);
 	else
 		rtn = false;
-	reg.unlock();
+	reg.commit();
 	return rtn;
 }
 
@@ -271,7 +271,7 @@ void registry::cleanup(void)
 		reg.exlock();
 		if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires < now)
 			expire(rr);
-		reg.unlock();
+		reg.commit();
 		Thread::yield();
 	}
 }
@@ -352,7 +352,7 @@ MappedRegistry *registry::create(const char *id)
 
 	rr = reg.getLocked();
 	if(!rr) {
-		reg.unlock();
+		reg.commit();
 		return NULL;
 	}
 
@@ -377,7 +377,7 @@ MappedRegistry *registry::create(const char *id)
 	if(!node || rr->type == MappedRegistry::EXPIRED) {
 		config::release(node);
 		reg.removeLocked(rr);
-		reg.unlock();
+		reg.commit();
 		return NULL;
 	}
 
