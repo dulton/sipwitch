@@ -210,7 +210,7 @@ public:
 			target *getTarget(void);
 		} index;
 		sockaddr_internet address, interface; 
-		time_t expires;
+		volatile time_t expires;
 		char contact[MAX_URI_SIZE]; 
 	};
 
@@ -297,6 +297,7 @@ public:
 	__EXPORT static MappedRegistry *access(const char *id);
 	__EXPORT static pattern *getRouting(unsigned trs, const char *id);
 	__EXPORT static void release(MappedRegistry *m);
+	__EXPORT static bool refresh(MappedRegistry *m, stack::address *adddr, time_t expires);
 	__EXPORT static bool remove(const char *id);
 	__EXPORT static void cleanup(void); 
 };

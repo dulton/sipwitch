@@ -80,7 +80,7 @@ public:
 	unsigned count;				// active regs count
 	sockaddr_internet contact;	// last/newest created contact registration
 	time_t	created;			// initial registration
-	time_t  expires;			// when registry expires as a whole
+	volatile time_t  expires;	// when registry expires as a whole
 	profile_t profile;			// profile at time of registration
 	LinkedObject *published;	// published routes
 	LinkedObject *targets;		// active registrations (can be multiple)

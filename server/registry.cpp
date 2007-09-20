@@ -774,6 +774,26 @@ void registry::addContact(MappedRegistry *rr, const char *id)
 	reg.share();
 }
 
+bool registry::refresh(MappedRegistry *rr, stack::address *addr, time_t expires)
+{
+	linked_pointer<target> tp;
+
+	if(!addr || !addr->getAddr() || !rr || !rr->expires || rr->type == MappedRegistry::EXPIRED)
+		return false;
+
+	tp = rr->targets;
+	while(tp) {
+		if(Socket::equal(addr->getAddr(), (struct sockaddr *)(&tp->address))) {
+			if(expires > rr->expires)
+				rr->expires = expires;
+			tp->expires = expires;
+			return true;
+		}
+		tp.next();
+	}
+	return false;
+}
+
 unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t expires, const char *contact)
 {
 	stack::address *origin;
