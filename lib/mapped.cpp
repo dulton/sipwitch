@@ -411,6 +411,7 @@ ReusableObject *MappedReuse::getTimed(timeout_t timeout)
 void MappedReuse::exclusive(void)
 {
 	lock();
+	assert(reading);
 	--reading;
 	while(reading) {
 		++waiting;
@@ -438,6 +439,7 @@ void MappedReuse::commit(void)
 
 void MappedReuse::share(void)
 {
+	assert(!reading);
 	++reading;
 	unlock();
 }
@@ -445,6 +447,7 @@ void MappedReuse::share(void)
 void MappedReuse::access(void)
 {
 	lock();
+	assert(!max_sharing || reading < max_sharing);
 	++reading;
 	unlock();
 }
@@ -452,6 +455,7 @@ void MappedReuse::access(void)
 void MappedReuse::release(void)
 {
 	lock();
+	assert(reading);
 	--reading;
 	if(!reading && waiting)
 		signal();
