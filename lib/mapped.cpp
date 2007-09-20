@@ -314,6 +314,7 @@ ReusableAllocator(), MappedMemory(name,  osize * count)
 {
 	objsize = osize;
 	reading = 0;
+	locking = 0;
 }
 
 MappedReuse::MappedReuse(size_t osize) :
@@ -321,6 +322,7 @@ ReusableAllocator(), MappedMemory()
 {
 	objsize = osize;
 	reading = 0;
+	locking = 0;
 }
 
 bool MappedReuse::avail(void)
@@ -413,9 +415,11 @@ void MappedReuse::exclusive(void)
 	lock();
 	--reading;
 	while(reading) {
+		++locking;
 		++waiting;
 		wait();
 		--waiting;
+		--locking;
 	}
 }
 
@@ -427,19 +431,14 @@ void MappedReuse::exlock(void)
 		wait();
 		--waiting;
 	}
+	if(waiting > locking)
+		broadcast();
 }
 
 void MappedReuse::share(void)
 {
-	if(waiting) {
-		broadcast();
-		unlock();
-		access();
-	} 
-	else {
-		++reading;
-		unlock();
-	}
+	++reading;
+	unlock();
 }
 
 void MappedReuse::access(void)
