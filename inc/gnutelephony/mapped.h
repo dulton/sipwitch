@@ -101,14 +101,7 @@ public:
 	ReusableObject *get(void);
 	ReusableObject *getTimed(timeout_t timeout);
 	ReusableObject *getLocked(void);
-	void removeLocked(ReusableObject *obj);
-	
-	void exclusive(void);
-	void share(void);
-	void access(void);
-	void release(void);
-	void exlock(void);
-	void commit(void);
+	void removeLocked(ReusableObject *obj);	
 };
 
 template <class T>
@@ -184,9 +177,6 @@ public:
 
 	inline T *getLocked(void)
 		{return static_cast<T*>(MappedReuse::getLocked());};
-
-	inline void release(void)
-		{MappedReuse::release();};
 
 	inline void release(T *o)
 		{ReusableAllocator::release(o);};

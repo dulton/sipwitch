@@ -28,6 +28,7 @@ static LinkedObject *freecalls = NULL;
 static LinkedObject *freemaps = NULL;
 static LinkedObject **hash = NULL;
 static unsigned keysize = 177;
+static condlock_t locking;
 
 stack::background *stack::background::thread = NULL;
 
@@ -106,9 +107,9 @@ void stack::background::run(void)
 		if(signalled || !expires.get()) {
 			signalled = false;
 			Conditional::unlock();
-			stack::sip.access();
+			locking.access();
 			expires = stack::sip.expire();
-			stack::sip.release();
+			locking.release();
 		}
 		else {
 			signalled = false;
@@ -158,7 +159,7 @@ void stack::destroy(session *s)
 	if(!s || !s->parent)
 		return;
 
-	sip.exlock();
+	locking.modify();
 	call *cr = s->parent;
 	sp = cr->segments.begin();
 	while(sp) {
@@ -175,7 +176,7 @@ void stack::destroy(session *s)
 	cr->delist();
 	cr->LinkedObject::enlist(&freecalls);
 	--active_calls;
-	sip.release();
+	locking.commit();
 }
 
 void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
@@ -219,7 +220,7 @@ stack::session *stack::create(MappedRegistry *rr, int cid)
 	call *cr;
 	caddr_t mp;
 
-	sip.exlock();
+	locking.modify();
 	if(freecalls) {
 		mp = reinterpret_cast<caddr_t>(freecalls);
 		freecalls = freecalls->getNext();
@@ -236,32 +237,15 @@ stack::session *stack::create(MappedRegistry *rr, int cid)
 	cr->target = NULL;
 	cr->count = 0;
 	cr->enlist(&stack::sip);
+	locking.share();
 	return cr->source;
-}
-
-stack::session *stack::modify(int cid)
-{
-	linked_pointer<session> sp;
-
-	sip.exlock();
-	sp = hash[cid % keysize];
-	while(sp) {
-		if(sp->cid == cid)
-			break;
-		sp.next();
-	}
-	if(!sp) {
-		sip.unlock();
-		return NULL;
-	}
-	return *sp;
 }
 
 stack::session *stack::access(int cid)
 {
 	linked_pointer<session> sp;
 
-	sip.access();
+	locking.access();
 	sp = hash[cid % keysize];
 	while(sp) {
 		if(sp->cid == cid)
@@ -269,7 +253,7 @@ stack::session *stack::access(int cid)
 		sp.next();
 	}
 	if(!sp) {
-		sip.release();
+		locking.release();
 		return NULL;
 	}
 	sp->parent->mutex.lock();
@@ -286,7 +270,7 @@ void stack::release(session *s)
 {
 	if(s) {
 		s->parent->mutex.release();
-		sip.release();
+		locking.release();
 	}
 }
 	
@@ -355,7 +339,7 @@ void stack::snapshot(FILE *fp)
 { 
 	linked_pointer<call> cp;
 	fprintf(fp, "SIP Stack:\n"); 
-	exlock();
+	locking.access();
 	fprintf(fp, "  mapped calls: %d\n", mapped_calls);
 	fprintf(fp, "  active calls: %d\n", active_calls);
 	fprintf(fp, "  active sessions: %d\n", active_segments);
@@ -365,7 +349,7 @@ void stack::snapshot(FILE *fp)
 	while(cp) {
 		cp.next();
 	}
-	release();
+	locking.release();
 } 
 
 bool stack::reload(service *cfg)

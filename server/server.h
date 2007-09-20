@@ -131,25 +131,19 @@ private:
 	int send101;
 	int family, tlsmode, protocol;
 
+    __EXPORT static session *createSession(call *cp, int cid);
+
 public:
 	typedef	Socket::address address;
 
 	stack();
 
-	inline void access(void)
-		{MappedReuse::access();};
-
-	inline void release(void)
-		{MappedReuse::release();};
-
 	__EXPORT static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
-	__EXPORT static session *createSession(call *cp, int cid);
 	__EXPORT static session *create(MappedRegistry *rr, int cid);
 	__EXPORT static void destroy(session *s);
 	__EXPORT static void release(session *s);
 	__EXPORT static void commit(session *s);
 	__EXPORT static session *access(int cid);
-	__EXPORT static session *modify(int cid);
 	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
 	__EXPORT static address *getAddress(const char *uri, address *addr = NULL);
 };
@@ -272,12 +266,6 @@ public:
 
 	inline static unsigned getRoutes(void)
 		{return reg.routes;};
-
-	inline void access(void)
-		{MappedReuse::access();};
-
-	inline void release(void)
-		{MappedReuse::release();};
 
 	__EXPORT static unsigned getEntries(void);
 	__EXPORT static unsigned getIndex(MappedRegistry *rr);

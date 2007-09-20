@@ -35,6 +35,7 @@ static LinkedObject **primap = NULL;
 static LinkedObject *freeroutes = NULL;
 static LinkedObject *freetargets = NULL;
 static LinkedObject **keys = NULL;
+static condlock_t locking;
 
 registry registry::reg;
 
@@ -82,8 +83,8 @@ void registry::start(service *cfg)
 bool registry::check(void)
 {
 	process::errlog(INFO, "checking registry...");
-	reg.exlock();
-	reg.commit();
+	locking.modify();
+	locking.commit();
 	return true;
 }
 
@@ -103,7 +104,7 @@ void registry::snapshot(FILE *fp)
 	linked_pointer<route> rp;
 	char buffer[128];
 
-	access();
+	locking.access();
 	fprintf(fp, "Registry:\n"); 
 	fprintf(fp, "  mapped entries: %d\n", mapped_entries);
 	fprintf(fp, "  active entries: %d\n", active_entries);
@@ -179,7 +180,7 @@ void registry::snapshot(FILE *fp)
 		fflush(fp);
 		Thread::yield();
 	}
-	release();
+	locking.release();
 } 
 
 bool registry::remove(const char *id)
@@ -187,13 +188,13 @@ bool registry::remove(const char *id)
 	bool rtn = true;
 	MappedRegistry *rr;
 
-	reg.exlock();
+	locking.modify();
 	rr = find(id);
 	if(rr)
 		expire(rr);
 	else
 		rtn = false;
-	reg.commit();
+	locking.commit();
 	return rtn;
 }
 
@@ -268,10 +269,10 @@ void registry::cleanup(void)
 	while(count < mapped_entries) {
 		time(&now);
 		rr = reg.pos(count++);
-		reg.exlock();
+		locking.modify();
 		if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires < now)
 			expire(rr);
-		reg.commit();
+		locking.commit();
 		Thread::yield();
 	}
 }
@@ -343,16 +344,16 @@ MappedRegistry *registry::create(const char *id)
 	const char *cp = "none";
 	profile_t *pro = NULL;
 
-	reg.exlock();
+	locking.modify();
 	rr = find(id);
 	if(rr) {
-		reg.share();
+		locking.share();
 		return rr;
 	}
 
 	rr = reg.getLocked();
 	if(!rr) {
-		reg.commit();
+		locking.commit();
 		return NULL;
 	}
 
@@ -377,7 +378,7 @@ MappedRegistry *registry::create(const char *id)
 	if(!node || rr->type == MappedRegistry::EXPIRED) {
 		config::release(node);
 		reg.removeLocked(rr);
-		reg.commit();
+		locking.commit();
 		return NULL;
 	}
 
@@ -482,7 +483,7 @@ MappedRegistry *registry::create(const char *id)
 	// exchange exclusive mutex lock for registry to shared before return
 	// when registry state is again stable.
 
-	reg.share();
+	locking.share();
 
 	return rr;
 }	
@@ -495,7 +496,7 @@ MappedRegistry *registry::address(struct sockaddr *addr)
 	unsigned path = Socket::keyindex(addr, keysize);
 	time_t now;
 
-	reg.access();
+	locking.access();
 
 	time(&now);
 	ind = addresses[path];
@@ -510,7 +511,7 @@ MappedRegistry *registry::address(struct sockaddr *addr)
 	}
 
 	if(!rr)
-		reg.release();
+		locking.release();
 	return rr;
 }
 
@@ -552,7 +553,7 @@ MappedRegistry *registry::contact(struct sockaddr *addr, const char *uid)
 	MappedRegistry *rr;
 	linked_pointer<route> rp;
 	unsigned path = NamedObject::keyindex(uid, keysize);
-	reg.access();
+	locking.access();
 	rp = contacts[path];
 	while(rp) {
 		if(!stricmp(uid, rp->entry.text) && Socket::equal(addr, (struct sockaddr *)(&rp->entry.registry->contact)))
@@ -561,7 +562,7 @@ MappedRegistry *registry::contact(struct sockaddr *addr, const char *uid)
 	}
 
 	if(!rp) {
-		reg.release();
+		locking.release();
 		return NULL;
 	}
 	rr = rp->entry.registry;
@@ -610,7 +611,7 @@ registry::pattern *registry::getRouting(unsigned trs, const char *id)
 	if(!trs)
 		return NULL;
 
-	reg.access();
+	locking.access();
 	while(trs--) {
 		pp = primap[trs];
 		while(pp) {
@@ -619,7 +620,7 @@ registry::pattern *registry::getRouting(unsigned trs, const char *id)
 			pp.next();
 		}
 	}
-	reg.release();
+	locking.release();
 	return NULL;
 }
 	
@@ -629,13 +630,13 @@ MappedRegistry *registry::getExtension(const char *id)
 	MappedRegistry *rr = NULL;
 	time_t now;
 
-	reg.access();
+	locking.access();
 	time(&now);
 	rr = extmap[ext - reg.prefix];
 	if(rr->expires && rr->expires < now)
 		rr = NULL;
 	if(!rr)
-		reg.MappedReuse::release();
+		locking.release();
 	return rr;
 }
 
@@ -647,12 +648,12 @@ MappedRegistry *registry::access(const char *id)
 	if(isExtension(id))
 		ext = atoi(id);
 
-	reg.access();
+	locking.access();
 	rr = find(id);
 	if(!rr && reg.range && ext >= reg.prefix && ext < reg.prefix + reg.range)
 		rr = extmap[ext - reg.prefix];
 	if(!rr)
-		reg.release();
+		locking.release();
 	return rr;
 }
 
@@ -661,7 +662,7 @@ void registry::release(MappedRegistry *rr)
 	if(!rr)
 		return;
 
-	reg.release();
+	locking.release();
 }
 
 unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t expires, const char *contact)
@@ -680,7 +681,7 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 
 	len = Socket::getlen(ai);
 
-	reg.exclusive();
+	locking.exclusive();
 	tp = rr->targets;
 	while(tp && rr->count > 1) {
 		--active_targets;
@@ -722,13 +723,13 @@ unsigned registry::setTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 			delete origin;
 	}
 	string::set(tp->contact, MAX_URI_SIZE, contact);
-	reg.share();
+	locking.share();
 	return 1;
 }
 
 void registry::addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const char *prefix, const char *suffix)
 {
-	reg.exclusive();
+	locking.exclusive();
 	route *rp = createRoute();
 
 	if(!prefix)
@@ -743,13 +744,13 @@ void registry::addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const
 	rp->entry.registry = rr;
 	rp->entry.enlist(&primap[pri]);
 	rp->enlist(&rr->routes);
-	reg.share();
+	locking.share();
 }
 
 void registry::addPublished(MappedRegistry *rr, const char *id)
 {
 	unsigned path = NamedObject::keyindex(id, keysize);
-	reg.exclusive();
+	locking.exclusive();
 	route *rp = createRoute();
 	string::set(rp->entry.text, MAX_USERID_SIZE, id);
 	rp->entry.priority = 0;
@@ -757,21 +758,21 @@ void registry::addPublished(MappedRegistry *rr, const char *id)
 	rp->entry.enlist(&published[path]);
 	rp->enlist(&rr->published);
 	++published_routes;
-	reg.share();
+	locking.share();
 }
 
 void registry::addContact(MappedRegistry *rr, const char *id)
 {
 	unsigned path = NamedObject::keyindex(id, keysize);
 
-	reg.exclusive();
+	locking.exclusive();
 	route *rp = createRoute();
 	string::set(rp->entry.text, MAX_USERID_SIZE, id);
 	rp->entry.priority = 0;
 	rp->entry.registry = rr;
 	rp->entry.enlist(&contacts[path]);
 	rp->enlist(&rr->routes);
-	reg.share();
+	locking.share();
 }
 
 bool registry::refresh(MappedRegistry *rr, stack::address *addr, time_t expires)
@@ -809,7 +810,7 @@ unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	if(!ai)
 		return 0;
 
-	reg.exclusive();
+	locking.exclusive();
 	tp = rr->targets;
 	if(expires > rr->expires)
 		rr->expires = expires;
@@ -837,7 +838,7 @@ unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 			expired->enlist(&freetargets);
 		}
 		tp->expires = expires;
-		reg.share();
+		locking.share();
 		return rr->count;
 	}
 	if(!expired) {
@@ -860,7 +861,7 @@ unsigned registry::addTarget(MappedRegistry *rr, stack::address *addr, time_t ex
 	expired->index.registry = rr;
 	expired->index.address = (struct sockaddr *)(&expired->address);
 	expired->index.enlist(&addresses[Socket::keyindex(expired->index.address, keysize)]); 
-	reg.share();
+	locking.share();
 	return rr->count;
 }
 
@@ -877,9 +878,9 @@ unsigned registry::setTargets(MappedRegistry *rr, stack::address *addr)
 	if(!al)
 		return 0;
 
-	reg.exclusive();
+	locking.exclusive();
 	if(rr->expires) {
-		reg.share();
+		locking.share();
 		return 0;
 	}
 
@@ -905,7 +906,7 @@ unsigned registry::setTargets(MappedRegistry *rr, stack::address *addr)
 		al = al->ai_next;
 	}
 	rr->expires = 0;
-	reg.share();
+	locking.share();
 	return rr->count;
 }
 
