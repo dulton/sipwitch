@@ -263,7 +263,7 @@ stack::session *stack::access(int cid)
 void stack::commit(session *s)
 {
 	if(s)
-		sip.unlock();
+		locking.commit();
 }
 
 void stack::release(session *s)
