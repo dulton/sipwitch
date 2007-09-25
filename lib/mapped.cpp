@@ -377,11 +377,11 @@ ReusableObject *MappedReuse::getLocked(void)
 ReusableObject *MappedReuse::getTimed(timeout_t timeout)
 {
 	bool rtn = true;
-	Timer expires;
+	struct timespec ts;
 	ReusableObject *obj = NULL;
 
 	if(timeout && timeout != Timer::inf)
-		expires.set(timeout);
+		gettimeout(timeout, &ts);
 
 	lock();
 	while(rtn && (!freelist || freelist && reading) && used >= size) {
@@ -389,7 +389,7 @@ ReusableObject *MappedReuse::getTimed(timeout_t timeout)
 		if(timeout == Timer::inf)
 			wait();
 		else if(timeout)
-			rtn = wait(*expires);
+			rtn = wait(&ts);
 		else
 			rtn = false;
 		--waiting;

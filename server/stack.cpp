@@ -102,7 +102,7 @@ void stack::background::run(void)
 		if(!signalled && timeout) {
 			if(timeout > interval)
 				timeout = interval;
-			Conditional::wait(interval);
+			Conditional::waitTimeout(interval);
 		}
 		if(signalled || !expires.get()) {
 			signalled = false;
@@ -176,7 +176,7 @@ void stack::destroy(session *s)
 	cr->delist();
 	cr->LinkedObject::enlist(&freecalls);
 	--active_calls;
-	locking.commit();
+	locking.release();
 }
 
 void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
@@ -263,7 +263,7 @@ stack::session *stack::access(int cid)
 void stack::commit(session *s)
 {
 	if(s)
-		locking.commit();
+		locking.release();
 }
 
 void stack::release(session *s)

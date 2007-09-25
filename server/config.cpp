@@ -411,7 +411,7 @@ bool config::check(void)
 {
 	process::errlog(INFO, "checking config...");
 	locking.modify();
-	locking.commit();
+	locking.release();
 	process::errlog(INFO, "checking components...");
 	if(service::check()) {
 		process::errlog(INFO, "checking complete");
@@ -458,7 +458,7 @@ void config::reload(const char *uid)
 		if(reclaim) {
 			locking.modify();
 			delete reclaim;
-			locking.commit();
+			locking.release();
 		}
 		reclaim = cfgp;
 	}
