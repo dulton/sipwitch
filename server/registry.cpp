@@ -84,7 +84,7 @@ bool registry::check(void)
 {
 	process::errlog(INFO, "checking registry...");
 	locking.modify();
-	locking.release();
+	locking.commit();
 	return true;
 }
 
@@ -194,7 +194,7 @@ bool registry::remove(const char *id)
 		expire(rr);
 	else
 		rtn = false;
-	locking.release();
+	locking.commit();
 	return rtn;
 }
 
@@ -272,7 +272,7 @@ void registry::cleanup(void)
 		locking.modify();
 		if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires < now)
 			expire(rr);
-		locking.release();
+		locking.commit();
 		Thread::yield();
 	}
 }
@@ -344,14 +344,16 @@ MappedRegistry *registry::create(const char *id)
 	const char *cp = "none";
 	profile_t *pro = NULL;
 
-	locking.access();
+	locking.modify();
 	rr = find(id);
-	if(rr)
+	if(rr) {
+		locking.share();
 		return rr;
+	}
 
 	rr = reg.getLocked();
 	if(!rr) {
-		locking.release();
+		locking.commit();
 		return NULL;
 	}
 
@@ -376,11 +378,9 @@ MappedRegistry *registry::create(const char *id)
 	if(!node || rr->type == MappedRegistry::EXPIRED) {
 		config::release(node);
 		reg.removeLocked(rr);
-		locking.release();
+		locking.commit();
 		return NULL;
 	}
-
-	locking.exclusive();
 
 	// add static services if exist
 	rp = node->leaf("contacts");
@@ -484,6 +484,7 @@ MappedRegistry *registry::create(const char *id)
 	// when registry state is again stable.
 
 	locking.share();
+
 	return rr;
 }	
 

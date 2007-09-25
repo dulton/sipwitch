@@ -176,7 +176,7 @@ void stack::destroy(session *s)
 	cr->delist();
 	cr->LinkedObject::enlist(&freecalls);
 	--active_calls;
-	locking.release();
+	locking.commit();
 }
 
 void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
@@ -263,7 +263,7 @@ stack::session *stack::access(int cid)
 void stack::commit(session *s)
 {
 	if(s)
-		locking.release();
+		locking.commit();
 }
 
 void stack::release(session *s)
