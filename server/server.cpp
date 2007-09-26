@@ -397,7 +397,7 @@ extern "C" int main(int argc, char **argv)
 				fprintf(stderr, "*** sipw: debug level missing\n");
 				exit(-1);
 			}
-			verbose = atoi(cp);
+			verbose = atoi(cp) + INFO;
 			continue;
 		}
 
@@ -406,7 +406,10 @@ extern "C" int main(int argc, char **argv)
 			switch(*cp) {
 			case 'v':
 				warned = true;
-				++verbose;
+				if(!verbose)
+					verbose = INFO;
+				else
+					++verbose;
 				break;
 			case 'f':
 				daemon = false;

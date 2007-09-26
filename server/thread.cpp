@@ -91,7 +91,7 @@ bool thread::unauthenticated(void)
 		return true;
 
 untrusted:
-	debug(1, "challenge request required");
+	debug(2, "challenge request required");
 	challenge();
 	return false;
 }
@@ -615,7 +615,7 @@ void thread::reregister(const char *contact, time_t interval)
 			count = registry::setTarget(registry, via_address, expire, contact);
 	}
 	if(refresh) 
-		debug(1, "refreshing %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
+		debug(2, "refreshing %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
 	else if(count)
 			process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
 	else {
@@ -709,7 +709,7 @@ void thread::run(void)
 		if(!sevent)
 			continue;
 
-		debug(1, "sip: event %d; cid=%d, did=%d, instance=%d",
+		debug(2, "sip: event %d; cid=%d, did=%d, instance=%d",
 			sevent->type, sevent->cid, sevent->did, instance);
 
 		switch(sevent->type) {
