@@ -76,7 +76,7 @@ public:
 };
 
 #ifdef	DEBUG
-#define	debug(l, s, a...)	process::errlog((errlevel_t)(DEBUG1 + l), s, ## a)
+#define	debug(l, s, a...)	process::errlog((errlevel_t)(INFO + l), s, ## a)
 #else
 #define	debug(l, s, a...)
 #endif
