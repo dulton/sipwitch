@@ -91,7 +91,7 @@ bool thread::unauthenticated(void)
 		return true;
 
 untrusted:
-	process::errlog(DEBUG1, "challenge request required");
+	debug(1, "challenge request required");
 	challenge();
 	return false;
 }
@@ -580,6 +580,7 @@ void thread::reregister(const char *contact, time_t interval)
 	unsigned count = 1;
 	osip_contact_t *c = NULL;
 	int pos = 0;
+	bool refresh;
 
 	if(extension && (extension < registry::getPrefix() || extension >= registry::getPrefix() + registry::getRange())) {
 		answer = SIP_NOT_ACCEPTABLE_HERE;
@@ -606,14 +607,17 @@ void thread::reregister(const char *contact, time_t interval)
 
 	expire += interval + 3;	// overdraft 3 seconds...
 
-	if(!registry::refresh(registry, via_address, expire)) {
+	refresh = registry::refresh(registry, via_address, expire);
+	if(!refresh) {
 		if(registry->type == MappedRegistry::USER && (registry->profile.features & USER_PROFILE_MULTITARGET))
 			count = registry::addTarget(registry, via_address, expire, contact);
 		else
 			count = registry::setTarget(registry, via_address, expire, contact);
 	}
-	if(count)
-		process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
+	if(refresh) 
+		debug(1, "refreshing %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
+	else if(count)
+			process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
 	else {
 		process::errlog(ERROR, "cannot register %s from %s", identity, buffer);
 		answer = SIP_FORBIDDEN;
@@ -705,7 +709,7 @@ void thread::run(void)
 		if(!sevent)
 			continue;
 
-		process::errlog(DEBUG1, "sip: event %d; cid=%d, did=%d, instance=%d",
+		debug(1, "sip: event %d; cid=%d, did=%d, instance=%d",
 			sevent->type, sevent->cid, sevent->did, instance);
 
 		switch(sevent->type) {

@@ -75,6 +75,12 @@ public:
 	static FILE *open(const char *id, const char *uid = NULL, const char *cfgpath = NULL);
 };
 
+#ifdef	DEBUG
+#define	debug(l, s, a...)	process::errlog((errlevel_t)(DEBUG1 + l), s, ## a)
+#else
+#define	debug(l, s, a...)
+#endif
+
 END_NAMESPACE
 
 #endif

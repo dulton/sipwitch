@@ -178,7 +178,7 @@ bool config::confirm(const char *user)
 			leaf = node->leaf("trs");
 			if(leaf && leaf->getPointer())
 				pp->value.level = atoi(leaf->getPointer());
-			process::errlog(DEBUG1, "adding profile %s", id);
+			debug(1, "adding profile %s", id);
 			if(!stricmp(id, "*"))
 				ppd = pp;
 		}
@@ -187,7 +187,7 @@ bool config::confirm(const char *user)
 			if(create(id, *node))
 				process::errlog(WARN, "duplicate identity %s", id);
 			else {
-				process::errlog(DEBUG1, "adding %s %s", node->getId(), id);
+				debug(1, "adding %s %s", node->getId(), id);
 				if(!stricmp(node->getId(), "reject"))
 					registry::remove(id);
 			}
