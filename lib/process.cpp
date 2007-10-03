@@ -339,10 +339,10 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 	case DEBUG2:
 	case DEBUG3:
 		if((getppid() > 1) && (loglevel <= verbose)) {
-			fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
-			if(fmt[strlen(fmt) - 1] != '\n') 
-				fputc('\n', stderr);
-			fflush(stderr);
+			if(fmt[strlen(fmt) - 1] == '\n') 
+				fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
+			else
+				fprintf(stderr, "%s: %s\n", getenv("IDENT"), buf);
 		}
 		return;
 	case INFO:
@@ -366,10 +366,10 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 
 	if(loglevel <= verbose) {
 		if(getppid() > 1) {
-			fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
-			if(fmt[strlen(fmt) - 1] != '\n') 
-				fputc('\n', stderr);
-			fflush(stderr);
+			if(fmt[strlen(fmt) - 1] == '\n') 
+				fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
+			else
+				fprintf(stderr, "%s: %s\n", getenv("IDENT"), buf);
 		}
 
 		service::snmptrap(loglevel + 10, buf);
@@ -404,7 +404,9 @@ restart:
 		else
 			status = WIFEXITED(status);
 		switch(status) {
+#ifdef	SIGPWR
 		case SIGPWR:
+#endif
 		case SIGINT:
 		case SIGQUIT:
 		case SIGTERM:
