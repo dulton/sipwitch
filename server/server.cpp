@@ -26,6 +26,7 @@ public:
 	sigset_t sigs;
 
 	SignalThread();
+	~SignalThread();
 
 	void run(void);
 } sigthread;
@@ -33,6 +34,12 @@ public:
 SignalThread::SignalThread() :
 JoinableThread()
 {
+}
+
+SignalThread::~SignalThread()
+{
+	pthread_kill(tid, SIGALRM);
+	cancel();
 }
 
 void SignalThread::run(void)
@@ -51,6 +58,7 @@ void SignalThread::run(void)
 		signo = sigwait(&sigs);
 #endif
 		alarm(0);
+		Thread::yield();
 		process::errlog(DEBUG1, "received signal %d", signo);
 		switch(signo) {
 		case SIGALRM:
