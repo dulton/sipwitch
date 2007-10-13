@@ -22,6 +22,7 @@ static volatile bool warning_registry = false;
 static bool shutdown_flag = false;
 static unsigned shutdown_count = 0;
 static unsigned startup_count = 0;
+static unsigned active_count = 0;
 
 static char *remove_quotes(char *c)
 {
@@ -760,7 +761,7 @@ void thread::options(void)
 void thread::shutdown(void)
 {
 	shutdown_flag = true;
-	while(shutdown_count == startup_count)
+	while(active_count)
 		Thread::sleep(50);
 	eXosip_quit();
 	while(shutdown_count < startup_count)
@@ -780,7 +781,9 @@ void thread::run(void)
 	raisePriority(stack::sip.priority);
 
 	for(;;) {
-		sevent = eXosip_event_wait(0, stack::sip.timing);
+		if(!shutdown_flag)
+			sevent = eXosip_event_wait(0, stack::sip.timing);
+
 		via_header = NULL;
 		origin_header = NULL;
 
@@ -793,6 +796,7 @@ void thread::run(void)
 		if(!sevent)
 			continue;
 
+		++active_count;
 		debug(2, "sip: event %d; cid=%d, did=%d, instance=%d",
 			sevent->type, sevent->cid, sevent->did, instance);
 
@@ -871,6 +875,7 @@ void thread::run(void)
 		}
 
 		eXosip_event_free(sevent);
+		--active_count;
 	}
 }
 
