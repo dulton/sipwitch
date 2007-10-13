@@ -58,34 +58,30 @@ void thread::invite()
 
 	if(dialed)
 		target = service::getValue(dialed, "id");
+	else if(registry)
+		target = registry->userid;
 
 	switch(destination) {
 	case LOCAL:
-		debug(1, "local call for %s from %s\n", registry->userid, identity);
+		debug(1, "local call for %s from %s\n", target, identity);
 		break;
 	case PUBLIC:
-		debug(1, "incoming call for %s from %s@%s\n", registry->userid, from->url->username, from->url->host);
+		debug(1, "incoming call for %s from %s@%s\n", target, from->url->username, from->url->host);
 		break;
 	case REMOTE:
 		debug(1, "outgoing call from %s to %s@%s\n", identity, to->url->username, to->url->host);
 		break;
 	case ROUTED:
-		if(registry)
-			debug(1, "dialed call for %s from %s, dialing=%s\n", registry->userid, identity, dialing);
-		else
-			debug(1, "dialed call for %s from %s, dialing=%s\n", target, identity, dialing);
+		debug(1, "dialed call for %s from %s, dialing=%s\n", target, identity, dialing);
 		break;  	
 	case FORWARD:
-		if(registry)
-			debug(1, "forwarding call for %s from %s, forward=%s\n", dialing, identity, registry->userid);
-		else
-			debug(1, "forwarding call for %s from %s, forward=%s\n", dialing, identity, target);
+		debug(1, "forwarding call for %s from %s, forward=%s\n", dialing, identity, target);
 		break;
 	}
 
 	eXosip_lock();
-	eXosip_message_build_answer(sevent->tid, SIP_NOT_FOUND, &reply);
-	eXosip_message_send_answer(sevent->tid, SIP_NOT_FOUND, reply);
+	eXosip_call_build_answer(sevent->tid, SIP_NOT_FOUND, &reply);
+	eXosip_call_send_answer(sevent->tid, SIP_NOT_FOUND, reply);
 	eXosip_unlock();		
 
 }
@@ -140,7 +136,6 @@ bool thread::authorize(void)
 	int error = SIP_UNDECIPHERABLE;
 	const char *scheme = "sip";
 	const char *from_port, *to_port;
-	osip_message_t *reply = NULL;
 	struct sockaddr_internet iface;
 	const char *cp;
 	time_t now;
@@ -264,8 +259,11 @@ rewrite:
 			return authenticate();
 		if(!stricmp(dialed->getId(), "refer"))
 			return authenticate();
+		if(!stricmp(dialed->getId(), "test"))
+			return authenticate();
 		if(!stricmp(dialed->getId(), "queue"))
 			goto anonymous;
+		process::errlog(ERROR, "unknown or invalid destination %s, type=%s\n", target, dialed->getId());
 		goto invalid;
 	}
 
@@ -432,11 +430,26 @@ invalid:
 	else
 		debug(1, "rejecting unknown invite; error=%d\n", error);
 
-	eXosip_lock();
-	eXosip_message_build_answer(sevent->tid, error, &reply);
-	eXosip_message_send_answer(sevent->tid, error, reply);
-	eXosip_unlock();		
+	send_reply(error);
 	return false;
+}
+
+void thread::send_reply(int error)
+{
+	osip_message_t *reply = NULL;
+
+	eXosip_lock();
+	switch(authorizing) {
+	case CALL:
+		eXosip_call_build_answer(sevent->tid, error, &reply);
+		eXosip_call_send_answer(sevent->tid, error, reply);
+		break;
+	case MESSAGE:
+		eXosip_message_build_answer(sevent->tid, error, &reply);
+		eXosip_message_send_answer(sevent->tid, error, reply);
+		break;
+	}
+	eXosip_unlock();
 }
 
 bool thread::authenticate(void)
@@ -528,10 +541,7 @@ bool thread::authenticate(void)
 
 failed:
 	config::release(node);
-	eXosip_lock();
-	eXosip_message_build_answer(sevent->tid, error, &reply);
-	eXosip_message_send_answer(sevent->tid, error, reply);
-	eXosip_unlock();		
+	send_reply(error);
 	return false;
 }
 
@@ -548,9 +558,18 @@ void thread::challenge(void)
 				registry::getRealm(), nonce, registry::getDigest());
 
 	eXosip_lock();
-	eXosip_message_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
-	osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
-	eXosip_message_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
+	switch(authorizing) {
+	case MESSAGE:
+		eXosip_message_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
+		osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
+		eXosip_message_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
+		break;
+	case CALL:
+		eXosip_call_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
+		osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
+		eXosip_call_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
+		break;
+	}
 	eXosip_unlock();
 }
 
@@ -769,6 +788,7 @@ void thread::run(void)
 
 		switch(sevent->type) {
 		case EXOSIP_CALL_INVITE:
+			authorizing = CALL;
 			if(!sevent->request)
 				break;
 			if(sevent->cid < 1 && sevent->did < 1)
@@ -777,6 +797,7 @@ void thread::run(void)
 				invite();
 			break;
 		case EXOSIP_MESSAGE_NEW:
+			authorizing = MESSAGE;
 			if(!sevent->request)
 				break;
 			if(MSG_IS_OPTIONS(sevent->request))

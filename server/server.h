@@ -349,11 +349,13 @@ private:
 	osip_to_t *to;
 
 	enum {REMOTE, LOCAL, PUBLIC, ROUTED, FORWARD} destination;
+	enum {CALL, MESSAGE} authorizing;
 
 	thread();
 
 	static void wait(unsigned count);
 
+	void send_reply(int error);
 	void invite(void);
 	void identify(void);
 	bool getsource(void);
