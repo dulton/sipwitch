@@ -316,7 +316,6 @@ void stack::stop(service *cfg)
 	background::cancel();
 	thread::shutdown();
 	Thread::yield();
-	eXosip_quit();
 	MappedMemory::release();
 	MappedMemory::remove("sipwitch.callmap");
 

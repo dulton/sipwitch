@@ -238,6 +238,13 @@ rewrite:
 			error = atoi(cp);
 		goto invalid;
 	}
+	if(dialed && !stricmp(dialed->getId(), "test")) {
+		cp = service::getValue(dialed, "error");
+		if(cp) {
+			error = atoi(cp);
+			goto invalid;
+		}
+	}
 
 	fwd = NULL;
 	if(dialed)
@@ -753,6 +760,9 @@ void thread::options(void)
 void thread::shutdown(void)
 {
 	shutdown_flag = true;
+	while(shutdown_count == startup_count)
+		Thread::sleep(50);
+	eXosip_quit();
 	while(shutdown_count < startup_count)
 		Thread::sleep(50);
 }
