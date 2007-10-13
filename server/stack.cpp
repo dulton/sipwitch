@@ -260,12 +260,6 @@ stack::session *stack::access(int cid)
 	return *sp;
 }
 
-void stack::commit(session *s)
-{
-	if(s)
-		locking.commit();
-}
-
 void stack::release(session *s)
 {
 	if(s) {

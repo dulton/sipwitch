@@ -51,6 +51,45 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	local_uri = remote_uri = NULL;
 }
 
+void thread::invite()
+{
+	osip_message_t *reply = NULL;
+	const char *target = dialing;
+
+	if(dialed)
+		target = service::getValue(dialed, "id");
+
+	switch(destination) {
+	case LOCAL:
+		debug(1, "local call for %s from %s\n", registry->userid, identity);
+		break;
+	case PUBLIC:
+		debug(1, "incoming call for %s from %s@%s\n", registry->userid, from->url->username, from->url->host);
+		break;
+	case REMOTE:
+		debug(1, "outgoing call from %s to %s@%s\n", identity, to->url->username, to->url->host);
+		break;
+	case ROUTED:
+		if(registry)
+			debug(1, "dialed call for %s from %s, dialing=%s\n", registry->userid, identity, dialing);
+		else
+			debug(1, "dialed call for %s from %s, dialing=%s\n", target, identity, dialing);
+		break;  	
+	case FORWARD:
+		if(registry)
+			debug(1, "forwarding call for %s from %s, forward=%s\n", dialing, identity, registry->userid);
+		else
+			debug(1, "forwarding call for %s from %s, forward=%s\n", dialing, identity, target);
+		break;
+	}
+
+	eXosip_lock();
+	eXosip_message_build_answer(sevent->tid, SIP_NOT_FOUND, &reply);
+	eXosip_message_send_answer(sevent->tid, SIP_NOT_FOUND, reply);
+	eXosip_unlock();		
+
+}
+
 void thread::identify(void)
 {
 	MappedRegistry *rr = NULL;
@@ -382,6 +421,8 @@ remote:
 	return true;
 
 invalid:
+	debug(1, "rejecting invite; error=%d\n", error);
+
 	eXosip_lock();
 	eXosip_message_build_answer(sevent->tid, error, &reply);
 	eXosip_message_send_answer(sevent->tid, error, reply);

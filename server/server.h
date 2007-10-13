@@ -142,7 +142,6 @@ public:
 	__EXPORT static session *create(MappedRegistry *rr, int cid);
 	__EXPORT static void destroy(session *s);
 	__EXPORT static void release(session *s);
-	__EXPORT static void commit(session *s);
 	__EXPORT static session *access(int cid);
 	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
 	__EXPORT static address *getAddress(const char *uri, address *addr = NULL);
@@ -353,6 +352,7 @@ private:
 
 	thread();
 
+	void invite(void);
 	void identify(void);
 	bool getsource(void);
 	bool unauthenticated(void);

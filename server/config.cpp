@@ -231,9 +231,6 @@ void config::release(cidr *access)
 		locking.release();
 }
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 cidr *config::getPolicy(struct sockaddr *addr)
 {
 	cidr *policy;

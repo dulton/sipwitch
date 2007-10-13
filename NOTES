@@ -1,0 +1,16 @@
+About locking:
+
+Inside the SIPWitch server we use shared conditional locks.  Some key
+assumptions are made and must never be violated:
+
+Methods that assert modify locks must never aquire additional shared locks;
+	all their arguments have all data needed to complete the operation
+	
+Methods that assert modify locks always either commit or share before they 
+	return.  No function will return with a modify lock still held.
+
+Lookup methods will return with a shared lock held if they are successful.
+	A matching release function will be used to clear the lock when the
+	object is no longer needed.
+
+
