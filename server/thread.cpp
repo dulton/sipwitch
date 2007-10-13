@@ -217,17 +217,21 @@ bool thread::authorize(void)
 	goto remote;
 
 local:
+	debug(2, "authorizing local; target=%s\n", to->url->username);
 	target = to->url->username;
 	destination = LOCAL;
 	string::set(dialing, sizeof(dialing), target);
 
 rewrite:
+	debug(3, "rewrite process; target=%s, dialing=%s\n", target, dialing);
 	error = SIP_NOT_FOUND;
 	if(!target || !*target || strlen(target) >= MAX_USERID_SIZE)
 		goto invalid;
 
 	registry = registry::access(target);
 	dialed = config::getProvision(target);
+
+	debug(4, "rewrite process; registry=%p, dialed=%p\n", registry, dialed);
 
 	if(!registry && !dialed)
 		goto routing;
@@ -421,7 +425,12 @@ remote:
 	return true;
 
 invalid:
-	debug(1, "rejecting invite; error=%d\n", error);
+	if(authorized)
+		debug(1, "rejecting invite from %s; error=%d\n", identity, error);
+	else if(from->url && from->url->host && from->url->username)
+		debug(1, "rejecting invite from %s@%s; error=%d\n", from->url->username, from->url->host, error);
+	else
+		debug(1, "rejecting unknown invite; error=%d\n", error);
 
 	eXosip_lock();
 	eXosip_message_build_answer(sevent->tid, error, &reply);
@@ -729,6 +738,11 @@ void thread::shutdown(void)
 		Thread::sleep(50);
 }
 
+void thread::wait(unsigned count) {
+	while(startup_count < count)
+		Thread::sleep(50);
+}
+
 void thread::run(void)
 {
 	instance = ++startup_count;
@@ -754,6 +768,14 @@ void thread::run(void)
 			sevent->type, sevent->cid, sevent->did, instance);
 
 		switch(sevent->type) {
+		case EXOSIP_CALL_INVITE:
+			if(!sevent->request)
+				break;
+			if(sevent->cid < 1 && sevent->did < 1)
+				break;
+			if(authorize())
+				invite();
+			break;
 		case EXOSIP_MESSAGE_NEW:
 			if(!sevent->request)
 				break;
@@ -797,17 +819,25 @@ void thread::run(void)
 			authorized = NULL;
 		}
 
-		if(from) 	                                                             
+		if(from) {
 			osip_from_free(from);
+			from = NULL;
+		}
 
-		if(to)
+		if(to) {
 			osip_to_free(to);
+			to = NULL;
+		}
 
-		if(remote_uri)
+		if(remote_uri) {
 			osip_free(remote_uri);
+			remote_uri = NULL;
+		}
 
-		if(local_uri)
+		if(local_uri) {
 			osip_free(local_uri);
+			local_uri = NULL;
+		}
 
 		eXosip_event_free(sevent);
 	}

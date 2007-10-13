@@ -305,7 +305,8 @@ void stack::start(service *cfg)
 		thr = new thread();
 		thr->start();
 	}
-	
+
+	thread::wait(threading);
 	background::create(timing);
 }
 

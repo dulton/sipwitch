@@ -352,6 +352,8 @@ private:
 
 	thread();
 
+	static void wait(unsigned count);
+
 	void invite(void);
 	void identify(void);
 	bool getsource(void);
