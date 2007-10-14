@@ -13,4 +13,16 @@ Lookup methods will return with a shared lock held if they are successful.
 	A matching release function will be used to clear the lock when the
 	object is no longer needed.
 
+Multiple access locks can be held against config by a single thread.  This 
+	is valid because only the reload function modifies config or holds a
+	modify lock.
+
+Only a single access reference should be held for registry or session.  The
+	registry and call sessions may be modified, or locks converted, and this
+	is only possible if there is no recursive locks.  It is possible to
+	hold recursive locks briefly, but there is a deadlock schedule scenario
+	possible since further (recursive) reads can be scheduled after writes,
+	so both registry and session locks should not be held by a thread if either
+	one is potentially being held recursive.
+
 
