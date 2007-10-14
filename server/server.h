@@ -343,6 +343,7 @@ private:
 	char identity[MAX_USERID_SIZE];
 	char dialing[MAX_USERID_SIZE];
 	stack::address *via_address, *from_address, *to_address;
+	stack::session *session;
 	char *local_uri, *remote_uri;
 	osip_via_t *via_header, *origin_header;
 	osip_from_t *from;

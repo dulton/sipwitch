@@ -48,6 +48,7 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	dialed = NULL;
 	authorized = NULL;
 	registry = NULL;
+	session = NULL;
 	via_address = from_address = to_address = NULL;
 	local_uri = remote_uri = NULL;
 }
@@ -847,6 +848,11 @@ void thread::run(void)
 		if(dialed) {
 			config::release(dialed);
 			dialed = NULL;
+		}
+
+		if(session) {
+			stack::release(session);
+			session = NULL;
 		}
 
 		if(authorized) {
