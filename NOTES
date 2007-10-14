@@ -25,4 +25,14 @@ Only a single access reference should be held for registry or session.  The
 	so both registry and session locks should not be held by a thread if either
 	one is potentially being held recursive.
 
+Never hold a session access lock when acquiring a modify lock to the registry.
+	There a deadlock scenario possible if registry modify locking or lock
+	conversion occurs when sessions are accessed.  Performing a modify
+	session lock while holding an active registry access lock is safe, and in 
+	some cases nessisary, which is why deadlocks can occur when someone tryies
+    to do the reverse.
+
+Non-deterministic blocking operations must never be performed while holding
+	a modify lock.  To avoid writer starvation, they probably should be
+	avoided while holding an access lock as well outside of config.
 
