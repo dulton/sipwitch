@@ -57,13 +57,11 @@ void stack::call::disconnect(void)
 	debug(4, "disconnecting call");
 
 	linked_pointer<segment> sp = segments.begin();
-	session *s;
 	while(sp) {
-		s = &(sp->sid);
-		if(s->cid > 0 && s->state != session::CLOSED) {
-			s->state = session::CLOSED;
+		if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
+			sp->sid.state = session::CLOSED;
 			eXosip_lock();
-			eXosip_call_terminate(s->cid, s->did);
+			eXosip_call_terminate(sp->sid.cid, sp->sid.did);
 			eXosip_unlock();
 		}
 		sp.next();
@@ -141,6 +139,8 @@ void stack::background::run(void)
 		}
 		timeout = expires.get();
 		if(!signalled && timeout) {
+			if((long)timeout > 0)
+				printf("scheduled %ld\n", timeout);
 			if(timeout > interval) 
 				timeout = interval;
 			Conditional::wait(interval);
