@@ -54,6 +54,11 @@ stack::call::call() : TimerQueue::event(Timer::reset), segments()
 
 void stack::call::expired(void)
 {
+	switch(state) {
+	case INITIAL:	// if session never used, garbage collect at expire...
+		stack::destroy(this);
+		break;
+	}
 }
 
 stack::background::background(timeout_t iv) : DetachedThread(), Conditional(), expires(Timer::inf)
@@ -100,13 +105,14 @@ void stack::background::run(void)
 		}
 		timeout = expires.get();
 		if(!signalled && timeout) {
-			if(timeout > interval)
+			if(timeout > interval) 
 				timeout = interval;
 			Conditional::wait(interval);
 		}
 		if(signalled || !expires.get()) {
 			signalled = false;
 			Conditional::unlock();
+			debug(4, "background call timer expired\n");
 			locking.access();
 			expires = stack::sip.expire();
 			locking.release();
@@ -153,14 +159,20 @@ void stack::update(void)
 
 void stack::destroy(session *s)
 {
-	linked_pointer<segment> sp;
-	LinkedObject *lo;
-
 	if(!s || !s->parent)
 		return;
 
-	locking.modify();
-	call *cr = s->parent;
+	destroy(s->parent);
+}
+
+void stack::destroy(call *cr)
+{
+	linked_pointer<segment> sp;
+	LinkedObject *lo;
+
+	// we assume access lock was already held when we call this...
+
+	locking.exclusive();
 	sp = cr->segments.begin();
 	while(sp) {
 		--active_segments;
@@ -176,7 +188,7 @@ void stack::destroy(session *s)
 	cr->delist();
 	cr->LinkedObject::enlist(&freecalls);
 	--active_calls;
-	locking.commit();
+	locking.share();
 }
 
 void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
@@ -212,10 +224,11 @@ stack::session *stack::createSession(call *cr, int cid)
 	sp->sid.enlist(&hash[cid % keysize]);
 	sp->sid.cid = cid;
 	sp->sid.sequence = ++ref;
+	sp->sid.parent = cr;
 	return &sp->sid;
 }
 
-stack::session *stack::create(MappedRegistry *rr, int cid)
+stack::session *stack::create(int cid)
 {
 	call *cr;
 	caddr_t mp;
@@ -232,12 +245,14 @@ stack::session *stack::create(MappedRegistry *rr, int cid)
 	memset(mp, 0, sizeof(call));
 	cr = new(mp) call();
 	++active_calls;
-	cr->disarm();
+	cr->arm(7000);	// Normally we get close in 6 seconds, this assures...
 	cr->source = createSession(cr, cid);
 	cr->target = NULL;
 	cr->count = 0;
+	cr->state = call::INITIAL;
 	cr->enlist(&stack::sip);
 	locking.share();
+	cr->update();
 	return cr->source;
 }
 

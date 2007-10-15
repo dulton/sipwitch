@@ -80,14 +80,17 @@ private:
 	class __LOCAL call : public TimerQueue::event
 	{
 	public:
-		typedef enum
-		{
+		enum {
 			DIRECTED,
 			CIRCULAR,
 			TERMINAL,
 			REDIRECTED,
 			DISTRIBUTED
-		} mode_t;
+		} mode;
+
+		volatile enum {
+			INITIAL
+		} state;
 
 		call();
 
@@ -103,7 +106,6 @@ private:
 		MappedCall *map;
 		unsigned count;
 		mutex_t mutex;
-		mode_t mode;
 	};
 
 	bool reload(service *cfg);
@@ -139,8 +141,9 @@ public:
 	stack();
 
 	__EXPORT static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
-	__EXPORT static session *create(MappedRegistry *rr, int cid);
+	__EXPORT static session *create(int cid);
 	__EXPORT static void destroy(session *s);
+	__EXPORT static void destroy(call *cr);
 	__EXPORT static void release(session *s);
 	__EXPORT static session *access(int cid);
 	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);

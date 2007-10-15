@@ -808,7 +808,8 @@ void thread::run(void)
 				break;
 			if(sevent->cid < 1 && sevent->did < 1)
 				break;
-			if(authorize())
+			session = stack::create(sevent->cid);
+			if(authorize()) 
 				invite();
 			break;
 		case EXOSIP_MESSAGE_NEW:
@@ -823,6 +824,19 @@ void thread::run(void)
 		default:
 			process::errlog(WARN, "unknown message");
 		}
+
+		// release access locks for registry and sessions quickly...
+	
+		if(session) {
+			stack::release(session);
+			session = NULL;
+		}
+
+		if(registry) {
+			registry::release(registry);
+			registry = NULL;
+		}
+
 		if(via_address) {
 			delete via_address;
 			via_address = NULL;
@@ -836,10 +850,8 @@ void thread::run(void)
 			to_address = NULL;
 		}
 
-		if(registry) {
-			registry::release(registry);
-			registry = NULL;
-		}
+		// release config access lock(s)...
+
 		if(access) {
 			config::release(access);
 			access = NULL;
@@ -848,11 +860,6 @@ void thread::run(void)
 		if(dialed) {
 			config::release(dialed);
 			dialed = NULL;
-		}
-
-		if(session) {
-			stack::release(session);
-			session = NULL;
 		}
 
 		if(authorized) {
