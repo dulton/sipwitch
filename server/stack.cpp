@@ -140,7 +140,7 @@ void stack::background::run(void)
 		timeout = expires.get();
 		if(!signalled && timeout) {
 			if((long)timeout > 0)
-				printf("scheduled %ld\n", timeout);
+				debug(9, "scheduled %ld\n", timeout);
 			if(timeout > interval) 
 				timeout = interval;
 			Conditional::wait(interval);
