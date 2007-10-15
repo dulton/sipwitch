@@ -52,12 +52,48 @@ stack::call::call() : TimerQueue::event(Timer::reset), segments()
 {
 }
 
+void stack::call::disconnect(void)
+{
+	debug(4, "disconnecting call");
+
+	linked_pointer<segment> sp = segments.begin();
+	session *s;
+	while(sp) {
+		s = &(sp->sid);
+		if(s->cid > 0 && s->state != session::CLOSED) {
+			s->state = session::CLOSED;
+			eXosip_lock();
+			eXosip_call_terminate(s->cid, s->did);
+			eXosip_unlock();
+		}
+		sp.next();
+	}
+
+	if(state != INITIAL) {
+		state = FINAL;
+		set((timeout_t)7000);
+		update();
+	}
+}
+
+void stack::call::closing(void)
+{
+	if(pending)
+		--pending;
+	if(pending)
+		return;
+	disconnect();
+}
+
 void stack::call::expired(void)
 {
 	switch(state) {
+	case FINAL:		// session expects to be cleared....
 	case INITIAL:	// if session never used, garbage collect at expire...
+		debug(4, "expiring call\n");
 		stack::destroy(this);
-		break;
+		return;
+	// most other handlers acquire mutex and manage a session....
 	}
 }
 
@@ -157,6 +193,48 @@ void stack::update(void)
 	background::signal();
 }
 
+void stack::close(session *s)
+{
+	call *cr;
+
+	if(!s)
+		return;
+
+	cr = s->parent;
+	cr->mutex.lock();
+	if(s->state != session::CLOSED) {
+		s->state = session::CLOSED;
+		if(s == cr->source || s == cr->source)
+			cr->disconnect();
+		else
+			cr->closing();
+	}
+	cr->mutex.unlock();
+}
+	
+void stack::clear(session *s)
+{
+	call *cr;
+
+	if(!s)
+		return;
+
+	cr = s->parent;
+	if(--cr->count == 0) {
+		debug(4, "clearing call\n");
+		destroy(cr);
+		return;
+	}
+
+	if(s->cid > 0) {
+		locking.exclusive();
+		debug(4, "clearing session %d\n", s->cid); 
+		s->delist(&hash[s->cid % keysize]);
+		s->cid = -1;
+		locking.share();
+	}
+}
+
 void stack::destroy(session *s)
 {
 	if(!s || !s->parent)
@@ -220,11 +298,13 @@ stack::session *stack::createSession(call *cr, int cid)
 		sp = static_cast<segment *>(config::allocate(sizeof(segment)));
 	}
 	memset(sp, 0, sizeof(session));
+	++cr->count;
 	sp->enlist(&cr->segments);
 	sp->sid.enlist(&hash[cid % keysize]);
 	sp->sid.cid = cid;
 	sp->sid.sequence = ++ref;
 	sp->sid.parent = cr;
+	sp->sid.state = session::OPEN;
 	return &sp->sid;
 }
 
@@ -246,9 +326,10 @@ stack::session *stack::create(int cid)
 	cr = new(mp) call();
 	++active_calls;
 	cr->arm(7000);	// Normally we get close in 6 seconds, this assures...
+	cr->count = 0;
+	cr->pending = 0;
 	cr->source = createSession(cr, cid);
 	cr->target = NULL;
-	cr->count = 0;
 	cr->state = call::INITIAL;
 	cr->enlist(&stack::sip);
 	locking.share();
@@ -271,23 +352,20 @@ stack::session *stack::access(int cid)
 		locking.release();
 		return NULL;
 	}
-	sp->parent->mutex.lock();
 	return *sp;
 }
 
 void stack::release(session *s)
 {
-	if(s) {
-		s->parent->mutex.release();
+	if(s) 
 		locking.release();
-	}
 }
 	
-void stack::start(service *cfg)
-{
-	thread *thr;
+void stack::start(service *cfg) 
+{ 
+	thread *thr; 
 	unsigned thidx = 0;
-	process::errlog(DEBUG1, "sip stack starting; creating %d threads at priority %d", threading, priority);
+	process::errlog(DEBUG1, "sip stack starting; creating %d threads at priority %d", threading, priority); 
 	eXosip_init();
 
 	MappedReuse::create("sipwitch.callmap", mapped_calls);

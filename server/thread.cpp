@@ -457,13 +457,14 @@ void thread::send_reply(int error)
 		eXosip_message_build_answer(sevent->tid, error, &reply);
 		eXosip_message_send_answer(sevent->tid, error, reply);
 		break;
+	default:
+		break;
 	}
 	eXosip_unlock();
 }
 
 bool thread::authenticate(void)
 {
-	osip_message_t *reply = NULL;
 	osip_authorization_t *auth = NULL;
 	service::keynode *node = NULL, *leaf;
 	stringbuf<64> digest;
@@ -577,6 +578,8 @@ void thread::challenge(void)
 		eXosip_call_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
 		osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
 		eXosip_call_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
+		break;
+	case NONE:
 		break;
 	}
 	eXosip_unlock();
@@ -802,6 +805,24 @@ void thread::run(void)
 			sevent->type, sevent->cid, sevent->did, instance);
 
 		switch(sevent->type) {
+		case EXOSIP_CALL_CLOSED:
+			authorizing = CALL;
+			if(sevent->cid > 0) {
+				session = stack::access(sevent->cid);
+				stack::close(session);
+				if(session)
+					send_reply(SIP_OK);
+			}
+			if(!session)
+				send_reply(SIP_NOT_FOUND);
+			break;
+		case EXOSIP_CALL_RELEASED:
+			authorizing = NONE;
+			if(sevent->cid > 0) {
+				session = stack::access(sevent->cid);
+				stack::clear(session);
+			}
+			break;
 		case EXOSIP_CALL_INVITE:
 			authorizing = CALL;
 			if(!sevent->request)

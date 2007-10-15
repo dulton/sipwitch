@@ -60,6 +60,8 @@ private:
 		unsigned sequence;
 		sockaddr_internet address, interface;
 
+		enum {OPEN, CLOSED} state;
+
 		char contact[MAX_URI_SIZE];	// who the real destination is
 		char via[MAX_URI_SIZE];		// how we get to the real destination
 		char to[MAX_URI_SIZE];		// alternate "to" based on type...
@@ -89,7 +91,8 @@ private:
 		} mode;
 
 		volatile enum {
-			INITIAL
+			INITIAL,
+			FINAL
 		} state;
 
 		call();
@@ -98,13 +101,15 @@ private:
 		char to[MAX_URI_SIZE];		// who is being called
 
 		void expired(void);
+		void closing(void);
+		void disconnect(void);
 
 		OrderedIndex segments;
 		session *source;
 		session *target;
 		segment *select;
 		MappedCall *map;
-		unsigned count;
+		unsigned count, pending;
 		mutex_t mutex;
 	};
 
@@ -145,6 +150,8 @@ public:
 	__EXPORT static void destroy(session *s);
 	__EXPORT static void destroy(call *cr);
 	__EXPORT static void release(session *s);
+	__EXPORT static void clear(session *s);
+	__EXPORT static void close(session *s);
 	__EXPORT static session *access(int cid);
 	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
 	__EXPORT static address *getAddress(const char *uri, address *addr = NULL);
@@ -353,7 +360,7 @@ private:
 	osip_to_t *to;
 
 	enum {REMOTE, LOCAL, PUBLIC, ROUTED, FORWARD} destination;
-	enum {CALL, MESSAGE} authorizing;
+	enum {CALL, MESSAGE, NONE} authorizing;
 
 	thread();
 
