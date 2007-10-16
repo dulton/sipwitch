@@ -54,7 +54,7 @@ stack::call::call() : TimerQueue::event(Timer::reset), segments()
 
 void stack::call::disconnect(void)
 {
-	debug(4, "disconnecting call");
+	debug(4, "disconnecting call %04x:%08x\n", source->cid, source->sequence);
 
 	linked_pointer<segment> sp = segments.begin();
 	while(sp) {
@@ -88,7 +88,7 @@ void stack::call::expired(void)
 	switch(state) {
 	case FINAL:		// session expects to be cleared....
 	case INITIAL:	// if session never used, garbage collect at expire...
-		debug(4, "expiring call\n");
+		debug(4, "expiring call %04x:%08x\n", source->cid, source->sequence);
 		stack::destroy(this);
 		return;
 	// most other handlers acquire mutex and manage a session....
@@ -148,7 +148,7 @@ void stack::background::run(void)
 		if(signalled || !expires.get()) {
 			signalled = false;
 			Conditional::unlock();
-			debug(4, "background call timer expired\n");
+			debug(4, "background timer expired\n");
 			locking.access();
 			expires = stack::sip.expire();
 			locking.release();
@@ -221,14 +221,16 @@ void stack::clear(session *s)
 
 	cr = s->parent;
 	if(--cr->count == 0) {
-		debug(4, "clearing call\n");
+		debug(4, "clearing call %04x:%08x\n", 
+			cr->source->cid, cr->source->sequence);
 		destroy(cr);
 		return;
 	}
 
 	if(s->cid > 0) {
 		locking.exclusive();
-		debug(4, "clearing session %d\n", s->cid); 
+		debug(4, "clearing call %04x:%08x session %d\n", 
+			cr->source->cid, cr->source->sequence, s->cid); 
 		s->delist(&hash[s->cid % keysize]);
 		s->cid = -1;
 		locking.share();

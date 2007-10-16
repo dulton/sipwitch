@@ -65,19 +65,24 @@ void thread::invite()
 
 	switch(destination) {
 	case LOCAL:
-		debug(1, "local call for %s from %s\n", target, identity);
+		debug(1, "local call %04x:%08x for %s from %s\n", 
+			session->cid, session->sequence, target, identity);
 		break;
 	case PUBLIC:
-		debug(1, "incoming call for %s from %s@%s\n", target, from->url->username, from->url->host);
+		debug(1, "incoming call %04x:%08x for %s from %s@%s\n", 
+			session->cid, session->sequence, target, from->url->username, from->url->host);
 		break;
 	case REMOTE:
-		debug(1, "outgoing call from %s to %s@%s\n", identity, to->url->username, to->url->host);
+		debug(1, "outgoing call %04x:%08x from %s to %s@%s\n", 
+			session->cid, session->sequence, identity, to->url->username, to->url->host);
 		break;
 	case ROUTED:
-		debug(1, "dialed call for %s from %s, dialing=%s\n", target, identity, dialing);
+		debug(1, "dialed call %04x:%08x for %s from %s, dialing=%s\n", 
+			session->cid, session->sequence, target, identity, dialing);
 		break;  	
 	case FORWARD:
-		debug(1, "forwarding call for %s from %s, forward=%s\n", dialing, identity, target);
+		debug(1, "forwarding call %04x:%08x for %s from %s, forward=%s\n", 
+			session->cid, session->sequence, dialing, identity, target);
 		break;
 	}
 
@@ -822,6 +827,7 @@ void thread::run(void)
 				session = stack::access(sevent->cid);
 				stack::clear(session);
 			}
+			send_reply(SIP_OK);
 			break;
 		case EXOSIP_CALL_INVITE:
 			authorizing = CALL;
