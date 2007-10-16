@@ -138,7 +138,7 @@ private:
 	int send101;
 	int family, tlsmode, protocol;
 
-    __EXPORT static session *createSession(call *cp, int cid);
+    __EXPORT static session *createSession(call *cp, int cid, int did);
 
 public:
 	typedef	Socket::address address;
@@ -146,7 +146,7 @@ public:
 	stack();
 
 	__EXPORT static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
-	__EXPORT static session *create(int cid);
+	__EXPORT static session *create(int cid, int did);
 	__EXPORT static void destroy(session *s);
 	__EXPORT static void destroy(call *cr);
 	__EXPORT static void release(session *s);

@@ -815,11 +815,8 @@ void thread::run(void)
 			if(sevent->cid > 0) {
 				session = stack::access(sevent->cid);
 				stack::close(session);
-				if(session)
-					send_reply(SIP_OK);
 			}
-			if(!session)
-				send_reply(SIP_NOT_FOUND);
+			send_reply(SIP_OK);
 			break;
 		case EXOSIP_CALL_RELEASED:
 			authorizing = NONE;
@@ -835,7 +832,7 @@ void thread::run(void)
 				break;
 			if(sevent->cid < 1 && sevent->did < 1)
 				break;
-			session = stack::create(sevent->cid);
+			session = stack::create(sevent->cid, sevent->did);
 			if(authorize()) 
 				invite();
 			break;

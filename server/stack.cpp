@@ -56,16 +56,20 @@ void stack::call::disconnect(void)
 {
 	debug(4, "disconnecting call %04x:%08x\n", source->cid, source->sequence);
 
+	locking.exclusive();
 	linked_pointer<segment> sp = segments.begin();
 	while(sp) {
 		if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
 			sp->sid.state = session::CLOSED;
+			sp->sid.delist(&hash[sp->sid.cid % keysize]);
 			eXosip_lock();
 			eXosip_call_terminate(sp->sid.cid, sp->sid.did);
 			eXosip_unlock();
+			sp->sid.cid = -1;
 		}
 		sp.next();
 	}
+	locking.share();
 
 	if(state != INITIAL) {
 		state = FINAL;
@@ -257,8 +261,10 @@ void stack::destroy(call *cr)
 	while(sp) {
 		--active_segments;
 		segment *next = sp.getNext();
-		if(sp->sid.cid != -1)
+		if(sp->sid.cid != -1) {
+			eXosip_call_terminate(sp->sid.cid, sp->sid.did);
 			sp->sid.delist(&hash[sp->sid.cid % keysize]);
+		}
 		lo = static_cast<LinkedObject*>(*sp);
 		lo->enlist(&freesegs);
 		sp = next;
@@ -286,7 +292,7 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 	}
 }
 	
-stack::session *stack::createSession(call *cr, int cid)
+stack::session *stack::createSession(call *cr, int cid, int did)
 {
 	volatile static unsigned ref = 0;
 	segment *sp;
@@ -304,13 +310,14 @@ stack::session *stack::createSession(call *cr, int cid)
 	sp->enlist(&cr->segments);
 	sp->sid.enlist(&hash[cid % keysize]);
 	sp->sid.cid = cid;
+	sp->sid.did = did;
 	sp->sid.sequence = ++ref;
 	sp->sid.parent = cr;
 	sp->sid.state = session::OPEN;
 	return &sp->sid;
 }
 
-stack::session *stack::create(int cid)
+stack::session *stack::create(int cid, int did)
 {
 	call *cr;
 	caddr_t mp;
@@ -330,7 +337,7 @@ stack::session *stack::create(int cid)
 	cr->arm(7000);	// Normally we get close in 6 seconds, this assures...
 	cr->count = 0;
 	cr->pending = 0;
-	cr->source = createSession(cr, cid);
+	cr->source = createSession(cr, cid, did);
 	cr->target = NULL;
 	cr->state = call::INITIAL;
 	cr->enlist(&stack::sip);
