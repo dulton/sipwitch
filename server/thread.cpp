@@ -65,24 +65,24 @@ void thread::invite()
 
 	switch(destination) {
 	case LOCAL:
-		debug(1, "local call %04x:%08x for %s from %s\n", 
-			session->cid, session->sequence, target, identity);
+		debug(1, "local call %08x:%u for %s from %s\n", 
+			session->sequence, session->cid, target, identity);
 		break;
 	case PUBLIC:
-		debug(1, "incoming call %04x:%08x for %s from %s@%s\n", 
-			session->cid, session->sequence, target, from->url->username, from->url->host);
+		debug(1, "incoming call %08x:%u for %s from %s@%s\n", 
+			session->sequence, session->cid, target, from->url->username, from->url->host);
 		break;
 	case REMOTE:
-		debug(1, "outgoing call %04x:%08x from %s to %s@%s\n", 
-			session->cid, session->sequence, identity, to->url->username, to->url->host);
+		debug(1, "outgoing call %08x:%u from %s to %s@%s\n", 
+			session->sequence, session->cid, identity, to->url->username, to->url->host);
 		break;
 	case ROUTED:
-		debug(1, "dialed call %04x:%08x for %s from %s, dialing=%s\n", 
-			session->cid, session->sequence, target, identity, dialing);
+		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
+			session->sequence, session->cid, target, identity, dialing);
 		break;  	
 	case FORWARD:
-		debug(1, "forwarding call %04x:%08x for %s from %s, forward=%s\n", 
-			session->cid, session->sequence, dialing, identity, target);
+		debug(1, "forwarding call %08x:%u for %s from %s, forward=%s\n", 
+			session->sequence, session->cid, dialing, identity, target);
 		break;
 	}
 

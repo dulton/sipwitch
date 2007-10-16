@@ -54,7 +54,7 @@ stack::call::call() : TimerQueue::event(Timer::reset), segments()
 
 void stack::call::disconnect(void)
 {
-	debug(4, "disconnecting call %04x:%08x\n", source->cid, source->sequence);
+	debug(4, "disconnecting call %08x:%u\n", source->sequence, source->cid);
 
 	linked_pointer<segment> sp = segments.begin();
 	while(sp) {
@@ -88,7 +88,7 @@ void stack::call::expired(void)
 	switch(state) {
 	case FINAL:		// session expects to be cleared....
 	case INITIAL:	// if session never used, garbage collect at expire...
-		debug(4, "expiring call %04x:%08x\n", source->cid, source->sequence);
+		debug(4, "expiring call %08x:%u\n", source->sequence, source->cid);
 		stack::destroy(this);
 		return;
 	// most other handlers acquire mutex and manage a session....
@@ -221,16 +221,16 @@ void stack::clear(session *s)
 
 	cr = s->parent;
 	if(--cr->count == 0) {
-		debug(4, "clearing call %04x:%08x\n", 
-			cr->source->cid, cr->source->sequence);
+		debug(4, "clearing call %08x:%u\n", 
+			cr->source->sequence, cr->source->cid);
 		destroy(cr);
 		return;
 	}
 
 	if(s->cid != 0) {
 		locking.exclusive();
-		debug(4, "clearing call %04x:%08x session %d\n", 
-			cr->source->cid, cr->source->sequence, s->cid); 
+		debug(4, "clearing call %08x:%u session %08x:%u\n", 
+			cr->source->sequence, cr->source->cid, s->sequence, s->cid); 
 		if(s->state != session::CLOSED) {
 			s->state = session::CLOSED;
 			eXosip_call_terminate(s->cid, s->did);
@@ -295,7 +295,6 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 	
 stack::session *stack::createSession(call *cr, int cid, int did)
 {
-	volatile static unsigned ref = 0;
 	segment *sp;
 
 	if(freesegs) {
@@ -308,11 +307,12 @@ stack::session *stack::createSession(call *cr, int cid, int did)
 	}
 	memset(sp, 0, sizeof(session));
 	++cr->count;
+	time(&sp->sid.sequence);
+	sp->sid.sequence &= 0xffffffffl;
 	sp->enlist(&cr->segments);
 	sp->sid.enlist(&hash[cid % keysize]);
 	sp->sid.cid = cid;
 	sp->sid.did = did;
-	sp->sid.sequence = ++ref;
 	sp->sid.parent = cr;
 	sp->sid.state = session::OPEN;
 	return &sp->sid;

@@ -56,8 +56,8 @@ private:
 	public:
 		int cid, did;
 		time_t activates;
+		time_t sequence;
 		call *parent;
-		unsigned sequence;
 		sockaddr_internet address, interface;
 
 		enum {OPEN, CLOSED} state;
