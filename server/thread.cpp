@@ -812,7 +812,7 @@ void thread::run(void)
 		switch(sevent->type) {
 		case EXOSIP_CALL_CLOSED:
 			authorizing = CALL;
-			if(sevent->cid > 0) {
+			if(sevent->cid != 0) {
 				session = stack::access(sevent->cid);
 				stack::close(session);
 			}
@@ -820,7 +820,7 @@ void thread::run(void)
 			break;
 		case EXOSIP_CALL_RELEASED:
 			authorizing = NONE;
-			if(sevent->cid > 0) {
+			if(sevent->cid != 0) {
 				session = stack::access(sevent->cid);
 				stack::clear(session);
 			}
@@ -830,7 +830,7 @@ void thread::run(void)
 			authorizing = CALL;
 			if(!sevent->request)
 				break;
-			if(sevent->cid < 1 && sevent->did < 1)
+			if(sevent->cid == 0)
 				break;
 			session = stack::create(sevent->cid, sevent->did);
 			if(authorize()) 

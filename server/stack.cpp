@@ -58,7 +58,7 @@ void stack::call::disconnect(void)
 
 	linked_pointer<segment> sp = segments.begin();
 	while(sp) {
-		if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
+		if(sp->sid.cid != 0 && sp->sid.state != session::CLOSED) {
 			sp->sid.state = session::CLOSED;
 			eXosip_lock();
 			eXosip_call_terminate(sp->sid.cid, sp->sid.did);
@@ -227,7 +227,7 @@ void stack::clear(session *s)
 		return;
 	}
 
-	if(s->cid > 0) {
+	if(s->cid != 0) {
 		locking.exclusive();
 		debug(4, "clearing call %04x:%08x session %d\n", 
 			cr->source->cid, cr->source->sequence, s->cid); 
@@ -262,7 +262,8 @@ void stack::destroy(call *cr)
 		--active_segments;
 		segment *next = sp.getNext();
 		if(sp->sid.cid != -1) {
-			eXosip_call_terminate(sp->sid.cid, sp->sid.did);
+			if(sp->sid.state != session::CLOSED)
+				eXosip_call_terminate(sp->sid.cid, sp->sid.did);
 			sp->sid.delist(&hash[sp->sid.cid % keysize]);
 		}
 		lo = static_cast<LinkedObject*>(*sp);
