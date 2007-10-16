@@ -56,7 +56,7 @@ private:
 	public:
 		int cid, did;
 		time_t activates;
-		time_t sequence;
+		uint32_t sequence;
 		call *parent;
 		sockaddr_internet address, interface;
 
@@ -355,6 +355,8 @@ private:
 	stack::address *via_address, *from_address, *to_address;
 	stack::session *session;
 	char *local_uri, *remote_uri;
+	osip_header_t *header;
+	long header_expires;
 	osip_via_t *via_header, *origin_header;
 	osip_from_t *from;
 	osip_to_t *to;
@@ -367,6 +369,7 @@ private:
 	static void wait(unsigned count);
 
 	void send_reply(int error);
+	void expiration(void);
 	void invite(void);
 	void identify(void);
 	bool getsource(void);

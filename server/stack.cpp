@@ -236,7 +236,8 @@ void stack::clear(session *s)
 			eXosip_call_terminate(s->cid, s->did);
 		}
 		s->delist(&hash[s->cid % keysize]);
-		s->cid = -1;
+		s->cid = 0;
+		s->did = -1;
 		locking.share();
 	}
 }
@@ -296,6 +297,7 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 stack::session *stack::createSession(call *cr, int cid, int did)
 {
 	segment *sp;
+	time_t now;
 
 	if(freesegs) {
 		sp = static_cast<segment *>(freesegs);
@@ -307,7 +309,8 @@ stack::session *stack::createSession(call *cr, int cid, int did)
 	}
 	memset(sp, 0, sizeof(session));
 	++cr->count;
-	time(&sp->sid.sequence);
+	time(&now);
+	sp->sid.sequence = (uint32_t)now;
 	sp->sid.sequence &= 0xffffffffl;
 	sp->enlist(&cr->segments);
 	sp->sid.enlist(&hash[cid % keysize]);

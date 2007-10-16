@@ -647,8 +647,8 @@ void thread::registration(void)
 		snprintf(buffer, sizeof(buffer), "sip:%s:%s", 
 			origin_header->host, origin_header->port);
 
-	if(interval < 0 && header && header->hvalue)
-		interval = atoi(header->hvalue);
+	if(interval < 0)
+		interval = header_expires;
 	if(interval < 0)
 		interval = registry::getExpires();
 	if(!interval || !contact) {
@@ -782,6 +782,29 @@ void thread::wait(unsigned count) {
 		Thread::sleep(50);
 }
 
+void thread::expiration(void)
+{
+	osip_header_t *header = NULL;
+	osip_uri_param_t *expires = NULL;
+	osip_contact_t *contact;
+	int pos = 0;
+
+	assert(sevent->request != NULL);	
+	
+	header_expires = 0l;
+	osip_message_get_expires(sevent->request, 0, &header);
+	if(header && header->hvalue)
+		header_expires = atol(header->hvalue);
+	else while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
+		contact = (osip_contact_t*)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos);
+		if(osip_contact_param_get_byname(contact, "expires", &expires) != 0 && expires != NULL) {
+			header_expires = atol(expires->gvalue);
+			break;
+		}
+		++pos;
+	}
+}
+
 void thread::run(void)
 {
 	instance = ++startup_count;
@@ -811,6 +834,7 @@ void thread::run(void)
 
 		switch(sevent->type) {
 		case EXOSIP_CALL_CLOSED:
+		case EXOSIP_CALL_CANCELLED:
 			authorizing = CALL;
 			if(sevent->cid != 0) {
 				session = stack::access(sevent->cid);
@@ -832,6 +856,7 @@ void thread::run(void)
 				break;
 			if(sevent->cid == 0)
 				break;
+			expiration();
 			session = stack::create(sevent->cid, sevent->did);
 			if(authorize()) 
 				invite();
@@ -840,6 +865,7 @@ void thread::run(void)
 			authorizing = MESSAGE;
 			if(!sevent->request)
 				break;
+			expiration();
 			if(MSG_IS_OPTIONS(sevent->request))
 				options();
 			else if(MSG_IS_REGISTER(sevent->request) && authenticate())
