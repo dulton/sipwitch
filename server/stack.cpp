@@ -56,20 +56,16 @@ void stack::call::disconnect(void)
 {
 	debug(4, "disconnecting call %04x:%08x\n", source->cid, source->sequence);
 
-	locking.exclusive();
 	linked_pointer<segment> sp = segments.begin();
 	while(sp) {
 		if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
 			sp->sid.state = session::CLOSED;
-			sp->sid.delist(&hash[sp->sid.cid % keysize]);
 			eXosip_lock();
 			eXosip_call_terminate(sp->sid.cid, sp->sid.did);
 			eXosip_unlock();
-			sp->sid.cid = -1;
 		}
 		sp.next();
 	}
-	locking.share();
 
 	if(state != INITIAL) {
 		state = FINAL;
@@ -235,6 +231,10 @@ void stack::clear(session *s)
 		locking.exclusive();
 		debug(4, "clearing call %04x:%08x session %d\n", 
 			cr->source->cid, cr->source->sequence, s->cid); 
+		if(s->state != session::CLOSED) {
+			s->state = session::CLOSED;
+			eXosip_call_terminate(s->cid, s->did);
+		}
 		s->delist(&hash[s->cid % keysize]);
 		s->cid = -1;
 		locking.share();
