@@ -59,9 +59,12 @@ private:
 		uint32_t sequence;
 		call *parent;
 		sockaddr_internet address, interface;
+		time_t expires;				// session/invite expires...
+		time_t ringing;				// ring no-answer timer...
 
 		enum {OPEN, CLOSED} state;
 
+		char forward[MAX_URI_SIZE];	// forwarding point
 		char contact[MAX_URI_SIZE];	// who the real destination is
 		char via[MAX_URI_SIZE];		// how we get to the real destination
 		char to[MAX_URI_SIZE];		// alternate "to" based on type...
@@ -110,6 +113,7 @@ private:
 		segment *select;
 		MappedCall *map;
 		unsigned count, pending;
+		time_t expires;
 		mutex_t mutex;
 	};
 
@@ -361,7 +365,7 @@ private:
 	osip_from_t *from;
 	osip_to_t *to;
 
-	enum {REMOTE, LOCAL, PUBLIC, ROUTED, FORWARD} destination;
+	enum {REMOTE, LOCAL, PUBLIC, ROUTED} destination;
 	enum {CALL, MESSAGE, NONE} authorizing;
 
 	thread();

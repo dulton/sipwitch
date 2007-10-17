@@ -80,10 +80,6 @@ void thread::invite()
 		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
 			session->sequence, session->cid, target, identity, dialing);
 		break;  	
-	case FORWARD:
-		debug(1, "forwarding call %08x:%u for %s from %s, forward=%s\n", 
-			session->sequence, session->cid, dialing, identity, target);
-		break;
 	}
 
 	eXosip_lock();
@@ -151,7 +147,6 @@ bool thread::authorize(void)
 	const char *target;
 	char dbuf[MAX_USERID_SIZE];
 	registry::pattern *pp;
-	service::keynode *fwd;
 
 	if(!sevent->request || !sevent->request->to || !sevent->request->from)
 		goto invalid;
@@ -253,22 +248,7 @@ rewrite:
 		}
 	}
 
-	fwd = NULL;
-	if(dialed)
-		fwd = dialed->leaf("forwarding");
-
-	if(fwd) {
-		cp = service::getValue(fwd, "all");
-		if(registry::isUserid(cp))
-			goto forwarding;
-	}
-
 	if(!registry && dialed) {
-		if(fwd) {
-			cp = service::getValue(fwd, "offline");
-			if(registry::isUserid(cp))
-				goto forwarding;
-		}
 		if(!stricmp(dialed->getId(), "group"))
 			return authenticate();
 		if(!stricmp(dialed->getId(), "refer"))
@@ -282,34 +262,8 @@ rewrite:
 	}
 
 	time(&now);
-	if(registry && registry->expires && registry->expires < now) {
-		if(!dialed)
-			goto invalid;
-		if(fwd)
-			cp = service::getValue(fwd, "offline");
-		if(fwd && registry::isUserid(cp)) {
-forwarding:
-			string::set(dbuf, sizeof(dbuf), cp);
-			config::release(dialed);
-			registry::release(registry);
-			destination = FORWARD;
-			string::set(dialing, sizeof(dialing), target);
-			dialed = NULL;
-			registry = NULL;
-			target = dbuf;
-			goto rewrite;
-		}
-	}
-
-	if(registry && registry->status == MappedRegistry::DND) {
-		error = SIP_BUSY_HERE;
-		if(fwd) {
-			cp = service::getValue(fwd, "dnd");
-			if(registry::isUserid(cp))
-				goto forwarding;
-		}
+	if(registry && registry->expires && registry->expires < now && !dialed)
 		goto invalid;
-	}
 
 	// extension references always require authentication
 	if(registry::isExtension(target)) {
@@ -833,10 +787,18 @@ void thread::run(void)
 			sevent->type, sevent->cid, sevent->did, instance);
 
 		switch(sevent->type) {
-		case EXOSIP_CALL_CLOSED:
 		case EXOSIP_CALL_CANCELLED:
 			authorizing = CALL;
-			if(sevent->cid != 0) {
+			if(sevent->cid > 0) {
+				session = stack::access(sevent->cid);
+				if(session->did == sevent->did)
+					stack::close(session);
+			}
+			send_reply(SIP_OK);
+			break;
+		case EXOSIP_CALL_CLOSED:
+			authorizing = CALL;
+			if(sevent->cid > 0) {
 				session = stack::access(sevent->cid);
 				stack::close(session);
 			}
@@ -844,7 +806,7 @@ void thread::run(void)
 			break;
 		case EXOSIP_CALL_RELEASED:
 			authorizing = NONE;
-			if(sevent->cid != 0) {
+			if(sevent->cid > 0) {
 				session = stack::access(sevent->cid);
 				stack::clear(session);
 			}
@@ -854,7 +816,7 @@ void thread::run(void)
 			authorizing = CALL;
 			if(!sevent->request)
 				break;
-			if(sevent->cid == 0)
+			if(sevent->cid < 1)
 				break;
 			expiration();
 			session = stack::create(sevent->cid, sevent->did);

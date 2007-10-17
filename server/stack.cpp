@@ -58,7 +58,7 @@ void stack::call::disconnect(void)
 
 	linked_pointer<segment> sp = segments.begin();
 	while(sp) {
-		if(sp->sid.cid != 0 && sp->sid.state != session::CLOSED) {
+		if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
 			sp->sid.state = session::CLOSED;
 			eXosip_lock();
 			eXosip_call_terminate(sp->sid.cid, sp->sid.did);
@@ -227,7 +227,7 @@ void stack::clear(session *s)
 		return;
 	}
 
-	if(s->cid != 0) {
+	if(s->cid > 0) {
 		locking.exclusive();
 		debug(4, "clearing call %08x:%u session %08x:%u\n", 
 			cr->source->sequence, cr->source->cid, s->sequence, s->cid); 
@@ -262,7 +262,7 @@ void stack::destroy(call *cr)
 	while(sp) {
 		--active_segments;
 		segment *next = sp.getNext();
-		if(sp->sid.cid != -1) {
+		if(sp->sid.cid > 0) {
 			if(sp->sid.state != session::CLOSED)
 				eXosip_call_terminate(sp->sid.cid, sp->sid.did);
 			sp->sid.delist(&hash[sp->sid.cid % keysize]);
@@ -310,10 +310,11 @@ stack::session *stack::createSession(call *cr, int cid, int did)
 	memset(sp, 0, sizeof(session));
 	++cr->count;
 	time(&now);
-	sp->sid.sequence = (uint32_t)now;
-	sp->sid.sequence &= 0xffffffffl;
 	sp->enlist(&cr->segments);
 	sp->sid.enlist(&hash[cid % keysize]);
+	sp->sid.sequence = (uint32_t)now;
+	sp->sid.sequence &= 0xffffffffl;
+	sp->sid.expires = 0l;
 	sp->sid.cid = cid;
 	sp->sid.did = did;
 	sp->sid.parent = cr;
@@ -341,6 +342,7 @@ stack::session *stack::create(int cid, int did)
 	cr->arm(7000);	// Normally we get close in 6 seconds, this assures...
 	cr->count = 0;
 	cr->pending = 0;
+	cr->expires = 0l;
 	cr->source = createSession(cr, cid, did);
 	cr->target = NULL;
 	cr->state = call::INITIAL;
