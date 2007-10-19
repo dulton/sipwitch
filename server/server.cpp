@@ -22,6 +22,9 @@ using namespace UCOMMON_NAMESPACE;
 #ifdef	USES_SIGNALS
 static class __LOCAL SignalThread : public JoinableThread
 {
+private:
+	bool shutdown;
+
 public:
 	sigset_t sigs;
 
@@ -34,12 +37,14 @@ public:
 SignalThread::SignalThread() :
 JoinableThread()
 {
+	shutdown = false;
 }
 
 SignalThread::~SignalThread()
 {
+	shutdown = true;
 	pthread_kill(tid, SIGALRM);
-	cancel();
+	join();
 }
 
 void SignalThread::run(void)
@@ -58,7 +63,8 @@ void SignalThread::run(void)
 		signo = sigwait(&sigs);
 #endif
 		alarm(0);
-		Thread::yield();
+		if(shutdown)
+			join();
 		process::errlog(DEBUG1, "received signal %d", signo);
 		switch(signo) {
 		case SIGALRM:
