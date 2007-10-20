@@ -15,9 +15,16 @@ AM_CXXFLAGS = -I$(top_srcdir)/inc @GNUTELEPHONY_FLAGS@
 CXXLINK = $(LIBTOOL) --tag=$(MODEL) --mode=link $(CXX) $(AM_CFLAGS) $(CFLAGS) \
     $(AM_LDFLAGS) $(LDFLAGS) -o $@
 
+LTCXXCOMPILE = $(LIBTOOL) --tag=$(MODEL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+    --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+    $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+
 lib_LTLIBRARIES = libgnutelephony.la 
 
 libgnutelephony_la_LDFLAGS = @GNUTELEPHONY_LIBS@ $(RELEASE) 
 libgnutelephony_la_SOURCES = mapped.cpp service.cpp digest.cpp process.cpp
+libgnutelephony_la_LINK = $(LIBTOOL) --tag=$(MODEL) $(AM_LIBTOOLFLAGS) \
+    $(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+    $(CXXFLAGS) $(libucommon_la_LDFLAGS) $(LDFLAGS) -o $@
 
 
