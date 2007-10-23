@@ -314,6 +314,7 @@ stack::session *stack::createSession(call *cr, int cid, int did)
 	sp->sid.enlist(&hash[cid % keysize]);
 	sp->sid.sequence = (uint32_t)now;
 	sp->sid.sequence &= 0xffffffffl;
+	sp->sid.forwarding = false;
 	sp->sid.expires = 0l;
 	sp->sid.cid = cid;
 	sp->sid.did = did;
