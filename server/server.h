@@ -61,11 +61,10 @@ private:
 		sockaddr_internet address, interface;
 		time_t expires;				// session/invite expires...
 		time_t ringing;				// ring no-answer timer...
-		bool forwarding;			// set if forwarding by contact
 
 		enum {OPEN, CLOSED} state;
 
-		char forward[MAX_URI_SIZE];	// next forwarding point
+		char forward[MAX_URI_SIZE];	// forwarding point
 		char contact[MAX_URI_SIZE];	// who the real destination is
 		char via[MAX_URI_SIZE];		// how we get to the real destination
 		char to[MAX_URI_SIZE];		// alternate "to" based on type...
@@ -357,13 +356,12 @@ private:
 	char buffer[MAX_URI_SIZE];	
 	char identity[MAX_USERID_SIZE];
 	char dialing[MAX_USERID_SIZE];
-	stack::address *via_address, *contact_address, *from_address, *to_address;
+	stack::address *via_address, *from_address, *to_address;
 	stack::session *session;
-	char *local_uri, *remote_uri, *contact_uri;
+	char *local_uri, *remote_uri;
 	osip_header_t *header;
 	long header_expires;
 	osip_via_t *via_header, *origin_header;
-	osip_contact_t *contacting;
 	osip_from_t *from;
 	osip_to_t *to;
 
@@ -375,7 +373,7 @@ private:
 	static void wait(unsigned count);
 
 	void send_reply(int error);
-	void common_headers(void);
+	void expiration(void);
 	void invite(void);
 	void identify(void);
 	bool getsource(void);

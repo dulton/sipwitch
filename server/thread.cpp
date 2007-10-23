@@ -46,12 +46,11 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	from = NULL;
 	access = NULL;
 	dialed = NULL;
-	contacting = NULL;
 	authorized = NULL;
 	registry = NULL;
 	session = NULL;
-	via_address = from_address = to_address = contact_address = NULL;
-	local_uri = remote_uri = contact_uri = NULL;
+	via_address = from_address = to_address = NULL;
+	local_uri = remote_uri = NULL;
 }
 
 void thread::invite()
@@ -74,10 +73,7 @@ void thread::invite()
 			session->sequence, session->cid, target, from->url->username, from->url->host);
 		break;
 	case REMOTE:
-		if(contacting)
-			debug(1, "outgoing call %08x:%u from %s to %s@%s\n", 
-				session->sequence, session->cid, identity, contacting->url->username, contacting->url->host);
-		else debug(1, "outgoing call %08x:%u from %s to %s@%s\n", 
+		debug(1, "outgoing call %08x:%u from %s to %s@%s\n", 
 			session->sequence, session->cid, identity, to->url->username, to->url->host);
 		break;
 	case ROUTED:
@@ -142,7 +138,7 @@ bool thread::authorize(void)
 {
 	int error = SIP_UNDECIPHERABLE;
 	const char *scheme = "sip";
-	const char *from_port, *to_port, *contact_port;
+	const char *from_port, *to_port;
 	struct sockaddr_internet iface;
 	const char *cp;
 	time_t now;
@@ -165,12 +161,6 @@ bool thread::authorize(void)
 	osip_from_to_str(sevent->request->from, &remote_uri);
 	if(!remote_uri)
 		goto invalid;
-
-	if(contacting) {
-		osip_contact_to_str(contacting, &contact_uri);
-		if(!contact_uri)
-			goto invalid;
-	}
 
 	osip_to_init(&to);
 	osip_to_parse(to, local_uri);
@@ -198,59 +188,34 @@ bool thread::authorize(void)
 	if(stricmp(from->url->scheme, scheme) || stricmp(to->url->scheme, scheme))
 		goto invalid;
 
-	contact_port = NULL;
-	if(contacting)
-		contact_port = contacting->url->port;
 	from_port = from->url->port;
 	to_port = to->url->port;
-	if(contacting && (!contact_port || !atoi(contact_port)))
-		contact_port = "5060";
 	if(!from_port || !atoi(from_port))
 		from_port = "5060";
 	if(!to_port || !atoi(to_port))
 		to_port = "5060";
 
-	if(contacting)
-		contact_address = new stack::address(contacting->url->host, contact_port);
 	from_address = new stack::address(from->url->host, from_port);
 	to_address = new stack::address(to->url->host, to_port);
 
 	if(!from_address->getAddr() || !to_address->getAddr())
 		goto invalid;
 
-	if(contacting && !contact_address->getAddr())
-		goto invalid;
-
-	if(contact_port) {
-		if(atoi(contact_port) != stack::sip.port)
-			goto remote;
-	}
-	else if(atoi(to_port) != stack::sip.port)
+	if(atoi(to_port) != stack::sip.port)
 		goto remote;
 
-	if(contacting && string::ifind(stack::sip.localnames, contacting->url->host, " ,;:\t\n"))
-		goto local;
-	else if(string::ifind(stack::sip.localnames, to->url->host, " ,;:\t\n"))
+	if(string::ifind(stack::sip.localnames, to->url->host, " ,;:\t\n"))
 		goto local;
 
-	if(contacting) {
-		stack::getInterface((struct sockaddr *)&iface, contact_address->getAddr());
-		if(Socket::equal((struct sockaddr *)&iface, contact_address->getAddr()))
-			goto local;
-	}
-	else {
-		stack::getInterface((struct sockaddr *)&iface, to_address->getAddr());
-		if(Socket::equal((struct sockaddr *)&iface, to_address->getAddr()))
-			goto local;
-	}
+	stack::getInterface((struct sockaddr *)&iface, to_address->getAddr());
+	if(Socket::equal((struct sockaddr *)&iface, to_address->getAddr()))
+		goto local;
+
 	goto remote;
 
 local:
-	if(contacting)
-		target = contacting->url->username;
-	else
-		target = to->url->username;
-	debug(2, "authorizing local; target=%s\n", target);
+	debug(2, "authorizing local; target=%s\n", to->url->username);
+	target = to->url->username;
 	destination = LOCAL;
 	string::set(dialing, sizeof(dialing), target);
 
@@ -771,7 +736,7 @@ void thread::wait(unsigned count) {
 		Thread::sleep(50);
 }
 
-void thread::common_headers(void)
+void thread::expiration(void)
 {
 	osip_header_t *header = NULL;
 	osip_uri_param_t *expires = NULL;
@@ -780,21 +745,18 @@ void thread::common_headers(void)
 
 	assert(sevent->request != NULL);	
 	
-	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
+	header_expires = 0l;
+	osip_message_get_expires(sevent->request, 0, &header);
+	if(header && header->hvalue)
+		header_expires = atol(header->hvalue);
+	else while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
 		contact = (osip_contact_t*)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos);
-		if(!contacting && contact)
-			contacting = contact;
 		if(osip_contact_param_get_byname(contact, "expires", &expires) != 0 && expires != NULL) {
 			header_expires = atol(expires->gvalue);
 			break;
 		}
 		++pos;
 	}
-
-	header_expires = 0l;
-	osip_message_get_expires(sevent->request, 0, &header);
-	if(header && header->hvalue)
-		header_expires = atol(header->hvalue);
 }
 
 void thread::run(void)
@@ -856,10 +818,8 @@ void thread::run(void)
 				break;
 			if(sevent->cid < 1)
 				break;
-			common_headers();
+			expiration();
 			session = stack::create(sevent->cid, sevent->did);
-			if(contacting)
-				session->forwarding = true;
 			if(authorize()) 
 				invite();
 			break;
@@ -867,7 +827,7 @@ void thread::run(void)
 			authorizing = MESSAGE;
 			if(!sevent->request)
 				break;
-			common_headers();
+			expiration();
 			if(MSG_IS_OPTIONS(sevent->request))
 				options();
 			else if(MSG_IS_REGISTER(sevent->request) && authenticate())
@@ -892,10 +852,6 @@ void thread::run(void)
 		if(via_address) {
 			delete via_address;
 			via_address = NULL;
-		}
-		if(contact_address) {
-			delete contact_address;
-			contact_address = NULL;
 		}
 		if(from_address) {
 			delete from_address;
@@ -931,14 +887,6 @@ void thread::run(void)
 		if(to) {
 			osip_to_free(to);
 			to = NULL;
-		}
-
-		if(contacting)
-			contacting = NULL;
-
-		if(contact_uri) {
-			osip_free(contact_uri);
-			contact_uri = NULL;
 		}
 
 		if(remote_uri) {
