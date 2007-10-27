@@ -50,7 +50,6 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	registry = NULL;
 	session = NULL;
 	via_address = from_address = local_address = NULL;
-	local_uri = from_uri = to_uri = NULL;
 }
 
 void thread::invite()
@@ -151,32 +150,11 @@ bool thread::authorize(void)
 	if(!sevent->request || !sevent->request->to || !sevent->request->from || !sevent->request->req_uri)
 		goto invalid;
 
+	from = sevent->request->from;
 	uri = sevent->request->req_uri;
+	to = sevent->request->to;
 
 	error = SIP_ADDRESS_INCOMPLETE;
-
-	osip_to_to_str(sevent->request->to, &to_uri);
-
-	if(!to_uri)
-		goto invalid;
-
-	osip_from_to_str(sevent->request->from, &from_uri);
-	if(!to_uri)
-		goto invalid;
-
-	osip_uri_to_str(sevent->request->req_uri, &local_uri);
-	if(!local_uri)
-		goto invalid;
-
-	osip_to_init(&to);
-	osip_to_parse(to, to_uri);
-	if(!to)
-		goto invalid;
-
-	osip_from_init(&from);
-	osip_from_parse(from, from_uri);		
-	if(!from)
-		goto invalid;
 
 	if(stack::sip.tlsmode)
 		scheme = "sips";
@@ -204,8 +182,10 @@ bool thread::authorize(void)
 	if(!to_port || !atoi(to_port))
 		to_port = "5060";
 
-	debug(3, "invite requested uri=%s:%s@%s:%s\n",
-		uri->scheme, uri->username, uri->host, local_port);
+	debug(3, "request from=%s:%s@%s:%s, uri=%s:%s@%s:%s, to=%s:%s@%s:%s\n",
+		from->url->scheme, from->url->username, from->url->host, from_port,
+		uri->scheme, uri->username, uri->host, local_port,
+		to->url->scheme, to->url->username, to->url->host, from_port);
 
 	from_address = new stack::address(from->url->host, from_port);
 	local_address = new stack::address(uri->host, local_port);
@@ -893,31 +873,6 @@ void thread::run(void)
 		if(authorized) {
 			config::release(authorized);
 			authorized = NULL;
-		}
-
-		if(from) {
-			osip_from_free(from);
-			from = NULL;
-		}
-
-		if(to) {
-			osip_to_free(to);
-			to = NULL;
-		}
-
-		if(from_uri) {
-			osip_free(from_uri);
-			from_uri = NULL;
-		}
-
-		if(to_uri) {
-			osip_free(to_uri);
-			to_uri = NULL;
-		}
-
-		if(local_uri) {
-			osip_free(local_uri);
-			local_uri = NULL;
 		}
 
 		eXosip_event_free(sevent);

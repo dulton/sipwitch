@@ -368,7 +368,6 @@ private:
 	char dialing[MAX_USERID_SIZE];
 	stack::address *via_address, *from_address, *local_address;
 	stack::session *session;
-	char *from_uri, *to_uri, *local_uri;
 	osip_header_t *header;
 	long header_expires;
 	osip_via_t *via_header, *origin_header;
