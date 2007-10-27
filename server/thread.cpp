@@ -220,11 +220,6 @@ bool thread::authorize(void)
 		goto local;
 
 	stack::getInterface((struct sockaddr *)&iface, local_address->getAddr());
-	char addrbuf[65];
-	Socket::getaddress((struct sockaddr *)&iface, addrbuf, sizeof(addrbuf));
-	printf("interface address %s\n", addrbuf);
-	Socket::getaddress((struct sockaddr *)local_address->getAddr(), addrbuf, sizeof(addrbuf));
-	printf("uri address %s\n", addrbuf); 
 	if(Socket::equal((struct sockaddr *)&iface, local_address->getAddr()))
 		goto local;
 
