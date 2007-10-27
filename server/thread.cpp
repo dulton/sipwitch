@@ -169,7 +169,7 @@ bool thread::authorize(void)
 		goto invalid;
 
 	osip_to_init(&to);
-	osip_to_parse(to, local_uri);
+	osip_to_parse(to, to_uri);
 	if(!to)
 		goto invalid;
 
