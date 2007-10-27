@@ -138,7 +138,7 @@ bool thread::authorize(void)
 {
 	int error = SIP_UNDECIPHERABLE;
 	const char *scheme = "sip";
-	const char *from_port, *to_port;
+	const char *from_port, *to_port, *local_port;
 	struct sockaddr_internet iface;
 	const char *cp;
 	time_t now;
@@ -194,26 +194,37 @@ bool thread::authorize(void)
 	if(stricmp(from->url->scheme, scheme) || stricmp(uri->scheme, scheme))
 		goto invalid;
 
+	local_port = uri->port;
 	from_port = from->url->port;
-	to_port = uri->port;
+	to_port = to->url->port;
+	if(!local_port || !atoi(local_port))
+		local_port = "5060";
 	if(!from_port || !atoi(from_port))
 		from_port = "5060";
 	if(!to_port || !atoi(to_port))
 		to_port = "5060";
 
+	debug(3, "invite requested uri=%s:%s@%s:%s\n",
+		uri->scheme, uri->username, uri->host, local_port);
+
 	from_address = new stack::address(from->url->host, from_port);
-	local_address = new stack::address(uri->host, to_port);
+	local_address = new stack::address(uri->host, local_port);
 
 	if(!from_address->getAddr() || !local_address->getAddr())
 		goto invalid;
 
-	if(atoi(to_port) != stack::sip.port)
+	if(atoi(local_port) != stack::sip.port)
 		goto remote;
 
 	if(string::ifind(stack::sip.localnames, uri->host, " ,;:\t\n"))
 		goto local;
 
 	stack::getInterface((struct sockaddr *)&iface, local_address->getAddr());
+	char addrbuf[65];
+	Socket::getaddress((struct sockaddr *)&iface, addrbuf, sizeof(addrbuf));
+	printf("interface address %s\n", addrbuf);
+	Socket::getaddress((struct sockaddr *)local_address->getAddr(), addrbuf, sizeof(addrbuf));
+	printf("uri address %s\n", addrbuf); 
 	if(Socket::equal((struct sockaddr *)&iface, local_address->getAddr()))
 		goto local;
 
