@@ -74,24 +74,61 @@ void stack::call::disconnect(void)
 	}
 }
 
-void stack::call::closing(void)
+void stack::call::closing(session *s)
 {
-	if(pending)
+	if(pending) {
+		switch(s->state)
+		{
+		case session::RING:
+			--ringing;
+			break;
+		case session::FWD:
+			--forwarding;
+			break;
+		case session::BUSY:
+			--ringbusy;
+			break;
+		case session::REORDER:
+			--unreachable;
+			break;
+		default:
+			break;
+		}
 		--pending;
+	}
+
+	// TODO: switch by call state to see if we send reply code!
+	if(pending && state == INITIAL) {
+		// if(pending - unreachable == forwarding)
+		// else if(pending - unreachable == ringing + forwarding)...
+		// else if(pending - unreachable == ringbusy) ...
+		// else if(pending == unreachable) ...
+	}
+
 	if(pending)
 		return;
+
 	disconnect();
 }
 
 void stack::call::expired(void)
 {
 	switch(state) {
+	case HOLDING:	// hold-recall timer expired...
+
+	case RINGING:	// maybe ring-no-answer with forward? invite expired?
+
+	case BUSY:		// invite expired
+	case ACTIVE:	// active call session expired without re-invite
+
 	case FINAL:		// session expects to be cleared....
+	case REORDER:	// only different in logging
+
+					// TODO: initial may have special case if pending!!!
 	case INITIAL:	// if session never used, garbage collect at expire...
 		debug(4, "expiring call %08x:%u\n", source->sequence, source->cid);
 		stack::destroy(this);
 		return;
-	// most other handlers acquire mutex and manage a session....
 	}
 }
 
@@ -207,7 +244,7 @@ void stack::close(session *s)
 		if(s == cr->source || s == cr->source)
 			cr->disconnect();
 		else
-			cr->closing();
+			cr->closing(s);
 	}
 	cr->mutex.unlock();
 }
@@ -341,7 +378,7 @@ stack::session *stack::create(int cid, int did)
 	++active_calls;
 	cr->arm(7000);	// Normally we get close in 6 seconds, this assures...
 	cr->count = 0;
-	cr->pending = 0;
+	cr->pending = cr->ringing = cr->ringbusy = cr->unreachable = cr->forwarding = 0;
 	cr->expires = 0l;
 	cr->source = createSession(cr, cid, did);
 	cr->target = NULL;

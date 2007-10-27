@@ -62,7 +62,7 @@ private:
 		time_t expires;				// session/invite expires...
 		time_t ringing;				// ring no-answer timer...
 
-		enum {OPEN, CLOSED} state;
+		enum {OPEN, CLOSED, RING, BUSY, FWD, REORDER} state;
 
 		char forward[MAX_URI_SIZE];	// forwarding point
 		char contact[MAX_URI_SIZE];	// who the real destination is
@@ -95,6 +95,11 @@ private:
 
 		volatile enum {
 			INITIAL,
+			RINGING,
+			REORDER,
+			HOLDING,
+			ACTIVE,
+			BUSY,
 			FINAL
 		} state;
 
@@ -104,7 +109,7 @@ private:
 		char to[MAX_URI_SIZE];		// who is being called
 
 		void expired(void);
-		void closing(void);
+		void closing(session *s);
 		void disconnect(void);
 
 		OrderedIndex segments;
@@ -112,7 +117,12 @@ private:
 		session *target;
 		segment *select;
 		MappedCall *map;
-		unsigned count, pending;
+		unsigned count;			// total open segments
+		unsigned pending;		// pending segments with invites
+		unsigned ringing;		// number of ringing segments
+		unsigned ringbusy;		// number of busy segments
+		unsigned unreachable;	// number of unreachable segments
+		unsigned forwarding;	// number of forwarding segments
 		time_t expires;
 		mutex_t mutex;
 	};
