@@ -49,8 +49,8 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	authorized = NULL;
 	registry = NULL;
 	session = NULL;
-	via_address = from_address = to_address = NULL;
-	local_uri = remote_uri = NULL;
+	via_address = from_address = local_address = NULL;
+	local_uri = from_uri = to_uri = NULL;
 }
 
 void thread::invite()
@@ -74,7 +74,7 @@ void thread::invite()
 		break;
 	case REMOTE:
 		debug(1, "outgoing call %08x:%u from %s to %s@%s\n", 
-			session->sequence, session->cid, identity, to->url->username, to->url->host);
+			session->sequence, session->cid, identity, uri->username, uri->host);
 		break;
 	case ROUTED:
 		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
@@ -148,18 +148,24 @@ bool thread::authorize(void)
 	char dbuf[MAX_USERID_SIZE];
 	registry::pattern *pp;
 
-	if(!sevent->request || !sevent->request->to || !sevent->request->from)
+	if(!sevent->request || !sevent->request->to || !sevent->request->from || !sevent->request->req_uri)
 		goto invalid;
+
+	uri = sevent->request->req_uri;
 
 	error = SIP_ADDRESS_INCOMPLETE;
 
-	osip_to_to_str(sevent->request->to, &local_uri);
+	osip_to_to_str(sevent->request->to, &to_uri);
 
-	if(!local_uri)
+	if(!to_uri)
 		goto invalid;
 
-	osip_from_to_str(sevent->request->from, &remote_uri);
-	if(!remote_uri)
+	osip_from_to_str(sevent->request->from, &from_uri);
+	if(!to_uri)
+		goto invalid;
+
+	osip_uri_to_str(sevent->request->req_uri, &local_uri);
+	if(!local_uri)
 		goto invalid;
 
 	osip_to_init(&to);
@@ -168,54 +174,54 @@ bool thread::authorize(void)
 		goto invalid;
 
 	osip_from_init(&from);
-	osip_from_parse(from, remote_uri);		
+	osip_from_parse(from, from_uri);		
 	if(!from)
 		goto invalid;
 
 	if(stack::sip.tlsmode)
 		scheme = "sips";
 
-	if(!from->url->host || !to->url->host)
+	if(!from->url->host || !uri->host)
 		goto invalid;
 
-	if(!from->url->username || !to->url->username)
+	if(!from->url->username || !uri->username)
 		goto invalid;
 
-	if(!from->url->scheme || !to->url->scheme)
+	if(!from->url->scheme || !uri->scheme)
 		goto invalid;
 
 	error = SIP_UNSUPPORTED_URI_SCHEME;
-	if(stricmp(from->url->scheme, scheme) || stricmp(to->url->scheme, scheme))
+	if(stricmp(from->url->scheme, scheme) || stricmp(uri->scheme, scheme))
 		goto invalid;
 
 	from_port = from->url->port;
-	to_port = to->url->port;
+	to_port = uri->port;
 	if(!from_port || !atoi(from_port))
 		from_port = "5060";
 	if(!to_port || !atoi(to_port))
 		to_port = "5060";
 
 	from_address = new stack::address(from->url->host, from_port);
-	to_address = new stack::address(to->url->host, to_port);
+	local_address = new stack::address(uri->host, to_port);
 
-	if(!from_address->getAddr() || !to_address->getAddr())
+	if(!from_address->getAddr() || !local_address->getAddr())
 		goto invalid;
 
 	if(atoi(to_port) != stack::sip.port)
 		goto remote;
 
-	if(string::ifind(stack::sip.localnames, to->url->host, " ,;:\t\n"))
+	if(string::ifind(stack::sip.localnames, uri->host, " ,;:\t\n"))
 		goto local;
 
-	stack::getInterface((struct sockaddr *)&iface, to_address->getAddr());
-	if(Socket::equal((struct sockaddr *)&iface, to_address->getAddr()))
+	stack::getInterface((struct sockaddr *)&iface, local_address->getAddr());
+	if(Socket::equal((struct sockaddr *)&iface, local_address->getAddr()))
 		goto local;
 
 	goto remote;
 
 local:
-	debug(2, "authorizing local; target=%s\n", to->url->username);
-	target = to->url->username;
+	debug(2, "authorizing local; target=%s\n", uri->username);
+	target = uri->username;
 	destination = LOCAL;
 	string::set(dialing, sizeof(dialing), target);
 
@@ -257,7 +263,11 @@ rewrite:
 			return authenticate();
 		if(!stricmp(dialed->getId(), "queue"))
 			goto anonymous;
-		process::errlog(ERROR, "unknown or invalid destination %s, type=%s\n", target, dialed->getId());
+		if(!stricmp(dialed->getId(), "user"))
+			process::errlog(NOTIFY, "unregistered destination %s", target);
+		else
+			process::errlog(ERROR, "invalid destination %s, type=%s\n", target, dialed->getId());
+		error = SIP_NOT_FOUND;	
 		goto invalid;
 	}
 
@@ -857,9 +867,9 @@ void thread::run(void)
 			delete from_address;
 			from_address = NULL;
 		}
-		if(to_address) {
-			delete to_address;
-			to_address = NULL;
+		if(local_address) {
+			delete local_address;
+			local_address = NULL;
 		}
 
 		// release config access lock(s)...
@@ -889,9 +899,14 @@ void thread::run(void)
 			to = NULL;
 		}
 
-		if(remote_uri) {
-			osip_free(remote_uri);
-			remote_uri = NULL;
+		if(from_uri) {
+			osip_free(from_uri);
+			from_uri = NULL;
+		}
+
+		if(to_uri) {
+			osip_free(to_uri);
+			to_uri = NULL;
 		}
 
 		if(local_uri) {

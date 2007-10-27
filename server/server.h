@@ -366,14 +366,15 @@ private:
 	char buffer[MAX_URI_SIZE];	
 	char identity[MAX_USERID_SIZE];
 	char dialing[MAX_USERID_SIZE];
-	stack::address *via_address, *from_address, *to_address;
+	stack::address *via_address, *from_address, *local_address;
 	stack::session *session;
-	char *local_uri, *remote_uri;
+	char *from_uri, *to_uri, *local_uri;
 	osip_header_t *header;
 	long header_expires;
 	osip_via_t *via_header, *origin_header;
 	osip_from_t *from;
 	osip_to_t *to;
+	osip_uri_t *uri;
 
 	enum {REMOTE, LOCAL, PUBLIC, ROUTED} destination;
 	enum {CALL, MESSAGE, NONE} authorizing;
