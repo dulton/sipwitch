@@ -56,6 +56,12 @@ void thread::invite()
 {
 	osip_message_t *reply = NULL;
 	const char *target = dialing;
+	osip_body_t *body = NULL;
+	int error = SIP_NOT_FOUND;
+
+	osip_message_get_body(sevent->request, 0, &body);
+	if(body && body->body)
+		string::set(session->sdp, sizeof(session->sdp), body->body);
 
 	if(dialed)
 		target = service::getValue(dialed, "id");
@@ -81,9 +87,10 @@ void thread::invite()
 		break;  	
 	}
 
+failed:
 	eXosip_lock();
-	eXosip_call_build_answer(sevent->tid, SIP_NOT_FOUND, &reply);
-	eXosip_call_send_answer(sevent->tid, SIP_NOT_FOUND, reply);
+	eXosip_call_build_answer(sevent->tid, error, &reply);
+	eXosip_call_send_answer(sevent->tid, error, reply);
 	eXosip_unlock();		
 
 }

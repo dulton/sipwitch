@@ -64,6 +64,7 @@ private:
 
 		enum {OPEN, CLOSED, RING, BUSY, FWD, REORDER} state;
 
+		char sdp[1024];				// sdp body to use in exchange
 		char forward[MAX_URI_SIZE];	// forwarding point
 		char contact[MAX_URI_SIZE];	// who the real destination is
 		char via[MAX_URI_SIZE];		// how we get to the real destination
