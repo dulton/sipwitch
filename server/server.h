@@ -65,7 +65,8 @@ private:
 		enum {OPEN, CLOSED, RING, BUSY, FWD, REORDER} state;
 
 		char sdp[1024];					// sdp body to use in exchange
-		char identity[MAX_URI_SIZE];	// who the effective contact is
+		char from[MAX_URI_SIZE];		// effective who is calling us...
+		char identity[MAX_URI_SIZE];	// our effective contact/to point...
 
 		inline bool isSource(void)
 			{return (this == parent->source);};
@@ -146,6 +147,7 @@ public:
 
 	stack();
 
+	__EXPORT static void logCall(const char *reason, session *session);
 	__EXPORT static void setBusy(int tid, session *session);
 	__EXPORT static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
 	__EXPORT static session *create(int cid, int did);

@@ -80,6 +80,7 @@ void thread::invite()
 			// local call loopback on event interface, real is by target...
 			stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
 			string::set(call->calling, sizeof(call->calling), session->identity);
+			string::set(session->from, sizeof(session->from), session->identity);
 			string::set(call->subject, sizeof(call->subject), "calling self");
 			break;
 		}

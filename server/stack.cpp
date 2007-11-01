@@ -391,6 +391,33 @@ stack::session *stack::create(int cid, int did)
 	return cr->source;
 }
 
+void stack::logCall(const char *reason, session *session)
+{
+	time_t now;
+	struct tm *dt;
+	char buf[1024];
+	call *cr;
+
+	if(!session)
+		return;
+
+	cr = session->parent;
+	if(!cr || !cr->starting)
+		return;
+
+	time(&now);
+	dt = localtime(&cr->starting);
+
+	snprintf(buf, sizeof(buf), "%08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s %s\n",
+		session->sequence, session->cid, reason,
+		dt->tm_year + 1900, dt->tm_mon + 1, dt->tm_mday,
+		dt->tm_hour, dt->tm_min, dt->tm_sec, now - cr->starting,
+		cr->localid, session->identity, session->from, cr->calling, cr->subject);		
+	
+	debug(3, "cdr=%s", buf); 
+	cr->starting = 0l;
+}
+
 void stack::setBusy(int tid, session *session)
 {
 	osip_message_t *reply = NULL;
@@ -407,6 +434,8 @@ void stack::setBusy(int tid, session *session)
 	eXosip_call_build_answer(tid, SIP_BUSY_HERE, &reply);
 	eXosip_call_send_answer(tid, SIP_BUSY_HERE, reply);
 	eXosip_unlock();		
+
+	logCall("busy", session);
 }
 
 stack::session *stack::access(int cid)
