@@ -66,7 +66,6 @@ private:
 
 		char sdp[1024];					// sdp body to use in exchange
 		char identity[MAX_URI_SIZE];	// who the effective contact is
-		char request[MAX_URI_SIZE];		// how we get to the real destination
 
 		inline bool isSource(void)
 			{return (this == parent->source);};
@@ -110,8 +109,7 @@ private:
 		unsigned ringbusy;		// number of busy segments
 		unsigned unreachable;	// number of unreachable segments
 		unsigned forwarding;	// number of forwarding segments
-		time_t expires;
-		time_t start;
+		time_t expires, starting;
 		mutex_t mutex;
 	};
 

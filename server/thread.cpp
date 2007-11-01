@@ -71,6 +71,7 @@ void thread::invite()
 	case LOCAL:
 		// busy here if calling self
 		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
+		time(&call->starting);
 		if(!stricmp(target, identity)) {
 			debug(1, "calling self %08x:%u, id=%s\n", 
 				session->sequence, session->cid, identity);

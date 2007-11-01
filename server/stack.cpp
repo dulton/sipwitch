@@ -385,7 +385,7 @@ stack::session *stack::create(int cid, int did)
 	cr->target = NULL;
 	cr->state = call::INITIAL;
 	cr->enlist(&stack::sip);
-	time(&cr->start);
+	cr->starting = 0l;
 	locking.share();
 	cr->update();
 	return cr->source;
