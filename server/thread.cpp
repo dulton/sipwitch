@@ -70,12 +70,15 @@ void thread::invite()
 	switch(destination) {
 	case LOCAL:
 		// busy here if calling self
-		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
 		time(&call->starting);
+		call->type = stack::call::LOCAL;
+		string::set(call->localid, sizeof(call->localid), identity);
 		if(!stricmp(target, identity)) {
 			debug(1, "calling self %08x:%u, id=%s\n", 
 				session->sequence, session->cid, identity);
 
+			// local call loopback on event interface, real is by target...
+			stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
 			string::set(call->calling, sizeof(call->calling), session->identity);
 			string::set(call->subject, sizeof(call->subject), "calling self");
 			break;
@@ -197,10 +200,11 @@ bool thread::authorize(void)
 	if(!to_port || !atoi(to_port))
 		to_port = "5060";
 
-	debug(3, "request from=%s:%s@%s:%s, uri=%s:%s@%s:%s, to=%s:%s@%s:%s\n",
+/*	debug(3, "request from=%s:%s@%s:%s, uri=%s:%s@%s:%s, to=%s:%s@%s:%s\n",
 		from->url->scheme, from->url->username, from->url->host, from_port,
 		uri->scheme, uri->username, uri->host, local_port,
 		to->url->scheme, to->url->username, to->url->host, from_port);
+*/
 
 	from_address = new stack::address(from->url->host, from_port);
 	local_address = new stack::address(uri->host, local_port);

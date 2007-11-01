@@ -91,8 +91,9 @@ private:
 
 		call();
 
-		char calling[MAX_URI_SIZE];	// who is being called
-		char subject[MAX_URI_SIZE];	// call subject
+		char localid[MAX_USERID_SIZE];	// local authorization id
+		char calling[MAX_URI_SIZE];		// who is being called
+		char subject[MAX_URI_SIZE];		// call subject
 
 		void expired(void);
 		void closing(session *s);
