@@ -59,16 +59,14 @@ private:
 		uint32_t sequence;
 		call *parent;
 		sockaddr_internet address, interface;
-		time_t expires;				// session/invite expires...
-		time_t ringing;				// ring no-answer timer...
+		time_t expires;					// session/invite expires...
+		time_t ringing;					// ring no-answer timer...
 
 		enum {OPEN, CLOSED, RING, BUSY, FWD, REORDER} state;
 
-		char sdp[1024];				// sdp body to use in exchange
-		char forward[MAX_URI_SIZE];	// forwarding point
-		char contact[MAX_URI_SIZE];	// who the real destination is
-		char via[MAX_URI_SIZE];		// how we get to the real destination
-		char to[MAX_URI_SIZE];		// alternate "to" based on type...
+		char sdp[1024];					// sdp body to use in exchange
+		char identity[MAX_URI_SIZE];	// who the effective contact is
+		char request[MAX_URI_SIZE];		// how we get to the real destination
 
 		inline bool isSource(void)
 			{return (this == parent->source);};
@@ -86,28 +84,16 @@ private:
 	class __LOCAL call : public TimerQueue::event
 	{
 	public:
-		enum {
-			DIRECTED,
-			CIRCULAR,
-			TERMINAL,
-			REDIRECTED,
-			DISTRIBUTED
-		} mode;
+		enum {DIRECTED, CIRCULAR, TERMINAL, REDIRECTED, DISTRIBUTED} mode;
 
-		volatile enum {
-			INITIAL,
-			RINGING,
-			REORDER,
-			HOLDING,
-			ACTIVE,
-			BUSY,
-			FINAL
-		} state;
+		enum {LOCAL, INCOMING, OUTGOING, REFER} type;
+
+		enum {INITIAL, RINGING, REORDER, HOLDING, ACTIVE, BUSY, FINAL} state;
 
 		call();
 
-		char from[MAX_URI_SIZE];	// who the call is from
-		char to[MAX_URI_SIZE];		// who is being called
+		char calling[MAX_URI_SIZE];	// who is being called
+		char subject[MAX_URI_SIZE];	// call subject
 
 		void expired(void);
 		void closing(session *s);
@@ -119,12 +105,13 @@ private:
 		segment *select;
 		MappedCall *map;
 		unsigned count;			// total open segments
-		unsigned pending;		// pending segments with invites
+		unsigned invited;		// pending segments with invites
 		unsigned ringing;		// number of ringing segments
 		unsigned ringbusy;		// number of busy segments
 		unsigned unreachable;	// number of unreachable segments
 		unsigned forwarding;	// number of forwarding segments
 		time_t expires;
+		time_t start;
 		mutex_t mutex;
 	};
 
@@ -160,6 +147,7 @@ public:
 
 	stack();
 
+	__EXPORT static void setBusy(int tid, session *session);
 	__EXPORT static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
 	__EXPORT static session *create(int cid, int did);
 	__EXPORT static void destroy(session *s);
@@ -367,6 +355,7 @@ private:
 	char buffer[MAX_URI_SIZE];	
 	char identity[MAX_USERID_SIZE];
 	char dialing[MAX_USERID_SIZE];
+	struct sockaddr_internet iface;
 	stack::address *via_address, *from_address, *local_address;
 	stack::session *session;
 	osip_header_t *header;

@@ -76,7 +76,7 @@ void stack::call::disconnect(void)
 
 void stack::call::closing(session *s)
 {
-	if(pending) {
+	if(invited) {
 		switch(s->state)
 		{
 		case session::RING:
@@ -94,18 +94,18 @@ void stack::call::closing(session *s)
 		default:
 			break;
 		}
-		--pending;
+		--invited;
 	}
 
 	// TODO: switch by call state to see if we send reply code!
-	if(pending && state == INITIAL) {
-		// if(forwarding && pending - unreachable - ringbusy == forwarding)
-		// else if(ringing && pending - unreachable - ringbusy == ringing + forwarding)...
-		// else if(ringbusy && pending - unreachable == ringbusy) ...
-		// else if(pending == unreachable) ...
+	if(invited && state == INITIAL) {
+		// if(forwarding && invited - unreachable - ringbusy == forwarding)
+		// else if(ringing && invited - unreachable - ringbusy == ringing + forwarding)...
+		// else if(ringbusy && invited - unreachable == ringbusy) ...
+		// else if(invited == unreachable) ...
 	}
 
-	if(pending)
+	if(invited)
 		return;
 
 	disconnect();
@@ -379,15 +379,34 @@ stack::session *stack::create(int cid, int did)
 	++active_calls;
 	cr->arm(7000);	// Normally we get close in 6 seconds, this assures...
 	cr->count = 0;
-	cr->pending = cr->ringing = cr->ringbusy = cr->unreachable = cr->forwarding = 0;
+	cr->invited = cr->ringing = cr->ringbusy = cr->unreachable = cr->forwarding = 0;
 	cr->expires = 0l;
 	cr->source = createSession(cr, cid, did);
 	cr->target = NULL;
 	cr->state = call::INITIAL;
 	cr->enlist(&stack::sip);
+	time(&cr->start);
 	locking.share();
 	cr->update();
 	return cr->source;
+}
+
+void stack::setBusy(int tid, session *session)
+{
+	osip_message_t *reply = NULL;
+	call *cr;
+	if(!session)
+		return;
+
+	cr = session->parent;
+	cr->state = call::BUSY;
+	cr->disarm();
+	cr->update();
+
+	eXosip_lock();
+	eXosip_call_build_answer(tid, SIP_BUSY_HERE, &reply);
+	eXosip_call_send_answer(tid, SIP_BUSY_HERE, reply);
+	eXosip_unlock();		
 }
 
 stack::session *stack::access(int cid)

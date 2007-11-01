@@ -54,10 +54,9 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 
 void thread::invite()
 {
-	osip_message_t *reply = NULL;
 	const char *target = dialing;
 	osip_body_t *body = NULL;
-	int error = SIP_NOT_FOUND;
+	stack::call *call = session->parent;
 
 	osip_message_get_body(sevent->request, 0, &body);
 	if(body && body->body)
@@ -70,8 +69,19 @@ void thread::invite()
 
 	switch(destination) {
 	case LOCAL:
+		// busy here if calling self
+		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
+		if(!stricmp(target, identity)) {
+			debug(1, "calling self %08x:%u, id=%s\n", 
+				session->sequence, session->cid, identity);
+
+			string::set(call->calling, sizeof(call->calling), session->identity);
+			string::set(call->subject, sizeof(call->subject), "calling self");
+			break;
+		}
 		debug(1, "local call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, target, identity);
+
 		break;
 	case PUBLIC:
 		debug(1, "incoming call %08x:%u for %s from %s@%s\n", 
@@ -87,12 +97,10 @@ void thread::invite()
 		break;  	
 	}
 
-failed:
-	eXosip_lock();
-	eXosip_call_build_answer(sevent->tid, error, &reply);
-	eXosip_call_send_answer(sevent->tid, error, reply);
-	eXosip_unlock();		
+	if(call->invited)
+		return;
 
+	stack::setBusy(sevent->tid, session);
 }
 
 void thread::identify(void)
@@ -144,8 +152,6 @@ bool thread::authorize(void)
 {
 	int error = SIP_UNDECIPHERABLE;
 	const char *scheme = "sip";
-	const char *from_port, *to_port, *local_port;
-	struct sockaddr_internet iface;
 	const char *cp;
 	time_t now;
 	unsigned level;
@@ -153,6 +159,7 @@ bool thread::authorize(void)
 	const char *target;
 	char dbuf[MAX_USERID_SIZE];
 	registry::pattern *pp;
+	const char *from_port, *to_port, *local_port;
 
 	if(!sevent->request || !sevent->request->to || !sevent->request->from || !sevent->request->req_uri)
 		goto invalid;
