@@ -65,7 +65,6 @@ private:
 		enum {OPEN, CLOSED, RING, BUSY, FWD, REORDER} state;
 
 		char sdp[1024];					// sdp body to use in exchange
-		char from[MAX_URI_SIZE];		// effective who is calling us...
 		char identity[MAX_URI_SIZE];	// our effective contact/to point...
 
 		inline bool isSource(void)
@@ -92,7 +91,9 @@ private:
 
 		call();
 
-		char localid[MAX_USERID_SIZE];	// local authorization id
+		char caller[MAX_USERID_SIZE];	// ext/user or ip address
+		char dialed[MAX_USERID_SIZE];	// user or ip address...
+		char joined[MAX_USERID_SIZE];	// who we actually joined
 		char calling[MAX_URI_SIZE];		// who is being called
 		char subject[MAX_URI_SIZE];		// call subject
 

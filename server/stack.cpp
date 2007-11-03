@@ -397,6 +397,7 @@ void stack::logCall(const char *reason, session *session)
 	struct tm *dt;
 	char buf[1024];
 	call *cr;
+	char *cp;
 
 	if(!session)
 		return;
@@ -408,12 +409,15 @@ void stack::logCall(const char *reason, session *session)
 	time(&now);
 	dt = localtime(&cr->starting);
 
-	snprintf(buf, sizeof(buf), "%08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s %s\n",
+	snprintf(buf, sizeof(buf), "%08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s\n",
 		session->sequence, session->cid, reason,
 		dt->tm_year + 1900, dt->tm_mon + 1, dt->tm_mday,
 		dt->tm_hour, dt->tm_min, dt->tm_sec, now - cr->starting,
-		cr->localid, session->identity, session->from, cr->calling, cr->subject);		
+		cr->caller, cr->dialed, cr->joined);		
 	
+	cp = strchr(buf, '\n');
+	if(cp)
+		*cp = 0;
 	debug(3, "cdr=%s", buf); 
 	cr->starting = 0l;
 }
