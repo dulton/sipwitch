@@ -57,38 +57,51 @@ void thread::invite()
 	const char *target = dialing;
 	osip_body_t *body = NULL;
 	stack::call *call = session->parent;
+	unsigned toext = 0;
 
 	osip_message_get_body(sevent->request, 0, &body);
 	if(body && body->body)
 		string::set(session->sdp, sizeof(session->sdp), body->body);
 
-	if(dialed)
+	if(dialed) {
+		target = service::getValue(dialed, "extension");
+		if(target)
+			toext = atoi(target);
 		target = service::getValue(dialed, "id");
-	else if(registry)
+	}
+	else if(registry) {
 		target = registry->userid;
+		toext = registry->ext;
+	}
 
 	switch(destination) {
 	case LOCAL:
 		// busy here if calling self
 		time(&call->starting);
 		call->type = stack::call::LOCAL;
-		string::set(call->caller, sizeof(call->caller), identity);
+		if(extension)
+			snprintf(call->caller, sizeof(call->caller), "%u", extension);
+		else
+			string::set(call->caller, sizeof(call->caller), identity);
 		string::set(call->dialed, sizeof(call->dialed), dialing);
 		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
 		if(!stricmp(target, identity)) {
-			string::set(call->joined, sizeof(call->joined), identity);
+			string::set(call->joined, sizeof(call->joined), call->caller);
 			debug(1, "calling self %08x:%u, id=%s\n", 
-				session->sequence, session->cid, identity);
+				session->sequence, session->cid, getIdent());
 
 			// local call loopback on event interface, real is by target...
 			string::set(call->calling, sizeof(call->calling), session->identity);
 			string::set(call->subject, sizeof(call->subject), "calling self");
 			break;
 		}
-		string::set(call->joined, sizeof(call->joined), target);
+		if(toext)
+			snprintf(call->joined, sizeof(call->joined), "%u", toext);
+		else
+			string::set(call->joined, sizeof(call->joined), target);
 		stack::sipAddress(&iface, call->calling, target, sizeof(call->calling));
 		debug(1, "local call %08x:%u for %s from %s\n", 
-			session->sequence, session->cid, target, identity);
+			session->sequence, session->cid, call->joined, call->caller);
 
 		break;
 	case PUBLIC:
@@ -97,11 +110,11 @@ void thread::invite()
 		break;
 	case REMOTE:
 		debug(1, "outgoing call %08x:%u from %s to %s@%s\n", 
-			session->sequence, session->cid, identity, uri->username, uri->host);
+			session->sequence, session->cid, getIdent(), uri->username, uri->host);
 		break;
 	case ROUTED:
 		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
-			session->sequence, session->cid, target, identity, dialing);
+			session->sequence, session->cid, target, getIdent(), dialing);
 		break;  	
 	}
 
@@ -125,11 +138,26 @@ void thread::identify(void)
 	if(!rr)
 		return;
 
+	extension = rr->ext;
 	string::set(identity, sizeof(identity), rr->userid);
 	authorized = config::getProvision(identity);
 	registry::release(rr);
 }
 
+const char *thread::getIdent(void)
+{
+	if(!extension)
+		return identity;
+
+	if(registry::isExtension(identity) && atoi(identity) == extension)
+		return identity;
+
+	if(!identbuf[0])
+		snprintf(identbuf, sizeof(identbuf), "%s(%u)", identity, extension);
+
+	return identbuf;
+}
+	
 bool thread::unauthenticated(void)
 {
 	MappedRegistry *rr = NULL;
@@ -144,6 +172,7 @@ bool thread::unauthenticated(void)
 	if(!rr)
 		goto untrusted;
 
+	extension = rr->ext;
 	string::set(identity, sizeof(identity), rr->userid);
 	authorized = config::getProvision(identity);
 	registry::release(rr);
@@ -411,7 +440,7 @@ remote:
 
 invalid:
 	if(authorized)
-		debug(1, "rejecting invite from %s; error=%d\n", identity, error);
+		debug(1, "rejecting invite from %s; error=%d\n", getIdent(), error);
 	else if(from->url && from->url->host && from->url->username)
 		debug(1, "rejecting invite from %s@%s; error=%d\n", from->url->username, from->url->host, error);
 	else
@@ -674,11 +703,11 @@ void thread::reregister(const char *contact, time_t interval)
 			count = registry::setTarget(registry, via_address, expire, contact);
 	}
 	if(refresh) 
-		debug(2, "refreshing %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
+		debug(2, "refreshing %s for %ld seconds from %s:%s", getIdent(), interval, via_header->host, via_header->port);
 	else if(count)
-			process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%s", identity, interval, via_header->host, via_header->port);
+			process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%s", getIdent(), interval, via_header->host, via_header->port);
 	else {
-		process::errlog(ERROR, "cannot register %s from %s", identity, buffer);
+		process::errlog(ERROR, "cannot register %s from %s", getIdent(), buffer);
 		answer = SIP_FORBIDDEN;
 		goto reply;
 	}		
@@ -706,7 +735,7 @@ reply:
 
 void thread::deregister()
 {
-	process::errlog(DEBUG1, "unregister %s", identity);
+	process::errlog(DEBUG1, "unregister %s", getIdent());
 }
 
 void thread::getDevice(MappedRegistry *rr)
@@ -786,6 +815,9 @@ void thread::run(void)
 	raisePriority(stack::sip.priority);
 
 	for(;;) {
+		extension = 0;
+		identbuf[0] = 0;
+
 		if(!shutdown_flag)
 			sevent = eXosip_event_wait(0, stack::sip.timing);
 

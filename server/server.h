@@ -91,9 +91,9 @@ private:
 
 		call();
 
-		char caller[MAX_USERID_SIZE];	// ext/user or ip address
-		char dialed[MAX_USERID_SIZE];	// user or ip address...
-		char joined[MAX_USERID_SIZE];	// who we actually joined
+		char caller[MAX_IDENT_SIZE];	// ext/user or ip address
+		char dialed[MAX_IDENT_SIZE];	// user or ip address...
+		char joined[MAX_IDENT_SIZE];	// who we actually joined
 		char calling[MAX_URI_SIZE];		// who is being called
 		char subject[MAX_URI_SIZE];		// call subject
 
@@ -159,6 +159,7 @@ public:
 	__EXPORT static void close(session *s);
 	__EXPORT static session *access(int cid);
 	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
+	__EXPORT static char *sipIdentity(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_IDENT_SIZE);
 	__EXPORT static address *getAddress(const char *uri, address *addr = NULL);
 };
 
@@ -355,6 +356,7 @@ private:
 	MappedRegistry *registry;
 	eXosip_event_t *sevent;
 	char buffer[MAX_URI_SIZE];	
+	char identbuf[MAX_USERID_SIZE + 12];
 	char identity[MAX_USERID_SIZE];
 	char dialing[MAX_USERID_SIZE];
 	struct sockaddr_internet iface;
@@ -389,6 +391,7 @@ private:
 	void options(void);
 	void run(void);
 	void getDevice(MappedRegistry *rr);
+	const char *getIdent(void);
 
 public:
 	__EXPORT static void shutdown(void);

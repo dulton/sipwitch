@@ -418,7 +418,7 @@ void stack::logCall(const char *reason, session *session)
 	cp = strchr(buf, '\n');
 	if(cp)
 		*cp = 0;
-	debug(3, "cdr=%s", buf); 
+	debug(3, "cdr: %s", buf); 
 	cr->starting = 0l;
 }
 
@@ -620,10 +620,33 @@ bool stack::reload(service *cfg)
 	return true;
 }
 
+char *stack::sipIdentity(struct sockaddr_internet *addr, char *buf, const char *user, size_t size)
+{
+	*buf = 0;
+	size_t len;
+
+	if(!size)
+		size = MAX_URI_SIZE;
+
+	if(!addr)
+		return NULL;
+
+	if(user) {
+		string::add(buf, size, user);
+		string::add(buf, size, "@");
+	}
+
+	len = strlen(buf);
+	Socket::getaddress((struct sockaddr *)addr, buf + len, size - len);
+	return buf;
+}
+
 char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *user, size_t size)
 {
-	char pbuf[8];
+	char pbuf[10];
 	unsigned port;
+	bool ipv6 = false;
+
 	*buf = 0;
 	size_t len;
 
@@ -639,6 +662,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 		break;
 #ifdef	AF_INET6
 	case AF_INET6:
+		ipv6 = true;
 		port = ntohs(addr->ipv6.sin6_port);
 		break;
 #endif
@@ -655,12 +679,20 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 
 	if(user) {
 		string::add(buf, size, user);
-		string::add(buf, size, "@");
+		if(ipv6)
+			string::add(buf, size, "@[");
+		else			
+			string::add(buf, size, "@");
 	}
+	else if(ipv6)
+		string::add(buf, size, "[");
 
 	len = strlen(buf);
 	Socket::getaddress((struct sockaddr *)addr, buf + len, size - len);
-	snprintf(pbuf, sizeof(pbuf), ":%u", port);
+	if(ipv6)
+		snprintf(pbuf, sizeof(pbuf), "]:%u", port);
+	else
+		snprintf(pbuf, sizeof(pbuf), ":%u", port);
 	string::add(buf, size, pbuf);
 	return buf;
 }
