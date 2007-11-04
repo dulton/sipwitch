@@ -360,7 +360,7 @@ private:
 	char identity[MAX_USERID_SIZE];
 	char dialing[MAX_USERID_SIZE];
 	struct sockaddr_internet iface;
-	stack::address *via_address, *from_address, *local_address;
+	stack::address *via_address, *from_address, *request_address;
 	stack::session *session;
 	osip_header_t *header;
 	long header_expires;
@@ -369,7 +369,7 @@ private:
 	osip_to_t *to;
 	osip_uri_t *uri;
 
-	enum {REMOTE, LOCAL, PUBLIC, ROUTED} destination;
+	enum {EXTERNAL, LOCAL, PUBLIC, ROUTED} destination;
 	enum {CALL, MESSAGE, NONE} authorizing;
 
 	thread();

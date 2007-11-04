@@ -396,7 +396,6 @@ void stack::logCall(const char *reason, session *session)
 	time_t now;
 	struct tm *dt;
 	call *cr;
-	char *cp;
 
 	if(!session)
 		return;

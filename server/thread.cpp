@@ -49,7 +49,7 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	authorized = NULL;
 	registry = NULL;
 	session = NULL;
-	via_address = from_address = local_address = NULL;
+	via_address = from_address = request_address = NULL;
 }
 
 void thread::invite()
@@ -105,10 +105,31 @@ void thread::invite()
 
 		break;
 	case PUBLIC:
-		debug(1, "incoming call %08x:%u for %s from %s@%s\n", 
-			session->sequence, session->cid, target, from->url->username, from->url->host);
+		time(&call->starting);
+		call->type = stack::call::INCOMING;
+		string::set(call->dialed, sizeof(call->dialed), dialing);
+		if(toext)
+			snprintf(call->joined, sizeof(call->joined), "%u", toext);
+		else
+			string::set(call->joined, sizeof(call->joined), target);
+		stack::sipAddress((struct sockaddr_internet *)from_address->getAddr(), session->identity, from->url->username, sizeof(session->identity)); 
+		stack::sipAddress(&iface, call->calling, target, sizeof(call->calling));
+		stack::sipIdentity((struct sockaddr_internet *)from_address->getAddr(), call->caller, from->url->username,  sizeof(call->caller));
+		debug(1, "incoming call %08x:%u for %s from %s\n", 
+			session->sequence, session->cid, target, call->caller);
 		break;
-	case REMOTE:
+	case EXTERNAL:
+		time(&call->starting);
+		call->type = stack::call::OUTGOING;
+		string::set(call->dialed, sizeof(call->dialed), dialing);
+		if(extension)
+			snprintf(call->caller, sizeof(call->caller), "%u", extension);
+		else
+			string::set(call->caller, sizeof(call->caller), identity);
+		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
+		stack::sipAddress((struct sockaddr_internet *)request_address, call->calling, uri->username, sizeof(call->calling));
+		stack::sipIdentity((struct sockaddr_internet *)request_address->getAddr(), call->joined, uri->username,  sizeof(call->joined));
+
 		debug(1, "outgoing call %08x:%u from %s to %s@%s\n", 
 			session->sequence, session->cid, getIdent(), uri->username, uri->host);
 		break;
@@ -149,7 +170,7 @@ const char *thread::getIdent(void)
 	if(!extension)
 		return identity;
 
-	if(registry::isExtension(identity) && atoi(identity) == extension)
+	if(registry::isExtension(identity) && (unsigned)atoi(identity) == extension)
 		return identity;
 
 	if(!identbuf[0])
@@ -240,9 +261,9 @@ bool thread::authorize(void)
 */
 
 	from_address = new stack::address(from->url->host, from_port);
-	local_address = new stack::address(uri->host, local_port);
+	request_address = new stack::address(uri->host, local_port);
 
-	if(!from_address->getAddr() || !local_address->getAddr())
+	if(!from_address->getAddr() || !request_address->getAddr())
 		goto invalid;
 
 	if(atoi(local_port) != stack::sip.port)
@@ -251,8 +272,8 @@ bool thread::authorize(void)
 	if(string::ifind(stack::sip.localnames, uri->host, " ,;:\t\n"))
 		goto local;
 
-	stack::getInterface((struct sockaddr *)&iface, local_address->getAddr());
-	if(Socket::equal((struct sockaddr *)&iface, local_address->getAddr()))
+	stack::getInterface((struct sockaddr *)&iface, request_address->getAddr());
+	if(Socket::equal((struct sockaddr *)&iface, request_address->getAddr()))
 		goto local;
 
 	goto remote;
@@ -422,7 +443,7 @@ anonymous:
 	return true;
 
 remote:
-	destination = REMOTE;
+	destination = EXTERNAL;
 	if(!authenticate())
 		return false;
 
@@ -908,9 +929,9 @@ void thread::run(void)
 			delete from_address;
 			from_address = NULL;
 		}
-		if(local_address) {
-			delete local_address;
-			local_address = NULL;
+		if(request_address) {
+			delete request_address;
+			request_address = NULL;
 		}
 
 		// release config access lock(s)...
