@@ -396,6 +396,7 @@ void stack::logCall(const char *reason, session *session)
 	time_t now;
 	struct tm *dt;
 	call *cr;
+	const char *joined = "n/a";
 
 	if(!session)
 		return;
@@ -404,6 +405,9 @@ void stack::logCall(const char *reason, session *session)
 	if(!cr || !cr->starting)
 		return;
 
+	if(cr->target)
+		joined = cr->target->sysident;
+
 	time(&now);
 	dt = localtime(&cr->starting);
 
@@ -411,7 +415,7 @@ void stack::logCall(const char *reason, session *session)
 		session->sequence, session->cid, reason,
 		dt->tm_year + 1900, dt->tm_mon + 1, dt->tm_mday,
 		dt->tm_hour, dt->tm_min, dt->tm_sec, now - cr->starting,
-		cr->caller, cr->dialed, cr->joined);		
+		session->sysident, cr->dialed, joined);		
 	
 	cr->starting = 0l;
 }

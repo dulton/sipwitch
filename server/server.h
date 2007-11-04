@@ -66,6 +66,7 @@ private:
 
 		char sdp[1024];					// sdp body to use in exchange
 		char identity[MAX_URI_SIZE];	// our effective contact/to point...
+		char sysident[MAX_IDENT_SIZE];	// ident of this session
 
 		inline bool isSource(void)
 			{return (this == parent->source);};
@@ -91,10 +92,7 @@ private:
 
 		call();
 
-		char caller[MAX_IDENT_SIZE];	// ext/user or ip address
 		char dialed[MAX_IDENT_SIZE];	// user or ip address...
-		char joined[MAX_IDENT_SIZE];	// who we actually joined
-		char calling[MAX_URI_SIZE];		// who is being called
 		char subject[MAX_URI_SIZE];		// call subject
 
 		void expired(void);

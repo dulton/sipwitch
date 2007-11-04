@@ -58,6 +58,7 @@ void thread::invite()
 	osip_body_t *body = NULL;
 	stack::call *call = session->parent;
 	unsigned toext = 0;
+	char joined[MAX_IDENT_SIZE];
 
 	osip_message_get_body(sevent->request, 0, &body);
 	if(body && body->body)
@@ -79,57 +80,49 @@ void thread::invite()
 		time(&call->starting);
 		call->type = stack::call::LOCAL;
 		if(extension)
-			snprintf(call->caller, sizeof(call->caller), "%u", extension);
+			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
-			string::set(call->caller, sizeof(call->caller), identity);
+			string::set(session->sysident, sizeof(session->sysident), identity);
 		string::set(call->dialed, sizeof(call->dialed), dialing);
-		if(toext)
-			snprintf(call->joined, sizeof(call->joined), "%u", toext);
-		else
-			string::set(call->joined, sizeof(call->joined), target);
-
 		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
-		stack::sipAddress(&iface, call->calling, target, sizeof(call->calling));
 
-		if(!stricmp(call->joined, call->dialed)) {
+		if(toext)
+			snprintf(joined, sizeof(joined), "%u", toext);
+		else
+			string::set(joined, sizeof(joined), target);
+
+		if(!stricmp(session->sysident, joined)) {
 			debug(1, "calling self %08x:%u, id=%s\n", 
 				session->sequence, session->cid, getIdent());
 
+			call->target = session;
 			string::set(call->subject, sizeof(call->subject), "calling self");
 			stack::setBusy(sevent->tid, session);
 			return;
 		}
 		
 		debug(1, "local call %08x:%u for %s from %s\n", 
-			session->sequence, session->cid, call->joined, call->caller);
+			session->sequence, session->cid, joined, session->sysident);
 
 		break;
 	case PUBLIC:
 		time(&call->starting);
 		call->type = stack::call::INCOMING;
 		string::set(call->dialed, sizeof(call->dialed), dialing);
-		if(toext)
-			snprintf(call->joined, sizeof(call->joined), "%u", toext);
-		else
-			string::set(call->joined, sizeof(call->joined), target);
 		stack::sipAddress((struct sockaddr_internet *)from_address->getAddr(), session->identity, from->url->username, sizeof(session->identity)); 
-		stack::sipAddress(&iface, call->calling, target, sizeof(call->calling));
-		stack::sipIdentity((struct sockaddr_internet *)from_address->getAddr(), call->caller, from->url->username,  sizeof(call->caller));
+		stack::sipIdentity((struct sockaddr_internet *)from_address->getAddr(), session->sysident, from->url->username,  sizeof(session->sysident));
 		debug(1, "incoming call %08x:%u for %s from %s\n", 
-			session->sequence, session->cid, target, call->caller);
+			session->sequence, session->cid, target, session->sysident);
 		break;
 	case EXTERNAL:
 		time(&call->starting);
 		call->type = stack::call::OUTGOING;
 		string::set(call->dialed, sizeof(call->dialed), dialing);
 		if(extension)
-			snprintf(call->caller, sizeof(call->caller), "%u", extension);
+			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
-			string::set(call->caller, sizeof(call->caller), identity);
+			string::set(session->sysident, sizeof(session->sysident), identity);
 		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
-		stack::sipAddress((struct sockaddr_internet *)request_address, call->calling, uri->username, sizeof(call->calling));
-		stack::sipIdentity((struct sockaddr_internet *)request_address->getAddr(), call->joined, uri->username,  sizeof(call->joined));
-
 		debug(1, "outgoing call %08x:%u from %s to %s@%s\n", 
 			session->sequence, session->cid, getIdent(), uri->username, uri->host);
 		break;
