@@ -430,16 +430,22 @@ static_routing:
 	return true;
 		
 anonymous:
+	error = SIP_FORBIDDEN;
+	if(!stack::sip.published)
+		goto invalid;
 	destination = PUBLIC;
 	return true;
 
 remote:
+	error = SIP_FORBIDDEN;
 	destination = EXTERNAL;
+	if(!stack::sip.published)
+		goto invalid;
+
 	if(!authenticate())
 		return false;
 
 	// must be active registration to dial out...
-	error = SIP_FORBIDDEN;
 	registry = registry::access(identity);
 	time(&now);
 	if(!registry || (registry->expires && registry->expires < now))

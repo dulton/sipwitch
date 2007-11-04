@@ -132,6 +132,7 @@ private:
 	const char *volatile localnames;
 	const char *volatile restricted;
 	const char *volatile trusted;
+	const char *volatile published;
 	const char *interface;
 	const char *agent;
 	short port;

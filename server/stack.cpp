@@ -217,7 +217,7 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	incoming = false;
 	outgoing = false;
 	agent = "sipwitch";
-	restricted = trusted = NULL;
+	restricted = trusted = published = NULL;
 	localnames = "localhost, localhost.localdomain";
 }
 
@@ -594,6 +594,8 @@ bool stack::reload(service *cfg)
 				localhosts = cfg->dup(value);
 			else if(!stricmp(key, "trusted"))
 				trusted = cfg->dup(value);
+			else if(!stricmp(key, "published") || !stricmp(key, "public"))
+				published = cfg->dup(value);
 			else if(!stricmp(key, "agent") && !isConfigured())
 				agent = strdup(value);
 			else if(!stricmp(key, "port") && !isConfigured())
