@@ -219,7 +219,7 @@ mempager(s), root()
 	while(varp && *varp) {
 		cp = getenv(*varp);
 		if(cp)
-			addNode(env, *varp, dup(getenv(cp)));
+			addNode(env, *varp, dup(cp));
 		++varp;
 	}
 }

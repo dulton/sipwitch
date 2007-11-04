@@ -76,7 +76,6 @@ void thread::invite()
 
 	switch(destination) {
 	case LOCAL:
-		// busy here if calling self
 		time(&call->starting);
 		call->type = stack::call::LOCAL;
 		if(extension)
@@ -84,22 +83,23 @@ void thread::invite()
 		else
 			string::set(call->caller, sizeof(call->caller), identity);
 		string::set(call->dialed, sizeof(call->dialed), dialing);
-		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
-		if(!stricmp(target, identity)) {
-			string::set(call->joined, sizeof(call->joined), call->caller);
-			debug(1, "calling self %08x:%u, id=%s\n", 
-				session->sequence, session->cid, getIdent());
-
-			// local call loopback on event interface, real is by target...
-			string::set(call->calling, sizeof(call->calling), session->identity);
-			string::set(call->subject, sizeof(call->subject), "calling self");
-			break;
-		}
 		if(toext)
 			snprintf(call->joined, sizeof(call->joined), "%u", toext);
 		else
 			string::set(call->joined, sizeof(call->joined), target);
+
+		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
 		stack::sipAddress(&iface, call->calling, target, sizeof(call->calling));
+
+		if(!stricmp(call->joined, call->dialed)) {
+			debug(1, "calling self %08x:%u, id=%s\n", 
+				session->sequence, session->cid, getIdent());
+
+			string::set(call->subject, sizeof(call->subject), "calling self");
+			stack::setBusy(sevent->tid, session);
+			return;
+		}
+		
 		debug(1, "local call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, call->joined, call->caller);
 

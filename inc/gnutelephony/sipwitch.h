@@ -61,6 +61,7 @@ using namespace UCOMMON_NAMESPACE;
 
 #define	MAX_PATTERN_SIZE	16
 #define	MAX_USERID_SIZE		32
+#define	MAX_IDENT_SIZE		(MAX_USERID_SIZE + 50)
 #define	MAX_URI_SIZE		256
 
 typedef struct {

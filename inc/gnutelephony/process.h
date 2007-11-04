@@ -62,6 +62,7 @@ public:
 	inline static void setVerbose(errlevel_t idx)
 		{verbose = idx;};
 
+	static void printlog(const char *id, const char *uid, const char *fmt, ...) __PRINTF(3, 4);
 	static void errlog(errlevel_t log, const char *fmt, ...) __PRINTF(2, 3);
 	static void restart(void);
 	static bool control(const char *id, const char *uid, const char *fmt, ...) __PRINTF(3, 4);

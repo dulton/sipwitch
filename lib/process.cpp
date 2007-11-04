@@ -241,6 +241,20 @@ static size_t ctrlfile(const char *id, const char *uid)
 	return 0;
 }
 
+static fd_t logfile(const char *id, const char *uid)
+{
+	char buf[128];
+	fd_t fd;
+
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/%s.log", id);
+	fd = open(buf, O_WRONLY | O_CREAT | O_APPEND, 0660);
+	if(fd > -1)
+		return fd;
+
+	snprintf(buf, sizeof(buf), "/tmp/%s-%s/logfile", id, uid);
+	return open(buf, O_WRONLY | O_CREAT | O_APPEND, 0660);
+}
+
 static pid_t pidfile(const char *id, const char *uid)
 {
 	struct stat ino;
@@ -416,6 +430,45 @@ restart:
 			goto restart;
 		}
 	}
+}
+
+void process::printlog(const char *id, const char *uid, const char *fmt, ...)
+{
+	fd_t fd;
+	va_list args;
+	char buf[1024];
+	int len;
+	service::keynode *env = service::getEnviron();
+	char *cp;
+
+	va_start(args, fmt);
+
+	if(!id)
+		id = service::getValue(env, "IDENT");
+
+	if(!uid)
+		uid = service::getValue(env, "USER");
+
+	fd = logfile(id, uid);
+	service::release(env);
+
+	vsnprintf(buf, sizeof(buf) - 1, fmt, args);
+	len = strlen(buf);
+	if(buf[len - 1] != '\n')
+		buf[len++] = '\n';
+
+	if(fd > -1) {
+		::write(fd, buf, strlen(buf));
+		::close(fd);
+	}
+	cp = strchr(buf, '\n');
+	if(cp)
+		*cp = 0;
+
+	service::publish(NULL, "- logfile s", buf); 
+
+	debug(2, "logfile: %s", buf);
+	va_end(args);
 }
 
 bool process::control(const char *id, const char *uid, const char *fmt, ...)
