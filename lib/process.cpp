@@ -387,7 +387,7 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 		}
 
 		service::snmptrap(loglevel + 10, buf);
-		service::publish(NULL, "- syslog %d %s", loglevel, buf); 
+		service::publish(NULL, "- errlog %d %s", loglevel, buf); 
 		::syslog(level, "%s", buf);
 	}
 	
