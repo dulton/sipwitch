@@ -391,12 +391,11 @@ stack::session *stack::create(int cid, int did)
 	return cr->source;
 }
 
-void stack::logCall(const char *reason, session *session)
+void stack::logCall(const char *reason, session *session, const char *joined)
 {
 	time_t now;
 	struct tm *dt;
 	call *cr;
-	const char *joined = "n/a";
 
 	if(!session)
 		return;
@@ -405,8 +404,11 @@ void stack::logCall(const char *reason, session *session)
 	if(!cr || !cr->starting)
 		return;
 
-	if(cr->target)
+	if(!joined && cr->target)
 		joined = cr->target->sysident;
+
+	if(!joined)
+		joined = "n/a";
 
 	time(&now);
 	dt = localtime(&cr->starting);

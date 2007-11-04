@@ -146,7 +146,7 @@ public:
 
 	stack();
 
-	__EXPORT static void logCall(const char *reason, session *session);
+	__EXPORT static void logCall(const char *reason, session *session, const char *joined = NULL);
 	__EXPORT static void setBusy(int tid, session *session);
 	__EXPORT static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
 	__EXPORT static session *create(int cid, int did);
