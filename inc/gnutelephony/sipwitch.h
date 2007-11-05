@@ -60,6 +60,7 @@ using namespace UCOMMON_NAMESPACE;
 #define	USER_PROFILE_RESTRICTED	(0)
 
 #define	MAX_PATTERN_SIZE	16
+#define	MAX_DISPLAY_SIZE	64
 #define	MAX_USERID_SIZE		32
 #define	MAX_IDENT_SIZE		(MAX_USERID_SIZE + 50)
 #define	MAX_URI_SIZE		256
@@ -74,6 +75,7 @@ class __EXPORT MappedRegistry : public ReusableObject
 {
 public:
 	char	userid[MAX_USERID_SIZE];
+	char	display[MAX_DISPLAY_SIZE];
 	enum {OFFLINE = 0, IDLE, BUSY, AWAY, DND} status;
 	enum {EXPIRED = 0, USER, GATEWAY, SERVICE, REJECT, REFER} type;
 	bool hidden;

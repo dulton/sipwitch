@@ -67,7 +67,7 @@ private:
 		char sdp[1024];					// sdp body to use in exchange
 		char identity[MAX_URI_SIZE];	// our effective contact/to point...
 		char sysident[MAX_IDENT_SIZE];	// ident of this session
-		char display[64];				// displayed caller name
+		char display[MAX_DISPLAY_SIZE];	// displayed caller name
 
 		char authid[MAX_USERID_SIZE];	// for authentication...
 		char secret[MAX_USERID_SIZE];
@@ -363,6 +363,7 @@ private:
 	char identbuf[MAX_USERID_SIZE + 12];
 	char identity[MAX_USERID_SIZE];
 	char dialing[MAX_USERID_SIZE];
+	char display[MAX_DISPLAY_SIZE];
 	struct sockaddr_internet iface;
 	stack::address *via_address, *from_address, *request_address;
 	stack::session *session;

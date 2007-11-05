@@ -58,6 +58,7 @@ void thread::invite()
 	osip_body_t *body = NULL;
 	stack::call *call = session->parent;
 	unsigned toext = 0;
+	const char *cp;
 
 	osip_message_get_body(sevent->request, 0, &body);
 	if(body && body->body)
@@ -82,7 +83,10 @@ void thread::invite()
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
 			string::set(session->sysident, sizeof(session->sysident), identity);
-		string::set(session->display, sizeof(session->display), session->sysident);
+		if(display[0])
+			string::set(session->display, sizeof(session->display), display);
+		else
+			string::set(session->display, sizeof(session->display), session->sysident);
 		string::set(call->dialed, sizeof(call->dialed), dialing);
 		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
 
@@ -124,7 +128,10 @@ void thread::invite()
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
 			string::set(session->sysident, sizeof(session->sysident), identity);
-		string::set(session->display, sizeof(session->display), identity);
+		if(display[0])
+			string::set(session->display, sizeof(session->display), display);
+		else
+			string::set(session->display, sizeof(session->display), identity);
 		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
 		stack::sipIdentity((struct sockaddr_internet *)request_address->getAddr(), call->dialed, uri->username, sizeof(call->dialed));
 		debug(1, "outgoing call %08x:%u from %s to %s", 
@@ -156,6 +163,7 @@ void thread::identify(void)
 	if(!rr)
 		return;
 
+	string::set(display, sizeof(display), rr->display);
 	extension = rr->ext;
 	string::set(identity, sizeof(identity), rr->userid);
 	authorized = config::getProvision(identity);
@@ -191,6 +199,7 @@ bool thread::unauthenticated(void)
 		goto untrusted;
 
 	extension = rr->ext;
+	string::set(display, sizeof(display), rr->display);
 	string::set(identity, sizeof(identity), rr->userid);
 	authorized = config::getProvision(identity);
 	registry::release(rr);
@@ -505,6 +514,7 @@ bool thread::authenticate(void)
 	if(authorized != NULL)
 		return true;
 
+	display[0] = 0;
 	extension = 0;
 	auth = NULL;
 
@@ -549,6 +559,10 @@ bool thread::authenticate(void)
 	leaf = node->leaf("extension");
 	if(leaf && leaf->getPointer())
 		extension = atoi(leaf->getPointer());
+
+	leaf = node->leaf("display");
+	if(leaf && leaf->getPointer())
+		string::set(display, sizeof(display), leaf->getPointer());
 
 	leaf = node->leaf("digest");
 	if(!leaf || !leaf->getPointer()) {
@@ -839,6 +853,7 @@ void thread::run(void)
 	raisePriority(stack::sip.priority);
 
 	for(;;) {
+		display[0] = 0;
 		extension = 0;
 		identbuf[0] = 0;
 

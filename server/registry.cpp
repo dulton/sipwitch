@@ -252,6 +252,7 @@ void registry::expire(MappedRegistry *rr)
 		extmap[rr->ext - reg.prefix] = NULL;
 	process::errlog(INFO, "expiring %s; extension=%d", rr->userid, rr->ext);
 	path = NamedObject::keyindex(rr->userid, keysize);
+	rr->display[0] = 0;
 	rr->userid[0] = 0;
 	rr->ext = 0;
 	rr->status = MappedRegistry::OFFLINE;
@@ -362,6 +363,7 @@ MappedRegistry *registry::create(const char *id)
 	rr->type = MappedRegistry::EXPIRED;
 	rr->expires = 0;
 	rr->created = 0;
+	rr->display[0] = 0;
 
 	if(node)
 		cp = node->getId();
@@ -402,7 +404,7 @@ MappedRegistry *registry::create(const char *id)
 		addPublished(rr, rp->getPointer());
 
 	if(rp && !rp->getPointer() && !rp->getFirst())
-		addPublished(rr, rr->userid);
+		addPublished(rr, id);
 
 	if(rp)
 		rp = rp->getFirst();
@@ -413,6 +415,10 @@ MappedRegistry *registry::create(const char *id)
 		rp.next();
 	}
 	
+	rp = node->leaf("display");
+	if(rp && rp->getPointer())
+		string::set(rr->display, sizeof(rr->display), rp->getPointer());
+
 	// we add routes while still exclusive owner of registry since
 	// they update priority indexes.
 	rp = node->leaf("routes");
