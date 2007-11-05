@@ -82,6 +82,7 @@ void thread::invite()
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
 			string::set(session->sysident, sizeof(session->sysident), identity);
+		string::set(session->display, sizeof(session->display), session->sysident);
 		string::set(call->dialed, sizeof(call->dialed), dialing);
 		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
 
@@ -109,6 +110,10 @@ void thread::invite()
 		string::set(call->dialed, sizeof(call->dialed), target);
 		stack::sipAddress((struct sockaddr_internet *)from_address->getAddr(), session->identity, from->url->username, sizeof(session->identity)); 
 		stack::sipIdentity((struct sockaddr_internet *)from_address->getAddr(), session->sysident, from->url->username,  sizeof(session->sysident));
+		if(from->displayname)
+			string::set(session->display, sizeof(session->display), from->displayname);
+		else
+			string::set(session->display, sizeof(session->display), from->url->username);
 		debug(1, "incoming call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, call->dialed, session->sysident);
 		break;
@@ -119,6 +124,7 @@ void thread::invite()
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
 			string::set(session->sysident, sizeof(session->sysident), identity);
+		string::set(session->display, sizeof(session->display), identity);
 		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
 		stack::sipIdentity((struct sockaddr_internet *)request_address->getAddr(), call->dialed, uri->username, sizeof(call->dialed));
 		debug(1, "outgoing call %08x:%u from %s to %s", 

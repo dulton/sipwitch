@@ -67,6 +67,11 @@ private:
 		char sdp[1024];					// sdp body to use in exchange
 		char identity[MAX_URI_SIZE];	// our effective contact/to point...
 		char sysident[MAX_IDENT_SIZE];	// ident of this session
+		char display[64];				// displayed caller name
+
+		char authid[MAX_USERID_SIZE];	// for authentication...
+		char secret[MAX_USERID_SIZE];
+		enum {NONE, DIGEST}	authtype;
 
 		inline bool isSource(void)
 			{return (this == parent->source);};
