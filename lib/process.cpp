@@ -77,10 +77,10 @@ static void detach(void)
 	pid = fork();
 	if(pid > 0)
 		exit(0);
-	crit(pid == 0);
+	crit(pid == 0, "detach without process");
 
 #if defined(SIGTSTP) && defined(TIOCNOTTY)
-	crit(setpgid(0, getpid()) == 0);
+	crit(setpgid(0, getpid()) == 0, "detach without process group");
 	if((fd = open(_PATH_TTY, O_RDWR)) >= 0) {
 		ioctl(fd, TIOCNOTTY, NULL);
 		close(fd);
@@ -88,15 +88,15 @@ static void detach(void)
 #else
 
 #ifdef HAVE_SETPGRP
-	crit(setpgrp() == 0);
+	crit(setpgrp() == 0, "detach without process group");
 #else
-	crit(setpgid(0, getpid()) == 0);
+	crit(setpgid(0, getpid()) == 0, "detach without process group");
 #endif
 	signal(SIGHUP, SIG_IGN);
 	pid = fork();
 	if(pid > 0)
 		exit(0);
-	crit(pid == 0);
+	crit(pid == 0, "detach without process");
 #endif
 	if(dev && *dev) {
 		fd = open(dev, O_RDWR);
@@ -392,7 +392,7 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 	}
 	
 	if(level == LOG_CRIT)
-		abort();
+		cpr_runtime_error(buf);
 }
 
 void process::release(void)
@@ -465,7 +465,7 @@ void process::printlog(const char *id, const char *uid, const char *fmt, ...)
 	if(cp)
 		*cp = 0;
 
-	service::publish(NULL, "- logfile s", buf); 
+	service::publish(NULL, "- logfile %s", buf); 
 
 	debug(2, "logfile: %s", buf);
 	va_end(args);

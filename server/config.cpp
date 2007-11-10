@@ -381,7 +381,7 @@ void config::utils(const char *uid)
 
 	cfg = new config("sipwitch");
 	
-	crit(cfg != NULL);
+	crit(cfg != NULL, "util has no config");
 
 	if(fp)
 		if(!cfg->load(fp)) {
@@ -441,7 +441,7 @@ void config::reload(const char *uid)
 	config *cfgp = new config("sipwitch");
 	static config *reclaim = NULL;
 	
-	crit(cfgp != NULL);
+	crit(cfgp != NULL, "reload without config");
 
 	if(fp)
 		if(!cfgp->load(fp)) {

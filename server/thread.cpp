@@ -143,6 +143,20 @@ void thread::invite()
 		break;  	
 	}
 
+	if(registry) {
+		// get rid of config ref if we are calling registry target
+		if(dialed) {
+			config::release(dialed);
+			dialed = NULL;
+		}
+
+		// TODO: FORWARD CHECK ALL/AWAY-BUSY??
+
+		// invite any available targets; increments cr->invited...
+		// AWAY handled in inviteLocal, nothing added; busy fallthru!
+		// stack::inviteLocal(session, registry);
+	}
+
 	if(call->invited)
 		return;
 

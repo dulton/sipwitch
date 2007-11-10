@@ -153,7 +153,7 @@ void service::subscriber::write(char *str)
 service::callback::callback(unsigned rl, const char *name) :
 OrderedObject()
 {
-	crit(rl < RUNLEVELS);
+	crit(rl < RUNLEVELS, "service runlevel invalid");
 	LinkedObject::enlist(&runlevels[rl]);
 	id = name;
 	active_flag = false;
@@ -670,7 +670,7 @@ void service::unsubscribe(const char *path)
 	exclusive_access(subscriber::locking);
 	linked_pointer<subscriber> sb;
 
-	crit(cfg != NULL);
+	crit(cfg != NULL, "unsubscribe without config");
 
 	sb = subscriber::list;
 	while(sb) {
@@ -745,7 +745,7 @@ void service::subscribe(const char *path, const char *listen)
 	linked_pointer<subscriber> sb;
 	caddr_t mp;
 
-	crit(cfg != NULL);
+	crit(cfg != NULL, "subscribe without subscribe");
 
 	if(!listen || !stricmp(listen, "*") || !stricmp(listen, "all"))
 		listen = "";
