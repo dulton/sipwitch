@@ -58,7 +58,6 @@ void thread::invite()
 	osip_body_t *body = NULL;
 	stack::call *call = session->parent;
 	unsigned toext = 0;
-	const char *cp;
 
 	osip_message_get_body(sevent->request, 0, &body);
 	if(body && body->body)
