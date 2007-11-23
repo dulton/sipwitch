@@ -503,7 +503,7 @@ void stack::start(service *cfg)
 
 	while(thidx++ < threading) {
 		thr = new thread();
-		thr->start();
+		thr->start(priority);
 	}
 
 	thread::wait(threading);

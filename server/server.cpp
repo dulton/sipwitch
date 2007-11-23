@@ -53,7 +53,6 @@ void SignalThread::run(void)
 	int signo;
 
 	process::errlog(DEBUG1, "starting signals");
-	lowerPriority();
 
 	for(;;) {
 		alarm(900);
@@ -554,7 +553,7 @@ extern "C" int main(int argc, char **argv)
 	config::startup();
 
 #ifdef	USES_SIGNALS
-	sigthread.start();
+	sigthread.start(-1);
 #endif
 
 	if(concurrency)

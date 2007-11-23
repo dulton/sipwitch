@@ -863,8 +863,6 @@ void thread::run(void)
 	instance = ++startup_count;
 	process::errlog(DEBUG1, "starting thread %d", instance);
 
-	raisePriority(stack::sip.priority);
-
 	for(;;) {
 		display[0] = 0;
 		extension = 0;
