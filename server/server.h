@@ -103,6 +103,7 @@ private:
 		void expired(void);
 		void closing(session *s);
 		void disconnect(void);
+		void update(void);
 
 		OrderedIndex segments;
 		session *source;

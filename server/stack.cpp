@@ -97,18 +97,23 @@ void stack::call::closing(session *s)
 		--invited;
 	}
 
+	if(invited) {
+		update();
+		return;
+	}
+
+	disconnect();
+}
+
+void stack::call::update(void)
+{
 	// TODO: switch by call state to see if we send reply code!
-	if(invited && state == INITIAL) {
+	if(state == INITIAL) {
 		// if(forwarding && invited - unreachable - ringbusy == forwarding)
 		// else if(ringing && invited - unreachable - ringbusy == ringing + forwarding)...
 		// else if(ringbusy && invited - unreachable == ringbusy) ...
 		// else if(invited == unreachable) ...
 	}
-
-	if(invited)
-		return;
-
-	disconnect();
 }
 
 void stack::call::expired(void)
