@@ -13,7 +13,7 @@ EXTRA_DIST = autogen.sh README *.pc.in TODO Doxyfile NOTES
 #  *.pc.in *.spec.in *.spec
 
 SUBDIRS = @BUILD_SUBDIRS@ inc test
-DIST_SUBDIRS = lib server inc test
+DIST_SUBDIRS = common server inc test
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libgnutelephony.pc
