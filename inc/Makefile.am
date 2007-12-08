@@ -10,6 +10,6 @@
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
 
-SUBDIRS = utelephony
-DIST_SUBDIRS = utelephony
+SUBDIRS = gnutelephony
+DIST_SUBDIRS = gnutelephony
 
