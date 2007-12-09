@@ -283,12 +283,11 @@ AC_CHECK_HEADERS(sys/resource.h sys/mman.h syslog.h)
 AC_LANG_CPLUSPLUS
 COMPILER_FLAGS=""
 for flag in $CXXFLAGS ; do
-	case $flag in
+	case "$flag" in
 	-f*exceptions|-f*rtti|-f*check-new|-f*enforce-eh-specs|-finline|-f*except)
 		if "$UCOMMON_MODEL" = "CXX" ; then
 			COMPILER_FLAGS="$COMPILER_FLAGS $flag" ; fi
 		;;
-	case $flag in
 	-fvisibility=*)
 		;;
 	*)
