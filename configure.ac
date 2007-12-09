@@ -284,7 +284,12 @@ AC_LANG_CPLUSPLUS
 COMPILER_FLAGS=""
 for flag in $CXXFLAGS ; do
 	case $flag in
-		-fvisibility=*|-f*exceptions|-f*rtti|-f*check-new|-f*enforce-eh-specs|-finline|-f*except)
+	-f*exceptions|-f*rtti|-f*check-new|-f*enforce-eh-specs|-finline|-f*except)
+		if "$UCOMMON_MODEL" = "CXX" ; then
+			COMPILER_FLAGS="$COMPILER_FLAGS $flag" ; fi
+		;;
+	case $flag in
+	-fvisibility=*)
 		;;
 	*)
 		COMPILER_FLAGS="$COMPILER_FLAGS $flag"
