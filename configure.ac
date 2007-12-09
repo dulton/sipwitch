@@ -62,7 +62,7 @@ GNUTELEPHONY_LIBS=""
 GNUTELEPHONY_FLAGS=""
 SERVER_FLAGS=""
 SERVER_LIBS=""
-BUILD_SUBDIRS="lib"
+BUILD_SUBDIRS="common"
 
 test -z "$ac_with_malloc" && ac_with_malloc=""
 test -z "$ac_with_crypto" && ac_with_crypto="auto"
@@ -348,6 +348,6 @@ AC_SUBST(GNUTELEPHONY_LIBS)
 AC_SUBST(SIPWITCH_EXOSIP2)
 AC_SUBST(BUILD_SUBDIRS)
 AC_SUBST(CXXFLAGS)
-AC_OUTPUT(Makefile lib/Makefile inc/Makefile inc/gnutelephony/Makefile 
+AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/gnutelephony/Makefile 
 server/Makefile test/Makefile libgnutelephony.pc)
 
