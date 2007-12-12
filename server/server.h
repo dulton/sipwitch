@@ -54,6 +54,8 @@ private:
 	class __LOCAL session : public LinkedObject
 	{
 	public:
+		MappedRegistry *registry;
+		unsigned rid;
 		int cid, did;
 		time_t activates;
 		uint32_t sequence;
@@ -303,11 +305,12 @@ public:
 	__EXPORT static MappedRegistry *getExtension(const char *id);
 	__EXPORT static MappedRegistry *create(const char *id);
 	__EXPORT static MappedRegistry *access(const char *id);
+	__EXPORT static MappedRegistry *reaccess(MappedRegistry *registry, unsigned sid);
 	__EXPORT static pattern *getRouting(unsigned trs, const char *id);
 	__EXPORT static void release(MappedRegistry *m);
 	__EXPORT static bool refresh(MappedRegistry *m, stack::address *adddr, time_t expires);
 	__EXPORT static bool remove(const char *id);
-	__EXPORT static void cleanup(void); 
+	__EXPORT static void cleanup(time_t period); 
 };
 
 class __LOCAL messages : public service::callback

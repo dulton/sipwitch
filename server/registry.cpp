@@ -243,6 +243,7 @@ void registry::expire(MappedRegistry *rr)
 		tp->enlist(&freetargets);
 		tp = nt;
 	}
+	++rr->seqid;
 	rr->routes = NULL;
 	rr->targets = NULL;
 	rr->published = NULL;
@@ -261,7 +262,7 @@ void registry::expire(MappedRegistry *rr)
 	reg.removeLocked(rr);
 }
 
-void registry::cleanup(void)
+void registry::cleanup(time_t period)
 {
 	MappedRegistry *rr;
 	unsigned count = 0;
@@ -271,7 +272,7 @@ void registry::cleanup(void)
 		time(&now);
 		rr = reg.pos(count++);
 		locking.modify();
-		if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires < now)
+		if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires + period < now)
 			expire(rr);
 		locking.commit();
 		Thread::yield();
@@ -643,6 +644,19 @@ MappedRegistry *registry::getExtension(const char *id)
 		rr = NULL;
 	if(!rr)
 		locking.release();
+	return rr;
+}
+
+MappedRegistry *registry::reaccess(MappedRegistry *rr, unsigned seq)
+{
+	if(!rr)
+		return NULL;
+
+	locking.access();
+	if(rr->seqid != seq) {
+		rr = NULL;
+		locking.release();
+	}
 	return rr;
 }
 

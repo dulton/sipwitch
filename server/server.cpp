@@ -51,11 +51,12 @@ void SignalThread::run(void)
 {
 	const char *uid = getenv("USER");
 	int signo;
+	unsigned period = 900;
 
 	process::errlog(DEBUG1, "starting signals");
 
 	for(;;) {
-		alarm(900);
+		alarm(period);
 #ifdef	HAVE_SIGWAIT2
 		sigwait(&sigs, &signo);
 #else
@@ -68,7 +69,7 @@ void SignalThread::run(void)
 		switch(signo) {
 		case SIGALRM:
 			process::errlog(INFO, "system housekeeping");
-			registry::cleanup();
+			registry::cleanup(period);
 			break;
 		case SIGINT:
 		case SIGTERM:
