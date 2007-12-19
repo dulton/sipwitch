@@ -554,7 +554,7 @@ extern "C" int main(int argc, char **argv)
 	config::startup();
 
 #ifdef	USES_SIGNALS
-	sigthread.start(-1);
+	sigthread.background();
 #endif
 
 	if(concurrency)
@@ -614,10 +614,14 @@ invalid:
 			continue;
 		}
 
+#ifdef	SCHED_RR
+		Thread::policy(SCHED_RR);
+#endif
+
 		if(!stricmp(args[0], "concurrency")) {
 			if(argc != 2)
 				goto invalid;
-			pthread_setconcurrency(atoi(args[1]));
+			Thread::concurrency(atoi(args[1]));
 			continue;
 		}
 
