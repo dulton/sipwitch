@@ -244,13 +244,10 @@ public:
 	class target : public LinkedObject 
 	{ 
 	public: 
-		inline target() : LinkedObject() {};
-
 		// internal hidden address indexing object
 		class indexing : public LinkedObject
 		{
 		public:
-			inline indexing() : LinkedObject() {};
 			struct sockaddr *address;
 			MappedRegistry *registry;
 			target *getTarget(void);
