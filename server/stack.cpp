@@ -354,7 +354,7 @@ stack::session *stack::createSession(call *cr, int cid, int did)
 	segment *sp; 
 	time_t now;
 
-	sp = new(config::allocate(sizeof(segment), &freesegs, &allocated_segments)) segment;
+	sp = new(allocate(sizeof(segment), &freesegs, &allocated_segments)) segment;
 	++cr->count;
 	time(&now);
 	index = &(cr->segments);
@@ -377,7 +377,7 @@ stack::session *stack::create(int cid, int did)
 	call *cr;
 
 	locking.modify();
-	cr = new(config::allocate(sizeof(call), &freecalls, &allocated_calls)) call();
+	cr = new(allocate(sizeof(call), &freecalls, &allocated_calls)) call();
 	++active_calls;
 	cr->arm(7000);	// Normally we get close in 6 seconds, this assures...
 	cr->count = 0;

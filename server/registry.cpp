@@ -1004,7 +1004,7 @@ unsigned registry::setTargets(MappedRegistry *rr, stack::address *addr)
 registry::route *registry::createRoute(void)
 {
 	++active_routes;
-	return new(config::allocate(sizeof(route), &freeroutes, NULL)) route;
+	return new(allocate(sizeof(route), &freeroutes, &allocated_routes)) route;
 }
 
 registry::target *registry::target::indexing::getTarget(void)
@@ -1024,7 +1024,7 @@ registry::target *registry::target::indexing::getTarget(void)
 registry::target *registry::createTarget(void)
 {
 	++active_targets;
-	return new(config::allocate(sizeof(target), &freetargets, NULL)) target;
+	return new(allocate(sizeof(target), &freetargets, &allocated_targets)) target;
 }
 
 END_NAMESPACE

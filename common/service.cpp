@@ -467,6 +467,8 @@ service::keynode *service::addNode(keynode *base, const char *id, const char *va
 	node = new(mp) keynode(base, cp);
 	if(value)
 		node->setPointer(dup(value));
+	else
+		node->setPointer(NULL);
 	return node;
 }
 

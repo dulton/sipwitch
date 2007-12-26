@@ -59,6 +59,8 @@ void thread::invite()
 	stack::call *call = session->parent;
 	unsigned toext = 0;
 
+	printf("*&***** IUNVIUTER!\n");
+
 	osip_message_get_body(sevent->request, 0, &body);
 	if(body && body->body)
 		string::set(session->sdp, sizeof(session->sdp), body->body);
@@ -102,10 +104,10 @@ void thread::invite()
 			stack::setBusy(sevent->tid, session);
 			return;
 		}
-		
+
+		session->registry = registry::invite(session->sysident);
 		debug(1, "local call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, call->dialed, session->sysident);
-
 		break;
 	case PUBLIC:
 		time(&call->starting);
@@ -127,6 +129,7 @@ void thread::invite()
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
 			string::set(session->sysident, sizeof(session->sysident), identity);
+		session->registry = registry::invite(session->sysident);
 		if(display[0])
 			string::set(session->display, sizeof(session->display), display);
 		else
@@ -137,6 +140,7 @@ void thread::invite()
 			session->sequence, session->cid, getIdent(), call->dialed);
 		break;
 	case ROUTED:
+		session->registry = registry::invite(identity);
 		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
 			session->sequence, session->cid, target, getIdent(), dialing);
 		break;  	
@@ -234,6 +238,7 @@ bool thread::authorize(void)
 	unsigned level;
 	profile_t *pro;
 	const char *target;
+	const char *invited = NULL;
 	char dbuf[MAX_USERID_SIZE];
 	registry::pattern *pp;
 	const char *from_port, *to_port, *local_port;
@@ -324,21 +329,24 @@ rewrite:
 			error = atoi(cp);
 		goto invalid;
 	}
-	if(dialed && !stricmp(dialed->getId(), "test")) {
-		cp = service::getValue(dialed, "error");
-		if(cp) {
-			error = atoi(cp);
-			goto invalid;
-		}
-	}
 
 	if(!registry && dialed) {
 		if(!stricmp(dialed->getId(), "group"))
 			return authenticate();
 		if(!stricmp(dialed->getId(), "refer"))
 			return authenticate();
-		if(!stricmp(dialed->getId(), "test"))
-			return authenticate();
+		if(!stricmp(dialed->getId(), "test")) {
+			if(session && authenticate()) {
+				session->registry = registry::invite(identity);
+				cp = service::getValue(dialed, "error");
+				if(cp) {
+					error = atoi(cp);
+					goto invalid;
+				}
+				return true;
+			}
+			return false;
+		}
 		if(!stricmp(dialed->getId(), "queue"))
 			goto anonymous;
 		if(!stricmp(dialed->getId(), "user"))
@@ -883,14 +891,11 @@ void thread::run(void)
 		if(!shutdown_flag)
 			sevent = eXosip_event_wait(0, stack::sip.timing);
 
-		Thread::yield();
-
 		via_header = NULL;
 		origin_header = NULL;
 
 		if(shutdown_flag) {
 			process::errlog(DEBUG1, "stopping thread %d", instance);
-			Thread::sleep(100);
 			++shutdown_count;
 			DetachedThread::exit();
 		}

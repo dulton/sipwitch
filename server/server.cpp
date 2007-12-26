@@ -24,6 +24,7 @@ static class __LOCAL SignalThread : public JoinableThread
 {
 private:
 	bool shutdown;
+	bool started;
 
 public:
 	sigset_t sigs;
@@ -37,14 +38,16 @@ public:
 SignalThread::SignalThread() :
 JoinableThread()
 {
-	shutdown = false;
+	shutdown = started = false;
 }
 
 SignalThread::~SignalThread()
 {
-	shutdown = true;
-	pthread_kill(tid, SIGALRM);
-	join();
+	if(started) {
+		shutdown = true;
+		pthread_kill(tid, SIGALRM);
+		join();
+	}
 }
 
 void SignalThread::run(void)
@@ -53,6 +56,7 @@ void SignalThread::run(void)
 	int signo;
 	unsigned period = 900;
 
+	started = true;
 	process::errlog(DEBUG1, "starting signals");
 
 	for(;;) {
@@ -147,7 +151,7 @@ static void regdump(void)
 	volatile const MappedRegistry *member;
 	MappedRegistry buffer;
 	time_t now;
-	char ext[8], exp[8];
+	char ext[8], exp[8], use[8];
 	const char *type;
 
 	if(!count) {
@@ -166,12 +170,13 @@ static void regdump(void)
 		else if(buffer.type == MappedRegistry::TEMPORARY && !buffer.inuse)
 			continue;
 		if(!found++)
-			printf("%7s %-32s type %-32s  expires address\n", "ext", "user", "profile");
+			printf("%7s %-30s type %-30s  use expires address\n", "ext", "user", "profile");
 		ext[0] = 0;
 		if(buffer.ext)
 			snprintf(ext, sizeof(ext), "%7d", buffer.ext); 
 		exp[0] = '-';
 		exp[1] = 0;
+		snprintf(use, sizeof(use), "%u", buffer.inuse);
 		if(buffer.expires && buffer.type != MappedRegistry::TEMPORARY)
 			snprintf(exp, sizeof(exp), "%ld", buffer.expires - now);
 		switch(buffer.type) {
@@ -193,7 +198,7 @@ static void regdump(void)
 		default:
 			type = "user";
 		};
-		printf("%7s %-32s %-4s %-32s  %7s ", ext, buffer.userid, type, buffer.profile.id, exp);
+		printf("%7s %-30s %-4s %-30s %4s %7s ", ext, buffer.userid, type, buffer.profile.id, use, exp);
 		paddress(&buffer.contact, NULL);
 		fflush(stdout);
 	}
@@ -212,6 +217,8 @@ static void command(const char *id, const char *uid, const char *cmd, unsigned t
 	sigaddset(&sigs, SIGUSR2);
 	sigaddset(&sigs, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &sigs, NULL);
+
+	config::utils(uid);
 
 	if(!process::control(id, uid, "%d %s", getpid(), cmd)) {
 		fprintf(stderr, "*** sipw: %s; server not responding\n", cmd);
@@ -449,6 +456,7 @@ extern "C" int main(int argc, char **argv)
 		process::util("sipwitch");
 
 		if(!stricmp(*argv, "stop") || !stricmp(*argv, "reload") || !stricmp(*argv, "abort") || !stricmp(*argv, "restart")) {
+			config::utils(user);
 			if(!process::control("sipwitch", user, *argv)) {
 				fprintf(stderr, "*** sipw: %s; server not responding\n", *argv);
 				exit(2);
@@ -457,6 +465,7 @@ extern "C" int main(int argc, char **argv)
 		}
 
 		if(!stricmp(*argv, "check")) {
+			config::utils(user);
 			if(!process::control("sipwitch", user, *argv)) {
 				fprintf(stderr, "*** sipw: %s; server cannot be checked\n", *argv);
 				exit(2);

@@ -42,7 +42,7 @@ service::keynode *config::find(const char *id)
 	return NULL;
 } 
 
-caddr_t config::allocate(size_t size, LinkedObject **list, volatile unsigned *count)
+caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count)
 {
 	caddr_t mp;
 	if(list && *list) {
@@ -450,6 +450,7 @@ void config::reload(const char *uid)
 {
 	FILE *fp = service::open("sipwitch", uid);
 	config *cfgp = new config("sipwitch");
+
 	static config *reclaim = NULL;
 	
 	crit(cfgp != NULL, "reload without config");

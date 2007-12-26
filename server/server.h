@@ -198,7 +198,6 @@ private:
 public:
 	config(char *id);
 
-	__EXPORT static caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count);
 	__EXPORT static bool check(void);
 	__EXPORT static profile_t *getProfile(const char *id); 
 	__EXPORT static keynode *getRouting(const char *id);
@@ -433,6 +432,8 @@ private:
 public:
 	__EXPORT static void shutdown(void);
 };
+
+__EXPORT caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count);
 
 END_NAMESPACE
 
