@@ -74,6 +74,34 @@ static size_t xmldecode(char *out, size_t limit, const char *src)
 	return out - ret;
 }
 
+service::pointer::pointer()
+{
+	node = NULL;
+}
+
+service::pointer::pointer(const char *id)
+{
+	locking.access();
+	node = service::path(id);
+}
+
+service::pointer::pointer(pointer const &copy)
+{
+	node = copy.node;
+	locking.access();
+}
+
+service::pointer::~pointer()
+{
+	service::release(node);
+}
+
+void service::pointer::operator=(keynode *p)
+{
+	service::release(node);
+	node = p;
+}	
+
 service::subscriber::subscriber(const char *name, const char *cmds) :
 LinkedObject(&list)
 {

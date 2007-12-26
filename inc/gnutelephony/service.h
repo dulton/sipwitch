@@ -53,6 +53,32 @@ public:
 		const char *value;
 	} define;
 
+	class pointer 
+	{
+	private:
+		keynode *node;
+
+	public:
+		pointer();
+		pointer(const char *path);
+		pointer(pointer const&);
+		~pointer();
+		
+		inline operator bool()
+			{return node != NULL;};
+
+		inline bool operator!()
+			{return node == NULL;};
+
+		void operator=(keynode *node);
+
+		inline keynode *operator*()
+			{return node;};
+
+		inline keynode *operator->()
+			{return node;};
+	};
+
 	class __EXPORT instance
 	{
 	private:

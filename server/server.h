@@ -195,31 +195,6 @@ private:
 public:
 	config(char *id);
 
-	class pointer 
-	{
-	private:
-		keynode *node;
-
-	public:
-		pointer();
-		pointer(pointer const&);
-		~pointer();
-		
-		inline operator bool()
-			{return node != NULL;};
-
-		inline bool operator!()
-			{return node == NULL;};
-
-		void operator=(keynode *node);
-
-		inline keynode *operator*()
-			{return node;};
-
-		inline keynode *operator->()
-			{return node;};
-	};
-
 	__EXPORT static void *allocate(size_t size);
 	__EXPORT static bool check(void);
 	__EXPORT static profile_t *getProfile(const char *id); 
