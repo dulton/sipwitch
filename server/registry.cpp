@@ -39,6 +39,33 @@ static condlock_t locking;
 
 registry registry::reg;
 
+registry::pointer::pointer()
+{
+	entry = NULL;
+}
+
+registry::pointer::pointer(const char *id)
+{
+	entry = registry::access(id);
+}
+
+registry::pointer::pointer(pointer const &copy)
+{
+	entry = copy.entry;
+	locking.access();
+}
+
+registry::pointer::~pointer()
+{
+	registry::release(entry);
+}
+
+void registry::pointer::operator=(MappedRegistry *rr)
+{
+	registry::release(entry);
+	entry = rr;
+}
+
 registry::registry() :
 service::callback(0), mapped_reuse<MappedRegistry>()
 {

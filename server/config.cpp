@@ -22,6 +22,31 @@ using namespace UCOMMON_NAMESPACE;
 
 static mempager mempool(PAGING);
 
+config::pointer::pointer()
+{
+	node = NULL;
+}
+
+config::pointer::pointer(pointer const &copy)
+{
+	node = copy.node;
+	locking.access();
+}
+
+config::pointer::~pointer()
+{
+	if(node)
+		config::release(node);
+}
+
+void config::pointer::operator=(keynode *p)
+{
+	if(node)
+		config::release(node);
+
+	node = p;
+}	
+
 config::config(char *id) :
 service(id, PAGING)
 {

@@ -195,6 +195,31 @@ private:
 public:
 	config(char *id);
 
+	class pointer 
+	{
+	private:
+		keynode *node;
+
+	public:
+		pointer();
+		pointer(pointer const&);
+		~pointer();
+		
+		inline operator bool()
+			{return node != NULL;};
+
+		inline bool operator!()
+			{return node == NULL;};
+
+		void operator=(keynode *node);
+
+		inline keynode *operator*()
+			{return node;};
+
+		inline keynode *operator->()
+			{return node;};
+	};
+
 	__EXPORT static void *allocate(size_t size);
 	__EXPORT static bool check(void);
 	__EXPORT static profile_t *getProfile(const char *id); 
@@ -212,11 +237,37 @@ public:
 class __LOCAL registry : private service::callback, private mapped_reuse<MappedRegistry> 
 { 
 public: 
-	class __LOCAL target : public LinkedObject 
+	class pointer
+	{
+	private:
+		MappedRegistry *entry;
+
+	public:
+		pointer();
+		pointer(const char *id);
+		pointer(pointer const &copy);
+		~pointer();
+		
+		void operator=(MappedRegistry *ptr);
+		
+		inline operator bool()
+			{return entry != NULL;};
+
+		inline bool operator!()
+			{return entry == NULL;};
+
+		inline MappedRegistry *operator->()
+			{return entry;};
+
+		inline MappedRegistry *operator*()
+			{return entry;};
+	};
+
+	class target : public LinkedObject 
 	{ 
 	public: 
 		// internal hidden address indexing object
-		class __LOCAL indexing : public LinkedObject
+		class indexing : public LinkedObject
 		{
 		public:
 			struct sockaddr *address;
@@ -228,7 +279,7 @@ public:
 		char contact[MAX_URI_SIZE]; 
 	};
 
-	class __LOCAL pattern : public LinkedObject
+	class pattern : public LinkedObject
 	{
 	public:
 		MappedRegistry *registry;
