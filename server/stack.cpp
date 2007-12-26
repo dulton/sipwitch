@@ -352,19 +352,9 @@ stack::session *stack::createSession(call *cr, int cid, int did)
 { 
 	OrderedIndex *index; 
 	segment *sp; 
-	caddr_t mp; 
 	time_t now;
 
-	if(freesegs) {
-		mp = reinterpret_cast<caddr_t>(freesegs);
-		freesegs = freesegs->getNext();
-	}
-	else {
-		++allocated_segments;
-		mp = static_cast<caddr_t>(config::allocate(sizeof(segment)));
-	}
-	memset(mp, 0, sizeof(segment));
-	sp = new(mp) segment;
+	sp = new(config::allocate(sizeof(segment), &freesegs, &allocated_segments)) segment;
 	++cr->count;
 	time(&now);
 	index = &(cr->segments);
@@ -385,19 +375,9 @@ stack::session *stack::createSession(call *cr, int cid, int did)
 stack::session *stack::create(int cid, int did)
 {
 	call *cr;
-	caddr_t mp;
 
 	locking.modify();
-	if(freecalls) {
-		mp = reinterpret_cast<caddr_t>(freecalls);
-		freecalls = freecalls->getNext();
-	}
-	else {
-		++allocated_calls;
-		mp = static_cast<caddr_t>(config::allocate(sizeof(call)));
-	}
-	memset(mp, 0, sizeof(call));
-	cr = new(mp) call();
+	cr = new(config::allocate(sizeof(call), &freecalls, &allocated_calls)) call();
 	++active_calls;
 	cr->arm(7000);	// Normally we get close in 6 seconds, this assures...
 	cr->count = 0;

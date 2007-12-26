@@ -42,9 +42,20 @@ service::keynode *config::find(const char *id)
 	return NULL;
 } 
 
-void *config::allocate(size_t size)
+caddr_t config::allocate(size_t size, LinkedObject **list, volatile unsigned *count)
 {
-	return mempool.alloc(size);
+	caddr_t mp;
+	if(list && *list) {
+		mp = (caddr_t)*list;
+		*list = (*list)->getNext();
+	}
+	else {
+		if(count)
+			++(*count);
+		mp = (caddr_t)mempool.alloc(size);
+	}
+	memset(mp, 0, size);
+	return mp;
 }
 
 bool config::create(const char *id, keynode *node)

@@ -1003,16 +1003,8 @@ unsigned registry::setTargets(MappedRegistry *rr, stack::address *addr)
 
 registry::route *registry::createRoute(void)
 {
-	route *r;
-	r = static_cast<route *>(freeroutes);
-	if(r)
-		freeroutes = r->getNext();
-	if(!r) {
-		++allocated_routes;
-		r = static_cast<route *>(config::allocate(sizeof(route)));
-	}
 	++active_routes;
-	return r;
+	return new(config::allocate(sizeof(route), &freeroutes, NULL)) route;
 }
 
 registry::target *registry::target::indexing::getTarget(void)
@@ -1031,19 +1023,8 @@ registry::target *registry::target::indexing::getTarget(void)
 	
 registry::target *registry::createTarget(void)
 {
-	caddr_t mp;
-	target *t;
-	if(freetargets) {
-		mp = reinterpret_cast<caddr_t>(freetargets);
-		freetargets = t->getNext();
-	}
-	else {
-		++allocated_targets;
-		mp = static_cast<caddr_t>(config::allocate(sizeof(target)));
-	}
-	t = new(mp) target;
 	++active_targets;
-	return t;
+	return new(config::allocate(sizeof(target), &freetargets, NULL)) target;
 }
 
 END_NAMESPACE
