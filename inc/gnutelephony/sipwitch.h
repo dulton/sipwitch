@@ -81,7 +81,6 @@ public:
 	bool hidden;
 	unsigned ext;				// 0 or extnum
 	unsigned count;				// active regs count
-	unsigned seqid;
 	sockaddr_internet contact;	// last/newest created contact registration
 	time_t	created;			// initial registration
 	volatile time_t  expires;	// when registry expires as a whole

@@ -243,7 +243,6 @@ void registry::expire(MappedRegistry *rr)
 		tp->enlist(&freetargets);
 		tp = nt;
 	}
-	++rr->seqid;
 	rr->routes = NULL;
 	rr->targets = NULL;
 	rr->published = NULL;
@@ -644,19 +643,6 @@ MappedRegistry *registry::getExtension(const char *id)
 		rr = NULL;
 	if(!rr)
 		locking.release();
-	return rr;
-}
-
-MappedRegistry *registry::reaccess(MappedRegistry *rr, unsigned seq)
-{
-	if(!rr)
-		return NULL;
-
-	locking.access();
-	if(rr->seqid != seq) {
-		rr = NULL;
-		locking.release();
-	}
 	return rr;
 }
 

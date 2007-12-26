@@ -362,8 +362,6 @@ stack::session *stack::createSession(call *cr, int cid, int did)
 	sp->sid.parent = cr;
 	sp->sid.state = session::OPEN;
 	sp->sid.sdp[0] = 0;
-	sp->sid.registry = NULL;
-	sp->sid.rid = 0;
 	return &sp->sid;
 }
 
