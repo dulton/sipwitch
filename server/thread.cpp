@@ -345,13 +345,25 @@ rewrite:
 			process::errlog(NOTIFY, "unregistered destination %s", target);
 		else
 			process::errlog(ERROR, "invalid destination %s, type=%s\n", target, dialed->getId());
-		error = SIP_NOT_FOUND;	
+		error = SIP_GONE;	
+		goto invalid;
+	}
+
+	if(registry && registry->type == MappedRegistry::TEMPORARY) {
+		error = SIP_GONE;
 		goto invalid;
 	}
 
 	time(&now);
-	if(registry && registry->expires && registry->expires < now && !dialed)
+
+	if(registry && registry->expires && registry->expires < now) {
+		error = SIP_GONE;
 		goto invalid;
+	}
+	else if(registry && !dialed) {
+		error = SIP_NOT_FOUND;
+		goto invalid;
+	}
 
 	// extension references always require authentication
 	if(registry::isExtension(target)) {
@@ -871,14 +883,18 @@ void thread::run(void)
 		if(!shutdown_flag)
 			sevent = eXosip_event_wait(0, stack::sip.timing);
 
+		Thread::yield();
+
 		via_header = NULL;
 		origin_header = NULL;
 
 		if(shutdown_flag) {
-			++shutdown_count;
 			process::errlog(DEBUG1, "stopping thread %d", instance);
+			Thread::sleep(100);
+			++shutdown_count;
 			DetachedThread::exit();
 		}
+
 
 		if(!sevent)
 			continue;

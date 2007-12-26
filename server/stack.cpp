@@ -58,6 +58,10 @@ void stack::call::disconnect(void)
 
 	linked_pointer<segment> sp = segments.begin();
 	while(sp) {
+		if(sp->sid.registry) {
+			--sp->sid.registry->inuse;
+			sp->sid.registry = NULL;
+		}
 		if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
 			sp->sid.state = session::CLOSED;
 			eXosip_lock();
@@ -280,6 +284,10 @@ void stack::clear(session *s)
 		s->delist(&hash[s->cid % keysize]);
 		s->cid = 0;
 		s->did = -1;
+		if(s->registry) {
+			--s->registry->inuse;
+			s->registry = NULL;
+		}
 		locking.share();
 	}
 }
@@ -304,6 +312,10 @@ void stack::destroy(call *cr)
 	while(sp) {
 		--active_segments;
 		segment *next = sp.getNext();
+		if(sp->sid.registry) {
+			--sp->sid.registry->inuse;
+			sp->sid.registry = NULL;
+		}
 		if(sp->sid.cid > 0) {
 			if(sp->sid.state != session::CLOSED)
 				eXosip_call_terminate(sp->sid.cid, sp->sid.did);
@@ -336,23 +348,27 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 	}
 }
 	
-stack::session *stack::createSession(call *cr, int cid, int did)
-{
-	segment *sp;
+stack::session *stack::createSession(call *cr, int cid, int did) 
+{ 
+	OrderedIndex *index; 
+	segment *sp; 
+	caddr_t mp; 
 	time_t now;
 
 	if(freesegs) {
-		sp = static_cast<segment *>(freesegs);
-		freesegs = sp->getNext();
+		mp = reinterpret_cast<caddr_t>(freesegs);
+		freesegs = freesegs->getNext();
 	}
 	else {
 		++allocated_segments;
-		sp = static_cast<segment *>(config::allocate(sizeof(segment)));
+		mp = static_cast<caddr_t>(config::allocate(sizeof(segment)));
 	}
-	memset(sp, 0, sizeof(session));
+	memset(mp, 0, sizeof(segment));
+	sp = new(mp) segment;
 	++cr->count;
 	time(&now);
-	sp->enlist(&cr->segments);
+	index = &(cr->segments);
+	sp->enlist(index);
 	sp->sid.enlist(&hash[cid % keysize]);
 	sp->sid.sequence = (uint32_t)now;
 	sp->sid.sequence &= 0xffffffffl;
@@ -362,6 +378,7 @@ stack::session *stack::createSession(call *cr, int cid, int did)
 	sp->sid.parent = cr;
 	sp->sid.state = session::OPEN;
 	sp->sid.sdp[0] = 0;
+	sp->sid.registry = NULL;
 	return &sp->sid;
 }
 
@@ -469,7 +486,7 @@ stack::session *stack::access(int cid)
 
 void stack::release(session *s)
 {
-	if(s) 
+	if(s)
 		locking.release();
 }
 	

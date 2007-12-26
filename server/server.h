@@ -54,6 +54,7 @@ private:
 	class __LOCAL session : public LinkedObject
 	{
 	public:
+		MappedRegistry *registry;
 		int cid, did;
 		time_t activates;
 		uint32_t sequence;
@@ -83,6 +84,8 @@ private:
 	class __LOCAL segment : public OrderedObject
 	{
 	public:
+		inline segment() : OrderedObject() {};
+
 		session sid;
 	};
 
@@ -125,8 +128,8 @@ private:
 	void stop(service *cfg);
 	void snapshot(FILE *fp);
 	bool check(void);
-	void modify(void);
 	void update(void);
+	void modify(void);
 
 	static stack sip;
 
@@ -241,10 +244,13 @@ public:
 	class target : public LinkedObject 
 	{ 
 	public: 
+		inline target() : LinkedObject() {};
+
 		// internal hidden address indexing object
 		class indexing : public LinkedObject
 		{
 		public:
+			inline indexing() : LinkedObject() {};
 			struct sockaddr *address;
 			MappedRegistry *registry;
 			target *getTarget(void);
@@ -329,11 +335,13 @@ public:
 	__EXPORT static MappedRegistry *getExtension(const char *id);
 	__EXPORT static MappedRegistry *create(const char *id);
 	__EXPORT static MappedRegistry *access(const char *id);
+	__EXPORT static MappedRegistry *invite(const char *id);
 	__EXPORT static pattern *getRouting(unsigned trs, const char *id);
 	__EXPORT static void release(MappedRegistry *m);
 	__EXPORT static bool refresh(MappedRegistry *m, stack::address *adddr, time_t expires);
 	__EXPORT static bool remove(const char *id);
 	__EXPORT static void cleanup(time_t period); 
+	__EXPORT static void deactivate(MappedRegistry *m);
 };
 
 class __LOCAL messages : public service::callback

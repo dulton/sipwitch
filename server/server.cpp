@@ -163,8 +163,8 @@ static void regdump(void)
 		} while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
 		if(buffer.type == MappedRegistry::EXPIRED)
 			continue;
-	//	if(buffer.expires && buffer.expires < now)
-	//		continue;
+		else if(buffer.type == MappedRegistry::TEMPORARY && !buffer.inuse)
+			continue;
 		if(!found++)
 			printf("%7s %-32s type %-32s  expires address\n", "ext", "user", "profile");
 		ext[0] = 0;
@@ -172,7 +172,7 @@ static void regdump(void)
 			snprintf(ext, sizeof(ext), "%7d", buffer.ext); 
 		exp[0] = '-';
 		exp[1] = 0;
-		if(buffer.expires)
+		if(buffer.expires && buffer.type != MappedRegistry::TEMPORARY)
 			snprintf(exp, sizeof(exp), "%ld", buffer.expires - now);
 		switch(buffer.type) {
 		case MappedRegistry::REJECT:
@@ -186,6 +186,9 @@ static void regdump(void)
 			break;
 		case MappedRegistry::SERVICE:
 			type = "peer";
+			break;
+		case MappedRegistry::TEMPORARY:
+			type = "temp";
 			break;
 		default:
 			type = "user";

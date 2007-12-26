@@ -217,7 +217,9 @@ bool registry::remove(const char *id)
 
 	locking.modify();
 	rr = find(id);
-	if(rr)
+	if(rr && rr->inuse)
+		rtn = false;
+	else if(rr)
 		expire(rr);
 	else
 		rtn = false;
@@ -274,6 +276,7 @@ void registry::expire(MappedRegistry *rr)
 	rr->targets = NULL;
 	rr->published = NULL;
 	rr->count = 0;
+	rr->inuse = 0;
 	rr->status = MappedRegistry::OFFLINE;
 	if(rr->ext && extmap[rr->ext - reg.prefix] == rr)
 		extmap[rr->ext - reg.prefix] = NULL;
@@ -298,7 +301,7 @@ void registry::cleanup(time_t period)
 		time(&now);
 		rr = reg.pos(count++);
 		locking.modify();
-		if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires + period < now)
+		if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires + period < now && !rr->inuse)
 			expire(rr);
 		locking.commit();
 		Thread::yield();
@@ -362,24 +365,65 @@ unsigned registry::getEntries(void)
 	return mapped_entries;
 }
 
+MappedRegistry *registry::invite(const char *id)
+{
+	MappedRegistry *rr = NULL;
+	unsigned path = NamedObject::keyindex(id, keysize);
+
+	locking.modify();
+	rr = find(id);
+	if(rr) {
+		++rr->inuse;
+		locking.commit();
+		return rr;
+	}
+
+	rr = reg.getLocked();
+
+	if(!rr) {
+		locking.commit();
+		return NULL;
+	}
+
+	memset(rr, 0, sizeof(MappedRegistry));
+	rr->type = MappedRegistry::TEMPORARY;
+	rr->expires = 0;
+	rr->created = 0;
+	rr->display[0] = 0;
+	rr->inuse = 1;
+
+	strcpy(rr->userid, id);
+	rr->ext = 0;
+	rr->enlist(&keys[path]);
+	rr->status = MappedRegistry::OFFLINE;
+
+	locking.commit();
+	return rr;
+}
+	
 MappedRegistry *registry::create(const char *id)
 {
-	MappedRegistry *rr, *prior;
+	MappedRegistry *rr = NULL, *prior;
 	unsigned path = NamedObject::keyindex(id, keysize);
 	linked_pointer<service::keynode> rp;
 	service::keynode *node, *leaf;
 	unsigned ext = 0;
 	const char *cp = "none";
 	profile_t *pro = NULL;
+	bool listed = false;
 
 	locking.modify();
 	rr = find(id);
-	if(rr) {
+	if(rr && rr->type != MappedRegistry::TEMPORARY) {
 		locking.share();
 		return rr;
 	}
 
-	rr = reg.getLocked();
+	if(rr) 
+		listed = true;
+	else
+		rr = reg.getLocked();
+
 	if(!rr) {
 		locking.commit();
 		return NULL;
@@ -391,6 +435,9 @@ MappedRegistry *registry::create(const char *id)
 	rr->expires = 0;
 	rr->created = 0;
 	rr->display[0] = 0;
+
+	if(!listed)
+		rr->inuse = 0;
 
 	if(node)
 		cp = node->getId();
@@ -406,7 +453,14 @@ MappedRegistry *registry::create(const char *id)
 		rr->type = MappedRegistry::SERVICE;
 	if(!node || rr->type == MappedRegistry::EXPIRED) {
 		config::release(node);
-		reg.removeLocked(rr);
+		if(listed && rr->inuse)
+			rr->type = MappedRegistry::TEMPORARY;
+		else if(listed) {
+			rr->delist(&keys[path]);
+			listed = false;
+		}
+		if(!listed)
+			reg.removeLocked(rr);
 		locking.commit();
 		return NULL;
 	}
@@ -495,10 +549,14 @@ MappedRegistry *registry::create(const char *id)
 	}
 
 	config::release(node);
-	strcpy(rr->userid, id);
 	rr->ext = 0;
-	rr->enlist(&keys[path]);
 	rr->status = MappedRegistry::IDLE;
+
+	if(!listed) {
+		strcpy(rr->userid, id);
+		rr->enlist(&keys[path]);
+	}
+
 	if(ext >= reg.prefix && ext < reg.prefix + reg.range) {
 		prior = extmap[ext - reg.prefix];
 		if(prior && prior != rr) {
@@ -812,7 +870,7 @@ bool registry::refresh(MappedRegistry *rr, stack::address *addr, time_t expires)
 {
 	linked_pointer<target> tp;
 
-	if(!addr || !addr->getAddr() || !rr || !rr->expires || rr->type == MappedRegistry::EXPIRED)
+	if(!addr || !addr->getAddr() || !rr || !rr->expires || rr->type == MappedRegistry::EXPIRED || rr->type == MappedRegistry::TEMPORARY)
 		return false;
 
 	tp = rr->targets;
@@ -973,14 +1031,17 @@ registry::target *registry::target::indexing::getTarget(void)
 	
 registry::target *registry::createTarget(void)
 {
+	caddr_t mp;
 	target *t;
-	t = static_cast<target *>(freetargets);
-	if(t)
+	if(freetargets) {
+		mp = reinterpret_cast<caddr_t>(freetargets);
 		freetargets = t->getNext();
-	if(!t) {
-		++allocated_targets;
-		t = static_cast<target *>(config::allocate(sizeof(target)));
 	}
+	else {
+		++allocated_targets;
+		mp = static_cast<caddr_t>(config::allocate(sizeof(target)));
+	}
+	t = new(mp) target;
 	++active_targets;
 	return t;
 }

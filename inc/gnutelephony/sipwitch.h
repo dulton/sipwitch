@@ -77,10 +77,11 @@ public:
 	char	userid[MAX_USERID_SIZE];
 	char	display[MAX_DISPLAY_SIZE];
 	enum {OFFLINE = 0, IDLE, BUSY, AWAY, DND} status;
-	enum {EXPIRED = 0, USER, GATEWAY, SERVICE, REJECT, REFER} type;
+	enum {EXPIRED = 0, USER, GATEWAY, SERVICE, REJECT, REFER, TEMPORARY} type;
 	bool hidden;
 	unsigned ext;				// 0 or extnum
 	unsigned count;				// active regs count
+	volatile unsigned inuse;	// in use for call count
 	sockaddr_internet contact;	// last/newest created contact registration
 	time_t	created;			// initial registration
 	volatile time_t  expires;	// when registry expires as a whole
