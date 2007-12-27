@@ -34,8 +34,8 @@ condlock_t service::locking;
 service *service::cfg = NULL;
 
 static char header[80] = "- welcome";
-static SOCKET trap4 = -1;
-static SOCKET trap6 = -1;
+static SOCKET trap4 = INVALID_SOCKET;
+static SOCKET trap6 = INVALID_SOCKET;
 static time_t started = 0l;
 
 static size_t xmldecode(char *out, size_t limit, const char *src)
@@ -121,7 +121,7 @@ void service::subscriber::close(void)
 {
 #ifdef	_MSWINDOWS_
 	if(fd != INVALID_HANDLE_VALUE)
-		CloseFile(fd);
+		CloseHandle(fd);
 	fd = INVALID_HANDLE_VALUE;
 #else
 	if(fd > -1)
@@ -160,7 +160,7 @@ void service::subscriber::write(char *str)
 	if(fd != INVALID_HANDLE_VALUE) {
 		WriteFile(fd, str, (DWORD)len, &result, NULL);
 		if(result < len) {
-			CloseFile(fd);
+			CloseHandle(fd);
 			fd = INVALID_HANDLE_VALUE;
 		}
 	}
@@ -363,17 +363,17 @@ send:
 		case AF_INET6:
 			if(trap6 == INVALID_SOCKET) {
 				trap6 = socket(AF_INET6, SOCK_DGRAM, 0);
-				setsockopt(trap6, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on));
+				setsockopt(trap6, SOL_SOCKET, SO_BROADCAST, (char *)&on, sizeof(on));
 			}
-			sendto(trap6, buf, len, 0, (struct sockaddr *)&servers->server, alen);
+			sendto(trap6, (caddr_t)buf, len, 0, (struct sockaddr *)&servers->server, alen);
 			break;
 #endif
 		case AF_INET:
 			if(trap4 == INVALID_SOCKET) {
 				trap4 = socket(AF_INET, SOCK_DGRAM, 0);
-				setsockopt(trap4, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on));
+				setsockopt(trap4, SOL_SOCKET, SO_BROADCAST, (char *)&on, sizeof(on));
 			}
-			sendto(trap4, buf, len, 0, (struct sockaddr *)&servers->server, alen);
+			sendto(trap4, (caddr_t)buf, len, 0, (struct sockaddr *)&servers->server, alen);
 			break;
 		}
 		servers.next();
@@ -726,6 +726,7 @@ void service::publish(const char *path, const char *fmt, ...)
 	vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 
+#ifndef	_MSWINDOWS_
 	if(path) {
 		cp = strrchr(path, '/');
 		if(cp && !stricmp(cp, "/control"))
@@ -740,6 +741,7 @@ void service::publish(const char *path, const char *fmt, ...)
 		}
 		return;
 	}
+#endif
 
 control:
 	protected_access(subscriber::locking);
@@ -885,7 +887,7 @@ void service::dumpfile(const char *id, const char *uid)
 	release(env);
 
 	if(!fp) {
-		process::errlog(ERROR, "dump cannot access file");
+		process::errlog(ERRLOG, "dump cannot access file");
 		return;
 	}
 
@@ -921,7 +923,7 @@ void service::snapshot(const char *id, const char *uid)
 	release(env);
 
 	if(!fp) {
-		process::errlog(ERROR, "snapshot; cannot access file");
+		process::errlog(ERRLOG, "snapshot; cannot access file");
 		return;
 	}
 

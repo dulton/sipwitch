@@ -352,7 +352,7 @@ rewrite:
 		if(!stricmp(dialed->getId(), "user"))
 			process::errlog(NOTIFY, "unregistered destination %s", target);
 		else
-			process::errlog(ERROR, "invalid destination %s, type=%s\n", target, dialed->getId());
+			process::errlog(ERRLOG, "invalid destination %s, type=%s\n", target, dialed->getId());
 		error = SIP_GONE;	
 		goto invalid;
 	}
@@ -696,7 +696,7 @@ void thread::registration(void)
 	int pos = 0;
 
 	if(!getsource()) {
-		process::errlog(ERROR, "cannot determine origin for registration");
+		process::errlog(ERRLOG, "cannot determine origin for registration");
 		return;
 	}
 
@@ -751,7 +751,7 @@ void thread::reregister(const char *contact, time_t interval)
 	if(!registry) {
 		if(!warning_registry) {
 			warning_registry = true;
-			process::errlog(ERROR, "registry capacity reached");
+			process::errlog(ERRLOG, "registry capacity reached");
 		}
 		answer = SIP_TEMPORARILY_UNAVAILABLE;
 		interval = 0;
@@ -778,7 +778,7 @@ void thread::reregister(const char *contact, time_t interval)
 	else if(count)
 			process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%s", getIdent(), interval, via_header->host, via_header->port);
 	else {
-		process::errlog(ERROR, "cannot register %s from %s", getIdent(), buffer);
+		process::errlog(ERRLOG, "cannot register %s from %s", getIdent(), buffer);
 		answer = SIP_FORBIDDEN;
 		goto reply;
 	}		

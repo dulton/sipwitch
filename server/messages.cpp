@@ -195,7 +195,7 @@ delay:
 	while(tp) {
 		if(!rr->expires || tp->expires > now) {
 			if(msg->self) 
-				stack::sipAddress(&tp->interface, msg->reply, NULL, sizeof(msg->reply)); 
+				stack::sipAddress(&tp->iface, msg->reply, NULL, sizeof(msg->reply)); 
 			eXosip_lock();
 			eXosip_unlock();
 		}

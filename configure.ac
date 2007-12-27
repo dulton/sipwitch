@@ -207,6 +207,12 @@ if test "$enable_sipwitch_server" = "yes" ; then
 	AC_DEFINE(OSIP2_LIST_PTR, [&], [define pointer mode])
 	SIPWITCH_EXOSIP2="$SIPWITCH_EXOSIP2 $LIBOSIP2_LIBS"
 
+	case "$target" in
+	*mingw*)
+		SIPWITCH_EXOSIP2="$SIPWITCH_EXOSIP2 -liphlpapi -ldnsapi"
+		;;
+	esac
+
 	AC_CACHE_CHECK(whether sigwait has 2 arguments,
 		ac_cv_libc_sigwait2,
 		AC_TRY_COMPILE([

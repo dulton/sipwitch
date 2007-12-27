@@ -217,7 +217,7 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	threading = 2;
 	priority = 1;
 	timing = 500;
-	interface = NULL;
+	iface = NULL;
 	protocol = IPPROTO_UDP;
 	port = 5060;
 	family = AF_INET;
@@ -486,14 +486,14 @@ void stack::start(service *cfg)
 		eXosip_enable_ipv6(1);
 #endif
 
-	if(eXosip_listen_addr(protocol, interface, port, family, tlsmode)) {
+	if(eXosip_listen_addr(protocol, iface, port, family, tlsmode)) {
 #ifdef	AF_INET6
-		if(!interface && protocol == AF_INET6)
-			interface = "::*";
+		if(!iface && protocol == AF_INET6)
+			iface = "::*";
 #endif
-		if(!interface)
-			interface = "*";
-		process::errlog(FAILURE, "sip cannot bind interface %s, port %d", interface, port);
+		if(!iface)
+			iface = "*";
+		process::errlog(FAILURE, "sip cannot bind interface %s, port %d", iface, port);
 	}
 
 	osip_trace_initialize_syslog(TRACE_LEVEL0, "sipwitch");
@@ -580,7 +580,7 @@ bool stack::reload(service *cfg)
 					value = NULL;
 				if(value)
 					value = strdup(value);
-				interface = value;
+				iface = value;
 			}
 			else if(!stricmp(key, "send101") && !isConfigured() && tobool(value))
 				send101 = 0;

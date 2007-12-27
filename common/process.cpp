@@ -333,68 +333,6 @@ retry:
 
 static const char *replytarget = NULL;
 
-errlevel_t process::verbose = FAILURE;
-
-void process::errlog(errlevel_t loglevel, const char *fmt, ...)
-{
-	char buf[256];
-	int level = LOG_ERR;
-	va_list args;	
-
-	va_start(args, fmt);
-
-	assert(fmt != NULL);
-	vsnprintf(buf, sizeof(buf), fmt, args);
-	va_end(args);
-
-	switch(loglevel)
-	{
-	case DEBUG1:
-	case DEBUG2:
-	case DEBUG3:
-		if((getppid() > 1) && (loglevel <= verbose)) {
-			if(fmt[strlen(fmt) - 1] == '\n') 
-				fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
-			else
-				fprintf(stderr, "%s: %s\n", getenv("IDENT"), buf);
-		}
-		return;
-	case INFO:
-		level = LOG_INFO;
-		break;
-	case NOTIFY:
-		level = LOG_NOTICE;
-		break;
-	case WARN:
-		level = LOG_WARNING;
-		break;
-	case ERROR:
-		level = LOG_ERR;
-		break;
-	case FAILURE:
-		level = LOG_CRIT;
-		break;
-	default:
-		level = LOG_ERR;
-	}
-
-	if(loglevel <= verbose) {
-		if(getppid() > 1) {
-			if(fmt[strlen(fmt) - 1] == '\n') 
-				fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
-			else
-				fprintf(stderr, "%s: %s\n", getenv("IDENT"), buf);
-		}
-
-		service::snmptrap(loglevel + 10, buf);
-		service::publish(NULL, "- errlog %d %s", loglevel, buf); 
-		::syslog(level, "%s", buf);
-	}
-	
-	if(level == LOG_CRIT)
-		cpr_runtime_error(buf);
-}
-
 void process::release(void)
 {
 	errlog(INFO, "shutdown");
@@ -430,45 +368,6 @@ restart:
 			goto restart;
 		}
 	}
-}
-
-void process::printlog(const char *id, const char *uid, const char *fmt, ...)
-{
-	fd_t fd;
-	va_list args;
-	char buf[1024];
-	int len;
-	service::keynode *env = service::getEnviron();
-	char *cp;
-
-	va_start(args, fmt);
-
-	if(!id)
-		id = service::getValue(env, "IDENT");
-
-	if(!uid)
-		uid = service::getValue(env, "USER");
-
-	fd = logfile(id, uid);
-	service::release(env);
-
-	vsnprintf(buf, sizeof(buf) - 1, fmt, args);
-	len = strlen(buf);
-	if(buf[len - 1] != '\n')
-		buf[len++] = '\n';
-
-	if(fd > -1) {
-		::write(fd, buf, strlen(buf));
-		::close(fd);
-	}
-	cp = strchr(buf, '\n');
-	if(cp)
-		*cp = 0;
-
-	service::publish(NULL, "- logfile %s", buf); 
-
-	debug(2, "logfile: %s", buf);
-	va_end(args);
 }
 
 bool process::control(const char *id, const char *uid, const char *fmt, ...)
@@ -632,4 +531,151 @@ void process::background(const char *id, const char *uid, const char *cfgpath, u
 	setuid(pwd->pw_uid);
 }
 
+void process::errlog(errlevel_t loglevel, const char *fmt, ...)
+{
+	char buf[256];
+	int level = LOG_ERR;
+	va_list args;	
+
+	va_start(args, fmt);
+
+	assert(fmt != NULL);
+	vsnprintf(buf, sizeof(buf), fmt, args);
+	va_end(args);
+
+	switch(loglevel)
+	{
+	case DEBUG1:
+	case DEBUG2:
+	case DEBUG3:
+		if((getppid() > 1) && (loglevel <= verbose)) {
+			if(fmt[strlen(fmt) - 1] == '\n') 
+				fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
+			else
+				fprintf(stderr, "%s: %s\n", getenv("IDENT"), buf);
+		}
+		return;
+	case INFO:
+		level = LOG_INFO;
+		break;
+	case NOTIFY:
+		level = LOG_NOTICE;
+		break;
+	case WARN:
+		level = LOG_WARNING;
+		break;
+	case ERROR:
+		level = LOG_ERR;
+		break;
+	case FAILURE:
+		level = LOG_CRIT;
+		break;
+	default:
+		level = LOG_ERR;
+	}
+
+	if(loglevel <= verbose) {
+		if(getppid() > 1) {
+			if(fmt[strlen(fmt) - 1] == '\n') 
+				fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
+			else
+				fprintf(stderr, "%s: %s\n", getenv("IDENT"), buf);
+		}
+		service::snmptrap(loglevel + 10, buf);
+		service::publish(NULL, "- errlog %d %s", loglevel, buf); 
+		::syslog(level, "%s", buf);
+	}
+	
+	if(level == LOG_CRIT)
+		cpr_runtime_error(buf);
+}
+
+
+#else
+
+static fd_t logfile(const char *id, const char *uid)
+{
+	char buf[128];
+	fd_t fd;
+
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/%s.log", id);
+	
+	return CreateFile(buf, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+}
+
+void process::errlog(errlevel_t loglevel, const char *fmt, ...)
+{
+	char buf[256];
+	va_list args;	
+
+	va_start(args, fmt);
+
+	assert(fmt != NULL);
+	vsnprintf(buf, sizeof(buf), fmt, args);
+	va_end(args);
+
+	if(loglevel <= verbose) {
+		if(fmt[strlen(fmt) - 1] == '\n') 
+			fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
+		else
+			fprintf(stderr, "%s: %s\n", getenv("IDENT"), buf);
+		service::snmptrap(loglevel + 10, buf);
+		service::publish(NULL, "- errlog %d %s", loglevel, buf); 
+	}
+	
+	if(loglevel == FAILURE)
+		cpr_runtime_error(buf);
+}
+
 #endif
+
+errlevel_t process::verbose = FAILURE;
+
+void process::printlog(const char *id, const char *uid, const char *fmt, ...)
+{
+	fd_t fd;
+	va_list args;
+	char buf[1024];
+	int len;
+	service::keynode *env = service::getEnviron();
+	char *cp;
+
+	va_start(args, fmt);
+
+	if(!id)
+		id = service::getValue(env, "IDENT");
+
+	if(!uid)
+		uid = service::getValue(env, "USER");
+
+	fd = logfile(id, uid);
+	service::release(env);
+
+	vsnprintf(buf, sizeof(buf) - 1, fmt, args);
+	len = strlen(buf);
+	if(buf[len - 1] != '\n')
+		buf[len++] = '\n';
+
+#ifdef	_MSWINDOWS_
+	if(fd != INVALID_HANDLE_VALUE) {
+		SetFilePointer(fd, 0, NULL, FILE_END);
+		WriteFile(fd, buf, strlen(buf), NULL, NULL);
+		CloseHandle(fd);
+	}
+#else
+	if(fd > -1) {
+		::write(fd, buf, strlen(buf));
+		::close(fd);
+	}
+#endif
+	cp = strchr(buf, '\n');
+	if(cp)
+		*cp = 0;
+
+	service::publish(NULL, "- logfile %s", buf); 
+
+	debug(2, "logfile: %s", buf);
+	va_end(args);
+}
+
+

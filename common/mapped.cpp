@@ -35,8 +35,11 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sched.h>
 #include <limits.h>
+
+#if _POSIX_PRIORITY_SCHEDULING > 0
+#include <sched.h>
+#endif
 
 #if	defined(HAVE_FTOK) && !defined(HAVE_SHM_OPEN)
 

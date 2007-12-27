@@ -15,6 +15,11 @@
 
 #include "server.h"
 
+#ifdef	_MSWINDOWS_
+#define	setenv(s, v, p)	SetEnvironmentVariable(s, v)
+#define	mkdir(v, p)	::mkdir(v)
+#endif
+
 #define	PAGING	8192
 
 NAMESPACE_SIPWITCH
@@ -146,7 +151,7 @@ bool config::confirm(const char *user)
 			fn = buf;
 		if(fp)
 			if(!load(fp, provision))
-				process::errlog(ERROR, "cannot load %s", fn);		
+				process::errlog(ERRLOG, "cannot load %s", fn);		
 			else
 				process::errlog(DEBUG1, "loaded %s", fn);
 	}
@@ -396,7 +401,7 @@ void config::utils(const char *uid)
 
 	if(fp)
 		if(!cfg->load(fp)) {
-			process::errlog(ERROR, "invalid config");
+			process::errlog(ERRLOG, "invalid config");
 			delete cfg;
 			return;
 		}
@@ -457,13 +462,13 @@ void config::reload(const char *uid)
 
 	if(fp)
 		if(!cfgp->load(fp)) {
-			process::errlog(ERROR, "invalid config");
+			process::errlog(ERRLOG, "invalid config");
 			delete cfgp;
 			return;
 		}
 
 	if(!cfgp->commit(uid)) {
-		process::errlog(ERROR, "config rejected");
+		process::errlog(ERRLOG, "config rejected");
 		if(reclaim) {
 			locking.modify();
 			delete reclaim;

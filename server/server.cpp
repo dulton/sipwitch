@@ -209,6 +209,7 @@ static void regdump(void)
 
 static void command(const char *id, const char *uid, const char *cmd, unsigned timeout)
 {
+#ifdef	USES_SIGNALS
 	sigset_t sigs;
 	int signo;
 
@@ -238,6 +239,7 @@ static void command(const char *id, const char *uid, const char *cmd, unsigned t
 		exit(1);
 	}
 	fprintf(stderr, "*** sipw: %s; request failed\n", cmd);
+#endif
 	exit(3);
 }
 #endif
@@ -301,8 +303,10 @@ extern "C" int main(int argc, char **argv)
 	if(cp)
 		cfgfile = strdup(cp);
 
+#ifndef	_MSWINDOWS_
 	if(!getuid())
 		daemon = true;
+#endif
 
 	while(NULL != *(++argv)) {
 		if(!strncmp(*argv, "--", 2))
@@ -547,15 +551,21 @@ extern "C" int main(int argc, char **argv)
 	pthread_sigmask(SIG_BLOCK, &sigthread.sigs, NULL);
 #endif
 
+#ifndef	_MSWINDOWS_
 	signal(SIGPIPE, SIG_IGN);
-
+#endif
 
 	if(!warned && !verbose)
 		verbose = 2;
 	process::setVerbose((errlevel_t)(verbose));
 
+#ifdef	_MSWINDOWS_
+	if(!user)
+		user = "telephony";
+#else
 	if(!user && getuid() == 0)
 		user = "telephony";
+#endif
 
 	if(daemon)
 		process::background("sipwitch", user, cfgfile, priority);
@@ -570,7 +580,7 @@ extern "C" int main(int argc, char **argv)
 #endif
 
 	if(concurrency)
-		pthread_setconcurrency(concurrency);
+		Thread::concurrency(concurrency);
 
 	while(NULL != (cp = process::receive())) {
         if(!stricmp(cp, "reload")) {

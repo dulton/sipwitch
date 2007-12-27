@@ -14,6 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <gnutelephony/sipwitch.h>
+#include <ucommon/socket.h>
 #include <eXosip2/eXosip.h>
 #include <config.h>
 
@@ -59,7 +60,8 @@ private:
 		time_t activates;
 		uint32_t sequence;
 		call *parent;
-		sockaddr_internet address, interface;
+		struct sockaddr_internet address;
+		struct sockaddr_internet iface;
 		time_t expires;					// session/invite expires...
 		time_t ringing;					// ring no-answer timer...
 
@@ -142,7 +144,7 @@ private:
 	const char *volatile restricted;
 	const char *volatile trusted;
 	const char *volatile published;
-	const char *interface;
+	const char *iface;
 	const char *agent;
 	short port;
 	bool incoming, outgoing;
@@ -251,7 +253,8 @@ public:
 			MappedRegistry *registry;
 			target *getTarget(void);
 		} index;
-		sockaddr_internet address, interface; 
+		struct sockaddr_internet address;
+		struct sockaddr_internet iface; 
 		volatile time_t expires;
 		char contact[MAX_URI_SIZE]; 
 	};
