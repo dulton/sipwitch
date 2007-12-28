@@ -86,7 +86,10 @@ private:
 	class __LOCAL segment : public OrderedObject
 	{
 	public:
-		inline segment() : OrderedObject() {};
+		segment(call *cr, int cid, int did);
+
+		static void *operator new(size_t size);
+		static void operator delete(void *obj);
 
 		session sid;
 	};
@@ -123,6 +126,9 @@ private:
 		unsigned forwarding;	// number of forwarding segments
 		time_t expires, starting;
 		mutex_t mutex;
+
+		static void *operator new(size_t size);
+		static void operator delete(void *obj);
 	};
 
 	bool reload(service *cfg);
@@ -150,8 +156,6 @@ private:
 	bool incoming, outgoing;
 	int send101;
 	int family, tlsmode, protocol;
-
-    __EXPORT static session *createSession(call *cp, int cid, int did);
 
 public:
 	typedef	Socket::address address;
@@ -257,6 +261,9 @@ public:
 		struct sockaddr_internet iface; 
 		volatile time_t expires;
 		char contact[MAX_URI_SIZE]; 
+
+		static void *operator new(size_t size);
+		static void operator delete(void *ptr);
 	};
 
 	class pattern : public LinkedObject
@@ -274,6 +281,9 @@ private:
 	{
 	public:
 		pattern entry;
+
+		static void *operator new(size_t size);
+		static void operator delete(void *ptr);
 	};
 
 	bool check(void);
@@ -282,8 +292,6 @@ private:
 	void stop(service *cfg);
 	void snapshot(FILE *fp);
 
-	static target *createTarget(void);
-	static route *createRoute(void);
 	static void expire(MappedRegistry *rr);
 	static MappedRegistry *find(const char *id);
 

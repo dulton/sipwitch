@@ -48,8 +48,49 @@ static bool tobool(const char *s)
 
 stack stack::sip;
 
+stack::segment::segment(call *cr, int cid, int did) : OrderedObject()
+{
+	time_t now;
+
+	++cr->count;
+	time(&now);
+	enlist(&(cr->segments));
+	sid.enlist(&hash[cid % keysize]);
+	sid.sequence = (uint32_t)now;
+	sid.sequence &= 0xffffffffl;
+	sid.expires = 0l;
+	sid.cid = cid;
+	sid.did = did;
+	sid.parent = cr;
+	sid.state = session::OPEN;
+	sid.sdp[0] = 0;
+	sid.registry = NULL;
+}
+
+void *stack::segment::operator new(size_t size)
+{
+	return allocate(size, &freesegs, &allocated_segments);
+}
+
+void stack::segment::operator delete(void *obj)
+{
+	((LinkedObject*)(obj))->enlist(&freesegs);
+}
+
 stack::call::call() : TimerQueue::event(Timer::reset), segments()
 {
+}
+
+void *stack::call::operator new(size_t size)
+{
+	++active_calls;
+	return allocate(size, &freecalls, &allocated_calls);
+}
+
+void stack::call::operator delete(void *obj)
+{
+	((LinkedObject*)(obj))->enlist(&freecalls);
+	--active_calls;
 }
 
 void stack::call::disconnect(void)
@@ -303,7 +344,6 @@ void stack::destroy(session *s)
 void stack::destroy(call *cr)
 {
 	linked_pointer<segment> sp;
-	LinkedObject *lo;
 
 	// we assume access lock was already held when we call this...
 
@@ -321,15 +361,13 @@ void stack::destroy(call *cr)
 				eXosip_call_terminate(sp->sid.cid, sp->sid.did);
 			sp->sid.delist(&hash[sp->sid.cid % keysize]);
 		}
-		lo = static_cast<LinkedObject*>(*sp);
-		lo->enlist(&freesegs);
+		delete *sp;
 		sp = next;
 	}
 	if(cr->map)
 		cr->map->enlist(&freemaps);
 	cr->delist();
-	cr->LinkedObject::enlist(&freecalls);
-	--active_calls;
+	delete cr;
 	locking.share();
 }
 
@@ -348,42 +386,20 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 	}
 }
 	
-stack::session *stack::createSession(call *cr, int cid, int did) 
-{ 
-	OrderedIndex *index; 
-	segment *sp; 
-	time_t now;
-
-	sp = new(allocate(sizeof(segment), &freesegs, &allocated_segments)) segment;
-	++cr->count;
-	time(&now);
-	index = &(cr->segments);
-	sp->enlist(index);
-	sp->sid.enlist(&hash[cid % keysize]);
-	sp->sid.sequence = (uint32_t)now;
-	sp->sid.sequence &= 0xffffffffl;
-	sp->sid.expires = 0l;
-	sp->sid.cid = cid;
-	sp->sid.did = did;
-	sp->sid.parent = cr;
-	sp->sid.state = session::OPEN;
-	sp->sid.sdp[0] = 0;
-	sp->sid.registry = NULL;
-	return &sp->sid;
-}
-
 stack::session *stack::create(int cid, int did)
 {
 	call *cr;
+	segment *sp;
 
 	locking.modify();
-	cr = new(allocate(sizeof(call), &freecalls, &allocated_calls)) call();
-	++active_calls;
+	cr = new call;
+	sp = new segment(cr, cid, did);
+
 	cr->arm(7000);	// Normally we get close in 6 seconds, this assures...
 	cr->count = 0;
 	cr->invited = cr->ringing = cr->ringbusy = cr->unreachable = cr->forwarding = 0;
 	cr->expires = 0l;
-	cr->source = createSession(cr, cid, did);
+	cr->source = &(sp->sid);
 	cr->target = NULL;
 	cr->state = call::INITIAL;
 	cr->enlist(&stack::sip);
