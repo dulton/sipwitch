@@ -444,7 +444,7 @@ void process::reply(const char *msg)
 	char *sid;
 
 	if(msg)
-		errlog(ERROR, "control failed; %s", msg);
+		errlog(ERRLOG, "control failed; %s", msg);
 
 	if(!replytarget)
 		return;
@@ -564,7 +564,7 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 	case WARN:
 		level = LOG_WARNING;
 		break;
-	case ERROR:
+	case ERRLOG:
 		level = LOG_ERR;
 		break;
 	case FAILURE:

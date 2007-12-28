@@ -269,6 +269,29 @@ static bool activate(int argc, char **args)
 	return rtn;
 }
 
+static mempager mempool(PAGING_SIZE);
+
+unsigned allocate(void)
+{
+	return mempool.getPages();
+}
+
+caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count)
+{
+	caddr_t mp;
+	if(list && *list) {
+		mp = (caddr_t)*list;
+		*list = (*list)->getNext();
+	}
+	else {
+		if(count)
+			++(*count);
+		mp = (caddr_t)mempool.alloc(size);
+	}
+	memset(mp, 0, size);
+	return mp;
+}
+
 extern "C" int main(int argc, char **argv)
 {
 	static char *user = NULL;

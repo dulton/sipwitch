@@ -550,7 +550,7 @@ bool stack::check(void)
 void stack::snapshot(FILE *fp) 
 { 
 	linked_pointer<call> cp;
-	fprintf(fp, "SIP Stack:\n"); 
+	fprintf(fp, "SIP:\n"); 
 	locking.access();
 	fprintf(fp, "  mapped calls: %d\n", mapped_calls);
 	fprintf(fp, "  active calls: %d\n", active_calls);

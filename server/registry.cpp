@@ -168,18 +168,21 @@ void registry::snapshot(FILE *fp)
 	while(count < mapped_entries) {
 		time(&now);
 		rr = reg.pos(count++);
-		if(rr->type != MappedRegistry::EXPIRED && (!rr->expires || rr->expires >= now)) {
+		if(rr->type == MappedRegistry::TEMPORARY) {
+			fprintf(fp, "  temp %s; use=%d\n", rr->userid, rr->inuse);
+		}
+		else if(rr->type != MappedRegistry::EXPIRED && (!rr->expires || rr->expires >= now)) {
 			if(rr->ext)
 				snprintf(buffer, sizeof(buffer), "%d", rr->ext);
 			else
 				string::set(buffer, sizeof(buffer), "none");
 			if(rr->type == MappedRegistry::USER)
-				fprintf(fp, "  user %s; extension=%s, profile=%s,",
-					rr->userid, buffer, rr->profile.id);
+				fprintf(fp, "  user %s; extension=%s, profile=%s, use=%d,",
+					rr->userid, buffer, rr->profile.id, rr->inuse);
 			else if(rr->type == MappedRegistry::GATEWAY)
-				fprintf(fp, "  gateway %s;", rr->userid);
+				fprintf(fp, "  gateway %s; use=%d,", rr->userid, rr->inuse);
 			else if(rr->type == MappedRegistry::SERVICE)
-				fprintf(fp, "  service %s;", rr->userid);
+				fprintf(fp, "  service %s; use=%d", rr->userid, rr->inuse);
 			else if(rr->type == MappedRegistry::REFER)
 				fprintf(fp, "  refer %s; extensions=%s,",
 					rr->userid, buffer);
@@ -197,7 +200,7 @@ void registry::snapshot(FILE *fp)
 				if(tp->expires && tp->expires <= now)
 					fprintf(fp, ", expired");
 				else if(tp->expires)
-					fprintf(fp, ", expires %ld second(s)", tp->expires - now);
+					fprintf(fp, ", expires %ld", tp->expires - now);
 				if(tp.getNext())
 					fputc(',', fp);
 				fputc('\n', fp);

@@ -20,15 +20,11 @@
 #define	mkdir(v, p)	::mkdir(v)
 #endif
 
-#define	PAGING	8192
-
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-static mempager mempool(PAGING);
-
 config::config(char *id) :
-service(id, PAGING)
+service(id, PAGING_SIZE)
 {
 	memset(keys, 0, sizeof(keys));
 	acl = NULL;
@@ -46,22 +42,6 @@ service::keynode *config::find(const char *id)
 	}
 	return NULL;
 } 
-
-caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count)
-{
-	caddr_t mp;
-	if(list && *list) {
-		mp = (caddr_t)*list;
-		*list = (*list)->getNext();
-	}
-	else {
-		if(count)
-			++(*count);
-		mp = (caddr_t)mempool.alloc(size);
-	}
-	memset(mp, 0, size);
-	return mp;
-}
 
 bool config::create(const char *id, keynode *node)
 {
@@ -436,9 +416,10 @@ bool config::check(void)
 
 void config::dump(FILE *fp)
 {
-	fprintf(fp, "Config Database:\n");
-	fprintf(fp, "  Allocated pages: %d\n", mempool.getPages());
-	fprintf(fp, "  Configured pages: %d\n", cfg->getPages());
+	fprintf(fp, "Server:\n");
+	fprintf(fp, "  allocated pages: %d\n", allocate());
+	fprintf(fp, "  configure pages: %d\n", cfg->getPages());
+	fprintf(fp, "  memory paging:   %d\n", PAGING_SIZE);
 	keynode *reg = getPath("registry");
 	if(reg && reg->getFirst()) {
 		fprintf(fp, "  registry keys:\n");

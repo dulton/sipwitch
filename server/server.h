@@ -22,6 +22,7 @@ NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
 #define	CONFIG_KEY_SIZE 177
+#define	PAGING_SIZE	(2048 * sizeof(void *))
 
 class thread;
 
@@ -444,7 +445,8 @@ public:
 	__EXPORT static void shutdown(void);
 };
 
-__EXPORT caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count);
+__EXPORT caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
+__EXPORT unsigned allocate(void);
 
 END_NAMESPACE
 
