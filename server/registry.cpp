@@ -445,9 +445,11 @@ MappedRegistry *registry::create(const char *id)
 
 	if(rr) 
 		listed = true;
-	else
+	else {
 		rr = reg.getLocked();
-
+		if(rr)
+			memset(rr, 0, sizeof(MappedRegistry));
+	}
 	if(!rr) {
 		locking.commit();
 		return NULL;

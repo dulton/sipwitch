@@ -59,7 +59,7 @@ void thread::invite()
 	stack::call *call = session->parent;
 	unsigned toext = 0;
 
-	printf("*&***** IUNVIUTER!\n");
+	printf("******* INVITING!\n");
 
 	osip_message_get_body(sevent->request, 0, &body);
 	if(body && body->body)
@@ -283,12 +283,13 @@ bool thread::authorize(void)
 		uri->scheme, uri->username, uri->host, local_port,
 		to->url->scheme, to->url->username, to->url->host, from_port);
 */
-
 	from_address = new stack::address(from->url->host, from_port);
 	request_address = new stack::address(uri->host, local_port);
 
-	if(!from_address->getAddr() || !request_address->getAddr())
+	if(request_address->getAddr() == NULL) {
+		error = SIP_ADDRESS_INCOMPLETE;
 		goto invalid;
+	}
 
 	if(atoi(local_port) != stack::sip.port)
 		goto remote;
@@ -478,13 +479,20 @@ static_routing:
 	return true;
 		
 anonymous:
-	error = SIP_FORBIDDEN;
-	if(!stack::sip.published)
+	if(!stack::sip.published) {
+		error = SIP_FORBIDDEN;
 		goto invalid;
+	}
+
+	if(from_address->getAddr() == NULL) {
+		error = SIP_ADDRESS_INCOMPLETE;
+		goto invalid;
+	}
+
 	destination = PUBLIC;
 	return true;
 
-remote:
+remote:		
 	error = SIP_FORBIDDEN;
 	destination = EXTERNAL;
 	if(!stack::sip.published)
