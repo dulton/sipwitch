@@ -20,8 +20,11 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 using namespace UCOMMON_NAMESPACE;
+
+static const char *replytarget = NULL;
 
 #ifndef	_MSWINDOWS_
 
@@ -331,8 +334,6 @@ retry:
 	return 0;
 }
 
-static const char *replytarget = NULL;
-
 void process::release(void)
 {
 	errlog(INFO, "shutdown");
@@ -370,42 +371,6 @@ restart:
 	}
 }
 
-bool process::control(const char *id, const char *uid, const char *fmt, ...)
-{
-	char buf[512];
-	int fd, len;
-	bool rtn = true;
-	va_list args;
-	service::keynode *env = service::getEnviron();
-
-	va_start(args, fmt);
-	if(!id)
-		id = service::getValue(env, "IDENT");
-
-	if(!uid)
-		uid = service::getValue(env, "USER");
-
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/control", id);
-	fd = ::open(buf, O_WRONLY | O_NONBLOCK);
-	if(fd < 0) {
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s/control", id, uid);
-		fd = ::open(buf, O_WRONLY | O_NONBLOCK);
-	}
-	service::release(env);
-	if(fd < 0)
-		return false;
-
-	vsnprintf(buf, sizeof(buf) - 1, fmt, args);
-	va_end(args);
-	len = strlen(buf);
-	if(buf[len - 1] != '\n')
-		buf[len++] = '\n';
-	if(::write(fd, buf, len) < len)
-		rtn = false;
-	::close(fd);
-	return rtn;
-}
-
 char *process::receive(void)
 {
 	static char buf[512];
@@ -438,41 +403,11 @@ retry:
 	return cp;
 }
 
-void process::reply(const char *msg)
-{
-	pid_t pid;
-	char *sid;
-
-	if(msg)
-		errlog(ERRLOG, "control failed; %s", msg);
-
-	if(!replytarget)
-		return;
-	
-	if(isdigit(*replytarget)) {
-		pid = atoi(replytarget);
-		if(msg)
-			kill(pid, SIGUSR2);
-		else
-			kill(pid, SIGUSR1);
-	}
-	else {
-		sid = strchr(replytarget, ';');
-		if(sid)
-			*(sid++) = 0;
-		if(msg)
-			service::publish(replytarget, "%s msg %s", sid, msg);
-		else
-			service::publish(replytarget, "%s ok", sid);
-	}
-	replytarget = NULL;
-}
-
 void process::util(const char *id)
 {
-	signal(SIGPIPE, SIG_IGN);
-	setenv("IDENT", id, 1);
-	openlog(id, 0, LOG_USER);
+	signal(sigpipe, sig_ign);
+	setenv("ident", id, 1);
+	openlog(id, 0, log_user);
 }
 
 void process::foreground(const char *id, const char *uid, const char *cfgpath, unsigned priority, size_t ps)
@@ -593,6 +528,11 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 
 #else
 
+static HANDLE hFifo = INVALID_HANDLE_VALUE;
+static HANDLE hLoopback = INVALID_HANDLE_VALUE;
+static HANDLE hEvent = INVALID_HANDLE_VALUE;
+static OVERLAPPED ovFifo;
+
 static fd_t logfile(const char *id, const char *uid)
 {
 	char buf[128];
@@ -602,6 +542,105 @@ static fd_t logfile(const char *id, const char *uid)
 	
 	return CreateFile(buf, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 }
+
+static size_t ctrlfile(const char *id)
+{
+	char buf[64];
+
+	if(*id == '/' || *id == '\\')
+		++id;
+
+	snprintf(buf, sizeof(buf), "\\\\.\\mailslot\\%s_ctrl", id);
+	hFifo = CreateMailslot(buf, 0, MAILSLOT_WAIT_FOREVER, NULL);
+	if(hFifo == INVALID_HANDLE_VALUE)
+		return 0;
+
+	hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	hLoopback = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	ovFifo.Offset = 0;
+	ovFifo.OffsetHigh = 0;
+	ovFifo.hEvent = hEvent;
+	return 464;
+}
+
+static void setup(const char *id, const char *uid, const char *cfgfile)
+{
+	char buf[128];
+	const char *cp;
+	
+	if(!cfgfile || !*cfgfile) 
+		SetEnvironmentVariable("CFG", "");
+	else if(*cfgfile == '/')
+		SetEnvironmentVariable("CFG", cfgfile);
+	else {			
+		getcwd(buf, sizeof(buf));
+		string::add(buf, sizeof(buf), "/");
+		string::add(buf, sizeof(buf), cfgfile);
+		SetEnvironmentVariable("CFG", buf);
+	}
+
+	mkdir(DEFAULT_VARPATH "/run");
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", id);
+	mkdir(buf);
+	chdir(buf);
+	SetEnvironmentVariable("PWD", buf);
+	SetEnvironmentVariable("IDENT", id);
+
+	if(!ctrlfile(id)) {
+		fprintf(stderr, "*** %s: no control file; exiting\n", id);
+		exit(-1);
+	}
+}
+	
+char *process::receive(void)
+{
+	static char buf[464];
+	BOOL result;
+	DWORD msgresult;
+	const char *lp;
+	char *cp;
+
+	if(hFifo == INVALID_HANDLE_VALUE)
+		return NULL;
+
+	reply(NULL);
+	
+retry:
+	result = ReadFile(hFifo, buf, sizeof(buf) - 1, &msgresult, &ovFifo);
+	if(!result && GetLastError() == ERROR_IO_PENDING) {
+		int ret = WaitForSingleObject(ovFifo.hEvent, INFINITE);
+		if(ret != WAIT_OBJECT_0)
+			return NULL;
+		result = GetOverlappedResult(hFifo, &ovFifo, &msgresult, TRUE);
+	}
+	
+	if(!result || msgresult < 1)
+		return NULL;
+	
+	buf[msgresult] = 0;
+	cp = string::strip(buf, " \t\r\n");
+	
+	if(*cp == '\\') {
+		if(strstr(cp, ".."))
+			goto retry;
+
+		if(strncmp(cp, "\\\\.\\mailslot\\", 14))
+			goto retry; 
+	}
+
+	if(*cp == '\\' || isdigit(*cp)) {
+		replytarget = cp;
+		while(*cp && !isspace(*cp))
+			++cp;
+		*(cp++) = 0;
+		while(isspace(*cp))
+			++cp;
+		lp = replytarget + strlen(replytarget) - 6;
+		if(stricmp(lp, "_temp")) 
+			goto retry;
+	}	
+	return cp;
+} 
 
 void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 {
@@ -625,6 +664,38 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 	
 	if(loglevel == FAILURE)
 		cpr_runtime_error(buf);
+}
+
+void process::util(const char *id)
+{
+	SetEnvironmentVariable("IDENT", id);
+}
+
+void process::foreground(const char *id, const char *uid, const char *cfgpath, unsigned priority, size_t ps)
+{
+	setup(id, uid, cfgpath);
+}
+
+void process::background(const char *id, const char *uid, const char *cfgpath, unsigned priority, size_t ps)
+{
+	setup(id, uid, cfgpath);
+}
+
+void process::restart(void)
+{
+	exit(1);
+}
+
+void process::release(void)
+{
+	errlog(INFO, "shutdown");
+
+	if(hFifo != INVALID_HANDLE_VALUE) {
+		CloseHandle(hFifo);
+		CloseHandle(hLoopback);
+		CloseHandle(hEvent);
+		hFifo = hLoopback = hEvent = INVALID_HANDLE_VALUE;
+	}
 }
 
 #endif
@@ -678,4 +749,94 @@ void process::printlog(const char *id, const char *uid, const char *fmt, ...)
 	va_end(args);
 }
 
+void process::reply(const char *msg)
+{
+	pid_t pid;
+	char *sid;
+
+	if(msg)
+		errlog(ERRLOG, "control failed; %s", msg);
+
+	if(!replytarget)
+		return;
+	
+	if(isdigit(*replytarget)) {
+#ifndef	_MSWINDOWS_
+		pid = atoi(replytarget);
+		if(msg)
+			kill(pid, SIGUSR2);
+		else
+			kill(pid, SIGUSR1);
+#endif
+	}
+	else {
+		sid = strchr(replytarget, ';');
+		if(sid)
+			*(sid++) = 0;
+		if(msg)
+			service::publish(replytarget, "%s msg %s", sid, msg);
+		else
+			service::publish(replytarget, "%s ok", sid);
+	}
+	replytarget = NULL;
+}
+
+bool process::control(const char *id, const char *uid, const char *fmt, ...)
+{
+	char buf[512];
+	fd_t fd;
+	int len;
+	bool rtn = true;
+	va_list args;
+	service::keynode *env = service::getEnviron();
+
+	va_start(args, fmt);
+#ifdef	_MSWINDOWS_
+	if(id) {
+		snprintf(buf, sizeof(buf), "\\\\.\\mailslot\\%s_ctrl", id);
+		fd = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		service::release(env);
+		if(fd == INVALID_HANDLE_VALUE)
+			return false;
+	}
+	else {
+		service::release(env);
+		fd = hLoopback;
+	}
+
+#else
+	if(!id)
+		id = service::getValue(env, "IDENT");
+
+	if(!uid)
+		uid = service::getValue(env, "USER");
+
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/control", id);
+	fd = ::open(buf, O_WRONLY | O_NONBLOCK);
+	if(fd < 0) {
+		snprintf(buf, sizeof(buf), "/tmp/%s-%s/control", id, uid);
+		fd = ::open(buf, O_WRONLY | O_NONBLOCK);
+	}
+	service::release(env);
+	if(fd < 0) {
+		return false;
+#endif
+
+	vsnprintf(buf, sizeof(buf) - 1, fmt, args);
+	va_end(args);
+	len = strlen(buf);
+	if(buf[len - 1] != '\n')
+		buf[len++] = '\n';
+#ifdef	_MSWINDOWS_
+	if(!WriteFile(fd, buf, (DWORD)strlen(buf) + 1, NULL, NULL))
+		rtn = false; 
+	if(fd != hLoopback)
+		CloseHandle(fd);
+#else
+	if(::write(fd, buf, len) < len)
+		rtn = false;
+	::close(fd);
+#endif
+	return rtn;
+}
 
