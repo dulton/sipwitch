@@ -405,9 +405,9 @@ retry:
 
 void process::util(const char *id)
 {
-	signal(sigpipe, sig_ign);
-	setenv("ident", id, 1);
-	openlog(id, 0, log_user);
+	signal(SIGPIPE, SIG_IGN);
+	setenv("IDENT", id, 1);
+	openlog(id, 0, LOG_USER);
 }
 
 void process::foreground(const char *id, const char *uid, const char *cfgpath, unsigned priority, size_t ps)
@@ -818,7 +818,7 @@ bool process::control(const char *id, const char *uid, const char *fmt, ...)
 		fd = ::open(buf, O_WRONLY | O_NONBLOCK);
 	}
 	service::release(env);
-	if(fd < 0) {
+	if(fd < 0)
 		return false;
 #endif
 
