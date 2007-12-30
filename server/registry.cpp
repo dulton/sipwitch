@@ -394,14 +394,15 @@ MappedRegistry *registry::invite(const char *id)
 	MappedRegistry *rr = NULL;
 	unsigned path = NamedObject::keyindex(id, keysize);
 
-	locking.modify();
+	locking.access();
 	rr = find(id);
 	if(rr) {
 		++rr->inuse;
-		locking.commit();
+		locking.release();
 		return rr;
 	}
 
+	locking.exclusive();
 	rr = reg.getLocked();
 
 	if(!rr) {

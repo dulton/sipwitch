@@ -160,6 +160,10 @@ void thread::invite()
 		// stack::inviteLocal(session, registry);
 	}
 
+	if(dialed) {
+		// PROCESS DIALED HERE IF EXISTS...
+	}
+
 	if(call->invited)
 		return;
 
