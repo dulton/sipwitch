@@ -100,7 +100,7 @@ void stack::call::disconnect(void)
 	linked_pointer<segment> sp = segments.begin();
 	while(sp) {
 		if(sp->sid.registry) {
-			--sp->sid.registry->inuse;
+			registry::decInuse(sp->sid.registry);
 			sp->sid.registry = NULL;
 		}
 		if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
@@ -326,7 +326,7 @@ void stack::clear(session *s)
 		s->cid = 0;
 		s->did = -1;
 		if(s->registry) {
-			--s->registry->inuse;
+			registry::decInuse(s->registry);
 			s->registry = NULL;
 		}
 		locking.share();
@@ -353,7 +353,7 @@ void stack::destroy(call *cr)
 		--active_segments;
 		segment *next = sp.getNext();
 		if(sp->sid.registry) {
-			--sp->sid.registry->inuse;
+			registry::decInuse(sp->sid.registry);
 			sp->sid.registry = NULL;
 		}
 		if(sp->sid.cid > 0) {

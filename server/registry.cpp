@@ -36,6 +36,7 @@ static LinkedObject *freeroutes = NULL;
 static LinkedObject *freetargets = NULL;
 static LinkedObject **keys = NULL;
 static condlock_t locking;
+static mutex_t inuse_mutex;
 
 registry registry::reg;
 
@@ -99,6 +100,20 @@ service::callback(0), mapped_reuse<MappedRegistry>()
 	range = 600;
 	expires = 300l;
 	routes = 10;
+}
+
+void registry::incInuse(MappedRegistry *rr)
+{
+	inuse_mutex.acquire();
+	++rr->inuse;
+	inuse_mutex.release();
+}
+
+void registry::decInuse(MappedRegistry *rr)
+{
+	inuse_mutex.acquire();
+	--rr->inuse;
+	inuse_mutex.release();
 }
 
 MappedRegistry *registry::find(const char *id)
@@ -397,7 +412,7 @@ MappedRegistry *registry::invite(const char *id)
 	locking.access();
 	rr = find(id);
 	if(rr) {
-		++rr->inuse;
+		incInuse(rr);
 		locking.release();
 		return rr;
 	}

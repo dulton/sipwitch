@@ -327,6 +327,8 @@ public:
 	inline static unsigned getRoutes(void)
 		{return reg.routes;};
 
+	__EXPORT static void incInuse(MappedRegistry *rr);
+	__EXPORT static void decInuse(MappedRegistry *rr);
 	__EXPORT static unsigned getEntries(void);
 	__EXPORT static unsigned getIndex(MappedRegistry *rr);
 	__EXPORT static unsigned setTargets(MappedRegistry *rr, stack::address *addr);
