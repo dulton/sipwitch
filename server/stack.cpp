@@ -401,17 +401,18 @@ stack::session *stack::create(int cid, int did)
 
 	locking.modify();
 	cr = new call;
-	sp = new segment(cr, cid, did);
 
 	cr->arm(7000);	// Normally we get close in 6 seconds, this assures...
 	cr->count = 0;
 	cr->invited = cr->ringing = cr->ringbusy = cr->unreachable = cr->forwarding = 0;
 	cr->expires = 0l;
-	cr->source = &(sp->sid);
 	cr->target = NULL;
 	cr->state = call::INITIAL;
 	cr->enlist(&stack::sip);
 	cr->starting = 0l;
+	sp = new segment(cr, cid, did);	// after count set to 0!
+	cr->source = &(sp->sid);
+
 	locking.share();
 	cr->update();
 	return cr->source;
