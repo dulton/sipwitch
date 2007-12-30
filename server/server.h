@@ -126,7 +126,6 @@ private:
 		unsigned unreachable;	// number of unreachable segments
 		unsigned forwarding;	// number of forwarding segments
 		time_t expires, starting;
-		mutex_t mutex;
 
 		static void *operator new(size_t size);
 		static void operator delete(void *obj);

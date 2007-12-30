@@ -36,7 +36,6 @@ static LinkedObject *freeroutes = NULL;
 static LinkedObject *freetargets = NULL;
 static LinkedObject **keys = NULL;
 static condlock_t locking;
-static mutex_t inuse_mutex;
 
 registry registry::reg;
 
@@ -104,16 +103,16 @@ service::callback(0), mapped_reuse<MappedRegistry>()
 
 void registry::incInuse(MappedRegistry *rr)
 {
-	inuse_mutex.acquire();
+	mutex::protect(rr);
 	++rr->inuse;
-	inuse_mutex.release();
+	mutex::release(rr);
 }
 
 void registry::decInuse(MappedRegistry *rr)
 {
-	inuse_mutex.acquire();
+	mutex::protect(rr);
 	--rr->inuse;
-	inuse_mutex.release();
+	mutex::release(rr);
 }
 
 MappedRegistry *registry::find(const char *id)
@@ -917,8 +916,10 @@ bool registry::refresh(MappedRegistry *rr, stack::address *addr, time_t expires)
 	tp = rr->targets;
 	while(tp) {
 		if(Socket::equal(addr->getAddr(), (struct sockaddr *)(&tp->address))) {
+			mutex::protect(rr);
 			if(expires > rr->expires)
 				rr->expires = expires;
+			mutex::release(rr);
 			tp->expires = expires;
 			return true;
 		}

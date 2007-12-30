@@ -77,7 +77,7 @@ void stack::segment::operator delete(void *obj)
 	((LinkedObject*)(obj))->enlist(&freesegs);
 }
 
-stack::call::call() : TimerQueue::event(Timer::reset), mutex(), segments()
+stack::call::call() : TimerQueue::event(Timer::reset), segments()
 {
 }
 
@@ -163,7 +163,7 @@ void stack::call::update(void)
 
 void stack::call::expired(void)
 {
-	mutex.acquire();
+	mutex::protect(this);
 	switch(state) {
 	case HOLDING:	// hold-recall timer expired...
 
@@ -178,11 +178,11 @@ void stack::call::expired(void)
 					// TODO: initial may have special case if pending!!!
 	case INITIAL:	// if session never used, garbage collect at expire...
 		debug(4, "expiring call %08x:%u\n", source->sequence, source->cid);
-		mutex.release();
+		mutex::release(this);
 		stack::destroy(this);
 		return;
 	}
-	mutex.release();
+	mutex::release(this);
 }
 
 stack::background::background(timeout_t iv) : DetachedThread(), Conditional(), expires(Timer::inf)
@@ -291,7 +291,7 @@ void stack::close(session *s)
 		return;
 
 	cr = s->parent;
-	cr->mutex.lock();
+	mutex::protect(cr);
 	if(s->state != session::CLOSED) {
 		s->state = session::CLOSED;
 		if(s == cr->source || s == cr->source)
@@ -299,7 +299,7 @@ void stack::close(session *s)
 		else
 			cr->closing(s);
 	}
-	cr->mutex.unlock();
+	mutex::release(cr);
 }
 	
 void stack::clear(session *s)
@@ -310,17 +310,17 @@ void stack::clear(session *s)
 		return;
 
 	cr = s->parent;
-	cr->mutex.lock();
+	mutex::protect(cr);
 	if(--cr->count == 0) {
 		debug(4, "clearing call %08x:%u\n", 
 			cr->source->sequence, cr->source->cid);
-		cr->mutex.unlock();
+		mutex::release(cr);
 		destroy(cr);
 		return;
 	}
 
 	if(s->cid > 0) {
-		cr->mutex.unlock();
+		mutex::release(cr);
 		locking.exclusive();
 		debug(4, "clearing call %08x:%u session %08x:%u\n", 
 			cr->source->sequence, cr->source->cid, s->sequence, s->cid); 
@@ -338,7 +338,7 @@ void stack::clear(session *s)
 		locking.share();
 	}
 	else
-		cr->mutex.unlock();
+		mutex::release(cr);
 }
 
 void stack::destroy(session *s)

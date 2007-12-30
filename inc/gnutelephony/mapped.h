@@ -88,6 +88,7 @@ class __EXPORT MappedReuse : protected ReusableAllocator, protected MappedMemory
 private:
 	unsigned objsize;
 	unsigned reading;
+	mutex_t mutex;
 
 public:
 	MappedReuse(const char *name, size_t osize, unsigned count);
