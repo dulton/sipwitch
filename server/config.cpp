@@ -106,6 +106,24 @@ bool config::confirm(const char *user)
 	pp->value.level = 0;
 	pp->value.features = USER_PROFILE_RESTRICTED;
 
+#ifdef	_MSWINDOWS_
+	char dbuf[256];
+	unsigned len;
+	GetEnvironmentVariable("APPDATA", dbuf, 192);
+	len = strlen(dbuf);
+	snprintf(dbuf + len, sizeof(dbuf) - len, "\\sipwitch\\users");
+	dir = opendir(dbuf);
+	if(dir)
+		dirpath = dbuf;
+	else {
+		GetEnvironmentVariable("USERPROFILE", dbuf, 192);
+		len = strlen(dbuf);
+		snprintf(dbuf + len, sizeof(dbuf) - len, "\\gnutelephony\\sipusers");
+		dirpath = dbuf;
+		mkdir(dbuf, 0700);
+		dir = opendir(dbuf);
+	} 
+#else
 	if(user) {
 		dir = opendir("/srv/sipw");
 		if(dir)
@@ -117,6 +135,7 @@ bool config::confirm(const char *user)
 	}
 	if(!dir)
 		dir = opendir(dirpath);
+#endif
 
 	while(dir && NULL != (dno = readdir(dir))) {
 		ext = strrchr(dno->d_name, '.');

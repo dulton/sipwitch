@@ -535,10 +535,13 @@ static OVERLAPPED ovFifo;
 
 static fd_t logfile(const char *id, const char *uid)
 {
-	char buf[128];
+	char buf[256];
 	fd_t fd;
+	unsigned len;
 
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/%s.log", id);
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\%s\\service.log", id);
 	
 	return CreateFile(buf, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 }
@@ -565,8 +568,9 @@ static size_t ctrlfile(const char *id)
 
 static void setup(const char *id, const char *uid, const char *cfgfile)
 {
-	char buf[128];
+	char buf[256];
 	const char *cp;
+	unsigned len;
 	
 	if(!cfgfile || !*cfgfile) 
 		SetEnvironmentVariable("CFG", "");
@@ -579,12 +583,21 @@ static void setup(const char *id, const char *uid, const char *cfgfile)
 		SetEnvironmentVariable("CFG", buf);
 	}
 
-	mkdir(DEFAULT_VARPATH "/run");
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", id);
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\%s", id); 
 	mkdir(buf);
 	chdir(buf);
 	SetEnvironmentVariable("PWD", buf);
 	SetEnvironmentVariable("IDENT", id);
+
+	GetEnvironmentVariable("USERPROFILE", buf, 192);
+	len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony");
+	mkdir(buf);
+	SetEnvironmentVariable("HOME", buf);
+	GetEnvironmentVariable("ComSpec", buf, sizeof(buf));
+	SetEnvironmentVariable("SHELL", buf);
 
 	if(!ctrlfile(id)) {
 		fprintf(stderr, "*** %s: no control file; exiting\n", id);

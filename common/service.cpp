@@ -877,12 +877,20 @@ void service::dumpfile(const char *id, const char *uid)
 	if(!uid)
 		uid = getValue(env, "USER");
 
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/dumpfile", id);
+#ifdef	_MSWINDOWS_
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	unsigned len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\%s\\dumpfile.log", id);	 
+#else
+	snprintfg(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/dumpfile", id);
+#endif
 	fp = fopen(buf, "w");
+#ifndef	_MSWINDOWS_
 	if(!fp) {
 		snprintf(buf, sizeof(buf), "/tmp/%s-%s/dumpfile", id, uid);
 		fp = fopen(buf, "w");
 	}
+#endif
 
 	release(env);
 
@@ -913,12 +921,20 @@ void service::snapshot(const char *id, const char *uid)
 	if(!uid)
 		uid = getValue(env, "USER");
 
+#ifdef	_MSWINDOWS_
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	unsigned len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\%s\\snapshot.log", id);	 
+#else
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/snapshot", id);
+#endif
 	fp = fopen(buf, "w");
+#ifndef _MSWINDOWS_
 	if(!fp) {
 		snprintf(buf, sizeof(buf), "/tmp/%s-%s/snapshot", id, uid);
 		fp = fopen(buf, "w");
 	}
+#endif
 
 	release(env);
 
@@ -1006,7 +1022,7 @@ bool service::commit(const char *user)
 
 FILE *service::open(const char *id, const char *uid, const char *cfgfile)
 {
-	char buf[128];
+	char buf[256];
 	struct stat ino;
 	FILE *fp;
 
@@ -1018,6 +1034,19 @@ FILE *service::open(const char *id, const char *uid, const char *cfgfile)
 		return fopen(cfgfile, "r");
 	}
 
+#ifdef _MSWINDOWS_
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	unsigned len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\%s\\config.xml", id);
+	fp = fopen(buf, "r");
+	if(fp) {
+			process::errlog(DEBUG1, "loading config from %s", buf);
+			return fp;
+	}
+	GetEnvironmentVariable("USERPROFILE", buf, 192);
+	len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony\\%s.xml", id);
+#else
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", id);
 	if(uid && !stat(buf, &ino) && S_ISDIR(ino.st_mode)) {
 		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/config.xml", id);
@@ -1032,6 +1061,7 @@ FILE *service::open(const char *id, const char *uid, const char *cfgfile)
 		snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s.xml", id);
 	else
 		snprintf(buf, sizeof(buf), "%s/.gnutelephony/%s.xml", getenv("HOME"), id); 
+#endif
 	process::errlog(DEBUG1, "loading config from %s", buf);
 	return fopen(buf, "r");
 }
