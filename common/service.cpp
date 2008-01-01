@@ -882,7 +882,7 @@ void service::dumpfile(const char *id, const char *uid)
 	unsigned len = strlen(buf);
 	snprintf(buf + len, sizeof(buf) - len, "\\%s\\dumpfile.log", id);	 
 #else
-	snprintfg(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/dumpfile", id);
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/dumpfile", id);
 #endif
 	fp = fopen(buf, "w");
 #ifndef	_MSWINDOWS_
