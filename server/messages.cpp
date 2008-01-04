@@ -175,7 +175,7 @@ messages::message *messages::create(const char *reply, const char *display)
 bool messages::send(message *msg)
 {
 	linked_pointer<registry::target> tp;
-	mapped_registry *rr = registry::access(msg->user);
+	registry::mapped *rr = registry::access(msg->user);
 	unsigned path = NamedObject::keyindex(msg->user, keysize);
 	time_t now;
 	unsigned count = 0;

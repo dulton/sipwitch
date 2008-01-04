@@ -246,7 +246,7 @@ static void command(const char *id, const char *uid, const char *cmd, unsigned t
 
 static bool activate(int argc, char **args)
 {
-	mapped_registry *reg;
+	registry::mapped *reg;
 	bool rtn = true;
 
 	Socket::address *addr;
@@ -262,7 +262,7 @@ static bool activate(int argc, char **args)
 		delete addr;
 		return false;
 	}
-	if(!reg->setTargets(addr))
+	if(!registry::setTargets(reg, addr))
 		rtn = false;
 	registry::release(reg);
 	delete addr;

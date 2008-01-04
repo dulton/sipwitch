@@ -172,7 +172,7 @@ void thread::invite()
 
 void thread::identify(void)
 {
-	mapped_registry *rr = NULL;
+	registry::mapped *rr = NULL;
 
 	if(!stack::sip.trusted || !getsource() || !access)
 		return;
@@ -207,7 +207,7 @@ const char *thread::getIdent(void)
 	
 bool thread::unauthenticated(void)
 {
-	mapped_registry *rr = NULL;
+	registry::mapped *rr = NULL;
 
 	if(!stack::sip.trusted || !getsource() || !access)
 		goto untrusted;
@@ -778,12 +778,12 @@ void thread::reregister(const char *contact, time_t interval)
 
 	expire += interval + 3;	// overdraft 3 seconds...
 
-	refresh = registry->refresh(via_address, expire);
+	refresh = registry::refresh(registry, via_address, expire);
 	if(!refresh) {
 		if(registry->type == MappedRegistry::USER && (registry->profile.features & USER_PROFILE_MULTITARGET))
-			count = registry->addTarget(via_address, expire, contact);
+			count = registry::addTarget(registry, via_address, expire, contact);
 		else
-			count = registry->setTarget(via_address, expire, contact);
+			count = registry::setTarget(registry, via_address, expire, contact);
 	}
 	if(refresh) 
 		debug(2, "refreshing %s for %ld seconds from %s:%s", getIdent(), interval, via_header->host, via_header->port);
@@ -801,7 +801,7 @@ void thread::reregister(const char *contact, time_t interval)
 	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
 		c = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
 		if(c && c->url && c->url->username) {
-			registry->addContact(c->url->username);
+			registry::addContact(registry, c->url->username);
 			process::errlog(INFO, "registering service %s:%s@%s:%s",
 				c->url->scheme, c->url->username, c->url->host, c->url->port);
 		}
@@ -821,7 +821,7 @@ void thread::deregister()
 	process::errlog(DEBUG1, "unregister %s", getIdent());
 }
 
-void thread::getDevice(mapped_registry *rr)
+void thread::getDevice(registry::mapped *rr)
 {
 	linked_pointer<service::keynode> device = config::list("devices");
 
