@@ -101,14 +101,14 @@ service::callback(0), mapped_reuse<mapped_registry>()
 	routes = 10;
 }
 
-void mapped_registry::operator++()
+void mapped_registry::incUse(void)
 {
 	mutex::protect(this);
 	++inuse;
 	mutex::release(this);
 }
 
-void mapped_registry::operator--()
+void mapped_registry::decUse()
 {
 	mutex::protect(this);
 	--inuse;
@@ -411,7 +411,7 @@ mapped_registry *registry::invite(const char *id)
 	locking.access();
 	rr = find(id);
 	if(rr) {
-		++*rr;
+		rr->incUse();
 		locking.release();
 		return rr;
 	}

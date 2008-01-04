@@ -25,10 +25,12 @@ using namespace UCOMMON_NAMESPACE;
 #define	PAGING_SIZE	(2048 * sizeof(void *))
 
 class __LOCAL mapped_registry : public MappedRegistry {
-public:
+private:
 	void operator++();
 	void operator--();
-
+public:
+	void incUse();
+	void decUse();
 	unsigned getIndex(void);
 	unsigned setTargets(Socket::address *addr);
 	unsigned addTarget(Socket::address *via, time_t expires, const char *contact);
