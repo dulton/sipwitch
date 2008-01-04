@@ -100,7 +100,7 @@ void stack::call::disconnect(void)
 	linked_pointer<segment> sp = segments.begin();
 	while(sp) {
 		if(sp->sid.registry) {
-			registry::decInuse(sp->sid.registry);
+			--*(sp->sid.registry);
 			sp->sid.registry = NULL;
 		}
 		if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
@@ -332,7 +332,7 @@ void stack::clear(session *s)
 		s->cid = 0;
 		s->did = -1;
 		if(s->registry) {
-			registry::decInuse(s->registry);
+			--*(s->registry);
 			s->registry = NULL;
 		}
 		locking.share();
@@ -361,7 +361,7 @@ void stack::destroy(call *cr)
 		--active_segments;
 		segment *next = sp.getNext();
 		if(sp->sid.registry) {
-			registry::decInuse(sp->sid.registry);
+			--*sp->sid.registry;
 			sp->sid.registry = NULL;
 		}
 		if(sp->sid.cid > 0) {
@@ -728,7 +728,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 	return buf;
 }
 	
-stack::address *stack::getAddress(const char *addr, address *ap)
+Socket::address *stack::getAddress(const char *addr, Socket::address *ap)
 {
 	char buffer[MAX_URI_SIZE];
 	int family = sip.family;
@@ -769,7 +769,7 @@ set:
 	if(ap)
 		ap->add(buffer, svc, family);
 	else
-		ap = new address(family, buffer, svc);
+		ap = new Socket::address(family, buffer, svc);
 
 	if(ap && !ap->getList()) {
 		delete ap;

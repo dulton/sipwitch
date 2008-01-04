@@ -246,10 +246,10 @@ static void command(const char *id, const char *uid, const char *cmd, unsigned t
 
 static bool activate(int argc, char **args)
 {
-	MappedRegistry *reg;
+	mapped_registry *reg;
 	bool rtn = true;
 
-	stack::address *addr;
+	Socket::address *addr;
 	if(argc < 2 || argc > 3)
 		return false;
 	if(argc == 3)
@@ -262,7 +262,7 @@ static bool activate(int argc, char **args)
 		delete addr;
 		return false;
 	}
-	if(!registry::setTargets(reg, addr))
+	if(!reg->setTargets(addr))
 		rtn = false;
 	registry::release(reg);
 	delete addr;

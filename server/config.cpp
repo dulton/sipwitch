@@ -318,10 +318,10 @@ service::keynode *config::getExtension(const char *id)
 	return node;
 }
 
-stack::address *config::getContact(const char *uid)
+Socket::address *config::getContact(const char *uid)
 {
 	keynode *node = getProvision(uid);
-	stack::address *addr = NULL;
+	Socket::address *addr = NULL;
 
 	if(!node)
 		return NULL;

@@ -24,7 +24,23 @@ using namespace UCOMMON_NAMESPACE;
 #define	CONFIG_KEY_SIZE 177
 #define	PAGING_SIZE	(2048 * sizeof(void *))
 
+class __LOCAL mapped_registry : public MappedRegistry {
+public:
+	void operator++();
+	void operator--();
+
+	unsigned getIndex(void);
+	unsigned setTargets(Socket::address *addr);
+	unsigned addTarget(Socket::address *via, time_t expires, const char *contact);
+	void addContact(const char *id);
+	void addPublished(const char *id);
+	void addRoute(const char *pat, unsigned pri, const char *prefix, const char *suffix);
+	unsigned setTarget(Socket::address *via, time_t expires, const char *contact);
+	bool refresh(Socket::address *adddr, time_t expires);
+};
+
 class thread;
+class registry;
 
 class __LOCAL stack : private service::callback, private mapped_reuse<MappedCall>, public TimerQueue
 {
@@ -56,7 +72,7 @@ private:
 	class __LOCAL session : public LinkedObject
 	{
 	public:
-		MappedRegistry *registry;
+		mapped_registry *registry;
 		int cid, did;
 		time_t activates;
 		uint32_t sequence;
@@ -158,8 +174,6 @@ private:
 	int family, tlsmode, protocol;
 
 public:
-	typedef	Socket::address address;
-
 	stack();
 
 	__EXPORT static void logCall(const char *reason, session *session, const char *joined = NULL);
@@ -174,7 +188,7 @@ public:
 	__EXPORT static session *access(int cid);
 	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
 	__EXPORT static char *sipIdentity(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_IDENT_SIZE);
-	__EXPORT static address *getAddress(const char *uri, address *addr = NULL);
+	__EXPORT static Socket::address *getAddress(const char *uri, Socket::address *addr = NULL);
 };
 
 class __LOCAL config : public service
@@ -214,16 +228,18 @@ public:
 	__EXPORT static void release(keynode *node);
 	__EXPORT static void reload(const char *uid);
 	__EXPORT static void utils(const char *uid);
-	__EXPORT static stack::address *getContact(const char *id);
+	__EXPORT static Socket::address *getContact(const char *id);
 };
 
-class __LOCAL registry : private service::callback, private mapped_reuse<MappedRegistry> 
+class __LOCAL registry : private service::callback, private mapped_reuse<mapped_registry> 
 { 
-public: 
-	class pointer
+public:
+	friend class mapped_registry;
+ 
+	class __LOCAL pointer
 	{
 	private:
-		MappedRegistry *entry;
+		mapped_registry *entry;
 
 	public:
 		pointer();
@@ -231,7 +247,7 @@ public:
 		pointer(pointer const &copy);
 		~pointer();
 		
-		void operator=(MappedRegistry *ptr);
+		void operator=(mapped_registry *ptr);
 		
 		inline operator bool()
 			{return entry != NULL;};
@@ -239,10 +255,10 @@ public:
 		inline bool operator!()
 			{return entry == NULL;};
 
-		inline MappedRegistry *operator->()
+		inline mapped_registry *operator->()
 			{return entry;};
 
-		inline MappedRegistry *operator*()
+		inline mapped_registry *operator*()
 			{return entry;};
 	};
 
@@ -254,7 +270,7 @@ public:
 		{
 		public:
 			struct sockaddr *address;
-			MappedRegistry *registry;
+			mapped_registry *registry;
 			target *getTarget(void);
 		} index;
 		struct sockaddr_internet address;
@@ -269,7 +285,7 @@ public:
 	class pattern : public LinkedObject
 	{
 	public:
-		MappedRegistry *registry;
+		mapped_registry *registry;
 		unsigned priority;
 		char text[MAX_USERID_SIZE];
 		char prefix[MAX_USERID_SIZE];
@@ -292,8 +308,8 @@ private:
 	void stop(service *cfg);
 	void snapshot(FILE *fp);
 
-	static void expire(MappedRegistry *rr);
-	static MappedRegistry *find(const char *id);
+	static void expire(mapped_registry *rr);
+	static mapped_registry *find(const char *id);
 
 	static registry reg;
 
@@ -326,31 +342,20 @@ public:
 	inline static unsigned getRoutes(void)
 		{return reg.routes;};
 
-	__EXPORT static void incInuse(MappedRegistry *rr);
-	__EXPORT static void decInuse(MappedRegistry *rr);
 	__EXPORT static unsigned getEntries(void);
-	__EXPORT static unsigned getIndex(MappedRegistry *rr);
-	__EXPORT static unsigned setTargets(MappedRegistry *rr, stack::address *addr);
-	__EXPORT static unsigned addTarget(MappedRegistry *rr, stack::address *via, time_t expires, const char *contact);
-	__EXPORT static void addContact(MappedRegistry *rr, const char *id);
-	__EXPORT static void addPublished(MappedRegistry *rr, const char *id);
-	__EXPORT static void addRoute(MappedRegistry *rr, const char *pat, unsigned pri, const char *prefix, const char *suffix);
-	__EXPORT static unsigned setTarget(MappedRegistry *rr, stack::address *via, time_t expires, const char *contact);
 	__EXPORT static bool isExtension(const char *id);
 	__EXPORT static bool isUserid(const char *id);
-	__EXPORT static MappedRegistry *address(struct sockaddr *addr);
-	__EXPORT static MappedRegistry *contact(const char *uri);
-	__EXPORT static MappedRegistry *contact(struct sockaddr *addr, const char *uid);
-	__EXPORT static MappedRegistry *getExtension(const char *id);
-	__EXPORT static MappedRegistry *create(const char *id);
-	__EXPORT static MappedRegistry *access(const char *id);
-	__EXPORT static MappedRegistry *invite(const char *id);
+	__EXPORT static mapped_registry *address(struct sockaddr *addr);
+	__EXPORT static mapped_registry *contact(const char *uri);
+	__EXPORT static mapped_registry *contact(struct sockaddr *addr, const char *uid);
+	__EXPORT static mapped_registry *getExtension(const char *id);
+	__EXPORT static mapped_registry *create(const char *id);
+	__EXPORT static mapped_registry *access(const char *id);
+	__EXPORT static mapped_registry *invite(const char *id);
 	__EXPORT static pattern *getRouting(unsigned trs, const char *id);
-	__EXPORT static void release(MappedRegistry *m);
-	__EXPORT static bool refresh(MappedRegistry *m, stack::address *adddr, time_t expires);
+	__EXPORT static void release(mapped_registry *m);
 	__EXPORT static bool remove(const char *id);
 	__EXPORT static void cleanup(time_t period); 
-	__EXPORT static void deactivate(MappedRegistry *m);
 };
 
 class __LOCAL messages : public service::callback
@@ -401,7 +406,7 @@ private:
 	cidr *access;
 	service::keynode *authorized;
 	service::keynode *dialed;
-	MappedRegistry *registry;
+	mapped_registry *registry;
 	eXosip_event_t *sevent;
 	char buffer[MAX_URI_SIZE];	
 	char identbuf[MAX_USERID_SIZE + 12];
@@ -409,7 +414,7 @@ private:
 	char dialing[MAX_USERID_SIZE];
 	char display[MAX_DISPLAY_SIZE];
 	struct sockaddr_internet iface;
-	stack::address *via_address, *from_address, *request_address;
+	Socket::address *via_address, *from_address, *request_address;
 	stack::session *session;
 	osip_header_t *header;
 	long header_expires;
@@ -439,7 +444,7 @@ private:
 	void challenge(void);
 	void options(void);
 	void run(void);
-	void getDevice(MappedRegistry *rr);
+	void getDevice(mapped_registry *rr);
 	const char *getIdent(void);
 
 public:
