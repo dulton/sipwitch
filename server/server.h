@@ -34,6 +34,13 @@ public:
 	public:
 		void incUse(void);
 		void decUse(void);
+		bool refresh(Socket::address *addr, time_t expires);
+		unsigned setTargets(Socket::address *addr);
+		unsigned addTarget(Socket::address *via, time_t expires, const char *contact);
+		unsigned setTarget(Socket::address *via, time_t expires, const char *contact);
+		void addContact(const char *id);
+		void addPublished(const char *id);
+		void addRoute(const char *pat, unsigned pri, const char *prefix, const char *suffix);
 	};
 
 	class __LOCAL pointer
@@ -144,12 +151,6 @@ public:
 
 	__EXPORT static unsigned getEntries(void);
 	__EXPORT static unsigned getIndex(mapped *rr);
-	__EXPORT static unsigned setTargets(mapped *rr, Socket::address *addr);
-	__EXPORT static unsigned addTarget(mapped *rr, Socket::address *via, time_t expires, const char *contact);
-	__EXPORT static void addContact(mapped *rr, const char *id);
-	__EXPORT static void addPublished(mapped *rr, const char *id);
-	__EXPORT static void addRoute(mapped *rr, const char *pat, unsigned pri, const char *prefix, const char *suffix);
-	__EXPORT static unsigned setTarget(mapped *rr, Socket::address *via, time_t expires, const char *contact);
 	__EXPORT static bool isExtension(const char *id);
 	__EXPORT static bool isUserid(const char *id);
 	__EXPORT static mapped *address(struct sockaddr *addr);
@@ -161,7 +162,6 @@ public:
 	__EXPORT static mapped *invite(const char *id);
 	__EXPORT static pattern *getRouting(unsigned trs, const char *id);
 	__EXPORT static void release(mapped *m);
-	__EXPORT static bool refresh(mapped *rr, Socket::address *adddr, time_t expires);
 	__EXPORT static bool remove(const char *id);
 	__EXPORT static void cleanup(time_t period); 
 };
