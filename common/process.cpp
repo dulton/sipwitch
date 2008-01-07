@@ -196,7 +196,7 @@ static struct passwd *getuserenv(const char *id, const char *uid, const char *cf
 		}
 	}
 	else {
-		snprintf(buf, sizeof(buf), "%s/.%s.d", pwd->pw_dir, id);
+		snprintf(buf, sizeof(buf), "%s/.%s", pwd->pw_dir, id);
 		mkdir(buf, 0700);
 		chdir(buf);
 		setenv("PWD", buf, 1);
