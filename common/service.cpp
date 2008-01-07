@@ -14,8 +14,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <config.h>
-#include <gnutelephony/service.h>
-#include <gnutelephony/process.h>
+#include <sipwitch/service.h>
+#include <sipwitch/process.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -24,6 +24,7 @@
 
 #define	RUNLEVELS	(sizeof(callback::runlevels) / sizeof(LinkedObject *))
 
+using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
 LinkedObject *service::subscriber::list = NULL;
@@ -362,18 +363,18 @@ send:
 #ifdef	AF_INET6
 		case AF_INET6:
 			if(trap6 == INVALID_SOCKET) {
-				trap6 = socket(AF_INET6, SOCK_DGRAM, 0);
+				trap6 = ::socket(AF_INET6, SOCK_DGRAM, 0);
 				setsockopt(trap6, SOL_SOCKET, SO_BROADCAST, (char *)&on, sizeof(on));
 			}
-			sendto(trap6, (caddr_t)buf, len, 0, (struct sockaddr *)&servers->server, alen);
+			::sendto(trap6, (caddr_t)buf, len, 0, (struct sockaddr *)&servers->server, alen);
 			break;
 #endif
 		case AF_INET:
 			if(trap4 == INVALID_SOCKET) {
-				trap4 = socket(AF_INET, SOCK_DGRAM, 0);
+				trap4 = ::socket(AF_INET, SOCK_DGRAM, 0);
 				setsockopt(trap4, SOL_SOCKET, SO_BROADCAST, (char *)&on, sizeof(on));
 			}
-			sendto(trap4, (caddr_t)buf, len, 0, (struct sockaddr *)&servers->server, alen);
+			::sendto(trap4, (caddr_t)buf, len, 0, (struct sockaddr *)&servers->server, alen);
 			break;
 		}
 		servers.next();

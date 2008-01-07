@@ -14,7 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <config.h>
-#include <gnutelephony/digest.h>
+#include <sipwitch/digest.h>
 
 #ifdef	HAVE_GCRYPT_CRYPTO
 #ifdef	HAVE_GCRYPT_GCRYPT_H
@@ -286,6 +286,7 @@ void MD5Transform(uint32_t buf[4], uint32_t const in[16])
 
 #endif
 
+using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
 #ifdef	MD5_MISSING

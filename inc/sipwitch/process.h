@@ -38,7 +38,12 @@
 #include <ucommon/string.h>
 #endif
 
-NAMESPACE_UCOMMON
+#ifndef	_SIPWITCH_SIPWITCH_H_
+#include <sipwitch/sipwitch.h>
+#endif
+
+NAMESPACE_SIPWITCH
+using namespace UCOMMON_NAMESPACE;
 
 typedef enum
 {

@@ -25,12 +25,14 @@
 #define	_SIPWITCH_SIPWITCH_H_
 
 #include <ucommon/ucommon.h>
+
+#define SIPWITCH_NAMESPACE   sipwitch
+#define NAMESPACE_SIPWITCH   namespace sipwitch {
+
 #include <sipwitch/mapped.h>
 #include <sipwitch/service.h>
 #include <sipwitch/process.h>
 #include <sipwitch/digest.h>
-
-#endif
 
 /**
  * @short SIP Witch common library and API services.
@@ -46,11 +48,8 @@
  * This covers the published interfaces to the sipwitch server itself.  These
  * are mostly classes that are mapped into shared memory blocks, and for
  * defining highly sipwitch specific plugin interfaces.
- * @file gnutelephony/sipwitch.h
+ * @file sipwitch/sipwitch.h
  */
-
-#ifndef	_SIPWITCH_SIPWITCH_H_
-#define	_SIPWITCH_SIPWITCH_H_
 
 /**
  * Common namespace for sipwitch server.
@@ -81,7 +80,7 @@
 #define	MAX_IDENT_SIZE		(MAX_USERID_SIZE + 50)
 #define	MAX_URI_SIZE		256
 
-NAMESPACE_UCOMMON
+NAMESPACE_SIPWITCH
 
 typedef struct {
 	char id[MAX_USERID_SIZE];

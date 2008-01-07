@@ -14,14 +14,15 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <config.h>
-#include <gnutelephony/process.h>
-#include <gnutelephony/service.h>
+#include <sipwitch/process.h>
+#include <sipwitch/service.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
 static const char *replytarget = NULL;

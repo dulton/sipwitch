@@ -14,7 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <config.h>
-#include <gnutelephony/mapped.h>
+#include <sipwitch/mapped.h>
 
 #include <fcntl.h>
 #include <ctype.h>
@@ -77,6 +77,7 @@ static key_t accessipc(const char *name, char mode)
 
 #endif
 
+using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
 MappedMemory::MappedMemory(const char *fn, size_t len)
