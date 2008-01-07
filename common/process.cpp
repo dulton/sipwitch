@@ -534,7 +534,7 @@ static HANDLE hLoopback = INVALID_HANDLE_VALUE;
 static HANDLE hEvent = INVALID_HANDLE_VALUE;
 static OVERLAPPED ovFifo;
 
-static fd_t logfile(const char *id, const char *uid)
+static fd_t logfile(const char *uid)
 {
 	char buf[256];
 	fd_t fd;
@@ -542,19 +542,16 @@ static fd_t logfile(const char *id, const char *uid)
 
 	GetEnvironmentVariable("APPDATA", buf, 192);
 	len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\%s\\service.log", id);
+	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\service.log");
 	
 	return CreateFile(buf, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 
-static size_t ctrlfile(const char *id)
+static size_t ctrlfile()
 {
 	char buf[64];
 
-	if(*id == '/' || *id == '\\')
-		++id;
-
-	snprintf(buf, sizeof(buf), "\\\\.\\mailslot\\%s_ctrl", id);
+	snprintf(buf, sizeof(buf), "\\\\.\\mailslot\\sipwitch_ctrl");
 	hFifo = CreateMailslot(buf, 0, MAILSLOT_WAIT_FOREVER, NULL);
 	if(hFifo == INVALID_HANDLE_VALUE)
 		return 0;
@@ -567,7 +564,7 @@ static size_t ctrlfile(const char *id)
 	return 464;
 }
 
-static void setup(const char *id, const char *uid, const char *cfgfile)
+static void setup(const char *uid, const char *cfgfile)
 {
 	char buf[256];
 	const char *cp;
@@ -586,11 +583,11 @@ static void setup(const char *id, const char *uid, const char *cfgfile)
 
 	GetEnvironmentVariable("APPDATA", buf, 192);
 	len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\%s", id); 
+	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch"); 
 	mkdir(buf);
 	chdir(buf);
 	SetEnvironmentVariable("PWD", buf);
-	SetEnvironmentVariable("IDENT", id);
+	SetEnvironmentVariable("IDENT", "sipwitch");
 
 	GetEnvironmentVariable("USERPROFILE", buf, 192);
 	len = strlen(buf);
@@ -600,8 +597,8 @@ static void setup(const char *id, const char *uid, const char *cfgfile)
 	GetEnvironmentVariable("ComSpec", buf, sizeof(buf));
 	SetEnvironmentVariable("SHELL", buf);
 
-	if(!ctrlfile(id)) {
-		fprintf(stderr, "*** %s: no control file; exiting\n", id);
+	if(!ctrlfile()) {
+		fprintf(stderr, "*** sipwitch: no control file; exiting\n");
 		exit(-1);
 	}
 }
@@ -680,19 +677,19 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 		cpr_runtime_error(buf);
 }
 
-void process::util(const char *id)
+void process::util(void)
 {
-	SetEnvironmentVariable("IDENT", id);
+	SetEnvironmentVariable("IDENT", "sipwitch");
 }
 
-void process::foreground(const char *id, const char *uid, const char *cfgpath, unsigned priority, size_t ps)
+void process::foreground(const char *uid, const char *cfgpath, unsigned priority, size_t ps)
 {
-	setup(id, uid, cfgpath);
+	setup(uid, cfgpath);
 }
 
-void process::background(const char *id, const char *uid, const char *cfgpath, unsigned priority, size_t ps)
+void process::background(const char *uid, const char *cfgpath, unsigned priority, size_t ps)
 {
-	setup(id, uid, cfgpath);
+	setup(uid, cfgpath);
 }
 
 void process::restart(void)
@@ -803,17 +800,11 @@ bool process::control(const char *uid, const char *fmt, ...)
 
 	va_start(args, fmt);
 #ifdef	_MSWINDOWS_
-	if(id) {
-		snprintf(buf, sizeof(buf), "\\\\.\\mailslot\\%s_ctrl", id);
-		fd = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-		service::release(env);
-		if(fd == INVALID_HANDLE_VALUE)
-			return false;
-	}
-	else {
-		service::release(env);
-		fd = hLoopback;
-	}
+	snprintf(buf, sizeof(buf), "\\\\.\\mailslot\\sipwitch_ctrl");
+	fd = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	service::release(env);
+	if(fd == INVALID_HANDLE_VALUE)
+		return false;
 
 #else
 	if(!uid)
