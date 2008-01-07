@@ -358,6 +358,6 @@ AC_SUBST(GNUTELEPHONY_LIBS)
 AC_SUBST(SIPWITCH_EXOSIP2)
 AC_SUBST(BUILD_SUBDIRS)
 AC_SUBST(CXXFLAGS)
-AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/gnutelephony/Makefile 
-server/Makefile test/Makefile libgnutelephony.pc)
+AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile 
+server/Makefile test/Makefile libsipwitch.pc)
 

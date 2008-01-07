@@ -23,8 +23,8 @@
  * @file gnutelephony/process.h
  */
 
-#ifndef _GNUTELEPHONY_PROCESS_H_
-#define	_GNUTELEPHONY_PROCESS_H_
+#ifndef _SIPWITCH_PROCESS_H_
+#define	_SIPWITCH_PROCESS_H_
 
 #ifndef _UCOMMON_LINKED_H_
 #include <ucommon/linked.h>

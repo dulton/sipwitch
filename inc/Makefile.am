@@ -10,6 +10,6 @@
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
 
-SUBDIRS = gnutelephony
-DIST_SUBDIRS = gnutelephony
+SUBDIRS = sipwitch
+DIST_SUBDIRS = sipwitch
 

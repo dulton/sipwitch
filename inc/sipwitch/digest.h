@@ -21,8 +21,8 @@
  * @file gnutelephony/digest.h
  */
 
-#ifndef _GNUTELEPHONY_DIGEST_H_
-#define	_GNUTELEPHONY_DIGEST_H_
+#ifndef _SIPWITCH_DIGEST_H_
+#define	_SIPWITCH_DIGEST_H_
 
 #ifndef	_UCOMMON_STRING_H_
 #include <ucommon/string.h>

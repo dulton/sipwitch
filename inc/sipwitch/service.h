@@ -26,8 +26,8 @@
  * @file gnutelephony/service.h
  */
 
-#ifndef _GNUTELEPHONY_SERVICE_H_
-#define	_GNUTELEPHONY_SERVICE_H_
+#ifndef _SIPWITCH_SERVICE_H_
+#define	_SIPWITCH_SERVICE_H_
 
 #ifndef _UCOMMON_LINKED_H_
 #include <ucommon/linked.h>

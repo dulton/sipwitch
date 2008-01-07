@@ -24,8 +24,8 @@
  * @file gnutelephony/mapped.h
  */
 
-#ifndef _GNUTELEPHONY_MAPPED_H_
-#define	_GNUTELEPHONY_MAPPED_H_
+#ifndef _SIPWITCH_MAPPED_H_
+#define	_SIPWITCH_MAPPED_H_
 
 #ifndef _UCOMMON_LINKED_H_
 #include <ucommon/linked.h>

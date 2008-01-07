@@ -1,5 +1,5 @@
-#ifndef _GNUTELEPHONY_PLUGIN_H_
-#define	_GNUTELEPHONY_PLUGIN_H_
+#ifndef _SIPWITCH_PLUGIN_H_
+#define	_SIPWITCH_PLUGIN_H_
 
 #ifndef _UCOMMON_LINKED_H_
 #include <ucommon/linked.h>
