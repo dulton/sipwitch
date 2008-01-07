@@ -23,7 +23,7 @@
  * the callback member class of service.  Other features include support of
  * snapshot dumps and checking functions to determine state of running
  * servers.
- * @file gnutelephony/service.h
+ * @file sipwitch/service.h
  */
 
 #ifndef _SIPWITCH_SERVICE_H_

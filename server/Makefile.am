@@ -9,11 +9,11 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
-AM_CXXFLAGS = -I$(top_srcdir)/inc @GNUTELEPHONY_FLAGS@
+AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
 MODEL=@UCOMMON_MODEL@
 CXXLINK = $(LIBTOOL) --tag=$(MODEL) --mode=link $(CXX) $(AM_CXXFLAGS) $(CFLAGS) \
     $(AM_LDFLAGS) $(LDFLAGS) -o $@
-LDADD = ../common/libgnutelephony.la @SIPWITCH_EXOSIP2@ @GNUTELEPHONY_LIBS@
+LDADD = ../common/libsipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@
 
 sbin_PROGRAMS = sipw
 pkglibdir=$(libdir)/sipw

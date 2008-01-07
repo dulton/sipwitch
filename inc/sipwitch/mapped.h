@@ -21,7 +21,7 @@
  * a UCommon vector or reusable type factory, in the latter case using the
  * shared memory block itself as a local heap.  Memory access is managed
  * through a form of shared locking formed through conditionals.
- * @file gnutelephony/mapped.h
+ * @file sipwitch/mapped.h
  */
 
 #ifndef _SIPWITCH_MAPPED_H_

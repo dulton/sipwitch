@@ -10,7 +10,6 @@
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
 
-pkgincludedir = $(includedir)/gnutelephony
-pkginclude_HEADERS = mapped.h service.h process.h digest.h sipwitch.h \
-	gnutelephony.h
+pkgincludedir = $(includedir)/sipwitch
+pkginclude_HEADERS = mapped.h service.h process.h digest.h sipwitch.h
 

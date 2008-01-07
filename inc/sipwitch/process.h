@@ -20,7 +20,7 @@
  * management of the deamon environment, executing child processes, and basic
  * IPC services.  IPC services are offered through control ports which are
  * implimented as fifo's on Posix platforms, and as mailslots on w32.
- * @file gnutelephony/process.h
+ * @file sipwitch/process.h
  */
 
 #ifndef _SIPWITCH_PROCESS_H_

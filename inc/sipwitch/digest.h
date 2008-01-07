@@ -18,7 +18,7 @@
  * Common cryptographic hash support depends on the underlying crypto
  * library that we are linked with.  This is used to compute hashes for
  * digest authentication.
- * @file gnutelephony/digest.h
+ * @file sipwitch/digest.h
  */
 
 #ifndef _SIPWITCH_DIGEST_H_
