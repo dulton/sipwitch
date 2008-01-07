@@ -43,8 +43,8 @@
 #include <signal.h>
 #endif
 
-#ifndef	_SIPWITCH_SIPWITCH_H_
-#include <sipwitch/sipwitch.h>
+#ifndef	_SIPWITCH_NAMESPACE_H_
+#include <sipwitch/namespace.h>
 #endif
 
 NAMESPACE_SIPWITCH

@@ -196,7 +196,7 @@ static struct passwd *getuserenv(const char *id, const char *uid, const char *cf
 		}
 	}
 	else {
-		snprintf(buf, sizeof(buf), "%s/.%s", pwd->pw_dir, id);
+		snprintf(buf, sizeof(buf), "%s/.%s.d", pwd->pw_dir, id);
 		mkdir(buf, 0700);
 		chdir(buf);
 		setenv("PWD", buf, 1);
@@ -227,7 +227,7 @@ static size_t ctrlfile(const char *id, const char *uid)
 	struct stat ino;
 
 	snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/%s", id);
-	if(!stat(fifopath, &ino) && S_ISDIR(ino.st_mode)) 
+	if(!stat(fifopath, &ino) && S_ISDIR(ino.st_mode) && !access(fifopath, W_OK)) 
 		snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/%s/control", id);
 	else
 		snprintf(fifopath, sizeof(fifopath), "/tmp/%s-%s/control", id, uid);
@@ -268,9 +268,9 @@ static pid_t pidfile(const char *id, const char *uid)
 	pid_t pid;
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", id);
-	if(!stat(buf, &ino) && S_ISDIR(ino.st_mode)) 
+	if(!stat(buf, &ino) && S_ISDIR(ino.st_mode) && !access(buf, W_OK))
 		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/pidfile", id);
-	else
+	else 
 		snprintf(buf, sizeof(buf), "/tmp/%s-%s/pidfile", id, uid);
 
 	fd = open(buf, O_RDONLY);
@@ -311,9 +311,9 @@ static pid_t pidfile(const char *id, const char *uid, pid_t pid)
 	fd_t fd;
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", id);
-	if(!stat(buf, &ino) && S_ISDIR(ino.st_mode))
+	if(!stat(buf, &ino) && S_ISDIR(ino.st_mode) && !access(buf, W_OK))
 		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/pidfile", id);
-	else
+	else 
 		snprintf(buf, sizeof(buf), "/tmp/%s-%s/pidfile", id, uid);
 
 retry:

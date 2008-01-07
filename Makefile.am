@@ -16,6 +16,6 @@ SUBDIRS = @BUILD_SUBDIRS@ inc test
 DIST_SUBDIRS = common server inc test
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libgnutelephony.pc
+pkgconfig_DATA = libsipwitch.pc
 
 

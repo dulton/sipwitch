@@ -310,9 +310,7 @@ if test "$localstatedir" == '${prefix}/var' ; then
 	localstatedir="/var" ; fi
 
 if test "$sysconfdir" == '${prefix}/etc' ; then
-	sysconfdir="/etc/gnutelephony" 
-elif test "$sysconfdir" == '/etc' ; then
-	sysconfdir="/etc/gnutelephony"
+	sysconfdir="/etc" 
 fi
 
 AC_SUBST_DIR(default_cfgpath, sysconfdir)

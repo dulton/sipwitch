@@ -26,9 +26,7 @@
 
 #include <ucommon/ucommon.h>
 
-#define SIPWITCH_NAMESPACE   sipwitch
-#define NAMESPACE_SIPWITCH   namespace sipwitch {
-
+#include <sipwitch/namespace.h>
 #include <sipwitch/mapped.h>
 #include <sipwitch/service.h>
 #include <sipwitch/process.h>
@@ -49,17 +47,6 @@
  * are mostly classes that are mapped into shared memory blocks, and for
  * defining highly sipwitch specific plugin interfaces.
  * @file sipwitch/sipwitch.h
- */
-
-/**
- * Common namespace for sipwitch server.
- * We use a sipwitch specific namespace to easily seperate sipwitch
- * interfaces from other parts of GNU Telephony.  This namespace
- * is controlled by the namespace macros (SIPWITCH_NAMESPACE and 
- * NAMESPACE_SIPWITCH) and are used in place of direct namespace
- * declarations to make parsing of tab levels simpler and to allow easy
- * changes to the namespace name later if needed.
- * @namespace sipwitch
  */
 
 #define	USER_PROFILE_DIALABLE		0x0001	// user may be dialed

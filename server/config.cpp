@@ -129,14 +129,16 @@ bool config::confirm(const char *user)
 		if(dir)
 			dirpath = "/srv/sipw";
 		else {
-			mkdir("sipusers", 0770);
-			dirpath = "sipusers";
+			mkdir(DEFAULT_CFGPATH "/sipwitch.d", 0770);
+			dirpath = DEFAULT_CFGPATH "/sipwitch.d";
 		}
 	}
 	if(!dir)
 		dir = opendir(dirpath);
 #endif
-
+	if(!stricmp(dirpath, "."))
+		dirpath = getenv("PWD");
+	process::errlog(DEBUG1, "scanning config from %s", dirpath);
 	while(dir && NULL != (dno = readdir(dir))) {
 		ext = strrchr(dno->d_name, '.');
 		if(!ext || stricmp(ext, ".xml"))

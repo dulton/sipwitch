@@ -28,8 +28,8 @@
 #include <ucommon/string.h>
 #endif
 
-#ifndef	__SIPWITCH_SIPWITCH_H_
-#include <sipwitch/sipwitch.h>
+#ifndef	__SIPWITCH_NAMESPACE_H_
+#include <sipwitch/namespace.h>
 #endif
 
 NAMESPACE_SIPWITCH

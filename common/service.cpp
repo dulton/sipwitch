@@ -1059,9 +1059,9 @@ FILE *service::open(const char *id, const char *uid, const char *cfgfile)
 	}
 
 	if(uid)
-		snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s.xml", id);
+		snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s.conf", id);
 	else
-		snprintf(buf, sizeof(buf), "%s/.gnutelephony/%s.xml", getenv("HOME"), id); 
+		snprintf(buf, sizeof(buf), "%s/.%src", getenv("HOME"), id); 
 #endif
 	process::errlog(DEBUG1, "loading config from %s", buf);
 	return fopen(buf, "r");
