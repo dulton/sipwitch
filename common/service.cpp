@@ -865,15 +865,12 @@ void service::dump(FILE *fp)
 	dump(fp, &root, 0);
 }
 
-void service::dumpfile(const char *id, const char *uid)
+void service::dumpfile(const char *uid)
 {
 	FILE *fp;
 	char buf[256];
 	linked_pointer<callback> cb;
 	keynode *env = getEnviron();
-
-	if(!id)
-		id = getValue(env, "IDENT");
 
 	if(!uid)
 		uid = getValue(env, "USER");
@@ -881,14 +878,14 @@ void service::dumpfile(const char *id, const char *uid)
 #ifdef	_MSWINDOWS_
 	GetEnvironmentVariable("APPDATA", buf, 192);
 	unsigned len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\%s\\dumpfile.log", id);	 
+	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\dumpfile.log");	 
 #else
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/dumpfile", id);
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch/dumpfile");
 #endif
 	fp = fopen(buf, "w");
 #ifndef	_MSWINDOWS_
 	if(!fp) {
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s/dumpfile", id, uid);
+		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/dumpfile", uid);
 		fp = fopen(buf, "w");
 	}
 #endif
@@ -908,7 +905,7 @@ void service::dumpfile(const char *id, const char *uid)
 	fclose(fp);
 }
 
-void service::snapshot(const char *id, const char *uid)
+void service::snapshot(const char *uid)
 {
 	FILE *fp;
 	char buf[256];
@@ -916,23 +913,20 @@ void service::snapshot(const char *id, const char *uid)
 	unsigned rl = 0;
 	keynode *env = getEnviron();
 
-	if(!id)
-		id = getValue(env, "IDENT");
-
 	if(!uid)
 		uid = getValue(env, "USER");
 
 #ifdef	_MSWINDOWS_
 	GetEnvironmentVariable("APPDATA", buf, 192);
 	unsigned len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\%s\\snapshot.log", id);	 
+	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\snapshot.log");	 
 #else
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/snapshot", id);
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch/snapshot");
 #endif
 	fp = fopen(buf, "w");
 #ifndef _MSWINDOWS_
 	if(!fp) {
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s/snapshot", id, uid);
+		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/snapshot", uid);
 		fp = fopen(buf, "w");
 	}
 #endif
@@ -1021,7 +1015,7 @@ bool service::commit(const char *user)
 	return true;
 }
 
-FILE *service::open(const char *id, const char *uid, const char *cfgfile)
+FILE *service::open(const char *uid, const char *cfgfile)
 {
 	char buf[256];
 	struct stat ino;
@@ -1038,7 +1032,7 @@ FILE *service::open(const char *id, const char *uid, const char *cfgfile)
 #ifdef _MSWINDOWS_
 	GetEnvironmentVariable("APPDATA", buf, 192);
 	unsigned len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\%s\\config.xml", id);
+	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\config.xml");
 	fp = fopen(buf, "r");
 	if(fp) {
 			process::errlog(DEBUG1, "loading config from %s", buf);
@@ -1046,11 +1040,11 @@ FILE *service::open(const char *id, const char *uid, const char *cfgfile)
 	}
 	GetEnvironmentVariable("USERPROFILE", buf, 192);
 	len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony\\%s.xml", id);
+	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony\\sipwitch.xml");
 #else
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", id);
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch");
 	if(uid && !stat(buf, &ino) && S_ISDIR(ino.st_mode)) {
-		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/config.xml", id);
+		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch/config.xml");
 		fp = fopen(buf, "r");
 		if(fp) {
 			process::errlog(DEBUG1, "loading config from %s", buf);
@@ -1059,9 +1053,9 @@ FILE *service::open(const char *id, const char *uid, const char *cfgfile)
 	}
 
 	if(uid)
-		snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s.conf", id);
+		snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/sipwitch.conf");
 	else
-		snprintf(buf, sizeof(buf), "%s/.%src", getenv("HOME"), id); 
+		snprintf(buf, sizeof(buf), "%s/.sipwitchrc", getenv("HOME")); 
 #endif
 	process::errlog(DEBUG1, "loading config from %s", buf);
 	return fopen(buf, "r");

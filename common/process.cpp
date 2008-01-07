@@ -144,7 +144,7 @@ static void scheduler(int priority)
 #endif
 }
 
-static struct passwd *getuserenv(const char *id, const char *uid, const char *cfgfile)
+static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 {
 	struct passwd *pwd;
 	struct group *grp;
@@ -181,7 +181,7 @@ static struct passwd *getuserenv(const char *id, const char *uid, const char *cf
 	}
 
 	if(!pwd) {
-		fprintf(stderr, "*** %s: unkown user identity; exiting\n", id);
+		fprintf(stderr, "*** sipwitch: unkown user identity; exiting\n");
 		exit(-1);
 	}
 
@@ -189,28 +189,28 @@ static struct passwd *getuserenv(const char *id, const char *uid, const char *cf
 		mkdir(pwd->pw_dir, 0770);
 		setenv("PWD", pwd->pw_dir, 1);
 		if(!chdir(pwd->pw_dir)) {
-			snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/lib/%s", id);
+			snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/lib/sipwitch");
 			mkdir(buf, 0770);
 			chdir(buf);
 			setenv("PWD", buf, 1);
 		}
 	}
 	else {
-		snprintf(buf, sizeof(buf), "%s/.%s", pwd->pw_dir, id);
+		snprintf(buf, sizeof(buf), "%s/.sipwitch", pwd->pw_dir);
 		mkdir(buf, 0700);
 		chdir(buf);
 		setenv("PWD", buf, 1);
 	} 
 
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", id);
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch");
 	mkdir(buf, 0775);
 	if(stat(buf, &ino) || !S_ISDIR(ino.st_mode)) {
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s", id, pwd->pw_name);
+		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s", pwd->pw_name);
 		mkdir(buf, 0770);
 	}
 
 	snprintf(buf, sizeof(buf), "%d", pwd->pw_uid);
-	setenv("IDENT", id, 1);
+	setenv("IDENT", "sipwitch", 1);
 	setenv("UID", buf, 1);
 	setenv("USER", pwd->pw_name, 1);
 	setenv("HOME", pwd->pw_dir, 1);
@@ -222,15 +222,15 @@ static struct passwd *getuserenv(const char *id, const char *uid, const char *cf
 
 static char fifopath[128] = "";
 
-static size_t ctrlfile(const char *id, const char *uid)
+static size_t ctrlfile(const char *uid)
 {
 	struct stat ino;
 
-	snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/%s", id);
+	snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/sipwitch");
 	if(!stat(fifopath, &ino) && S_ISDIR(ino.st_mode) && !access(fifopath, W_OK)) 
-		snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/%s/control", id);
+		snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/sipwitch/control");
 	else
-		snprintf(fifopath, sizeof(fifopath), "/tmp/%s-%s/control", id, uid);
+		snprintf(fifopath, sizeof(fifopath), "/tmp/sipwitch-%s/control", uid);
 
 	remove(fifopath);
 	if(mkfifo(fifopath, 0660)) {
@@ -245,21 +245,21 @@ static size_t ctrlfile(const char *id, const char *uid)
 	return 0;
 }
 
-static fd_t logfile(const char *id, const char *uid)
+static fd_t logfile(const char *uid)
 {
 	char buf[128];
 	fd_t fd;
 
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/%s.log", id);
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/sipwitch.log");
 	fd = open(buf, O_WRONLY | O_CREAT | O_APPEND, 0660);
 	if(fd > -1)
 		return fd;
 
-	snprintf(buf, sizeof(buf), "/tmp/%s-%s/logfile", id, uid);
+	snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/logfile", uid);
 	return open(buf, O_WRONLY | O_CREAT | O_APPEND, 0660);
 }
 
-static pid_t pidfile(const char *id, const char *uid)
+static pid_t pidfile(const char *uid)
 {
 	struct stat ino;
 	time_t now;
@@ -267,11 +267,11 @@ static pid_t pidfile(const char *id, const char *uid)
 	fd_t fd;
 	pid_t pid;
 
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", id);
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch");
 	if(!stat(buf, &ino) && S_ISDIR(ino.st_mode) && !access(buf, W_OK))
-		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/pidfile", id);
+		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch/pidfile");
 	else 
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s/pidfile", id, uid);
+		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/pidfile", uid);
 
 	fd = open(buf, O_RDONLY);
 	if(fd < 0 && errno == EPERM)
@@ -303,23 +303,23 @@ bydate:
 	return 1;
 }
 
-static pid_t pidfile(const char *id, const char *uid, pid_t pid)
+static pid_t pidfile(const char *uid, pid_t pid)
 {
 	char buf[128];
 	pid_t opid;
 	struct stat ino;
 	fd_t fd;
 
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", id);
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch");
 	if(!stat(buf, &ino) && S_ISDIR(ino.st_mode) && !access(buf, W_OK))
-		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/pidfile", id);
+		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch/pidfile");
 	else 
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s/pidfile", id, uid);
+		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/pidfile", uid);
 
 retry:
 	fd = open(buf, O_CREAT|O_WRONLY|O_TRUNC|O_EXCL, 0755);
 	if(fd < 0) {
-		opid = pidfile(id, uid);
+		opid = pidfile(uid);
 		if(!opid || opid == 1 && pid > 1) {
 			remove(buf);
 			goto retry;
@@ -404,25 +404,25 @@ retry:
 	return cp;
 }
 
-void process::util(const char *id)
+void process::util(void)
 {
 	signal(SIGPIPE, SIG_IGN);
-	setenv("IDENT", id, 1);
-	openlog(id, 0, LOG_USER);
+	setenv("IDENT", "sipwitch", 1);
+	openlog("sipwitch", 0, LOG_USER);
 }
 
-void process::foreground(const char *id, const char *uid, const char *cfgpath, unsigned priority, size_t ps)
+void process::foreground(const char *uid, const char *cfgpath, unsigned priority, size_t ps)
 {
-	struct passwd *pwd = getuserenv(id, uid, cfgpath);
+	struct passwd *pwd = getuserenv(uid, cfgpath);
 	pid_t pid;
 
-	if(0 != (pid = pidfile(id, pwd->pw_name, getpid()))) {
-		fprintf(stderr, "*** %s: already running; pid=%d\n", id, pid);
+	if(0 != (pid = pidfile(pwd->pw_name, getpid()))) {
+		fprintf(stderr, "*** sipwitch: already running; pid=%d\n", pid);
 		exit(-1);
 	}
 
-	if(!ctrlfile(id, pwd->pw_name)) {
-		fprintf(stderr, "*** %s: no control file; exiting\n", id);
+	if(!ctrlfile(pwd->pw_name)) {
+		fprintf(stderr, "*** sipwitch: no control file; exiting\n");
 		exit(-1);
 	}
 
@@ -431,16 +431,16 @@ void process::foreground(const char *id, const char *uid, const char *cfgpath, u
 	setuid(pwd->pw_uid);
 	endpwent();
 	endgrent();
-	openlog(id, 0, LOG_USER);
+	openlog("sipwitch", 0, LOG_USER);
 }
 
-void process::background(const char *id, const char *uid, const char *cfgpath, unsigned priority, size_t ps)
+void process::background(const char *uid, const char *cfgpath, unsigned priority, size_t ps)
 {
-	struct passwd *pwd = getuserenv(id, uid, cfgpath);
+	struct passwd *pwd = getuserenv(uid, cfgpath);
 	pid_t pid;
 
-	if(!ctrlfile(id, pwd->pw_name)) {
-		fprintf(stderr, "*** %s: no control file; exiting\n", id);
+	if(!ctrlfile(pwd->pw_name)) {
+		fprintf(stderr, "*** sipwitch: no control file; exiting\n");
 		exit(-1);
 	}
 
@@ -450,16 +450,16 @@ void process::background(const char *id, const char *uid, const char *cfgpath, u
 	endgrent();
 
 	if(getppid() > 1) {
-		if(getppid() > 1 && 0 != (pid = pidfile(id, pwd->pw_name, 1))) {
-			fprintf(stderr, "*** %s: already running; pid=%d\n", id, pid);
+		if(getppid() > 1 && 0 != (pid = pidfile(pwd->pw_name, 1))) {
+			fprintf(stderr, "*** sipwitch: already running; pid=%d\n", pid);
 			exit(-1);
 		}
 		detach();
 	}
 
-	openlog(id, LOG_CONS, LOG_DAEMON);
+	openlog("sipwitch", LOG_CONS, LOG_DAEMON);
 
-	if(0 != pidfile(id, pwd->pw_name, getpid())) {
+	if(0 != pidfile(pwd->pw_name, getpid())) {
 		syslog(LOG_CRIT, "already running; exiting");
 		exit(-1);
 	}
@@ -716,7 +716,7 @@ void process::release(void)
 
 errlevel_t process::verbose = FAILURE;
 
-void process::printlog(const char *id, const char *uid, const char *fmt, ...)
+void process::printlog(const char *uid, const char *fmt, ...)
 {
 	fd_t fd;
 	va_list args;
@@ -727,13 +727,10 @@ void process::printlog(const char *id, const char *uid, const char *fmt, ...)
 
 	va_start(args, fmt);
 
-	if(!id)
-		id = service::getValue(env, "IDENT");
-
 	if(!uid)
 		uid = service::getValue(env, "USER");
 
-	fd = logfile(id, uid);
+	fd = logfile(uid);
 	service::release(env);
 
 	vsnprintf(buf, sizeof(buf) - 1, fmt, args);
@@ -795,7 +792,7 @@ void process::reply(const char *msg)
 	replytarget = NULL;
 }
 
-bool process::control(const char *id, const char *uid, const char *fmt, ...)
+bool process::control(const char *uid, const char *fmt, ...)
 {
 	char buf[512];
 	fd_t fd;
@@ -819,16 +816,13 @@ bool process::control(const char *id, const char *uid, const char *fmt, ...)
 	}
 
 #else
-	if(!id)
-		id = service::getValue(env, "IDENT");
-
 	if(!uid)
 		uid = service::getValue(env, "USER");
 
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/control", id);
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch/control");
 	fd = ::open(buf, O_WRONLY | O_NONBLOCK);
 	if(fd < 0) {
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s/control", id, uid);
+		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/control", uid);
 		fd = ::open(buf, O_WRONLY | O_NONBLOCK);
 	}
 	service::release(env);

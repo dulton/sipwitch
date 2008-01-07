@@ -77,13 +77,13 @@ void SignalThread::run(void)
 			break;
 		case SIGINT:
 		case SIGTERM:
-			process::control("sipwitch", uid, "down");
+			process::control(uid, "down");
 			break;
 		case SIGUSR1:
-			process::control("sipwitch", uid, "snapshot");
+			process::control(uid, "snapshot");
 			break;
 		case SIGHUP:
-			process::control("sipwitch", uid, "reload");
+			process::control(uid, "reload");
 			break;
 		}
 	}
@@ -207,7 +207,7 @@ static void regdump(void)
 	exit(0);
 }
 
-static void command(const char *id, const char *uid, const char *cmd, unsigned timeout)
+static void command(const char *uid, const char *cmd, unsigned timeout)
 {
 #ifdef	USES_SIGNALS
 	sigset_t sigs;
@@ -221,7 +221,7 @@ static void command(const char *id, const char *uid, const char *cmd, unsigned t
 
 	config::utils(uid);
 
-	if(!process::control(id, uid, "%d %s", getpid(), cmd)) {
+	if(!process::control(uid, "%d %s", getpid(), cmd)) {
 		fprintf(stderr, "*** sipw: %s; server not responding\n", cmd);
 		exit(2);
 	}
@@ -480,11 +480,11 @@ extern "C" int main(int argc, char **argv)
 			continue;
 
 #ifdef	USES_COMMANDS
-		process::util("sipwitch");
+		process::util();
 
 		if(!stricmp(*argv, "stop") || !stricmp(*argv, "reload") || !stricmp(*argv, "abort") || !stricmp(*argv, "restart")) {
 			config::utils(user);
-			if(!process::control("sipwitch", user, *argv)) {
+			if(!process::control(user, *argv)) {
 				fprintf(stderr, "*** sipw: %s; server not responding\n", *argv);
 				exit(2);
 			}
@@ -493,7 +493,7 @@ extern "C" int main(int argc, char **argv)
 
 		if(!stricmp(*argv, "check")) {
 			config::utils(user);
-			if(!process::control("sipwitch", user, *argv)) {
+			if(!process::control(user, *argv)) {
 				fprintf(stderr, "*** sipw: %s; server cannot be checked\n", *argv);
 				exit(2);
 			}
@@ -540,7 +540,7 @@ extern "C" int main(int argc, char **argv)
 				fprintf(stderr, "*** sipw: activate: only one address\n");
 				exit(-1);
 			}
-			command("sipwitch", user, *argv, 30);
+			command(user, *argv, 30);
 		}
 
 
@@ -553,11 +553,11 @@ extern "C" int main(int argc, char **argv)
 				fprintf(stderr, "*** sipw: release: only one userid\n");
 				exit(-1);
 			}
-			command("sipwitch", user, *argv, 30);
+			command(user, *argv, 30);
 		}
 
 		if(!stricmp(*argv, "dump") || !stricmp(*argv, "snapshot"))
-			command("sipwitch", user, *argv, 30);
+			command(user, *argv, 30);
 #endif
 
 		fprintf(stderr, "*** sipw: %s: unknown option\n", *argv);
@@ -591,9 +591,9 @@ extern "C" int main(int argc, char **argv)
 #endif
 
 	if(daemon)
-		process::background("sipwitch", user, cfgfile, priority);
+		process::background(user, cfgfile, priority);
 	else
-		process::foreground("sipwitch", user, cfgfile, priority);
+		process::foreground(user, cfgfile, priority);
 
 	config::reload(user);
 	config::startup();
@@ -626,12 +626,12 @@ extern "C" int main(int argc, char **argv)
 		}
 
 		if(!stricmp(cp, "snapshot")) {
-			service::snapshot("sipwitch", user);
+			service::snapshot(user);
 			continue;
 		}
 
 		if(!stricmp(cp, "dump")) {
-			service::dumpfile("sipwitch", user);
+			service::dumpfile(user);
 			continue;
 		}
 

@@ -67,18 +67,18 @@ public:
 	inline static void setVerbose(errlevel_t idx)
 		{verbose = idx;};
 
-	static void printlog(const char *id, const char *uid, const char *fmt, ...) __PRINTF(3, 4);
+	static void printlog(const char *uid, const char *fmt, ...) __PRINTF(2, 3);
 	static void errlog(errlevel_t log, const char *fmt, ...) __PRINTF(2, 3);
 	static void restart(void);
-	static bool control(const char *id, const char *uid, const char *fmt, ...) __PRINTF(3, 4);
+	static bool control(const char *uid, const char *fmt, ...) __PRINTF(2, 3);
 	static void result(const char *value);
 	static char *receive(void);
 	static void reply(const char *err = NULL);
-	static void util(const char *id);
-	static void foreground(const char *id, const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
-	static void background(const char *id, const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
+	static void util(void);
+	static void foreground(const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
+	static void background(const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
 	static void release(void);
-	static FILE *open(const char *id, const char *uid = NULL, const char *cfgpath = NULL);
+	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
 };
 
 #ifdef	DEBUG

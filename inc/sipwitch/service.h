@@ -175,13 +175,13 @@ public:
 
 	static const char *getValue(keynode *base, const char *id);
 	static void dump(FILE *fp, keynode *node, unsigned level);
-	static void snapshot(const char *id, const char *uid);
-	static void dumpfile(const char *id, const char *uid);
+	static void snapshot(const char *uid);
+	static void dumpfile(const char *uid);
 	static void unsubscribe(const char *path);
 	static void subscribe(const char *path, const char *cmds = NULL);
 	static void publish(const char *path, const char *fmt, ...) __PRINTF(2, 3);
 	static void result(const char *value);
-	static FILE *open(const char *id, const char *uid = NULL, const char *cfgpath = NULL);
+	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
 	static void startup(bool restarable = false);
 	static void shutdown(void);
 	static void snmptrap(unsigned id, const char *descr);
