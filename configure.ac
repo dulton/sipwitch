@@ -285,6 +285,7 @@ for lib in $UCOMMON_LIBS $UCOMMON_CLINK ; do
 done
 
 AC_CHECK_HEADERS(sys/resource.h sys/mman.h syslog.h)
+AC_CHECK_FUNCS(setrlimit)
 
 AC_LANG_CPLUSPLUS
 COMPILER_FLAGS=""

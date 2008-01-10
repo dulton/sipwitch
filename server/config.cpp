@@ -26,12 +26,16 @@ using namespace UCOMMON_NAMESPACE;
 config::config(char *id) :
 service(id, PAGING_SIZE)
 {
+	assert(id != NULL && *id != 0);
+
 	memset(keys, 0, sizeof(keys));
 	acl = NULL;
 }
 
 service::keynode *config::find(const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	unsigned path = NamedObject::keyindex(id, CONFIG_KEY_SIZE);
 	linked_pointer<keymap> map = keys[path];
 
@@ -45,6 +49,9 @@ service::keynode *config::find(const char *id)
 
 bool config::create(const char *id, keynode *node)
 {
+	assert(id != NULL && *id != 0);
+	assert(node != NULL);
+
 	keymap *map = (keymap *)alloc_locked(sizeof(keymap));
 	unsigned path = NamedObject::keyindex(id, CONFIG_KEY_SIZE);
 	
@@ -59,6 +66,8 @@ bool config::create(const char *id, keynode *node)
 
 bool config::confirm(const char *user)
 {
+	assert(user == NULL || *user != 0);
+
 	keynode *access = getPath("access");
 	char *id = NULL, *secret = NULL;
 	const char *ext;
@@ -250,6 +259,9 @@ void config::release(cidr *access)
 
 cidr *config::getPolicy(struct sockaddr *addr)
 {
+	assert(addr != NULL);
+	assert(cfg != NULL);
+
 	cidr *policy;
 
 	if(!cfg)
@@ -264,6 +276,9 @@ cidr *config::getPolicy(struct sockaddr *addr)
 
 profile_t *config::getProfile(const char *pro)
 {
+	assert(pro != NULL);
+	assert(cfg != NULL);
+
 	config *cfgp;
 	linked_pointer<profile> pp;
 	profile_t *ppd = NULL;
@@ -291,6 +306,9 @@ profile_t *config::getProfile(const char *pro)
 
 service::keynode *config::getExtension(const char *id)
 {
+	assert(id != NULL && *id != 0);
+	assert(cfg != NULL);
+
 	unsigned ext = atoi(id);
 	unsigned range = registry::getRange();
 	unsigned prefix = registry::getPrefix();
@@ -322,6 +340,9 @@ service::keynode *config::getExtension(const char *id)
 
 Socket::address *config::getContact(const char *uid)
 {
+	assert(uid != NULL && *uid != 0);
+	assert(cfg != NULL);
+
 	keynode *node = getProvision(uid);
 	Socket::address *addr = NULL;
 
@@ -337,6 +358,9 @@ Socket::address *config::getContact(const char *uid)
 
 service::keynode *config::getRouting(const char *id)
 {
+	assert(id != NULL && *id != 0);
+	assert(cfg != NULL);
+
 	linked_pointer<keynode> node;
 	keynode *routing;
 	config *cfgp;
@@ -370,6 +394,9 @@ service::keynode *config::getRouting(const char *id)
 	
 service::keynode *config::getProvision(const char *uid)
 {
+	assert(uid != NULL && *uid != 0);
+	assert(cfg != NULL);
+
 	keynode *node;
 	config *cfgp;
 	unsigned range = registry::getRange();
@@ -392,6 +419,8 @@ service::keynode *config::getProvision(const char *uid)
 
 void config::utils(const char *uid)
 {
+	assert(uid == NULL || *uid != 0);
+
 	FILE *fp = service::open(uid);
 	const char *key = NULL, *value;
 	linked_pointer<keynode> sp;
@@ -437,6 +466,9 @@ bool config::check(void)
 
 void config::dump(FILE *fp)
 {
+	assert(fp != NULL);
+	assert(cfg != NULL);
+
 	fprintf(fp, "Server:\n");
 	fprintf(fp, "  allocated pages: %d\n", allocate());
 	fprintf(fp, "  configure pages: %d\n", cfg->getPages());
@@ -455,6 +487,8 @@ void config::dump(FILE *fp)
 		
 void config::reload(const char *uid)
 {
+	assert(uid == NULL || *uid != 0);
+
 	FILE *fp = service::open(uid);
 	config *cfgp = new config("sipwitch");
 

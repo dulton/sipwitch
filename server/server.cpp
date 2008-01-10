@@ -19,6 +19,33 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+#if defined(HAVE_SETRLIMIT) && defined(DEBUG)
+#include <sys/time.h>
+#include <sys/resource.h>
+
+static void corefiles(void)
+{
+	struct rlimit core;
+
+	assert(getrlimit(RLIMIT_CORE, &core) == 0);
+#ifdef	MAX_CORE_SOFT
+	core.rlim_cur = MAX_CORE_SOFT;
+#else
+	core.rlim_cur = RLIM_INFINITY;
+#endif
+#ifdef	MAX_CORE_HARD
+	core.rlim_max = MAX_CORE_HARD;
+#else
+	core.rlim_max = RLIM_INFINITY;
+#endif
+	assert(setrlimit(RLIMIT_CORE, &core) == 0);
+}
+#else
+static void corefiles(void)
+{
+}
+#endif
+
 #ifdef	USES_SIGNALS
 static class __LOCAL SignalThread : public JoinableThread
 {
@@ -305,6 +332,8 @@ extern "C" int main(int argc, char **argv)
 
 	char *cp, *tokens;
 	char *args[65];
+
+	corefiles();
 
 	// for deaemon env usually loaded from /etc/defaults or /etc/sysconfig
 
