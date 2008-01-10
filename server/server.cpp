@@ -121,6 +121,8 @@ void SignalThread::run(void)
 #ifdef	USES_COMMANDS
 static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 {
+	assert(a1 != NULL && a2 != NULL);
+
 	char sep = '\n';
 	char buf[64];
 	unsigned len;
@@ -236,6 +238,10 @@ static void regdump(void)
 
 static void command(const char *uid, const char *cmd, unsigned timeout)
 {
+	assert(uid == NULL || *uid != 0);
+	assert(cmd != NULL && *cmd != 0);
+	assert(timeout > 0);
+
 #ifdef	USES_SIGNALS
 	sigset_t sigs;
 	int signo;
@@ -273,6 +279,8 @@ static void command(const char *uid, const char *cmd, unsigned timeout)
 
 static bool activate(int argc, char **args)
 {
+	assert(args != NULL);
+
 	registry::mapped *reg;
 	bool rtn = true;
 
@@ -305,6 +313,7 @@ unsigned allocate(void)
 
 caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count)
 {
+	assert(size > 0);
 	caddr_t mp;
 	if(list && *list) {
 		mp = (caddr_t)*list;

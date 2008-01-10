@@ -46,6 +46,8 @@ registry::pointer::pointer()
 
 registry::pointer::pointer(const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	entry = registry::access(id);
 }
 
@@ -68,24 +70,32 @@ void registry::pointer::operator=(mapped *rr)
 
 void *registry::target::operator new(size_t size)
 {
+	assert(size == sizeof(registry::target));
+
 	++active_targets;
 	return allocate(size, &freetargets, &allocated_targets);
 }
 
 void registry::target::operator delete(void *obj)
 {
+	assert(obj != NULL);
+
 	((LinkedObject*)(obj))->enlist(&freetargets);
 	--active_targets;
 }
 
 void *registry::route::operator new(size_t size)
 {
+	assert(size == sizeof(registry::route));
+
 	++active_routes;
 	return allocate(size, &freeroutes, &allocated_routes);
 }
 
 void registry::route::operator delete(void *obj)
 {
+	assert(obj != NULL);
+
 	((LinkedObject*)(obj))->enlist(&freeroutes);
 	--active_routes;
 }
@@ -117,6 +127,8 @@ void registry::mapped::decUse(void)
 
 registry::mapped *registry::find(const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	linked_pointer<mapped> rp;
 	unsigned path = NamedObject::keyindex(id, keysize);
 	if(!keys)
@@ -132,12 +144,16 @@ registry::mapped *registry::find(const char *id)
 
 unsigned registry::getIndex(mapped *rr)
 {
+	assert((caddr_t)rr >= reg.getStart());
+
 	unsigned x = (unsigned)(((caddr_t)rr - reg.getStart()) / sizeof(MappedRegistry));
 	return x;
 }
 
 void registry::start(service *cfg)
 {
+	assert(cfg != NULL);
+
 	process::errlog(DEBUG1, "registry starting; mapping %d entries", mapped_entries);
 	MappedReuse::create("sipwitch.regmap", mapped_entries);
 	if(!reg)
@@ -155,6 +171,8 @@ bool registry::check(void)
 
 void registry::stop(service *cfg)
 {
+	assert(cfg != NULL);
+
 	process::errlog(DEBUG1, "registry stopping");
 	MappedMemory::release();
 	MappedMemory::remove("sipwitch.regmap");
@@ -162,6 +180,8 @@ void registry::stop(service *cfg)
 
 void registry::snapshot(FILE *fp) 
 {
+	assert(fp != NULL);
+
 	mapped *rr;
 	unsigned count = 0;
 	time_t now;
@@ -253,6 +273,8 @@ void registry::snapshot(FILE *fp)
 
 bool registry::remove(const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	bool rtn = true;
 	mapped *rr;
 
@@ -270,6 +292,8 @@ bool registry::remove(const char *id)
 
 void registry::expire(mapped *rr)
 {
+	assert(rr != NULL);
+
 	linked_pointer<target> tp = rr->targets;
 	linked_pointer<route> rp = rr->routes;
 	unsigned path;
@@ -348,6 +372,8 @@ void registry::cleanup(time_t period)
 
 bool registry::reload(service *cfg)
 {
+	assert(cfg != NULL);
+
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("registry");
 
@@ -405,6 +431,8 @@ unsigned registry::getEntries(void)
 
 registry::mapped *registry::invite(const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	mapped *rr = NULL;
 	unsigned path = NamedObject::keyindex(id, keysize);
 
@@ -442,6 +470,8 @@ registry::mapped *registry::invite(const char *id)
 	
 registry::mapped *registry::create(const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	mapped *rr = NULL, *prior;
 	unsigned path = NamedObject::keyindex(id, keysize);
 	linked_pointer<service::keynode> rp;
@@ -622,6 +652,8 @@ registry::mapped *registry::create(const char *id)
 
 registry::mapped *registry::address(struct sockaddr *addr)
 {
+	assert(addr != NULL);
+
 	target *target;
 	linked_pointer<target::indexing> ind;
 	mapped *rr = NULL;
@@ -647,9 +679,10 @@ registry::mapped *registry::address(struct sockaddr *addr)
 	return rr;
 }
 
-
 registry::mapped *registry::contact(const char *uri)
 {
+	assert(uri != NULL && *uri != 0);
+
 	mapped *rr = NULL;
 	struct sockaddr *addr = NULL;
 	Socket::address *target = NULL;
@@ -682,6 +715,9 @@ registry::mapped *registry::contact(const char *uri)
 
 registry::mapped *registry::contact(struct sockaddr *addr, const char *uid)
 {
+	assert(addr != NULL);
+	assert(uid != NULL && *uid != 0);
+
 	mapped *rr;
 	linked_pointer<route> rp;
 	unsigned path = NamedObject::keyindex(uid, keysize);
@@ -703,6 +739,8 @@ registry::mapped *registry::contact(struct sockaddr *addr, const char *uid)
 
 bool registry::isUserid(const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	if(!id || !*id)
 		return false;
 
@@ -717,6 +755,8 @@ bool registry::isUserid(const char *id)
 
 bool registry::isExtension(const char *id)
 {
+	assert(id != NULL && *id != 0);
+	 
 	unsigned ext = atoi(id);
 	
 	while(*id) {
@@ -736,6 +776,8 @@ bool registry::isExtension(const char *id)
 
 registry::pattern *registry::getRouting(unsigned trs, const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	linked_pointer<pattern> pp;
 	if(trs > reg.routes)
 		trs = reg.routes;
@@ -758,6 +800,8 @@ registry::pattern *registry::getRouting(unsigned trs, const char *id)
 	
 registry::mapped *registry::getExtension(const char *id)
 {
+	assert(id != NULL && *id != 0);
+	
 	unsigned ext = atoi(id);
 	registry::mapped *rr = NULL;
 	time_t now;
@@ -774,6 +818,8 @@ registry::mapped *registry::getExtension(const char *id)
 
 registry::mapped *registry::access(const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	mapped *rr;
 	unsigned ext = 0;
 
@@ -799,6 +845,9 @@ void registry::release(mapped *rr)
 
 unsigned registry::mapped::setTarget(Socket::address *target_addr, time_t lease, const char *target_contact)
 {
+	assert(target_addr != NULL && *target_addr != 0);
+	assert(target_contact != NULL && *target_contact != 0);
+
 	Socket::address *origin = NULL;
 	struct sockaddr *ai, *oi = NULL;
 	linked_pointer<target> tp;
@@ -860,6 +909,8 @@ unsigned registry::mapped::setTarget(Socket::address *target_addr, time_t lease,
 
 void registry::mapped::addRoute(const char *route_pattern, unsigned route_priority, const char *route_prefix, const char *route_suffix)
 {
+	assert(route_pattern != NULL && *route_pattern != 0);
+
 	locking.exclusive();
 	route *rp = new route;
 
@@ -880,6 +931,8 @@ void registry::mapped::addRoute(const char *route_pattern, unsigned route_priori
 
 void registry::mapped::addPublished(const char *published_id)
 {
+	assert(published_id != NULL && *published_id != 0);
+
 	unsigned path = NamedObject::keyindex(published_id, keysize);
 	locking.exclusive();
 	route *rp = new route;
@@ -894,6 +947,8 @@ void registry::mapped::addPublished(const char *published_id)
 
 void registry::mapped::addContact(const char *contact_id)
 {
+	assert(contact_id != NULL && *contact_id != 0);
+
 	unsigned path = NamedObject::keyindex(contact_id, keysize);
 
 	locking.exclusive();
@@ -908,6 +963,9 @@ void registry::mapped::addContact(const char *contact_id)
 
 bool registry::mapped::refresh(Socket::address *saddr, time_t lease)
 {
+	assert(saddr != NULL);
+	assert(lease > 0);
+
 	linked_pointer<target> tp;
 
 	if(!saddr || !saddr->getAddr() || !expires || type == MappedRegistry::EXPIRED || type == MappedRegistry::TEMPORARY)
@@ -930,6 +988,10 @@ bool registry::mapped::refresh(Socket::address *saddr, time_t lease)
 
 unsigned registry::mapped::addTarget(Socket::address *target_addr, time_t lease, const char *target_contact)
 {
+	assert(target_addr != NULL && *target_addr != 0);
+	assert(target_contact != NULL && *target_contact != 0);
+	assert(lease > 0);
+
 	Socket::address *origin;
 	struct sockaddr *ai, *oi = NULL;
 	linked_pointer<target> tp;
@@ -999,6 +1061,8 @@ unsigned registry::mapped::addTarget(Socket::address *target_addr, time_t lease,
 
 unsigned registry::mapped::setTargets(Socket::address *target_addr)
 {
+	assert(target_addr != NULL && *target_addr != 0);
+
 	struct addrinfo *al;
 	linked_pointer<target> tp;
 	socklen_t len;

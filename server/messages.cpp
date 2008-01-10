@@ -79,6 +79,8 @@ void messages::cleanup(void)
 
 bool messages::reload(service *cfg)
 {
+	assert(cfg != NULL);
+
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("messages");
 
@@ -104,6 +106,7 @@ bool messages::reload(service *cfg)
 
 void messages::snapshot(FILE *fp) 
 {
+	assert(fp != NULL);
 	fprintf(fp, "Messaging:\n"); 
 	fprintf(fp, "  allocated messages: %d\n", allocated);
 	fprintf(fp, "  pending messages:   %d\n", pending);
@@ -111,6 +114,8 @@ void messages::snapshot(FILE *fp)
 
 void messages::update(const char *uid)
 {
+	assert(uid == NULL || *uid != 0);
+
 	linked_pointer<message> mp;
 	LinkedObject *next;
 	unsigned path;
@@ -174,6 +179,8 @@ messages::message *messages::create(const char *reply, const char *display)
 
 bool messages::send(message *msg)
 {
+	assert(msg != NULL);
+
 	linked_pointer<registry::target> tp;
 	registry::mapped *rr = registry::access(msg->user);
 	unsigned path = NamedObject::keyindex(msg->user, keysize);
@@ -214,6 +221,9 @@ delay:
 
 bool messages::sms(const char *reply, const char *to, const char *text, const char *display)
 {
+	assert(to != NULL && *to != 0);
+	assert(text != NULL);
+
 	message *msg = create(reply, display);
 	string::set(msg->user, sizeof(msg->user), to);
 	string::set(msg->text, sizeof(msg->text), text);

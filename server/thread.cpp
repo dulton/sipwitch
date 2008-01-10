@@ -26,6 +26,8 @@ static unsigned active_count = 0;
 
 static char *remove_quotes(char *c)
 {
+	assert(c != NULL);
+
 	char *o = c;
 	char *d = c;
 	if(*c != '\"')
@@ -530,6 +532,9 @@ invalid:
 
 void thread::send_reply(int error)
 {
+	assert(error >= 100);
+	assert(authorizing == CALL || authorizing == MESSAGE);
+
 	osip_message_t *reply = NULL;
 
 	eXosip_lock();
@@ -745,6 +750,10 @@ void thread::registration(void)
 
 void thread::reregister(const char *contact, time_t interval)
 {
+	assert(contact != NULL && *contact != 0);
+	assert(interval > 0);
+	assert(identity != NULL && *identity != 0);
+
 	int answer = SIP_OK;
 	osip_message_t *reply = NULL;
 	time_t expire;
@@ -823,6 +832,8 @@ void thread::deregister()
 
 void thread::getDevice(registry::mapped *rr)
 {
+	assert(rr != NULL);
+
 	linked_pointer<service::keynode> device = config::list("devices");
 
 	while(device) {
@@ -896,6 +907,12 @@ void thread::run(void)
 	process::errlog(DEBUG1, "starting thread %d", instance);
 
 	for(;;) {
+		assert(instance > 0);
+		assert(registry == NULL);
+		assert(dialed == NULL);
+		assert(authorized == NULL);
+		assert(access == NULL);
+
 		display[0] = 0;
 		extension = 0;
 		identbuf[0] = 0;
@@ -941,10 +958,11 @@ void thread::run(void)
 		case EXOSIP_CALL_RELEASED:
 			authorizing = NONE;
 			if(sevent->cid > 0) {
+				authorizing = CALL;
 				session = stack::access(sevent->cid);
 				stack::clear(session);
+				send_reply(SIP_OK);
 			}
-			send_reply(SIP_OK);
 			break;
 		case EXOSIP_CALL_INVITE:
 			authorizing = CALL;

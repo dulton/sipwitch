@@ -34,6 +34,8 @@ stack::background *stack::background::thread = NULL;
 
 static bool tobool(const char *s)
 {
+	assert(s != NULL);
+
 	switch(*s)
 	{
 	case 'n':
@@ -50,6 +52,9 @@ stack stack::sip;
 
 stack::segment::segment(call *cr, int cid, int did) : OrderedObject()
 {
+	assert(cr != NULL);
+	assert(cid > 0);
+
 	time_t now;
 
 	++cr->count;
@@ -69,11 +74,15 @@ stack::segment::segment(call *cr, int cid, int did) : OrderedObject()
 
 void *stack::segment::operator new(size_t size)
 {
+	assert(size == sizeof(stack::segment));
+
 	return allocate(size, &freesegs, &allocated_segments);
 }
 
 void stack::segment::operator delete(void *obj)
 {
+	assert(obj != NULL);
+
 	((LinkedObject*)(obj))->enlist(&freesegs);
 }
 
@@ -83,12 +92,16 @@ stack::call::call() : TimerQueue::event(Timer::reset), segments()
 
 void *stack::call::operator new(size_t size)
 {
+	assert(size == sizeof(stack::call));
+
 	++active_calls;
 	return allocate(size, &freecalls, &allocated_calls);
 }
 
 void stack::call::operator delete(void *obj)
 {
+	assert(obj != NULL);
+
 	((LinkedObject*)(obj))->enlist(&freecalls);
 	--active_calls;
 }
@@ -121,6 +134,8 @@ void stack::call::disconnect(void)
 
 void stack::call::closing(session *s)
 {
+	assert(s != NULL);
+
 	if(invited) {
 		switch(s->state)
 		{
@@ -285,6 +300,8 @@ void stack::update(void)
 
 void stack::close(session *s)
 {
+	assert(s != NULL);
+
 	call *cr;
 
 	if(!s)
@@ -304,6 +321,8 @@ void stack::close(session *s)
 	
 void stack::clear(session *s)
 {
+	assert(s != NULL);
+
 	call *cr;
 
 	if(!s)
@@ -343,6 +362,8 @@ void stack::clear(session *s)
 
 void stack::destroy(session *s)
 {
+	assert(s != NULL);
+
 	if(!s || !s->parent)
 		return;
 
@@ -351,6 +372,8 @@ void stack::destroy(session *s)
 
 void stack::destroy(call *cr)
 {
+	assert(cr != NULL);
+
 	linked_pointer<segment> sp;
 
 	// we assume access lock was already held when we call this...
@@ -381,6 +404,8 @@ void stack::destroy(call *cr)
 
 void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 {
+	assert(iface != NULL && dest != NULL);
+
 	Socket::getinterface(iface, dest);
 	switch(iface->sa_family) {
 	case AF_INET:
@@ -396,6 +421,8 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 	
 stack::session *stack::create(int cid, int did)
 {
+	assert(cid > 0);
+
 	call *cr;
 	segment *sp;
 
@@ -420,6 +447,9 @@ stack::session *stack::create(int cid, int did)
 
 void stack::logCall(const char *reason, session *session, const char *joined)
 {
+	assert(reason != NULL && *reason != 0);
+	assert(session != NULL);
+
 	time_t now;
 	struct tm *dt;
 	call *cr;
@@ -453,6 +483,8 @@ void stack::logCall(const char *reason, session *session, const char *joined)
 
 void stack::setBusy(int tid, session *session)
 {
+	assert(session != NULL);
+
 	osip_message_t *reply = NULL;
 	call *cr;
 	if(!session)
@@ -473,6 +505,8 @@ void stack::setBusy(int tid, session *session)
 
 stack::session *stack::access(int cid)
 {
+	assert(cid > 0);
+
 	linked_pointer<session> sp;
 
 	locking.access();
@@ -496,7 +530,9 @@ void stack::release(session *s)
 }
 	
 void stack::start(service *cfg) 
-{ 
+{
+	assert(cfg != NULL);
+	 
 	thread *thr; 
 	unsigned thidx = 0;
 	process::errlog(DEBUG1, "sip stack starting; creating %d threads at priority %d", threading, priority); 
@@ -539,6 +575,8 @@ void stack::start(service *cfg)
 
 void stack::stop(service *cfg)
 {
+	assert(cfg != NULL);
+
 	process::errlog(DEBUG1, "sip stack stopping");
 	background::cancel();
 	thread::shutdown();
@@ -558,6 +596,8 @@ bool stack::check(void)
 
 void stack::snapshot(FILE *fp) 
 { 
+	assert(fp != NULL);
+
 	linked_pointer<call> cp;
 	fprintf(fp, "SIP:\n"); 
 	locking.access();
@@ -575,6 +615,8 @@ void stack::snapshot(FILE *fp)
 
 bool stack::reload(service *cfg)
 {
+	assert(cfg != NULL);
+
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("stack");
 	int val;
@@ -653,6 +695,11 @@ bool stack::reload(service *cfg)
 
 char *stack::sipIdentity(struct sockaddr_internet *addr, char *buf, const char *user, size_t size)
 {
+	assert(addr != NULL);
+	assert(buf != NULL);
+	assert(user == NULL || *user != 0);
+	assert(size > 0);
+
 	*buf = 0;
 	size_t len;
 
@@ -674,6 +721,11 @@ char *stack::sipIdentity(struct sockaddr_internet *addr, char *buf, const char *
 
 char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *user, size_t size)
 {
+	assert(addr != NULL);
+	assert(buf != NULL);
+	assert(user == NULL || *user != 0);
+	assert(size > 0);
+
 	char pbuf[10];
 	unsigned port;
 	bool ipv6 = false;
@@ -730,6 +782,8 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 	
 Socket::address *stack::getAddress(const char *addr, Socket::address *ap)
 {
+	assert(addr != NULL && *addr != 0);
+
 	char buffer[MAX_URI_SIZE];
 	int family = sip.family;
 	const char *svc = "sip";
