@@ -41,9 +41,11 @@ static time_t started = 0l;
 
 static size_t xmldecode(char *out, size_t limit, const char *src)
 {
-	char *ret = out;
+	assert(out != NULL);
+	assert(limit > 0);
+	assert(src != NULL);
 
-	assert(src != NULL && out != NULL && limit > 0);
+	char *ret = out;
 
 	if(*src == '\'' || *src == '\"')
 		++src;
@@ -82,6 +84,8 @@ service::pointer::pointer()
 
 service::pointer::pointer(const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	locking.access();
 	node = service::path(id);
 }
@@ -106,6 +110,9 @@ void service::pointer::operator=(keynode *p)
 service::subscriber::subscriber(const char *name, const char *cmds) :
 LinkedObject(&list)
 {
+	assert(name != NULL && *name != 0);
+	assert(cmds != NULL && *cmds != 0);
+
 	strcpy(path, name);
 #ifdef	_MSWINDOWS_
 	fd = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -133,6 +140,8 @@ void service::subscriber::close(void)
 
 void service::subscriber::reopen(const char *cmds)
 {
+	assert(cmds != NULL && *cmds != 0);
+
 	close();
 #ifdef	_MSWINDOWS_
 	fd = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -148,6 +157,8 @@ void service::subscriber::reopen(const char *cmds)
 
 void service::subscriber::write(char *str)
 {
+	assert(str != NULL && *str != 0);
+
 	exclusive_access(mutex);
 
 	size_t len = strlen(str);
@@ -231,6 +242,8 @@ service::instance::~instance()
 service::service(char *name, size_t s) :
 mempager(s), root()
 {
+	assert(name != NULL && *name != 0);
+
 	keynode *env;
 	
 	static char *vars[] = {"HOME", "USER", "IDENT", "PATH", "LANG", "PWD", "TZ", "TMP", "SHELL", "CFG", NULL};
@@ -275,6 +288,8 @@ long service::uptime(void)
 
 void service::snmptrap(unsigned id, const char *descr)
 {
+	assert(descr != NULL && *descr != 0);
+
 	static unsigned char header1_short[] = {
 		0x06, 0x08, 0x2b, 0x06, 0x01, 0x04, 0x01, 0x81, 0xc7, 0x42,
 		0x40, 0x04, 0xc0, 0xa8, 0x3b, 0xcd};
@@ -383,6 +398,8 @@ send:
 
 service::keynode *service::path(const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	if(!cfg)
 		return NULL;
 
@@ -391,6 +408,8 @@ service::keynode *service::path(const char *id)
 
 service::keynode *service::list(const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	keynode *node;
 
 	if(!cfg)
@@ -405,6 +424,8 @@ service::keynode *service::list(const char *id)
 
 service::keynode *service::getProtected(const char *id)
 {
+	assert(id != NULL && *id != 0);
+	
 	keynode *node;
 
 	if(!cfg)
@@ -419,6 +440,8 @@ service::keynode *service::getProtected(const char *id)
 
 service::keynode *service::getList(const char *path)
 {
+	assert(path != NULL && *path != 0);
+
 	keynode *base = getPath(path);
 	if(!base)
 		return NULL;
@@ -434,6 +457,8 @@ void service::release(keynode *node)
 
 service::keynode *service::getPath(const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	const char *np;
 	char buf[65];
 	char *ep;
@@ -459,6 +484,9 @@ service::keynode *service::getPath(const char *id)
 
 service::keynode *service::addNode(keynode *base, const char *id, const char *value)
 {
+	assert(base != NULL);
+	assert(id != NULL && *id != 0);
+
 	caddr_t mp;
 	keynode *node;
 	char *cp;
@@ -475,6 +503,9 @@ service::keynode *service::addNode(keynode *base, const char *id, const char *va
 
 const char *service::getValue(keynode *node, const char *id)
 {
+	assert(node != NULL);
+	assert(id != NULL && *id != 0);
+
 	node = node->getChild(id);
 	if(!node)
 		return NULL;
@@ -484,6 +515,9 @@ const char *service::getValue(keynode *node, const char *id)
 
 service::keynode *service::addNode(keynode *base, define *defs)
 {
+	assert(base != NULL);
+	assert(defs != NULL);
+
 	keynode *node = getNode(base, defs->key, defs->value);
 	if(!node)
 		node = addNode(base, defs->key, defs->value);
@@ -501,6 +535,11 @@ service::keynode *service::addNode(keynode *base, define *defs)
 
 service::keynode *service::getNode(keynode *base, const char *id, const char *attr, const char *value)
 {
+	assert(base != NULL);
+	assert(id != NULL && *id != 0);
+	assert(attr != NULL);
+	assert(value != NULL);
+
 	linked_pointer<keynode> node = base->getFirst();
 	keynode *leaf;
 	char *cp;
@@ -521,6 +560,10 @@ service::keynode *service::getNode(keynode *base, const char *id, const char *at
 
 service::keynode *service::getNode(keynode *base, const char *id, const char *text)
 {
+	assert(base != NULL);
+	assert(id != NULL && *id != 0);
+	assert(text != NULL && *text != 0);
+
 	linked_pointer<keynode> node = base->getFirst();
 	char *cp;
 	
@@ -537,6 +580,9 @@ service::keynode *service::getNode(keynode *base, const char *id, const char *te
 
 void service::addAttributes(keynode *node, char *attr)
 {
+	assert(node != NULL);
+	assert(attr != NULL);
+
 	char *ep, *qt;
 	char *id;
 	int len;
@@ -576,6 +622,8 @@ void service::addAttributes(keynode *node, char *attr)
 
 bool service::load(FILE *fp, keynode *node)
 {
+	assert(fp != NULL);
+
 	char *cp, *ep, *bp, *id;
 	ssize_t len = 0;
 	bool rtn = false;
@@ -698,6 +746,8 @@ exit:
 
 void service::unsubscribe(const char *path)
 {
+	assert(path != NULL && *path != 0);
+
 	exclusive_access(subscriber::locking);
 	linked_pointer<subscriber> sb;
 
@@ -715,6 +765,9 @@ void service::unsubscribe(const char *path)
 
 void service::publish(const char *path, const char *fmt, ...)
 {
+	assert(path == NULL || *path != 0);
+	assert(fmt != NULL && *fmt != 0);
+	
 	linked_pointer<subscriber> sb;
 	char buf[512];
 	char cmdbuf[16];
@@ -774,6 +827,8 @@ control:
 
 void service::subscribe(const char *path, const char *listen)
 {
+	assert(path != NULL && *path != 0);
+
 	exclusive_access(subscriber::locking);
 	linked_pointer<subscriber> sb;
 	caddr_t mp;
@@ -834,6 +889,9 @@ void service::shutdown(void)
 
 void service::dump(FILE *fp, service::keynode *root, unsigned level)
 {
+	assert(fp != NULL);
+	assert(root != NULL);
+
 	unsigned offset;
 	const char *id, *value;
 	service::keynode *child;
@@ -861,12 +919,16 @@ void service::dump(FILE *fp, service::keynode *root, unsigned level)
 
 void service::dump(FILE *fp)
 {
+	assert(fp != NULL);
+
 	fprintf(fp, "Config ");
 	dump(fp, &root, 0);
 }
 
 void service::dumpfile(const char *uid)
 {
+	assert(uid == NULL || *uid != 0);
+
 	FILE *fp;
 	char buf[256];
 	linked_pointer<callback> cb;
@@ -907,6 +969,8 @@ void service::dumpfile(const char *uid)
 
 void service::snapshot(const char *uid)
 {
+	assert(uid == NULL || *uid != 0);
+
 	FILE *fp;
 	char buf[256];
 	linked_pointer<callback> cb;
@@ -962,6 +1026,8 @@ bool service::confirm(const char *user)
 
 service::callback *service::getComponent(const char *id)
 {
+	assert(id != NULL && *id != 0);
+
 	linked_pointer<callback> cb;
 	unsigned rl = 0;
 
@@ -1017,6 +1083,9 @@ bool service::commit(const char *user)
 
 FILE *service::open(const char *uid, const char *cfgfile)
 {
+	assert(cfgfile == NULL || *cfgfile != 0);
+	assert(uid == NULL || *uid != 0);
+
 	char buf[256];
 	struct stat ino;
 	FILE *fp;
@@ -1063,6 +1132,9 @@ FILE *service::open(const char *uid, const char *cfgfile)
 
 bool service::match(const char *digits, const char *match, bool partial)
 {
+	assert(digits != NULL);
+	assert(match != NULL);
+
 	unsigned len = strlen(match);
 	unsigned dlen = 0;
 	bool inc;

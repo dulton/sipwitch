@@ -87,6 +87,8 @@ static void MD5Transform(uint32_t buf[4], uint32_t const in[16]);
 #else
 static void byteReverse(unsigned char *buf, unsigned longs)
 {
+	assert(buf != NULL);
+
 	uint32_t t;
 	do {
 	t = (uint32_t) ((unsigned) buf[3] << 8 | buf[2]) << 16 |
@@ -110,6 +112,10 @@ static void MD5Init(MD5_CTX *ctx)
 
 static void MD5Update(MD5_CTX *ctx, unsigned char const *buf, unsigned len)
 {
+	assert(ctx != NULL);
+	assert(buf != NULL);
+	assert(len > 0);
+
 	uint32_t t;
 
 	/* Update bitcount */
@@ -154,6 +160,8 @@ static void MD5Update(MD5_CTX *ctx, unsigned char const *buf, unsigned len)
 
 static void MD5Final(unsigned char digest[16], MD5_CTX *ctx)
 {
+	assert(ctx != NULL);
+
 	unsigned count;
 	unsigned char *p;
 
@@ -292,6 +300,8 @@ using namespace UCOMMON_NAMESPACE;
 #ifdef	MD5_MISSING
 unsigned digest::md5(unsigned char *target, const char *str)
 {
+	assert(target != NULL);
+	assert(str != NULL);
 	return 0;
 }
 #endif
@@ -299,6 +309,9 @@ unsigned digest::md5(unsigned char *target, const char *str)
 #ifdef	SHA1_MISSING
 unsigned digest::sha1(unsigned char *target, const char *str)
 {
+	assert(target != NULL);
+	assert(str != NULL);
+
 	return 0;
 }
 #endif
@@ -306,6 +319,8 @@ unsigned digest::sha1(unsigned char *target, const char *str)
 #ifdef	RMD160_MISSING
 unsigned digest::rmd160(unsigned char *target, const char *str)
 {
+	assert(target != NULL);
+	assert(str != NULL);
 	return 0;
 }
 #endif
@@ -313,6 +328,9 @@ unsigned digest::rmd160(unsigned char *target, const char *str)
 #ifdef	MD5_GENERIC
 unsigned digest::md5(unsigned char *digest, const char *str)
 {
+	assert(digest != NULL);
+	assert(str != NULL);	
+
 	MD5_CTX md5;
 
 	if(!str)
@@ -328,6 +346,9 @@ unsigned digest::md5(unsigned char *digest, const char *str)
 #ifdef	SHA1_GENERIC
 unsigned digest::sha1(unsigned char *digest, const char *str)
 {
+	assert(digest != NULL);
+	assert(str != NULL);
+
 	SHA_CTX sha1;
 
 	if(!str)
@@ -343,6 +364,9 @@ unsigned digest::sha1(unsigned char *digest, const char *str)
 #ifdef	RMD160_GENERIC
 unsigned digest::rmd160(unsigned char *digest, const char *str)
 {
+	assert(digest != NULL);
+	assert(str != NULL);	
+
 	RMD160_CTX rmd160;
 
 	if(!str)
@@ -358,6 +382,9 @@ unsigned digest::rmd160(unsigned char *digest, const char *str)
 #ifdef	MD5_GCRYPT
 unsigned digest::md5(unsigned char *digest, const char *str)
 {
+	assert(digest != NULL);
+	assert(str != NULL);
+
 	gcry_md_hd_t md5;
 
 	gcry_md_open(&md5, GCRY_MD_MD5, 0);
@@ -378,6 +405,9 @@ unsigned digest::md5(unsigned char *digest, const char *str)
 #ifdef	SHA1_GCRYPT
 unsigned digest::sha1(unsigned char *digest, const char *str)
 {
+	assert(digest != NULL);
+	assert(str != NULL);
+
 	gcry_md_hd_t sha1;
 
 	gcry_md_open(&sha1, GCRY_MD_SHA1, 0);
@@ -398,6 +428,9 @@ unsigned digest::sha1(unsigned char *digest, const char *str)
 #ifdef	RMD160_GCRYPT
 unsigned digest::rmd160(unsigned char *digest, const char *str)
 {
+	assert(digest != NULL);
+	assert(str != NULL);
+
 	gcry_md_hd_t rmd160;
 
 	gcry_md_open(&rmd160, GCRY_MD_RMD160, 0);

@@ -146,6 +146,8 @@ static void scheduler(int priority)
 
 static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 {
+	assert(uid == NULL || *uid != 0);
+
 	struct passwd *pwd;
 	struct group *grp;
 	char buf[128];
@@ -181,7 +183,7 @@ static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 	}
 
 	if(!pwd) {
-		fprintf(stderr, "*** sipwitch: unkown user identity; exiting\n");
+		fprintf(stderr, "*** sipw: unkown user identity; exiting\n");
 		exit(-1);
 	}
 
@@ -224,6 +226,8 @@ static char fifopath[128] = "";
 
 static size_t ctrlfile(const char *uid)
 {
+	assert(uid != NULL && *uid != 0);
+
 	struct stat ino;
 
 	snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/sipwitch");
@@ -247,6 +251,7 @@ static size_t ctrlfile(const char *uid)
 
 static fd_t logfile(const char *uid)
 {
+	assert(uid != NULL && *uid != 0);
 	char buf[128];
 	fd_t fd;
 
@@ -261,6 +266,8 @@ static fd_t logfile(const char *uid)
 
 static pid_t pidfile(const char *uid)
 {
+	assert(uid != NULL && *uid != 0);
+
 	struct stat ino;
 	time_t now;
 	char buf[128];
@@ -305,6 +312,8 @@ bydate:
 
 static pid_t pidfile(const char *uid, pid_t pid)
 {
+	assert(uid != NULL && *uid != 0);
+
 	char buf[128];
 	pid_t opid;
 	struct stat ino;
@@ -408,21 +417,23 @@ void process::util(void)
 {
 	signal(SIGPIPE, SIG_IGN);
 	setenv("IDENT", "sipwitch", 1);
-	openlog("sipwitch", 0, LOG_USER);
+	openlog("sipw", 0, LOG_USER);
 }
 
 void process::foreground(const char *uid, const char *cfgpath, unsigned priority, size_t ps)
 {
+	assert(uid == NULL || *uid != 0);
+
 	struct passwd *pwd = getuserenv(uid, cfgpath);
 	pid_t pid;
 
 	if(0 != (pid = pidfile(pwd->pw_name, getpid()))) {
-		fprintf(stderr, "*** sipwitch: already running; pid=%d\n", pid);
+		fprintf(stderr, "*** sipw: already running; pid=%d\n", pid);
 		exit(-1);
 	}
 
 	if(!ctrlfile(pwd->pw_name)) {
-		fprintf(stderr, "*** sipwitch: no control file; exiting\n");
+		fprintf(stderr, "*** sipw: no control file; exiting\n");
 		exit(-1);
 	}
 
@@ -431,16 +442,18 @@ void process::foreground(const char *uid, const char *cfgpath, unsigned priority
 	setuid(pwd->pw_uid);
 	endpwent();
 	endgrent();
-	openlog("sipwitch", 0, LOG_USER);
+	openlog("sipw", 0, LOG_USER);
 }
 
 void process::background(const char *uid, const char *cfgpath, unsigned priority, size_t ps)
 {
+	assert(uid == NULL || *uid != 0);
+
 	struct passwd *pwd = getuserenv(uid, cfgpath);
 	pid_t pid;
 
 	if(!ctrlfile(pwd->pw_name)) {
-		fprintf(stderr, "*** sipwitch: no control file; exiting\n");
+		fprintf(stderr, "*** sipw: no control file; exiting\n");
 		exit(-1);
 	}
 
@@ -451,13 +464,13 @@ void process::background(const char *uid, const char *cfgpath, unsigned priority
 
 	if(getppid() > 1) {
 		if(getppid() > 1 && 0 != (pid = pidfile(pwd->pw_name, 1))) {
-			fprintf(stderr, "*** sipwitch: already running; pid=%d\n", pid);
+			fprintf(stderr, "*** sipw: already running; pid=%d\n", pid);
 			exit(-1);
 		}
 		detach();
 	}
 
-	openlog("sipwitch", LOG_CONS, LOG_DAEMON);
+	openlog("sipw", LOG_CONS, LOG_DAEMON);
 
 	if(0 != pidfile(pwd->pw_name, getpid())) {
 		syslog(LOG_CRIT, "already running; exiting");
@@ -469,13 +482,13 @@ void process::background(const char *uid, const char *cfgpath, unsigned priority
 
 void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 {
+	assert(fmt != NULL && *fmt != 0);
+
 	char buf[256];
 	int level = LOG_ERR;
 	va_list args;	
 
 	va_start(args, fmt);
-
-	assert(fmt != NULL);
 	vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 
@@ -486,9 +499,9 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 	case DEBUG3:
 		if((getppid() > 1) && (loglevel <= verbose)) {
 			if(fmt[strlen(fmt) - 1] == '\n') 
-				fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
+				fprintf(stderr, "sipw: %s", buf);
 			else
-				fprintf(stderr, "%s: %s\n", getenv("IDENT"), buf);
+				fprintf(stderr, "sipw: %s\n", buf);
 		}
 		return;
 	case INFO:
@@ -513,9 +526,9 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 	if(loglevel <= verbose) {
 		if(getppid() > 1) {
 			if(fmt[strlen(fmt) - 1] == '\n') 
-				fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
+				fprintf(stderr, "sipw: %s", buf);
 			else
-				fprintf(stderr, "%s: %s\n", getenv("IDENT"), buf);
+				fprintf(stderr, "sipw: %s\n", buf);
 		}
 		service::snmptrap(loglevel + 10, buf);
 		service::publish(NULL, "- errlog %d %s", loglevel, buf); 
@@ -536,6 +549,8 @@ static OVERLAPPED ovFifo;
 
 static fd_t logfile(const char *uid)
 {
+	assert(uid != NULL && *uid != 0);
+
 	char buf[256];
 	fd_t fd;
 	unsigned len;
@@ -566,6 +581,9 @@ static size_t ctrlfile()
 
 static void setup(const char *uid, const char *cfgfile)
 {
+	assert(uid == NULL || *uid != 0);
+	assert(cfgfile == NULL || *cfgfile != 0);
+
 	char buf[256];
 	const char *cp;
 	unsigned len;
@@ -598,7 +616,7 @@ static void setup(const char *uid, const char *cfgfile)
 	SetEnvironmentVariable("SHELL", buf);
 
 	if(!ctrlfile()) {
-		fprintf(stderr, "*** sipwitch: no control file; exiting\n");
+		fprintf(stderr, "*** sipw: no control file; exiting\n");
 		exit(-1);
 	}
 }
@@ -655,6 +673,8 @@ retry:
 
 void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 {
+	assert(fmt != NULL && *fmt != 0);
+
 	char buf[256];
 	va_list args;	
 
@@ -684,11 +704,15 @@ void process::util(void)
 
 void process::foreground(const char *uid, const char *cfgpath, unsigned priority, size_t ps)
 {
+	assert(uid == NULL || *uid != 0);
+	assert(cfgfile == NULL || *cfgfile != 0);
 	setup(uid, cfgpath);
 }
 
 void process::background(const char *uid, const char *cfgpath, unsigned priority, size_t ps)
 {
+	assert(uid == NULL || *uid != 0);
+	assert(cfgfile == NULL || *cfgfile != 0);
 	setup(uid, cfgpath);
 }
 
@@ -715,6 +739,9 @@ errlevel_t process::verbose = FAILURE;
 
 void process::printlog(const char *uid, const char *fmt, ...)
 {
+	assert(uid == NULL || *uid != 0);
+	assert(fmt != NULL && *fmt != 0);
+
 	fd_t fd;
 	va_list args;
 	char buf[1024];
@@ -759,6 +786,8 @@ void process::printlog(const char *uid, const char *fmt, ...)
 
 void process::reply(const char *msg)
 {
+	assert(msg == NULL || *msg != 0);
+
 	pid_t pid;
 	char *sid;
 
@@ -791,6 +820,9 @@ void process::reply(const char *msg)
 
 bool process::control(const char *uid, const char *fmt, ...)
 {
+	assert(uid == NULL || *uid != 0);
+	assert(fmt != NULL && *fmt != 0);
+
 	char buf[512];
 	fd_t fd;
 	int len;

@@ -45,6 +45,10 @@
 
 static void ftok_name(const char *name, char *buf, size_t max)
 {
+	assert(name != NULL && *name != 0);
+	assert(buf != NULL);
+	assert(max > 0);
+
 	struct stat ino;
 	if(*name == '/')
 		++name;
@@ -57,6 +61,8 @@ static void ftok_name(const char *name, char *buf, size_t max)
 
 static key_t createipc(const char *name, char mode)
 {
+	assert(name != NULL && *name != 0);
+
 	char buf[65];
 	int fd;
 
@@ -69,6 +75,8 @@ static key_t createipc(const char *name, char mode)
 
 static key_t accessipc(const char *name, char mode)
 {
+	assert(name != NULL && *name != 0);
+
 	char buf[65];
 
 	ftok_name(name, buf, sizeof(buf));
@@ -82,11 +90,15 @@ using namespace UCOMMON_NAMESPACE;
 
 MappedMemory::MappedMemory(const char *fn, size_t len)
 {
+	assert(fn != NULL && *fn != 0);
+	assert(len > 0);
+
 	create(fn, size);
 }
 
 MappedMemory::MappedMemory(const char *fn)
 {
+	assert(fn != NULL && *fn != 0);
 	create(fn, 0);
 }
 
@@ -101,6 +113,8 @@ MappedMemory::MappedMemory()
 
 void MappedMemory::create(const char *fn, size_t len)
 {
+	assert(fn != NULL && *fn != 0);
+
 	int share = FILE_SHARE_READ;
 	int prot = FILE_MAP_READ;
 	int mode = GENERIC_READ;
@@ -139,6 +153,7 @@ MappedMemory::~MappedMemory()
 
 void MappedMemory::remove(const char *id)
 {
+	assert(id != NULL && *id != 0);
 }
 
 void MappedMemory::release(void)
@@ -156,6 +171,8 @@ void MappedMemory::release(void)
 
 void MappedMemory::create(const char *fn, size_t len)
 {
+	assert(fn != NULL && *fn != 0);
+
 	int prot = PROT_READ;
 	struct stat ino;
 	char fbuf[65];
@@ -209,6 +226,8 @@ void MappedMemory::release()
 
 void MappedMemory::remove(const char *fn)
 {
+	assert(fn != NULL && *fn != 0);
+
 	char fbuf[65];
 
 	if(*fn != '/') {
@@ -223,6 +242,8 @@ void MappedMemory::remove(const char *fn)
 
 void MappedMemory::remove(const char *name)
 {
+	assert(name != NULL && *name != 0);
+
 	key_t key;
 	fd_t fd;
 
@@ -236,6 +257,9 @@ void MappedMemory::remove(const char *name)
 
 MappedMemory::MappedMemory(const char *name, size_t len)
 {
+	assert(name != NULL && *name != 0);
+	assert(len > 0);
+
 	struct shmid_ds stat;
 	size = 0;
 	used = 0;
@@ -299,6 +323,7 @@ void MappedMemory::fault(void)
 
 void *MappedMemory::sbrk(size_t len)
 {
+	assert(len > 0);
 	void *mp = (void *)(map + used);
 	if(used + len > size)
 		fault();
@@ -316,6 +341,9 @@ void *MappedMemory::offset(size_t offset)
 MappedReuse::MappedReuse(const char *name, size_t osize, unsigned count) :
 ReusableAllocator(), MappedMemory(name,  osize * count)
 {
+	assert(name != NULL && *name != 0);
+	assert(osize > 0 && count > 0);
+
 	objsize = osize;
 	reading = 0;
 }
@@ -323,6 +351,8 @@ ReusableAllocator(), MappedMemory(name,  osize * count)
 MappedReuse::MappedReuse(size_t osize) :
 ReusableAllocator(), MappedMemory()
 {
+	assert(osize > 0);
+
 	objsize = osize;
 	reading = 0;
 }
@@ -359,6 +389,8 @@ ReusableObject *MappedReuse::get(void)
 
 void MappedReuse::removeLocked(ReusableObject *obj)
 {
+	assert(obj != NULL);
+	
 	LinkedObject **ru = (LinkedObject **)freelist;
 	obj->retain();
 	obj->enlist(ru);
