@@ -14,12 +14,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
+#ifndef	DEBUG
 #define	DEBUG
-#include <gnutelephony/sipwitch.h>
+#endif
+
+#include <sipwitch/sipwitch.h>
 
 #include <stdio.h>
 
-using namespace UCOMMON_NAMESPACE;
+using namespace SIPWITCH_NAMESPACE;
 
 static int init_callback = 0;
 static int load_callback = 0;
