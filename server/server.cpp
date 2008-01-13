@@ -121,7 +121,7 @@ void SignalThread::run(void)
 #ifdef	USES_COMMANDS
 static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 {
-	assert(a1 != NULL && a2 != NULL);
+	assert(a1 != NULL);
 
 	char sep = '\n';
 	char buf[64];
