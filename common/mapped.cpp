@@ -41,6 +41,14 @@
 #include <sched.h>
 #endif
 
+#if defined(__APPLE__) && defined(__MACH__)
+#define	INSERT_OFFSET	16
+#endif
+
+#ifndef	INSERT_OFFSET
+#define	INSERT_OFFSET	0
+#endif
+
 #if	defined(HAVE_FTOK) && !defined(HAVE_SHM_OPEN)
 
 static void ftok_name(const char *name, char *buf, size_t max)
@@ -189,6 +197,7 @@ void MappedMemory::create(const char *fn, size_t len)
 	}
 	
 	if(len) {
+		len += INSERT_OFFSET;
 		prot |= PROT_WRITE;
 		fd = shm_open(fn, O_RDWR | O_CREAT, 0660);
 		if(fd > -1)
@@ -205,11 +214,21 @@ void MappedMemory::create(const char *fn, size_t len)
 	if(fd < 0)
 		return;
 
+	
 	map = (caddr_t)mmap(NULL, len, prot, MAP_SHARED, fd, 0);
 	close(fd);
 	if(map != (caddr_t)MAP_FAILED) {
-		size = len;
-		mlock(map, size);
+		size = mapsize = len;
+		mlock(map, mapsize);
+#if INSERT_OFFSET > 0
+		if(prot & PROT_WRITE) {
+			size -= INSERT_OFFSET;
+			snprintf(map, INSERT_OFFSET, "%ld", size);
+		}
+		else
+			size = atol(map); 
+		map += INSERT_OFFSET;
+#endif
 	}
 }
 
@@ -221,8 +240,9 @@ MappedMemory::~MappedMemory()
 void MappedMemory::release()
 {
 	if(size) {
-		munlock(map, size);
-		munmap(map, size);
+		map -= INSERT_OFFSET;
+		munlock(map, mapsize);
+		munmap(map, mapsize);
 		size = 0;
 	}
 }

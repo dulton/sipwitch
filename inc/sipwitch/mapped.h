@@ -61,6 +61,7 @@ using namespace UCOMMON_NAMESPACE;
 class __EXPORT MappedMemory
 {
 private:
+	size_t mapsize;
 	caddr_t map;
 	fd_t fd;	
 
