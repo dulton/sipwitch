@@ -175,13 +175,16 @@ void MappedMemory::create(const char *fn, size_t len)
 
 	int prot = PROT_READ;
 	struct stat ino;
-	char fbuf[65];
+	char fbuf[80];
 
 	size = 0;
 	used = 0;
 
 	if(*fn != '/') {
-		snprintf(fbuf, sizeof(fbuf), "/%s", fn);
+		if(access("/dev/shm", W_OK))
+			snprintf(fbuf, sizeof(fbuf), "/tmp/.%s", fn);
+		else
+			snprintf(fbuf, sizeof(fbuf), "/%s", fn);
 		fn = fbuf;
 	}
 	
@@ -231,7 +234,10 @@ void MappedMemory::remove(const char *fn)
 	char fbuf[65];
 
 	if(*fn != '/') {
-		snprintf(fbuf, sizeof(fbuf), "/%s", fn);
+		if(access("/dev/shm", W_OK))
+			snprintf(fbuf, sizeof(fbuf), "/tmp/.%s", fn);
+		else
+			snprintf(fbuf, sizeof(fbuf), "/%s", fn);
 		fn = fbuf;
 	}
 
