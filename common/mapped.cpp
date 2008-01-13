@@ -181,10 +181,10 @@ void MappedMemory::create(const char *fn, size_t len)
 	used = 0;
 
 	if(*fn != '/') {
-		if(access("/dev/shm", W_OK))
-			snprintf(fbuf, sizeof(fbuf), "/tmp/.%s", fn);
-		else
+		if(!stat("/dev/shm", &ino) && S_ISDIR(ino.st_mode))
 			snprintf(fbuf, sizeof(fbuf), "/%s", fn);
+		else
+			snprintf(fbuf, sizeof(fbuf), "/tmp/.%s.shm", fn);
 		fn = fbuf;
 	}
 	
@@ -231,13 +231,14 @@ void MappedMemory::remove(const char *fn)
 {
 	assert(fn != NULL && *fn != 0);
 
-	char fbuf[65];
+	struct stat ino;
+	char fbuf[80];
 
 	if(*fn != '/') {
-		if(access("/dev/shm", W_OK))
-			snprintf(fbuf, sizeof(fbuf), "/tmp/.%s", fn);
-		else
+		if(!stat("/dev/shm", &ino) && S_ISDIR(ino.st_mode))
 			snprintf(fbuf, sizeof(fbuf), "/%s", fn);
+		else
+			snprintf(fbuf, sizeof(fbuf), "/tmp/.%s.shm", fn);
 		fn = fbuf;
 	}
 
