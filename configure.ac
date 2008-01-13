@@ -248,6 +248,11 @@ AC_ARG_WITH(pkg-config,
 
 for lib in $UCOMMON_CLINK ; do
 	case "$lib" in
+	*,-lc)
+		lib="-lc"
+		;;
+	esac
+	case "$lib" in
 	-l*)
 		libc=`echo $lib | sed -e "s/^-l//"`
 		AC_CHECK_LIB($libc, mkfifo, [
@@ -268,7 +273,14 @@ done
 ac_have_shm_open="no"
 for lib in $UCOMMON_LIBS $UCOMMON_CLINK ; do
 	case "$lib" in
+	*,-lc)
+		lib="-lc"
+		;;
+	esac
+	case "$lib" in
 	-lucommon)
+		;;
+	-lpthread*)
 		;;
 	-l*)
 		libcheck=`echo $lib | sed -e "s/^-l//"`

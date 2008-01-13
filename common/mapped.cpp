@@ -27,7 +27,7 @@
 #include <sys/types.h>
 #endif
 
-#if HAVE_FTOK
+#ifdef HAVE_FTOK
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #endif
@@ -47,6 +47,10 @@
 
 #ifndef	INSERT_OFFSET
 #define	INSERT_OFFSET	0
+#endif
+
+#if defined(__FreeBSD__)
+#undef	HAVE_SHM_OPEN
 #endif
 
 #if	defined(HAVE_FTOK) && !defined(HAVE_SHM_OPEN)
@@ -189,13 +193,11 @@ void MappedMemory::create(const char *fn, size_t len)
 	used = 0;
 
 	if(*fn != '/') {
-		if(!stat("/dev/shm", &ino) && S_ISDIR(ino.st_mode))
-			snprintf(fbuf, sizeof(fbuf), "/%s", fn);
-		else
-			snprintf(fbuf, sizeof(fbuf), "/tmp/.%s.shm", fn);
+		snprintf(fbuf, sizeof(fbuf), "/%s", fn);
 		fn = fbuf;
 	}
 	
+	printf("FN %s\n", fn);
 	if(len) {
 		len += INSERT_OFFSET;
 		prot |= PROT_WRITE;
@@ -255,10 +257,7 @@ void MappedMemory::remove(const char *fn)
 	char fbuf[80];
 
 	if(*fn != '/') {
-		if(!stat("/dev/shm", &ino) && S_ISDIR(ino.st_mode))
-			snprintf(fbuf, sizeof(fbuf), "/%s", fn);
-		else
-			snprintf(fbuf, sizeof(fbuf), "/tmp/.%s.shm", fn);
+		snprintf(fbuf, sizeof(fbuf), "/%s", fn);
 		fn = fbuf;
 	}
 
@@ -282,7 +281,7 @@ void MappedMemory::remove(const char *name)
 	}
 }
 
-MappedMemory::MappedMemory(const char *name, size_t len)
+void MappedMemory::create(const char *name, size_t len)
 {
 	assert(name != NULL && *name != 0);
 	assert(len > 0);
