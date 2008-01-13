@@ -197,7 +197,6 @@ void MappedMemory::create(const char *fn, size_t len)
 		fn = fbuf;
 	}
 	
-	printf("FN %s\n", fn);
 	if(len) {
 		len += INSERT_OFFSET;
 		prot |= PROT_WRITE;
