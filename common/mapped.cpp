@@ -66,9 +66,9 @@ static void ftok_name(const char *name, char *buf, size_t max)
 		++name;
 
 	if(!stat("/var/run/ipc", &ino) && S_ISDIR(ino.st_mode))
-		snprintf(buf, sizeof(buf), "/var/run/ipc/%s", name);
+		snprintf(buf, max, "/var/run/ipc/%s", name);
 	else
-		snprintf(buf, sizeof(buf), "/tmp/.%s.ipc", name);
+		snprintf(buf, max, "/tmp/.%s.ipc", name);
 }
 
 static key_t createipc(const char *name, char mode)
