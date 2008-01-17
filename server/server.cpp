@@ -72,7 +72,11 @@ SignalThread::~SignalThread()
 {
 	if(started) {
 		shutdown = true;
+#ifdef	__FreeBSD__
+		raise(SIGINT);
+#else
 		pthread_kill(tid, SIGALRM);
+#endif
 		join();
 	}
 }
