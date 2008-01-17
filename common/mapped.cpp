@@ -283,7 +283,6 @@ void MappedMemory::remove(const char *name)
 void MappedMemory::create(const char *name, size_t len)
 {
 	assert(name != NULL && *name != 0);
-	assert(len > 0);
 
 	struct shmid_ds stat;
 	size = 0;
