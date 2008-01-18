@@ -49,7 +49,7 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	access = NULL;
 	dialed = NULL;
 	authorized = NULL;
-	reg = NULL;
+	reginfo = NULL;
 	session = NULL;
 	via_address = from_address = request_address = NULL;
 }
@@ -73,9 +73,9 @@ void thread::invite()
 			toext = atoi(target);
 		target = service::getValue(dialed, "id");
 	}
-	else if(reg) {
-		target = reg->userid;
-		toext = reg->ext;
+	else if(reginfo) {
+		target = reginfo->userid;
+		toext = reginfo->ext;
 	}
 
 	switch(destination) {
@@ -148,7 +148,7 @@ void thread::invite()
 		break;  	
 	}
 
-	if(reg) {
+	if(reginfo) {
 		// get rid of config ref if we are calling registry target
 		if(dialed) {
 			config::release(dialed);
@@ -321,12 +321,12 @@ rewrite:
 	if(!target || !*target || strlen(target) >= MAX_USERID_SIZE)
 		goto invalid;
 
-	reg = registry::access(target);
+	reginfo = registry::access(target);
 	dialed = config::getProvision(target);
 
-	debug(4, "rewrite process; registry=%p, dialed=%p\n", reg, dialed);
+	debug(4, "rewrite process; registry=%p, dialed=%p\n", reginfo, dialed);
 
-	if(!reg && !dialed)
+	if(!reginfo && !dialed)
 		goto routing;
 
 	// reject nodes with defined errors
@@ -337,7 +337,7 @@ rewrite:
 		goto invalid;
 	}
 
-	if(!reg && dialed) {
+	if(!reginfo && dialed) {
 		if(!stricmp(dialed->getId(), "group"))
 			return authenticate();
 		if(!stricmp(dialed->getId(), "refer"))
@@ -364,18 +364,18 @@ rewrite:
 		goto invalid;
 	}
 
-	if(reg && reg->type == MappedRegistry::TEMPORARY) {
+	if(reginfo && reginfo->type == MappedRegistry::TEMPORARY) {
 		error = SIP_GONE;
 		goto invalid;
 	}
 
 	time(&now);
 
-	if(reg && reg->expires && reg->expires < now) {
+	if(reginfo && reginfo->expires && reginfo->expires < now) {
 		error = SIP_GONE;
 		goto invalid;
 	}
-	else if(reg && !dialed) {
+	else if(reginfo && !dialed) {
 		error = SIP_NOT_FOUND;
 		goto invalid;
 	}
@@ -384,12 +384,12 @@ rewrite:
 	if(registry::isExtension(target)) {
 		if(!authenticate())
 			return false;
-		if(!reg)
+		if(!reginfo)
 			goto invalid;
 		return true;
 	}
 
-	if(reg && reg->type == MappedRegistry::USER && (reg->profile.features & USER_PROFILE_INCOMING))
+	if(reginfo && reginfo->type == MappedRegistry::USER && (reginfo->profile.features & USER_PROFILE_INCOMING))
 		goto anonymous;
 
 	return authenticate();
@@ -423,7 +423,7 @@ routing:
 	if(!pp)
 		goto static_routing;
 
-	reg = pp->registry;
+	reginfo = pp->registry;
 	dialing[0] = 0;
 	if(pp->prefix[0] == '-') {
 		if(!strnicmp(target, pp->prefix + 1, strlen(pp->prefix) - 1))
@@ -475,10 +475,10 @@ static_routing:
 		string::set(dbuf, sizeof(dbuf), dialing);
 		target = dbuf;
 		config::release(dialed);
-		if(reg)
-			registry::release(reg);
+		if(reginfo)
+			registry::release(reginfo);
 		dialed = NULL;
-		reg = NULL;
+		reginfo = NULL;
 		destination = LOCAL;
 		goto rewrite;
 	}
@@ -508,12 +508,12 @@ remote:
 		return false;
 
 	// must be active registration to dial out...
-	reg = registry::access(identity);
+	reginfo = registry::access(identity);
 	time(&now);
-	if(!reg || (reg->expires && reg->expires < now))
+	if(!reginfo || (reginfo->expires && reginfo->expires < now))
 		goto invalid;
 
-	if(reg->type == MappedRegistry::USER && !(reg->profile.features & USER_PROFILE_OUTGOING))
+	if(reginfo->type == MappedRegistry::USER && !(reginfo->profile.features & USER_PROFILE_OUTGOING))
 		goto invalid;
 
 	return true;
@@ -768,8 +768,8 @@ void thread::reregister(const char *contact, time_t interval)
 		goto reply;
 	}
 
-	reg = registry::create(identity);
-	if(!reg) {
+	reginfo = registry::create(identity);
+	if(!reginfo) {
 		if(!warning_registry) {
 			warning_registry = true;
 			process::errlog(ERRLOG, "registry capacity reached");
@@ -780,19 +780,19 @@ void thread::reregister(const char *contact, time_t interval)
 	}
 	warning_registry = false;
 	time(&expire);
-	if(reg->expires < expire) {
-		reg->created = expire;
-		getDevice(reg);
+	if(reginfo->expires < expire) {
+		reginfo->created = expire;
+		getDevice(reginfo);
 	}
 
 	expire += interval + 3;	// overdraft 3 seconds...
 
-	refresh = reg->refresh(via_address, expire);
+	refresh = reginfo->refresh(via_address, expire);
 	if(!refresh) {
-		if(reg->type == MappedRegistry::USER && (reg->profile.features & USER_PROFILE_MULTITARGET))
-			count = reg->addTarget(via_address, expire, contact);
+		if(reginfo->type == MappedRegistry::USER && (reginfo->profile.features & USER_PROFILE_MULTITARGET))
+			count = reginfo->addTarget(via_address, expire, contact);
 		else
-			count = reg->setTarget(via_address, expire, contact);
+			count = reginfo->setTarget(via_address, expire, contact);
 	}
 	if(refresh) 
 		debug(2, "refreshing %s for %ld seconds from %s:%s", getIdent(), interval, via_header->host, via_header->port);
@@ -804,13 +804,13 @@ void thread::reregister(const char *contact, time_t interval)
 		goto reply;
 	}		
 
-	if(reg->type != MappedRegistry::SERVICE || reg->routes)
+	if(reginfo->type != MappedRegistry::SERVICE || reginfo->routes)
 		goto reply;
 
 	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
 		c = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
 		if(c && c->url && c->url->username) {
-			reg->addContact(c->url->username);
+			reginfo->addContact(c->url->username);
 			process::errlog(INFO, "registering service %s:%s@%s:%s",
 				c->url->scheme, c->url->username, c->url->host, c->url->port);
 		}
@@ -820,7 +820,7 @@ reply:
 	eXosip_message_build_answer(sevent->tid, answer, &reply);
 	eXosip_message_send_answer(sevent->tid, answer, reply);
 	eXosip_unlock();
-	if(reg && reg->type == MappedRegistry::USER && answer == SIP_OK)
+	if(reginfo && reginfo->type == MappedRegistry::USER && answer == SIP_OK)
 		messages::update(identity);
 }
 
@@ -907,7 +907,7 @@ void thread::run(void)
 
 	for(;;) {
 		assert(instance > 0);
-		assert(reg == NULL);
+		assert(reginfo == NULL);
 		assert(dialed == NULL);
 		assert(authorized == NULL);
 		assert(access == NULL);
@@ -995,9 +995,9 @@ void thread::run(void)
 			session = NULL;
 		}
 
-		if(reg) {
-			registry::release(reg);
-			reg = NULL;
+		if(reginfo) {
+			registry::release(reginfo);
+			reginfo = NULL;
 		}
 
 		if(via_address) {

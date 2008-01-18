@@ -402,7 +402,7 @@ private:
 	cidr *access;
 	service::keynode *authorized;
 	service::keynode *dialed;
-	registry::mapped *reg;
+	registry::mapped *reginfo;
 	eXosip_event_t *sevent;
 	char buffer[MAX_URI_SIZE];	
 	char identbuf[MAX_USERID_SIZE + 12];
