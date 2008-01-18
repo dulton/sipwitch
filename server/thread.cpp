@@ -49,7 +49,7 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	access = NULL;
 	dialed = NULL;
 	authorized = NULL;
-	registry = NULL;
+	reg = NULL;
 	session = NULL;
 	via_address = from_address = request_address = NULL;
 }
@@ -73,9 +73,9 @@ void thread::invite()
 			toext = atoi(target);
 		target = service::getValue(dialed, "id");
 	}
-	else if(registry) {
-		target = registry->userid;
-		toext = registry->ext;
+	else if(reg) {
+		target = reg->userid;
+		toext = reg->ext;
 	}
 
 	switch(destination) {
@@ -107,7 +107,7 @@ void thread::invite()
 			return;
 		}
 
-		session->registry = registry::invite(session->sysident);
+		session->reg = registry::invite(session->sysident);
 		debug(1, "local call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, call->dialed, session->sysident);
 		break;
@@ -131,7 +131,7 @@ void thread::invite()
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
 			string::set(session->sysident, sizeof(session->sysident), identity);
-		session->registry = registry::invite(session->sysident);
+		session->reg = registry::invite(session->sysident);
 		if(display[0])
 			string::set(session->display, sizeof(session->display), display);
 		else
@@ -142,13 +142,13 @@ void thread::invite()
 			session->sequence, session->cid, getIdent(), call->dialed);
 		break;
 	case ROUTED:
-		session->registry = registry::invite(identity);
+		session->reg = registry::invite(identity);
 		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
 			session->sequence, session->cid, target, getIdent(), dialing);
 		break;  	
 	}
 
-	if(registry) {
+	if(reg) {
 		// get rid of config ref if we are calling registry target
 		if(dialed) {
 			config::release(dialed);
@@ -321,12 +321,12 @@ rewrite:
 	if(!target || !*target || strlen(target) >= MAX_USERID_SIZE)
 		goto invalid;
 
-	registry = registry::access(target);
+	reg = registry::access(target);
 	dialed = config::getProvision(target);
 
-	debug(4, "rewrite process; registry=%p, dialed=%p\n", registry, dialed);
+	debug(4, "rewrite process; registry=%p, dialed=%p\n", reg, dialed);
 
-	if(!registry && !dialed)
+	if(!reg && !dialed)
 		goto routing;
 
 	// reject nodes with defined errors
@@ -337,14 +337,14 @@ rewrite:
 		goto invalid;
 	}
 
-	if(!registry && dialed) {
+	if(!reg && dialed) {
 		if(!stricmp(dialed->getId(), "group"))
 			return authenticate();
 		if(!stricmp(dialed->getId(), "refer"))
 			return authenticate();
 		if(!stricmp(dialed->getId(), "test")) {
 			if(session && authenticate()) {
-				session->registry = registry::invite(identity);
+				session->reg = registry::invite(identity);
 				cp = service::getValue(dialed, "error");
 				if(cp) {
 					error = atoi(cp);
@@ -364,18 +364,18 @@ rewrite:
 		goto invalid;
 	}
 
-	if(registry && registry->type == MappedRegistry::TEMPORARY) {
+	if(reg && reg->type == MappedRegistry::TEMPORARY) {
 		error = SIP_GONE;
 		goto invalid;
 	}
 
 	time(&now);
 
-	if(registry && registry->expires && registry->expires < now) {
+	if(reg && reg->expires && reg->expires < now) {
 		error = SIP_GONE;
 		goto invalid;
 	}
-	else if(registry && !dialed) {
+	else if(reg && !dialed) {
 		error = SIP_NOT_FOUND;
 		goto invalid;
 	}
@@ -384,12 +384,12 @@ rewrite:
 	if(registry::isExtension(target)) {
 		if(!authenticate())
 			return false;
-		if(!registry)
+		if(!reg)
 			goto invalid;
 		return true;
 	}
 
-	if(registry && registry->type == MappedRegistry::USER && (registry->profile.features & USER_PROFILE_INCOMING))
+	if(reg && reg->type == MappedRegistry::USER && (reg->profile.features & USER_PROFILE_INCOMING))
 		goto anonymous;
 
 	return authenticate();
@@ -423,7 +423,7 @@ routing:
 	if(!pp)
 		goto static_routing;
 
-	registry = pp->registry;
+	reg = pp->registry;
 	dialing[0] = 0;
 	if(pp->prefix[0] == '-') {
 		if(!strnicmp(target, pp->prefix + 1, strlen(pp->prefix) - 1))
@@ -475,10 +475,10 @@ static_routing:
 		string::set(dbuf, sizeof(dbuf), dialing);
 		target = dbuf;
 		config::release(dialed);
-		if(registry)
-			registry::release(registry);
+		if(reg)
+			registry::release(reg);
 		dialed = NULL;
-		registry = NULL;
+		reg = NULL;
 		destination = LOCAL;
 		goto rewrite;
 	}
@@ -508,12 +508,12 @@ remote:
 		return false;
 
 	// must be active registration to dial out...
-	registry = registry::access(identity);
+	reg = registry::access(identity);
 	time(&now);
-	if(!registry || (registry->expires && registry->expires < now))
+	if(!reg || (reg->expires && reg->expires < now))
 		goto invalid;
 
-	if(registry->type == MappedRegistry::USER && !(registry->profile.features & USER_PROFILE_OUTGOING))
+	if(reg->type == MappedRegistry::USER && !(reg->profile.features & USER_PROFILE_OUTGOING))
 		goto invalid;
 
 	return true;
@@ -768,8 +768,8 @@ void thread::reregister(const char *contact, time_t interval)
 		goto reply;
 	}
 
-	registry = registry::create(identity);
-	if(!registry) {
+	reg = registry::create(identity);
+	if(!reg) {
 		if(!warning_registry) {
 			warning_registry = true;
 			process::errlog(ERRLOG, "registry capacity reached");
@@ -780,19 +780,19 @@ void thread::reregister(const char *contact, time_t interval)
 	}
 	warning_registry = false;
 	time(&expire);
-	if(registry->expires < expire) {
-		registry->created = expire;
-		getDevice(registry);
+	if(reg->expires < expire) {
+		reg->created = expire;
+		getDevice(reg);
 	}
 
 	expire += interval + 3;	// overdraft 3 seconds...
 
-	refresh = registry->refresh(via_address, expire);
+	refresh = reg->refresh(via_address, expire);
 	if(!refresh) {
-		if(registry->type == MappedRegistry::USER && (registry->profile.features & USER_PROFILE_MULTITARGET))
-			count = registry->addTarget(via_address, expire, contact);
+		if(reg->type == MappedRegistry::USER && (reg->profile.features & USER_PROFILE_MULTITARGET))
+			count = reg->addTarget(via_address, expire, contact);
 		else
-			count = registry->setTarget(via_address, expire, contact);
+			count = reg->setTarget(via_address, expire, contact);
 	}
 	if(refresh) 
 		debug(2, "refreshing %s for %ld seconds from %s:%s", getIdent(), interval, via_header->host, via_header->port);
@@ -804,24 +804,23 @@ void thread::reregister(const char *contact, time_t interval)
 		goto reply;
 	}		
 
-	if(registry->type != MappedRegistry::SERVICE || registry->routes)
+	if(reg->type != MappedRegistry::SERVICE || reg->routes)
 		goto reply;
 
 	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
 		c = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
 		if(c && c->url && c->url->username) {
-			registry->addContact(c->url->username);
+			reg->addContact(c->url->username);
 			process::errlog(INFO, "registering service %s:%s@%s:%s",
 				c->url->scheme, c->url->username, c->url->host, c->url->port);
 		}
 	}
-
 reply:
 	eXosip_lock();
 	eXosip_message_build_answer(sevent->tid, answer, &reply);
 	eXosip_message_send_answer(sevent->tid, answer, reply);
 	eXosip_unlock();
-	if(registry && registry->type == MappedRegistry::USER && answer == SIP_OK)
+	if(reg && reg->type == MappedRegistry::USER && answer == SIP_OK)
 		messages::update(identity);
 }
 
@@ -908,7 +907,7 @@ void thread::run(void)
 
 	for(;;) {
 		assert(instance > 0);
-		assert(registry == NULL);
+		assert(reg == NULL);
 		assert(dialed == NULL);
 		assert(authorized == NULL);
 		assert(access == NULL);
@@ -996,9 +995,9 @@ void thread::run(void)
 			session = NULL;
 		}
 
-		if(registry) {
-			registry::release(registry);
-			registry = NULL;
+		if(reg) {
+			registry::release(reg);
+			reg = NULL;
 		}
 
 		if(via_address) {

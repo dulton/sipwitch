@@ -195,7 +195,7 @@ private:
 	class __LOCAL session : public LinkedObject
 	{
 	public:
-		registry::mapped *registry;
+		registry::mapped *reg;
 		int cid, did;
 		time_t activates;
 		uint32_t sequence;
@@ -402,7 +402,7 @@ private:
 	cidr *access;
 	service::keynode *authorized;
 	service::keynode *dialed;
-	registry::mapped *registry;
+	registry::mapped *reg;
 	eXosip_event_t *sevent;
 	char buffer[MAX_URI_SIZE];	
 	char identbuf[MAX_USERID_SIZE + 12];

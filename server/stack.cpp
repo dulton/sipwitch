@@ -69,7 +69,7 @@ stack::segment::segment(call *cr, int cid, int did) : OrderedObject()
 	sid.parent = cr;
 	sid.state = session::OPEN;
 	sid.sdp[0] = 0;
-	sid.registry = NULL;
+	sid.reg = NULL;
 }
 
 void *stack::segment::operator new(size_t size)
@@ -112,9 +112,9 @@ void stack::call::disconnect(void)
 
 	linked_pointer<segment> sp = segments.begin();
 	while(sp) {
-		if(sp->sid.registry) {
-			sp->sid.registry->decUse();
-			sp->sid.registry = NULL;
+		if(sp->sid.reg) {
+			sp->sid.reg->decUse();
+			sp->sid.reg = NULL;
 		}
 		if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
 			sp->sid.state = session::CLOSED;
@@ -350,9 +350,9 @@ void stack::clear(session *s)
 		s->delist(&hash[s->cid % keysize]);
 		s->cid = 0;
 		s->did = -1;
-		if(s->registry) {
-			s->registry->decUse();
-			s->registry = NULL;
+		if(s->reg) {
+			s->reg->decUse();
+			s->reg = NULL;
 		}
 		locking.share();
 	}
@@ -383,9 +383,9 @@ void stack::destroy(call *cr)
 	while(sp) {
 		--active_segments;
 		segment *next = sp.getNext();
-		if(sp->sid.registry) {
-			sp->sid.registry->decUse();
-			sp->sid.registry = NULL;
+		if(sp->sid.reg) {
+			sp->sid.reg->decUse();
+			sp->sid.reg = NULL;
 		}
 		if(sp->sid.cid > 0) {
 			if(sp->sid.state != session::CLOSED)
