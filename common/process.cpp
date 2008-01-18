@@ -705,14 +705,12 @@ void process::util(void)
 void process::foreground(const char *uid, const char *cfgpath, unsigned priority, size_t ps)
 {
 	assert(uid == NULL || *uid != 0);
-	assert(cfgfile == NULL || *cfgfile != 0);
 	setup(uid, cfgpath);
 }
 
 void process::background(const char *uid, const char *cfgpath, unsigned priority, size_t ps)
 {
 	assert(uid == NULL || *uid != 0);
-	assert(cfgfile == NULL || *cfgfile != 0);
 	setup(uid, cfgpath);
 }
 
