@@ -247,7 +247,7 @@ bool thread::authorize(void)
 	const char *invited = NULL;
 	char dbuf[MAX_USERID_SIZE];
 	registry::pattern *pp;
-	const char *from_port, *to_port, *local_port;
+	unsigned from_port = 5060, to_port = 5060, local_port = 5060;
 
 	if(!sevent->request || !sevent->request->to || !sevent->request->from || !sevent->request->req_uri)
 		goto invalid;
@@ -274,20 +274,23 @@ bool thread::authorize(void)
 	if(stricmp(from->url->scheme, scheme) || stricmp(uri->scheme, scheme))
 		goto invalid;
 
-	local_port = uri->port;
-	from_port = from->url->port;
-	to_port = to->url->port;
-	if(!local_port || !atoi(local_port))
-		local_port = "5060";
-	if(!from_port || !atoi(from_port))
-		from_port = "5060";
-	if(!to_port || !atoi(to_port))
-		to_port = "5060";
+	if(uri->port)
+		local_port = atoi(uri->port);
+	if(from->url->port)
+		from_port = atoi(from->url->port);
+	if(to->url->port)
+		to_port = atoi(to->url->port);
+	if(!local_port)
+		local_port = 5060;
+	if(!from_port)
+		from_port = 5060;
+	if(!to_port)
+		to_port = 5060;
 
-/*	debug(3, "request from=%s:%s@%s:%s, uri=%s:%s@%s:%s, to=%s:%s@%s:%s\n",
+/*	debug(3, "request from=%s:%s@%s:%d, uri=%s:%s@%s:%d, to=%s:%s@%s:%d\n",
 		from->url->scheme, from->url->username, from->url->host, from_port,
 		uri->scheme, uri->username, uri->host, local_port,
-		to->url->scheme, to->url->username, to->url->host, from_port);
+		to->url->scheme, to->url->username, to->url->host, to_port);
 */
 	from_address = new Socket::address(from->url->host, from_port);
 	request_address = new Socket::address(uri->host, local_port);
@@ -297,7 +300,7 @@ bool thread::authorize(void)
 		goto invalid;
 	}
 
-	if(atoi(local_port) != stack::sip.port)
+	if(local_port != stack::sip.port)
 		goto remote;
 
 	if(string::ifind(stack::sip.localnames, uri->host, " ,;:\t\n"))
@@ -683,6 +686,7 @@ void thread::challenge(void)
 bool thread::getsource(void)
 {
 	int vpos = 0;
+	unsigned via_port = 5060;
 
 	if(via_address)
 		return true;
@@ -698,7 +702,11 @@ bool thread::getsource(void)
 	if(!via_header)
 		return false;
 
-	via_address = new Socket::address(via_header->host, via_header->port);
+	if(via_header->port)
+		via_port = atoi(via_header->port);
+	if(!via_port)
+		via_port = 5060;
+	via_address = new Socket::address(via_header->host, via_port);
 	access = config::getPolicy(via_address->getAddr());
 	return true;
 }
