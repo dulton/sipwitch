@@ -188,7 +188,7 @@ static void regdump(void)
 	const char *type;
 
 	if(!count) {
-		process::errlog(FAILURE, "cannot access mapped registry");
+		fprintf(stderr, "*** sipw: cannot access mapped registry\n");
 		exit(-1);
 	}
 

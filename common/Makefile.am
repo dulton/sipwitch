@@ -22,7 +22,7 @@ LTCXXCOMPILE = $(LIBTOOL) --tag=$(MODEL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 lib_LTLIBRARIES = libgnusipwitch.la 
 
 libgnusipwitch_la_LDFLAGS = @SIPWITCH_LIBS@ $(RELEASE) 
-libgnusipwitch_la_SOURCES = mapped.cpp service.cpp digest.cpp process.cpp
+libgnusipwitch_la_SOURCES = service.cpp digest.cpp process.cpp
 libgnusipwitch_la_LINK = $(LIBTOOL) --tag=$(MODEL) $(AM_LIBTOOLFLAGS) \
     $(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
     $(CXXFLAGS) $(libucommon_la_LDFLAGS) $(LDFLAGS) -o $@

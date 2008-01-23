@@ -14,6 +14,8 @@ VERSION="0.2.0"
 LT_RELEASE="0.2"
 LT_VERSION="0:0"
 
+UCOMMON_REQUIRES="1.4.0"
+
 AC_CONFIG_AUX_DIR(autoconf)
 AC_CANONICAL_SYSTEM
 AC_PROG_CPP
@@ -231,7 +233,7 @@ fi
 
 AC_ARG_WITH(pkg-config,
 	AC_HELP_STRING([--with-pkg-config],[enable support for pkg-config]),[
-	PKG_CHECK_MODULES(UCOMMON, ucommon >= 1.3.0)
+	PKG_CHECK_MODULES(UCOMMON, ucommon >= $UCOMMON_REQUIRES)
 	UCOMMON_CLINK=`pkg-config --variable=clink ucommon`
 	UCOMMON_MODEL=`pkg-config --variable=model ucommon`
 ],[
@@ -258,9 +260,6 @@ for lib in $UCOMMON_CLINK ; do
 		AC_CHECK_LIB($libc, mkfifo, [
 			AC_DEFINE(HAVE_MKFIFO, [1], [fifo control port])
 		])
-		AC_CHECK_LIB($libc, ftok, [
-			AC_DEFINE(HAVE_FTOK, [1], [ftok ipc support])
-		])
 		AC_CHECK_LIB($libc, setpgrp, [
 			AC_DEFINE(HAVE_SETPGR, [1], [process set group])
 		])
@@ -270,33 +269,7 @@ for lib in $UCOMMON_CLINK ; do
 	esac
 done
 
-ac_have_shm_open="no"
-for lib in $UCOMMON_LIBS $UCOMMON_CLINK ; do
-	case "$lib" in
-	*,-lc)
-		lib="-lc"
-		;;
-	esac
-	case "$lib" in
-	-lucommon)
-		;;
-	-lpthread*)
-		;;
-	-l*)
-		libcheck=`echo $lib | sed -e "s/^-l//"`
-		if test "$ac_have_shm_open" = "no" ; then
-			AC_CHECK_LIB($libcheck, shm_open, [
-				AC_DEFINE(HAVE_SHM_OPEN, [1], [shared memory open])
-				ac_have_shm_open="yes"
-			])
-		fi
-		;;
-	*)
-		;;
-	esac
-done
-
-AC_CHECK_HEADERS(sys/resource.h sys/mman.h syslog.h)
+AC_CHECK_HEADERS(sys/resource.h syslog.h)
 AC_CHECK_FUNCS(setrlimit)
 
 AC_LANG_CPLUSPLUS
@@ -361,6 +334,7 @@ AH_BOTTOM([
 ])
 
 AC_SUBST(plugindir)
+AC_SUBST(UCOMMON_REQUIRES)
 AC_SUBST(UCOMMON_MODEL)
 AC_SUBST(EXPORT_FLAGS)
 AC_SUBST(EXPORT_LIBS)
