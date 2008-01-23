@@ -602,7 +602,7 @@ static void setup(const char *uid, const char *cfgfile)
 	GetEnvironmentVariable("APPDATA", buf, 192);
 	len = strlen(buf);
 	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch"); 
-	mkdir(buf);
+	mkdir(buf, 0770);
 	chdir(buf);
 	SetEnvironmentVariable("PWD", buf);
 	SetEnvironmentVariable("IDENT", "sipwitch");
@@ -610,7 +610,7 @@ static void setup(const char *uid, const char *cfgfile)
 	GetEnvironmentVariable("USERPROFILE", buf, 192);
 	len = strlen(buf);
 	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony");
-	mkdir(buf);
+	mkdir(buf, 0770);
 	SetEnvironmentVariable("HOME", buf);
 	GetEnvironmentVariable("ComSpec", buf, sizeof(buf));
 	SetEnvironmentVariable("SHELL", buf);

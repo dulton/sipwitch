@@ -15,11 +15,6 @@
 
 #include "server.h"
 
-#ifdef	_MSWINDOWS_
-#define	setenv(s, v, p)	SetEnvironmentVariable(s, v)
-#define	mkdir(v, p)	::mkdir(v)
-#endif
-
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
