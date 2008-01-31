@@ -978,7 +978,7 @@ void thread::run(void)
 			if(sevent->cid < 1)
 				break;
 			expiration();
-			session = stack::create(sevent->cid, sevent->did);
+			session = stack::create(sevent->cid, sevent->did, sevent->tid);
 			if(authorize()) 
 				invite();
 			break;

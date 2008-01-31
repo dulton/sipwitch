@@ -50,7 +50,7 @@ static bool tobool(const char *s)
 
 stack stack::sip;
 
-stack::segment::segment(call *cr, int cid, int did) : OrderedObject()
+stack::segment::segment(call *cr, int cid, int did, int tid) : OrderedObject()
 {
 	assert(cr != NULL);
 	assert(cid > 0);
@@ -66,6 +66,7 @@ stack::segment::segment(call *cr, int cid, int did) : OrderedObject()
 	sid.expires = 0l;
 	sid.cid = cid;
 	sid.did = did;
+	sid.tid = tid;
 	sid.parent = cr;
 	sid.state = session::OPEN;
 	sid.sdp[0] = 0;
@@ -178,14 +179,18 @@ void stack::call::update(void)
 
 void stack::call::expired(void)
 {
+	linked_pointer<segment> sp;
+	osip_message_t *reply = NULL;
+
 	mutex::protect(this);
 	switch(state) {
 	case HOLDING:	// hold-recall timer expired...
 
 	case RINGING:	// maybe ring-no-answer with forward? invite expired?
-
 	case BUSY:		// invite expired
 	case ACTIVE:	// active call session expired without re-invite
+		if(experror != 0 && source != NULL && source->state != session::CLOSED)
+			break;
 
 	case FINAL:		// session expects to be cleared....
 	case REORDER:	// only different in logging
@@ -197,6 +202,18 @@ void stack::call::expired(void)
 		stack::destroy(this);
 		return;
 	}
+
+	if(experror && source) {
+		debug(4, "suspending call %08x:%u, error=%d\n", source->sequence, source->cid, experror);
+		// drop any active invites...
+		stack::disjoin(this);
+
+		// notify caller....
+		eXosip_call_send_answer(source->tid, experror, NULL);
+		experror = 0;
+		state = REORDER;
+	}
+
 	mutex::release(this);
 }
 
@@ -370,6 +387,29 @@ void stack::destroy(session *s)
 	destroy(s->parent);
 }
 
+void stack::disjoin(call *cr)
+{
+	assert(cr != NULL);
+
+	linked_pointer<segment> sp = cr->segments.begin();
+	while(sp) {
+		session *s = sp->get();
+		if(s != cr->source) {
+			if(s->reg) {
+				s->reg->decUse();
+				s->reg = NULL;
+			}
+			if(s->cid > 0 && s->state != session::CLOSED) {
+				eXosip_lock();
+				eXosip_call_terminate(s->cid, s->did);
+				eXosip_unlock();
+				s->state = session::CLOSED;
+			}
+		}
+		sp.next();
+	}
+}
+
 void stack::destroy(call *cr)
 {
 	assert(cr != NULL);
@@ -388,8 +428,11 @@ void stack::destroy(call *cr)
 			sp->sid.reg = NULL;
 		}
 		if(sp->sid.cid > 0) {
-			if(sp->sid.state != session::CLOSED)
+			if(sp->sid.state != session::CLOSED) {
+				eXosip_lock();
 				eXosip_call_terminate(sp->sid.cid, sp->sid.did);
+				eXosip_unlock();
+			}
 			sp->sid.delist(&hash[sp->sid.cid % keysize]);
 		}
 		delete *sp;
@@ -419,7 +462,7 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 	}
 }
 	
-stack::session *stack::create(int cid, int did)
+stack::session *stack::create(int cid, int did, int tid)
 {
 	assert(cid > 0);
 
@@ -437,7 +480,7 @@ stack::session *stack::create(int cid, int did)
 	cr->state = call::INITIAL;
 	cr->enlist(&stack::sip);
 	cr->starting = 0l;
-	sp = new segment(cr, cid, did);	// after count set to 0!
+	sp = new segment(cr, cid, did, tid);	// after count set to 0!
 	cr->source = &(sp->sid);
 
 	locking.share();

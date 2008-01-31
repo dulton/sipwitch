@@ -196,7 +196,7 @@ private:
 	{
 	public:
 		registry::mapped *reg;
-		int cid, did;
+		int cid, did, tid;
 		time_t activates;
 		uint32_t sequence;
 		call *parent;
@@ -226,12 +226,15 @@ private:
 	class __LOCAL segment : public OrderedObject
 	{
 	public:
-		segment(call *cr, int cid, int did);
+		segment(call *cr, int cid, int did, int tid);
 
 		static void *operator new(size_t size);
 		static void operator delete(void *obj);
 
 		session sid;
+
+		inline session *get(void)
+			{return &sid;};
 	};
 
 	class __LOCAL call : public TimerQueue::event
@@ -265,6 +268,7 @@ private:
 		unsigned unreachable;	// number of unreachable segments
 		unsigned forwarding;	// number of forwarding segments
 		time_t expires, starting;
+		int experror;			// error at expiration...
 
 		static void *operator new(size_t size);
 		static void operator delete(void *obj);
@@ -302,9 +306,10 @@ public:
 	__EXPORT static void logCall(const char *reason, session *session, const char *joined = NULL);
 	__EXPORT static void setBusy(int tid, session *session);
 	__EXPORT static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
-	__EXPORT static session *create(int cid, int did);
+	__EXPORT static session *create(int cid, int did, int tid);
 	__EXPORT static void destroy(session *s);
 	__EXPORT static void destroy(call *cr);
+	__EXPORT static void disjoin(call *cr);
 	__EXPORT static void release(session *s);
 	__EXPORT static void clear(session *s);
 	__EXPORT static void close(session *s);
