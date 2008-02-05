@@ -87,10 +87,6 @@ void stack::segment::operator delete(void *obj)
 	((LinkedObject*)(obj))->enlist(&freesegs);
 }
 
-stack::call::call() : TimerQueue::event(Timer::reset), segments()
-{
-}
-
 void *stack::call::operator new(size_t size)
 {
 	assert(size == sizeof(stack::call));
@@ -105,116 +101,6 @@ void stack::call::operator delete(void *obj)
 
 	((LinkedObject*)(obj))->enlist(&freecalls);
 	--active_calls;
-}
-
-void stack::call::disconnect(void)
-{
-	debug(4, "disconnecting call %08x:%u\n", source->sequence, source->cid);
-
-	linked_pointer<segment> sp = segments.begin();
-	while(sp) {
-		if(sp->sid.reg) {
-			sp->sid.reg->decUse();
-			sp->sid.reg = NULL;
-		}
-		if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
-			sp->sid.state = session::CLOSED;
-			eXosip_lock();
-			eXosip_call_terminate(sp->sid.cid, sp->sid.did);
-			eXosip_unlock();
-		}
-		sp.next();
-	}
-
-	if(state != INITIAL) {
-		state = FINAL;
-		set((timeout_t)7000);
-		update();
-	}
-}
-
-void stack::call::closing(session *s)
-{
-	assert(s != NULL);
-
-	if(invited) {
-		switch(s->state)
-		{
-		case session::RING:
-			--ringing;
-			break;
-		case session::FWD:
-			--forwarding;
-			break;
-		case session::BUSY:
-			--ringbusy;
-			break;
-		case session::REORDER:
-			--unreachable;
-			break;
-		default:
-			break;
-		}
-		--invited;
-	}
-
-	if(invited) {
-		update();
-		return;
-	}
-
-	disconnect();
-}
-
-void stack::call::update(void)
-{
-	// TODO: switch by call state to see if we send reply code!
-	if(state == INITIAL) {
-		// if(forwarding && invited - unreachable - ringbusy == forwarding)
-		// else if(ringing && invited - unreachable - ringbusy == ringing + forwarding)...
-		// else if(ringbusy && invited - unreachable == ringbusy) ...
-		// else if(invited == unreachable) ...
-	}
-}
-
-void stack::call::expired(void)
-{
-	linked_pointer<segment> sp;
-	osip_message_t *reply = NULL;
-
-	mutex::protect(this);
-	switch(state) {
-	case HOLDING:	// hold-recall timer expired...
-
-	case RINGING:	// maybe ring-no-answer with forward? invite expired?
-	case BUSY:		// invite expired
-	case ACTIVE:	// active call session expired without re-invite
-		if(experror != 0 && source != NULL && source->state != session::CLOSED)
-			break;
-
-	case FINAL:		// session expects to be cleared....
-	case REORDER:	// only different in logging
-
-					// TODO: initial may have special case if pending!!!
-	case INITIAL:	// if session never used, garbage collect at expire...
-		debug(4, "expiring call %08x:%u\n", source->sequence, source->cid);
-		mutex::release(this);
-		stack::destroy(this);
-		return;
-	}
-
-	if(experror && source) {
-		debug(4, "suspending call %08x:%u, error=%d\n", source->sequence, source->cid, experror);
-		// drop any active invites...
-		stack::disjoin(this);
-
-		// notify caller....
-		eXosip_call_send_answer(source->tid, experror, NULL);
-		experror = 0;
-		state = REORDER;
-	}
-
-	mutex::release(this);
 }
 
 stack::background::background(timeout_t iv) : DetachedThread(), Conditional(), expires(Timer::inf)
