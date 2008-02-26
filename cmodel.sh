@@ -22,7 +22,17 @@ for arg in $* ; do
 	esac
 done
 
-exec $shell $cmd --tag=CC $args
+tag="--tag=CC"
+version=`libtool --version | sed -e s/^[^0-9]*//`
+if test -z "$version" ; then
+	version="1.5.x" ; fi
+
+case "$version" in
+1.4.*|1.3.*|1.2.*)
+	tag=""
+	;;
+esac
+exec $shell $cmd $tag $args
 
 
 
