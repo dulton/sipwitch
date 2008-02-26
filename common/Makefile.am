@@ -10,21 +10,11 @@
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
 RELEASE = -version-info $(LT_VERSION) -release $(LT_RELEASE)
-MODEL=@UCOMMON_MODEL@
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
-CXXLINK = $(LIBTOOL) --tag=$(MODEL) --mode=link $(CXX) $(AM_CFLAGS) $(CFLAGS) \
-    $(AM_LDFLAGS) $(LDFLAGS) -o $@
-
-LTCXXCOMPILE = $(LIBTOOL) --tag=$(MODEL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-    --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-    $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 
 lib_LTLIBRARIES = libgnusipwitch.la 
 
 libgnusipwitch_la_LDFLAGS = @SIPWITCH_LIBS@ $(RELEASE) 
 libgnusipwitch_la_SOURCES = service.cpp digest.cpp process.cpp
-libgnusipwitch_la_LINK = $(LIBTOOL) --tag=$(MODEL) $(AM_LIBTOOLFLAGS) \
-    $(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
-    $(CXXFLAGS) $(libucommon_la_LDFLAGS) $(LDFLAGS) -o $@
 
 

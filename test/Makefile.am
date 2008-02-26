@@ -10,9 +10,6 @@
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
-MODEL=@UCOMMON_MODEL@
-CXXLINK = $(LIBTOOL) --tag=$(MODEL) --mode=link $(CXX) $(AM_CXXFLAGS) $(CFLAGS) \
-    $(AM_LDFLAGS) $(LDFLAGS) -o $@
 
 TESTS = sipwLibrary
 check_PROGRAMS = $(TESTS)

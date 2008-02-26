@@ -248,6 +248,9 @@ AC_ARG_WITH(pkg-config,
 
 ])
 
+if test "$UCOMMON_MODEL" = "CC" ; then
+	LIBTOOL='$(SHELL) $(top_srcdir)/cmodel.sh'" ${LIBTOOL}" ; fi
+
 for lib in $UCOMMON_CLINK ; do
 	case "$lib" in
 	*,-lc)
