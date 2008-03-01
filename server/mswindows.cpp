@@ -33,6 +33,8 @@ extern "C" int main(int argc, char **argv)
 
 	char *cp, *tokens;
 	char *args[65];
+	char buf[256];
+	size_t len;
 
 	// for deaemon env usually loaded from /etc/defaults or /etc/sysconfig
 
@@ -187,7 +189,7 @@ extern "C" int main(int argc, char **argv)
 	GetEnvironmentVariable("ComSpec", buf, sizeof(buf));
 	SetEnvironmentVariable("SHELL", buf);
 
-	if(!process::attach(uid)) {
+	if(!process::attach(user)) {
 		fprintf(stderr, "*** sipw: no control file; exiting\n");
 		exit(-1);
 	}
