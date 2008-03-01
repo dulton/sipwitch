@@ -69,14 +69,13 @@ public:
 
 	static void printlog(const char *uid, const char *fmt, ...) __PRINTF(2, 3);
 	static void errlog(errlevel_t log, const char *fmt, ...) __PRINTF(2, 3);
-	static void restart(void);
 	static bool control(const char *uid, const char *fmt, ...) __PRINTF(2, 3);
 	static void result(const char *value);
 	static char *receive(void);
 	static void reply(const char *err = NULL);
-	static void util(void);
 	static void foreground(const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
 	static void background(const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
+	static size_t attach(const char *user);
 	static void release(void);
 	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
 };

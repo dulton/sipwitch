@@ -224,7 +224,7 @@ static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 
 static char fifopath[128] = "";
 
-static size_t ctrlfile(const char *uid)
+size_t process::attach(const char *uid)
 {
 	assert(uid != NULL && *uid != 0);
 
@@ -353,34 +353,6 @@ void process::release(void)
 	}
 }
 
-void process::restart(void)
-{
-	pid_t pid;
-	int status;
-
-restart:
-	pid = fork();
-	if(pid > 0) {
-		waitpid(pid, &status, 0);
-		if(WIFSIGNALED(status))
-			status = WTERMSIG(status);
-		else
-			status = WIFEXITED(status);
-		switch(status) {
-#ifdef	SIGPWR
-		case SIGPWR:
-#endif
-		case SIGINT:
-		case SIGQUIT:
-		case SIGTERM:
-		case 0:
-			exit(status);
-		default:
-			goto restart;
-		}
-	}
-}
-
 char *process::receive(void)
 {
 	static char buf[512];
@@ -413,13 +385,6 @@ retry:
 	return cp;
 }
 
-void process::util(void)
-{
-	signal(SIGPIPE, SIG_IGN);
-	setenv("IDENT", "sipwitch", 1);
-	openlog("sipw", 0, LOG_USER);
-}
-
 void process::foreground(const char *uid, const char *cfgpath, unsigned priority, size_t ps)
 {
 	assert(uid == NULL || *uid != 0);
@@ -432,7 +397,7 @@ void process::foreground(const char *uid, const char *cfgpath, unsigned priority
 		exit(-1);
 	}
 
-	if(!ctrlfile(pwd->pw_name)) {
+	if(!process::attach(pwd->pw_name)) {
 		fprintf(stderr, "*** sipw: no control file; exiting\n");
 		exit(-1);
 	}
@@ -452,7 +417,7 @@ void process::background(const char *uid, const char *cfgpath, unsigned priority
 	struct passwd *pwd = getuserenv(uid, cfgpath);
 	pid_t pid;
 
-	if(!ctrlfile(pwd->pw_name)) {
+	if(!process::attach(pwd->pw_name)) {
 		fprintf(stderr, "*** sipw: no control file; exiting\n");
 		exit(-1);
 	}
@@ -562,7 +527,7 @@ static fd_t logfile(const char *uid)
 	return CreateFile(buf, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 
-static size_t ctrlfile()
+size_t process::attach(const char *uid)
 {
 	char buf[64];
 
@@ -615,7 +580,7 @@ static void setup(const char *uid, const char *cfgfile)
 	GetEnvironmentVariable("ComSpec", buf, sizeof(buf));
 	SetEnvironmentVariable("SHELL", buf);
 
-	if(!ctrlfile()) {
+	if(!process::attach(uid)) {
 		fprintf(stderr, "*** sipw: no control file; exiting\n");
 		exit(-1);
 	}
@@ -695,11 +660,6 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 	
 	if(loglevel == FAILURE)
 		cpr_runtime_error(buf);
-}
-
-void process::util(void)
-{
-	SetEnvironmentVariable("IDENT", "sipwitch");
 }
 
 void process::foreground(const char *uid, const char *cfgpath, unsigned priority, size_t ps)

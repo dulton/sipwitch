@@ -19,6 +19,46 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+#ifdef	_MSWINDOWS_
+
+#else
+#include <sys/wait.h>
+#include <syslog.h>
+
+#ifndef WEXITSTATUS
+#define WEXITSTATUS(status) ((unsigned)(status) >> 8)
+#endif
+
+static void restart(void)
+{
+	pid_t pid;
+	int status;
+
+restart:
+	pid = fork();
+	if(pid > 0) {
+		waitpid(pid, &status, 0);
+		if(WIFSIGNALED(status))
+			status = WTERMSIG(status);
+		else
+			status = WIFEXITED(status);
+		switch(status) {
+#ifdef	SIGPWR
+		case SIGPWR:
+#endif
+		case SIGINT:
+		case SIGQUIT:
+		case SIGTERM:
+		case 0:
+			exit(status);
+		default:
+			goto restart;
+		}
+	}
+}
+
+#endif
+
 #if defined(HAVE_SETRLIMIT) && defined(DEBUG)
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -180,6 +220,7 @@ extern "C" int main(int argc, char **argv)
 	static unsigned priority = 0;
 	static unsigned concurrency = 0;
 	static int exit_code = 0;
+	static bool restartable = false;
 
 	char *cp, *tokens;
 	char *args[65];
@@ -217,6 +258,12 @@ extern "C" int main(int argc, char **argv)
 
 		if(!strcmp(*argv, "-f") || !stricmp(*argv, "-foreground")) {
 			daemon = false;
+			continue;
+		}
+
+		if(!strcmp(*argv, "-r") || !stricmp(*argv, "-restartable")) {
+			restartable = true;
+			daemon = true;
 			continue;
 		}
 
@@ -313,6 +360,10 @@ extern "C" int main(int argc, char **argv)
 				else
 					++verbose;
 				break;
+			case 'r':
+				daemon = true;
+				restartable = true;
+				break;
 			case 'f':
 				daemon = false;
 				break;
@@ -331,7 +382,13 @@ extern "C" int main(int argc, char **argv)
 			continue;
 
 #ifdef	USES_COMMANDS
-		process::util();
+#ifdef	_MSWINDOWS_
+		SetEnvironmentVariable("IDENT", "sipwitch");
+#else
+		signal(SIGPIPE, SIG_IGN);
+		setenv("IDENT", "sipwitch", 1);
+		openlog("sipw", 0, LOG_USER);
+#endif
 
 		if(!stricmp(*argv, "stop") || !stricmp(*argv, "reload") || !stricmp(*argv, "abort") || !stricmp(*argv, "restart")) {
 			config::utils(user);
@@ -451,6 +508,12 @@ extern "C" int main(int argc, char **argv)
 		process::foreground(user, cfgfile, priority);
 
 	config::reload(user);
+
+#ifndef	_MSWINDOWS_
+	if(restartable) 
+		restart();
+#endif
+
 	config::startup();
 
 #ifdef	USES_SIGNALS
@@ -466,6 +529,7 @@ extern "C" int main(int argc, char **argv)
 	sigthread.cancel();
 #endif
 	service::shutdown();
+	process::release();
 	exit(exit_code);
 }
 

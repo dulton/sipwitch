@@ -136,6 +136,7 @@ void server::usage(void)
 		"  --help                Display this information\n"
 		"  -foreground           Run server in foreground\n"
 		"  -background           Run server as daemon\n"
+		"  -restartable			 Run server as restartable daemon\n"
 		"  -config=<cfgfile>     Use cfgfile in place of default one\n"
 		"  -user=<userid>        Change to effective user from root\n" 
 		"  -concurrency=<level>  Increase thread concurrency\n"

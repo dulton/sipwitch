@@ -852,12 +852,9 @@ void service::subscribe(const char *path, const char *listen)
 	new(mp) subscriber(path, listen);
 }
 
-void service::startup(bool restartable)
+void service::startup(void)
 {
 	linked_pointer<callback> sp;
-
-	if(restartable)
-		process::restart();
 
 	process::errlog(NOTICE, "startup");
 
@@ -875,7 +872,6 @@ void service::shutdown(void)
 	linked_pointer<callback> sp;
 	unsigned level = RUNLEVELS;
 
-	process::release();
 	publish(NULL, "- shutdown");
 
 	while(level--) {
