@@ -13,8 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifdef	_MSWINDOWS_
 #include "server.h"
+
+#ifdef	_MSWINDOWS_
 #include <signal.h>
 
 NAMESPACE_SIPWITCH
@@ -149,10 +150,6 @@ extern "C" int main(int argc, char **argv)
 					verbose = INFO;
 				else
 					++verbose;
-				break;
-			case 'r':
-				daemon = true;
-				restartable = true;
 				break;
 			case 'f':
 				daemon = false;
