@@ -328,9 +328,9 @@ AH_BOTTOM([
 #endif
 ])
 
-DEAMON_LIBS=""
+DAEMON_LIBS=""
 AC_CHECK_LIB(msvcrt, fopen,
-	[DEAMON_LIBS="-lvadvapi32"])
+	[DAEMON_LIBS="-ladvapi32"])
 
 AC_SUBST(plugindir)
 AC_SUBST(UCOMMON_REQUIRES)
