@@ -73,11 +73,9 @@ public:
 	static void result(const char *value);
 	static char *receive(void);
 	static void reply(const char *err = NULL);
-	static void foreground(const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
-	static void background(const char *uid = NULL, const char *cfgpath = NULL, unsigned priority = 0, size_t ps = 0);
 	static size_t attach(const char *user);
 	static void release(void);
-	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
+//	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
 };
 
 #ifdef	DEBUG

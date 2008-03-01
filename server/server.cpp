@@ -152,7 +152,9 @@ void server::usage(void)
 #endif
 		"  -config=<cfgfile>     Use cfgfile in place of default one\n"
 		"  -user=<userid>        Change to effective user from root\n" 
+#ifndef	_MSWINDOWS_
 		"  -concurrency=<level>  Increase thread concurrency\n"
+#endif
 		"  -priority=<level>     Increase process priority\n"
 		"  -v[vv], -x<n>         Select verbosity or debug level\n"
 #ifdef	USES_COMMANDS

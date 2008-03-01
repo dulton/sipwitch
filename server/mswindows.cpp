@@ -29,17 +29,12 @@ extern "C" int main(int argc, char **argv)
 	static bool warned = false;
 	static unsigned verbose = 0;
 	static unsigned priority = 0;
-	static unsigned concurrency = 0;
 	static int exit_code = 0;
 
 	char *cp, *tokens;
 	char *args[65];
 
 	// for deaemon env usually loaded from /etc/defaults or /etc/sysconfig
-
-	cp = getenv("CONCURRENCY");
-	if(cp)
-		concurrency = atoi(cp);
 
 	cp = getenv("PRIORITY");
 	if(cp)
@@ -76,21 +71,6 @@ extern "C" int main(int argc, char **argv)
 
 		if(!strnicmp(*argv, "-priority=", 10)) {
 			priority = atoi(*argv + 10);
-			continue;
-		} 
-
-		if(!stricmp(*argv, "-concurrency")) {
-			cp = *(++argv);
-			if(!cp) {
-				fprintf(stderr, "*** sipw: concurrency option missing\n");
-				exit(-1);
-			}
-			concurrency = atoi(cp);
-			continue;
-		}
-
-		if(!strnicmp(*argv, "-concurrency=", 13)) {
-			concurrency = atoi(*argv + 13);
 			continue;
 		} 
 
@@ -174,22 +154,46 @@ extern "C" int main(int argc, char **argv)
 
 	if(!warned && !verbose)
 		verbose = 2;
+
 	process::setVerbose((errlevel_t)(verbose));
 
 	if(!user)
 		user = "telephony";
 
-	if(daemon)
-		process::background(user, cfgfile, priority);
-	else
-		process::foreground(user, cfgfile, priority);
+	if(!cfgfile || !*cfgfile) 
+		SetEnvironmentVariable("CFG", "");
+	else if(*cfgfile == '/')
+		SetEnvironmentVariable("CFG", cfgfile);
+	else {			
+		getcwd(buf, sizeof(buf));
+		string::add(buf, sizeof(buf), "/");
+		string::add(buf, sizeof(buf), cfgfile);
+		SetEnvironmentVariable("CFG", buf);
+	}
+
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch"); 
+	mkdir(buf, 0770);
+	chdir(buf);
+	SetEnvironmentVariable("PWD", buf);
+	SetEnvironmentVariable("IDENT", "sipwitch");
+
+	GetEnvironmentVariable("USERPROFILE", buf, 192);
+	len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony");
+	mkdir(buf, 0770);
+	SetEnvironmentVariable("HOME", buf);
+	GetEnvironmentVariable("ComSpec", buf, sizeof(buf));
+	SetEnvironmentVariable("SHELL", buf);
+
+	if(!process::attach(uid)) {
+		fprintf(stderr, "*** sipw: no control file; exiting\n");
+		exit(-1);
+	}
 
 	config::reload(user);
-
 	config::startup();
-
-	if(concurrency)
-		Thread::concurrency(concurrency);
 
 	server::run(user);
 	service::shutdown();
