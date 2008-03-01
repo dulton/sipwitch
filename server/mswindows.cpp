@@ -27,11 +27,19 @@ static SERVICE_STATUS_HANDLE hStatus;
 static SERVICE_STATUS status;
 static const char *user = "telephony";
 static const char *cfgfile = "C:\\WINDOWS\\SIPWITCH.INI";
+static unsigned verbose = 0;
 
 static void dispatch()
 {
 	char buf[256];
 	size_t len;	
+
+	process::setVerbose((errlevel_t)(verbose));
+
+	if(!process::attach(user)) {
+		fprintf(stderr, "*** sipw: no control file; exiting\n");
+		exit(-1);
+	}
 
 	if(!cfgfile || !*cfgfile) 
 		SetEnvironmentVariable("CFG", "");
@@ -111,7 +119,6 @@ extern "C" int main(int argc, char **argv)
 {
 	static bool daemon = false;
 	static bool warned = false;
-	static unsigned verbose = 0;
 	static unsigned priority = 0;
 	static int exit_code = 0;
 
@@ -306,7 +313,6 @@ exitcontrol:
 				exit(0);
 			}
 		}
-
 		fprintf(stderr, "*** sipw: %s: unknown option\n", *argv);
 		exit(-1);
 	}
@@ -314,19 +320,16 @@ exitcontrol:
 	if(!warned && !verbose)
 		verbose = 2;
 
-	process::setVerbose((errlevel_t)(verbose));
-
-	if(!process::attach(user)) {
-		fprintf(stderr, "*** sipw: no control file; exiting\n");
-		exit(-1);
-	}
 	if(daemon || argc < 2) {
 		success = ::StartServiceCtrlDispatcher(serviceTable);
-		if(!success) 
-			dispatch();
+		if(!success) {
+			if(argc < 2)
+				fprintf(stderr, "*** sipw: options required for non-service startup\n"); 
+			exit(-1);
+		}
+		return;
 	}
-	else	
-		dispatch();
+	dispatch();
 	exit(exit_code);
 }
 	
