@@ -674,11 +674,6 @@ void process::background(const char *uid, const char *cfgpath, unsigned priority
 	setup(uid, cfgpath);
 }
 
-void process::restart(void)
-{
-	exit(1);
-}
-
 void process::release(void)
 {
 	errlog(INFO, "shutdown");
