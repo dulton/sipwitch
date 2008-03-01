@@ -71,7 +71,8 @@ JoinableThread()
 
 SignalThread::~SignalThread()
 {
-	cancel();
+	if(!shutdown)
+		cancel();
 }
 
 void SignalThread::cancel()
