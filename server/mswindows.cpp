@@ -327,7 +327,7 @@ exitcontrol:
 				fprintf(stderr, "*** sipw: options required for non-service startup\n"); 
 			exit(-1);
 		}
-		return;
+		return 0;
 	}
 	dispatch();
 	exit(exit_code);
