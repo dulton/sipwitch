@@ -83,7 +83,6 @@ static void corefiles(void)
 }
 #endif
 
-#ifdef	USES_SIGNALS
 static class __LOCAL SignalThread : public JoinableThread
 {
 private:
@@ -163,8 +162,6 @@ void SignalThread::run(void)
 	}
 }
 
-#endif
-
 #ifdef USES_COMMANDS
 static void command(const char *uid, const char *cmd, unsigned timeout)
 {
@@ -172,7 +169,6 @@ static void command(const char *uid, const char *cmd, unsigned timeout)
 	assert(cmd != NULL && *cmd != 0);
 	assert(timeout > 0);
 
-#ifdef	USES_SIGNALS
 	sigset_t sigs;
 	int signo;
 
@@ -202,7 +198,6 @@ static void command(const char *uid, const char *cmd, unsigned timeout)
 		exit(1);
 	}
 	fprintf(stderr, "*** sipw: %s; request failed\n", cmd);
-#endif
 	exit(3);
 }
 #endif
@@ -456,7 +451,6 @@ extern "C" int main(int argc, char **argv)
 		exit(-1);
 	}
 
-#ifdef USES_SIGNALS
 	sigemptyset(&sigthread.sigs);
 	sigaddset(&sigthread.sigs, SIGALRM);
 	sigaddset(&sigthread.sigs, SIGHUP);
@@ -464,7 +458,6 @@ extern "C" int main(int argc, char **argv)
 	sigaddset(&sigthread.sigs, SIGTERM);
 	sigaddset(&sigthread.sigs, SIGUSR1);
 	pthread_sigmask(SIG_BLOCK, &sigthread.sigs, NULL);
-#endif
 
 	signal(SIGPIPE, SIG_IGN);
 
@@ -492,18 +485,13 @@ extern "C" int main(int argc, char **argv)
 
 	config::startup();
 
-#ifdef	USES_SIGNALS
-	sigthread.background();
-#endif
-
 	if(concurrency)
 		Thread::concurrency(concurrency);
 
+	sigthread.background();
 	server::run(user);
 
-#ifdef	USES_SIGNALS
 	sigthread.cancel();
-#endif
 	service::shutdown();
 	process::release();
 	exit(exit_code);

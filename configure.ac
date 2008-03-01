@@ -180,14 +180,6 @@ if test "$enable_sipwitch_server" = "yes" ; then
 	if test "$enable_commands" = "yes" ; then
 		AC_DEFINE(USES_COMMANDS, [1], [command options])
 	fi
-
-	AC_ARG_ENABLE(signals, 
-		AC_HELP_STRING([--disable-signals],[disable signal handling thread]))
-	if test -z "$enable_signals" ; then
-		enable_signals="yes" ; fi
-	if test "$enable_signals" = "yes" ; then
-		AC_DEFINE(USES_SIGNALS, [1], [has signal handler])
-	fi
 fi
 
 AC_ARG_ENABLE(debug, 
