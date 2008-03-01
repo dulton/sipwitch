@@ -13,21 +13,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#ifndef	_MSWINDOWS_
 #include "server.h"
 #include <signal.h>
-
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
-
-#ifdef	_MSWINDOWS_
-
-#else
 #include <sys/wait.h>
 #include <syslog.h>
 
 #ifndef WEXITSTATUS
 #define WEXITSTATUS(status) ((unsigned)(status) >> 8)
 #endif
+
+NAMESPACE_SIPWITCH
+using namespace UCOMMON_NAMESPACE;
 
 static void restart(void)
 {
@@ -56,8 +53,6 @@ restart:
 		}
 	}
 }
-
-#endif
 
 #if defined(HAVE_SETRLIMIT) && defined(DEBUG)
 #include <sys/time.h>
@@ -247,10 +242,8 @@ extern "C" int main(int argc, char **argv)
 	if(cp)
 		cfgfile = strdup(cp);
 
-#ifndef	_MSWINDOWS_
 	if(!getuid())
 		daemon = true;
-#endif
 
 	while(NULL != *(++argv)) {
 		if(!strncmp(*argv, "--", 2))
@@ -311,14 +304,8 @@ extern "C" int main(int argc, char **argv)
 			continue;
 		} 
 
-		if(!stricmp(*argv, "-version")) {
-			printf("SIP Witch " VERSION "\n"
-				"Copyright (C) 2007 David Sugar, Tycho Softworks\n"
-				"License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
-				"This is free software: you are free to change and redistribute it.\n"
-				"There is NO WARRANTY, to the extent permitted by law.\n");
-			exit(0);
-		}
+		if(!stricmp(*argv, "-version")) 
+			server::version();
 
 		if(!strcmp(*argv, "-u") || !stricmp(*argv, "-user")) {
 			user = *(++argv);
@@ -382,13 +369,9 @@ extern "C" int main(int argc, char **argv)
 			continue;
 
 #ifdef	USES_COMMANDS
-#ifdef	_MSWINDOWS_
-		SetEnvironmentVariable("IDENT", "sipwitch");
-#else
 		signal(SIGPIPE, SIG_IGN);
 		setenv("IDENT", "sipwitch", 1);
 		openlog("sipw", 0, LOG_USER);
-#endif
 
 		if(!stricmp(*argv, "stop") || !stricmp(*argv, "reload") || !stricmp(*argv, "abort") || !stricmp(*argv, "restart")) {
 			config::utils(user);
@@ -481,21 +464,14 @@ extern "C" int main(int argc, char **argv)
 	pthread_sigmask(SIG_BLOCK, &sigthread.sigs, NULL);
 #endif
 
-#ifndef	_MSWINDOWS_
 	signal(SIGPIPE, SIG_IGN);
-#endif
 
 	if(!warned && !verbose)
 		verbose = 2;
 	process::setVerbose((errlevel_t)(verbose));
 
-#ifdef	_MSWINDOWS_
-	if(!user)
-		user = "telephony";
-#else
 	if(!user && getuid() == 0)
 		user = "telephony";
-#endif
 
 #ifdef	SCHED_RR
 	if(priority)
@@ -509,10 +485,8 @@ extern "C" int main(int argc, char **argv)
 
 	config::reload(user);
 
-#ifndef	_MSWINDOWS_
 	if(restartable) 
 		restart();
-#endif
 
 	config::startup();
 
@@ -534,3 +508,5 @@ extern "C" int main(int argc, char **argv)
 }
 
 END_NAMESPACE
+
+#endif

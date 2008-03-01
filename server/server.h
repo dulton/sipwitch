@@ -17,6 +17,10 @@
 #include <eXosip2/eXosip.h>
 #include <config.h>
 
+#ifdef	_MSWINDOWS_
+#undef	USES_COMMANDS
+#endif
+
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
@@ -456,6 +460,7 @@ class __EXPORT server
 {
 public:
 	static void usage(void);
+	static void version(void);
 	static void run(const char *user);
 	static caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
 	static unsigned allocate(void);

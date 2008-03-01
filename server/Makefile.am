@@ -17,5 +17,5 @@ pkglibdir=$(libdir)/sipw
 noinst_HEADERS = server.h
 
 sipw_SOURCES = server.cpp config.cpp registry.cpp stack.cpp thread.cpp \
-	call.cpp messages.cpp posix.cpp
+	call.cpp messages.cpp posix.cpp mswindows.cpp
 

@@ -125,6 +125,16 @@ caddr_t server::allocate(size_t size, LinkedObject **list, volatile unsigned *co
 	return mp;
 }
 
+void server::version(void)
+{
+	printf("SIP Witch " VERSION "\n"
+        "Copyright (C) 2007 David Sugar, Tycho Softworks\n"
+		"License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
+		"This is free software: you are free to change and redistribute it.\n"
+        "There is NO WARRANTY, to the extent permitted by law.\n");
+    exit(0);
+}
+
 void server::usage(void)
 {
 #ifdef	USES_COMMANDS
@@ -136,7 +146,10 @@ void server::usage(void)
 		"  --help                Display this information\n"
 		"  -foreground           Run server in foreground\n"
 		"  -background           Run server as daemon\n"
+#ifdef	_MSWINDOWS_
+#else
 		"  -restartable			 Run server as restartable daemon\n"
+#endif
 		"  -config=<cfgfile>     Use cfgfile in place of default one\n"
 		"  -user=<userid>        Change to effective user from root\n" 
 		"  -concurrency=<level>  Increase thread concurrency\n"
