@@ -462,6 +462,7 @@ public:
 	static void usage(void);
 	static void version(void);
 	static void run(const char *user);
+	static void stop(void);
 	static caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
 	static unsigned allocate(void);
 	static void regdump(void);

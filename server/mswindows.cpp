@@ -18,23 +18,111 @@
 #ifdef	_MSWINDOWS_
 #include <signal.h>
 
+#define	SERVICE_CONTROL_RELOAD	128
+
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+static SERVICE_STATUS_HANDLE hStatus;
+static SERVICE_STATUS status;
+static const char *user = "telephony";
+static const char *cfgfile = "C:\\WINDOWS\\SIPWITCH.INI";
+
+static void dispatch()
+{
+	char buf[256];
+	size_t len;	
+
+	if(!cfgfile || !*cfgfile) 
+		SetEnvironmentVariable("CFG", "");
+	else if(*cfgfile == '/')
+		SetEnvironmentVariable("CFG", cfgfile);
+	else {			
+		getcwd(buf, sizeof(buf));
+		string::add(buf, sizeof(buf), "/");
+		string::add(buf, sizeof(buf), cfgfile);
+		SetEnvironmentVariable("CFG", buf);
+	}
+
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch"); 
+	mkdir(buf, 0770);
+	chdir(buf);
+	SetEnvironmentVariable("PWD", buf);
+	SetEnvironmentVariable("IDENT", "sipwitch");
+
+	GetEnvironmentVariable("USERPROFILE", buf, 192);
+	len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony");
+	mkdir(buf, 0770);
+	SetEnvironmentVariable("HOME", buf);
+	GetEnvironmentVariable("ComSpec", buf, sizeof(buf));
+	SetEnvironmentVariable("SHELL", buf);
+
+	config::reload(user);
+	config::startup();
+
+	server::run(user);
+	service::shutdown();
+	process::release();
+	exit(0);
+}
+
+static void WINAPI control(DWORD control)
+{
+	switch(control)
+	{
+	case SERVICE_CONTROL_RELOAD:
+		process::control(user, "reload");
+		return;
+	case SERVICE_CONTROL_SHUTDOWN:
+	case SERVICE_CONTROL_STOP:
+		status.dwCurrentState = SERVICE_STOP_PENDING;
+		status.dwWin32ExitCode = 0;
+		status.dwCheckPoint = 0;
+		status.dwWaitHint = 0;
+		server::stop();
+		break;
+	default:
+		break;
+	}
+	::SetServiceStatus(hStatus, &status);
+}
+
+static void WINAPI start(DWORD argc, LPSTR *argv)
+{
+	memset(&status, 0, sizeof(SERVICE_STATUS));
+	status.dwServiceType = SERVICE_WIN32;
+	status.dwCurrentState = SERVICE_START_PENDING;
+	status.dwControlsAccepted = SERVICE_ACCEPT_STOP|SERVICE_ACCEPT_SHUTDOWN;
+
+	hStatus = ::RegisterServiceCtrlHandler("sipwitch", &control);
+	::SetServiceStatus(hStatus, &status);
+
+	// ?? parse argments....
+
+	status.dwCurrentState = SERVICE_RUNNING;
+	::SetServiceStatus(hStatus, &status);
+	dispatch();
+}
+
 extern "C" int main(int argc, char **argv)
 {
-	static char *user = NULL;
-	static char *cfgfile = NULL;
 	static bool daemon = false;
 	static bool warned = false;
 	static unsigned verbose = 0;
 	static unsigned priority = 0;
 	static int exit_code = 0;
 
+	static SERVICE_TABLE_ENTRY serviceTable[] = {
+		{"sipwitch", (LPSERVICE_MAIN_FUNCTION)start},
+		{NULL, NULL}};		
+
+	SC_HANDLE service, scm;
+	BOOL success;
 	char *cp, *tokens;
 	char *args[65];
-	char buf[256];
-	size_t len;
 
 	// for deaemon env usually loaded from /etc/defaults or /etc/sysconfig
 
@@ -150,6 +238,75 @@ extern "C" int main(int argc, char **argv)
 		if(!*cp)
 			continue;
 
+		if(*argv && !argv[1]) {
+			scm = OpenSCManager(0, 0, SC_MANAGER_CREATE_SERVICE);
+			if(!scm) {
+				fprintf(stderr, "*** sipw: cannot access service control\n");
+				exit(-1);
+			}
+			if(!stricmp(*argv, "stop")) {
+				service = OpenService(scm, "sipwitch", SERVICE_ALL_ACCESS);
+				if(!service) {
+					fprintf(stderr, "*** sipw: cannot access service for stop\n");
+					exit(-1);
+				}
+				ControlService(service, SERVICE_CONTROL_STOP, &status);
+				goto exitcontrol;
+			}
+
+			if(!stricmp(*argv, "reload")) {
+				service = OpenService(scm, "sipwitch", SERVICE_ALL_ACCESS);
+				if(!service) {
+					fprintf(stderr, "*** sipw: cannot access service for stop\n");
+					exit(-1);
+				}
+				ControlService(service, SERVICE_CONTROL_RELOAD, &status);
+				goto exitcontrol;
+			}
+
+			if(!stricmp(*argv, "register")) {
+				service = CreateService(scm,
+					"sipwitch", "sipwitch",
+					GENERIC_READ | GENERIC_EXECUTE,
+					SERVICE_WIN32_OWN_PROCESS,
+					SERVICE_AUTO_START,
+					SERVICE_ERROR_IGNORE,
+					argv[0],
+					NULL, NULL, NULL, NULL, NULL);
+				if(service)
+					printf("service removed\n");
+				else
+					fprintf(stderr, "*** sipw: cannot remove service\n");
+				goto exitcontrol;
+			}
+
+			if(!stricmp(*argv, "release")) {
+				service = OpenService(scm, "sipwitch", SERVICE_ALL_ACCESS | DELETE);
+				if(!service) {
+					fprintf(stderr, "*** sipw: cannot access service for delete\n");
+					exit(-1);
+				}
+				success = QueryServiceStatus(service, &status);
+				if(!success) {
+					fprintf(stderr, "*** sipw: cannot access service\n");
+					exit(-1);
+				}
+				if(status.dwCurrentState != SERVICE_STOPPED) {
+					success = ControlService(service, SERVICE_CONTROL_STOP, &status);
+					Sleep(1000);
+				}
+				success = DeleteService(service);
+				if(success)
+					printf("service removed\n");
+				else
+					fprintf(stderr, "*** sipw: cannot remove service\n");
+exitcontrol:
+				CloseServiceHandle(service);
+				CloseServiceHandle(scm);
+				exit(0);
+			}
+		}
+
 		fprintf(stderr, "*** sipw: %s: unknown option\n", *argv);
 		exit(-1);
 	}
@@ -159,49 +316,20 @@ extern "C" int main(int argc, char **argv)
 
 	process::setVerbose((errlevel_t)(verbose));
 
-	if(!user)
-		user = "telephony";
-
-	if(!cfgfile || !*cfgfile) 
-		SetEnvironmentVariable("CFG", "");
-	else if(*cfgfile == '/')
-		SetEnvironmentVariable("CFG", cfgfile);
-	else {			
-		getcwd(buf, sizeof(buf));
-		string::add(buf, sizeof(buf), "/");
-		string::add(buf, sizeof(buf), cfgfile);
-		SetEnvironmentVariable("CFG", buf);
-	}
-
-	GetEnvironmentVariable("APPDATA", buf, 192);
-	len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch"); 
-	mkdir(buf, 0770);
-	chdir(buf);
-	SetEnvironmentVariable("PWD", buf);
-	SetEnvironmentVariable("IDENT", "sipwitch");
-
-	GetEnvironmentVariable("USERPROFILE", buf, 192);
-	len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony");
-	mkdir(buf, 0770);
-	SetEnvironmentVariable("HOME", buf);
-	GetEnvironmentVariable("ComSpec", buf, sizeof(buf));
-	SetEnvironmentVariable("SHELL", buf);
-
 	if(!process::attach(user)) {
 		fprintf(stderr, "*** sipw: no control file; exiting\n");
 		exit(-1);
 	}
-
-	config::reload(user);
-	config::startup();
-
-	server::run(user);
-	service::shutdown();
-	process::release();
+	if(daemon || argc < 2) {
+		success = ::StartServiceCtrlDispatcher(serviceTable);
+		if(!success) 
+			dispatch();
+	}
+	else	
+		dispatch();
 	exit(exit_code);
 }
+	
 END_NAMESPACE
 
 #endif

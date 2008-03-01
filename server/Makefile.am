@@ -10,7 +10,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
-LDADD = ../common/libgnusipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@
+LDADD = ../common/libgnusipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ -ladvapi32
 
 sbin_PROGRAMS = sipw
 pkglibdir=$(libdir)/sipw
@@ -18,4 +18,5 @@ noinst_HEADERS = server.h
 
 sipw_SOURCES = server.cpp config.cpp registry.cpp stack.cpp thread.cpp \
 	call.cpp messages.cpp posix.cpp mswindows.cpp
+
 

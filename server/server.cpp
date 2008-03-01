@@ -20,6 +20,7 @@ NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
 static mempager mempool(PAGING_SIZE);
+static bool running = true;
 
 #ifdef	USES_COMMANDS
 static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
@@ -157,10 +158,16 @@ void server::usage(void)
 #endif
 		"  -priority=<level>     Increase process priority\n"
 		"  -v[vv], -x<n>         Select verbosity or debug level\n"
-#ifdef	USES_COMMANDS
+#if defined(USES_COMMANDS) || defined(_MSWINDOWS_)
 		"Commands:\n"
 		"  stop                  Stop running server\n"
 		"  reload                Reload config file\n"
+#ifdef	_MSWINDOWS_
+		"  register              Register as service deamon\n"
+		"  release               Release service deamon registeration\n"
+#endif
+#endif
+#ifdef	USES_COMMANDS
 		"  restart               Restart server\n"
 		"  check                 Test for thread deadlocks\n"
 		"  snapshot              Create snapshot file\n"
@@ -241,6 +248,11 @@ void server::regdump(void)
 #endif
 }
 
+void server::stop(void)
+{
+	running = false;
+}
+
 void server::run(const char *user)
 {
 	int argc;
@@ -248,7 +260,7 @@ void server::run(const char *user)
 	char *cp, *tokens;
 	static int exit_code = 0;
 
-	while(NULL != (cp = process::receive())) {
+	while(running && NULL != (cp = process::receive())) {
         if(!stricmp(cp, "reload")) {
             config::reload(user);
             continue;
