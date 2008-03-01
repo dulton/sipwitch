@@ -77,7 +77,7 @@ void *stack::segment::operator new(size_t size)
 {
 	assert(size == sizeof(stack::segment));
 
-	return allocate(size, &freesegs, &allocated_segments);
+	return server::allocate(size, &freesegs, &allocated_segments);
 }
 
 void stack::segment::operator delete(void *obj)
@@ -92,7 +92,7 @@ void *stack::call::operator new(size_t size)
 	assert(size == sizeof(stack::call));
 
 	++active_calls;
-	return allocate(size, &freecalls, &allocated_calls);
+	return server::allocate(size, &freecalls, &allocated_calls);
 }
 
 void stack::call::operator delete(void *obj)

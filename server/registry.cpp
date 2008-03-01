@@ -73,7 +73,7 @@ void *registry::target::operator new(size_t size)
 	assert(size == sizeof(registry::target));
 
 	++active_targets;
-	return allocate(size, &freetargets, &allocated_targets);
+	return server::allocate(size, &freetargets, &allocated_targets);
 }
 
 void registry::target::operator delete(void *obj)
@@ -89,7 +89,7 @@ void *registry::route::operator new(size_t size)
 	assert(size == sizeof(registry::route));
 
 	++active_routes;
-	return allocate(size, &freeroutes, &allocated_routes);
+	return server::allocate(size, &freeroutes, &allocated_routes);
 }
 
 void registry::route::operator delete(void *obj)

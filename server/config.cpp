@@ -465,7 +465,7 @@ void config::dump(FILE *fp)
 	assert(cfg != NULL);
 
 	fprintf(fp, "Server:\n");
-	fprintf(fp, "  allocated pages: %d\n", allocate());
+	fprintf(fp, "  allocated pages: %d\n", server::allocate());
 	fprintf(fp, "  configure pages: %d\n", cfg->getPages());
 	fprintf(fp, "  memory paging:   %d\n", PAGING_SIZE);
 	keynode *reg = getPath("registry");

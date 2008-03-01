@@ -452,8 +452,15 @@ public:
 	__EXPORT static void shutdown(void);
 };
 
-__EXPORT caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
-__EXPORT unsigned allocate(void);
+class __EXPORT server
+{
+public:
+	static void usage(void);
+	static void run(const char *user);
+	static caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
+	static unsigned allocate(void);
+	static void regdump(void);
+};
 
 END_NAMESPACE
 
