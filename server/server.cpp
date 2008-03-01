@@ -60,6 +60,7 @@ public:
 	~SignalThread();
 
 	void run(void);
+	void cancel(void);
 } sigthread;
 
 SignalThread::SignalThread() :
@@ -70,13 +71,17 @@ JoinableThread()
 
 SignalThread::~SignalThread()
 {
+	cancel();
+}
+
+void SignalThread::cancel()
+{
 	if(started) {
 		shutdown = true;
 #ifdef	__FreeBSD__
 		raise(SIGINT);
-#else
-		pthread_kill(tid, SIGALRM);
 #endif
+		pthread_kill(tid, SIGALRM);
 		join();
 	}
 }
@@ -742,6 +747,9 @@ invalid:
 
 		process::reply("unknown command");
 	}
+#ifdef	USES_SIGNALS
+	sigthread.cancel();
+#endif
 	service::shutdown();
 	exit(exit_code);
 }

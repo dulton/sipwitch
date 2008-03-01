@@ -512,7 +512,6 @@ void stack::stop(service *cfg)
 	Thread::yield();
 	MappedMemory::release();
 	MappedMemory::remove("sipwitch.callmap");
-
 }
 
 bool stack::check(void)
