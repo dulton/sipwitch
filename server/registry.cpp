@@ -113,16 +113,16 @@ service::callback(0), mapped_reuse<MappedRegistry>()
 
 void registry::mapped::incUse(void)
 {
-	mutex::protect(this);
+	Mutex::protect(this);
 	++inuse;
-	mutex::release(this);
+	Mutex::release(this);
 }
 
 void registry::mapped::decUse(void)
 {
-	mutex::protect(this);
+	Mutex::protect(this);
 	--inuse;
-	mutex::release(this);
+	Mutex::release(this);
 }
 
 registry::mapped *registry::find(const char *id)
@@ -183,7 +183,7 @@ void registry::snapshot(FILE *fp)
 	assert(fp != NULL);
 
 	mapped *rr;
-	unsigned count = 0;
+	unsigned regcount = 0;
 	time_t now;
 	linked_pointer<target> tp;
 	linked_pointer<route> rp;
@@ -199,9 +199,9 @@ void registry::snapshot(FILE *fp)
 	fprintf(fp, "  allocated routes:  %d\n", allocated_routes);
 	fprintf(fp, "  allocated targets: %d\n", allocated_targets);
 
-	while(count < mapped_entries) {
+	while(regcount < mapped_entries) {
 		time(&now);
-		rr = static_cast<mapped*>(reg.pos(count++));
+		rr = static_cast<mapped*>(reg.pos(regcount++));
 		if(rr->type == MappedRegistry::TEMPORARY) {
 			fprintf(fp, "  temp %s; use=%d\n", rr->userid, rr->inuse);
 		}
@@ -228,7 +228,7 @@ void registry::snapshot(FILE *fp)
 			else
 				fputc('\n', fp);
 			tp = rr->targets;
-			while(tp) {
+			while((bool)tp) {
 				Socket::getaddress((struct sockaddr *)(&tp->address), buffer, sizeof(buffer));
 				fprintf(fp, "    address=%s, contact=%s", buffer, tp->contact);		
 				if(tp->expires && tp->expires <= now)
@@ -241,11 +241,11 @@ void registry::snapshot(FILE *fp)
 				tp.next();
 			}
 			rp = rr->routes;
-			if(rp && rr->type == MappedRegistry::SERVICE)
+			if((bool)rp && rr->type == MappedRegistry::SERVICE)
 				fprintf(fp, "      services=");
-			else if(rp && rr->type == MappedRegistry::GATEWAY)
+			else if((bool)rp && rr->type == MappedRegistry::GATEWAY)
 				fprintf(fp, "      routes=");
-			while(rp && (rr->type == MappedRegistry::SERVICE || rr->type == MappedRegistry::GATEWAY)) {
+			while((bool)rp && (rr->type == MappedRegistry::SERVICE || rr->type == MappedRegistry::GATEWAY)) {
 				fputs(rp->entry.text, fp);
 				if(rp->getNext())
 					fputc(',', fp);
@@ -356,12 +356,12 @@ void registry::expire(mapped *rr)
 void registry::cleanup(time_t period)
 {
 	mapped *rr;
-	unsigned count = 0;
+	unsigned regcount = 0;
 	time_t now;
 
-	while(count < mapped_entries) {
+	while(regcount < mapped_entries) {
 		time(&now);
-		rr = static_cast<mapped*>(reg.pos(count++));
+		rr = static_cast<mapped*>(reg.pos(regcount++));
 		locking.modify();
 		if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires + period < now && !rr->inuse)
 			expire(rr);
@@ -552,10 +552,10 @@ registry::mapped *registry::create(const char *id)
 	if(!rp)
 		node->leaf("publish");
 
-	if(rp && rp->getPointer())
+	if((bool)rp && rp->getPointer())
 		rr->addPublished(rp->getPointer());
 
-	if(rp && !rp->getPointer() && !rp->getFirst())
+	if((bool)rp && !rp->getPointer() && !rp->getFirst())
 		rr->addPublished(id);
 
 	if(rp)
@@ -568,7 +568,7 @@ registry::mapped *registry::create(const char *id)
 	}
 	
 	rp = node->leaf("display");
-	if(rp && rp->getPointer())
+	if((bool)rp && rp->getPointer())
 		string::set(rr->display, sizeof(rr->display), rp->getPointer());
 
 	// we add routes while still exclusive owner of registry since
@@ -845,14 +845,14 @@ void registry::release(mapped *rr)
 
 unsigned registry::mapped::setTarget(Socket::address *target_addr, time_t lease, const char *target_contact)
 {
-	assert(target_addr != NULL && *target_addr != 0);
+	assert(target_addr != NULL && target_addr->getAddr() != 0);
 	assert(target_contact != NULL && *target_contact != 0);
 
 	Socket::address *origin = NULL;
 	struct sockaddr *ai, *oi = NULL;
 	linked_pointer<target> tp;
 	socklen_t len;
-	bool created = false;
+	bool creating = false;
 
 	if(!target_addr)
 		return 0;
@@ -864,7 +864,7 @@ unsigned registry::mapped::setTarget(Socket::address *target_addr, time_t lease,
 
 	locking.exclusive();
 	tp = targets;
-	while(tp && count > 1) {
+	while((bool)tp && count > 1) {
 		delete *tp;
 		tp.next();
 		--count;
@@ -875,7 +875,7 @@ unsigned registry::mapped::setTarget(Socket::address *target_addr, time_t lease,
 		tp->enlist(&targets);
 		count = 1;
 		tp->address.sa_family = 0;
-		created = true;
+		creating = true;
 	}
 	expires = tp->expires = lease;
 	if(!Socket::equal((struct sockaddr *)(&tp->address), ai)) {
@@ -883,7 +883,7 @@ unsigned registry::mapped::setTarget(Socket::address *target_addr, time_t lease,
 			tp->index.delist(&addresses[Socket::keyindex(tp->index.address, keysize)]);
 			tp->index.address = NULL;
 			tp->index.registry = NULL;
-			created = true;
+			creating = true;
 		}
 		
 		origin = stack::getAddress(target_contact);
@@ -893,7 +893,7 @@ unsigned registry::mapped::setTarget(Socket::address *target_addr, time_t lease,
 			oi = ai;
 		memcpy(&tp->address, ai, len);
 		memcpy(&contact, oi, len);
-		if(created) {
+		if(creating) {
 			tp->index.registry = this;
 			tp->index.address = (struct sockaddr *)(&tp->address);
 			tp->index.enlist(&addresses[Socket::keyindex(tp->index.address, keysize)]);
@@ -974,10 +974,10 @@ bool registry::mapped::refresh(Socket::address *saddr, time_t lease)
 	tp = targets;
 	while(tp) {
 		if(Socket::equal(saddr->getAddr(), (struct sockaddr *)(&tp->address))) {
-			mutex::protect(this);
+			Mutex::protect(this);
 			if(lease > expires)
 				expires = lease;
-			mutex::release(this);
+			Mutex::release(this);
 			tp->expires = lease;
 			return true;
 		}
@@ -988,7 +988,7 @@ bool registry::mapped::refresh(Socket::address *saddr, time_t lease)
 
 unsigned registry::mapped::addTarget(Socket::address *target_addr, time_t lease, const char *target_contact)
 {
-	assert(target_addr != NULL && *target_addr != 0);
+	assert(target_addr != NULL && target_addr->getAddr() != 0);
 	assert(target_contact != NULL && *target_contact != 0);
 	assert(lease > 0);
 
@@ -1061,7 +1061,7 @@ unsigned registry::mapped::addTarget(Socket::address *target_addr, time_t lease,
 
 unsigned registry::mapped::setTargets(Socket::address *target_addr)
 {
-	assert(target_addr != NULL && *target_addr != 0);
+	assert(target_addr != NULL && target_addr->getAddr() != NULL);
 
 	struct addrinfo *al;
 	linked_pointer<target> tp;

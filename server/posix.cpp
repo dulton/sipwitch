@@ -527,7 +527,7 @@ static void command(const char *uid, const char *cmd, unsigned timeout)
 
 extern "C" int main(int argc, char **argv)
 {
-	static char *user = NULL;
+	static const char *user = NULL;
 	static char *cfgfile = NULL;
 	static bool daemon = false;
 	static bool warned = false;
@@ -817,7 +817,7 @@ extern "C" int main(int argc, char **argv)
 	sigthread.cancel();
 	service::shutdown();
 	process::release();
-	exit(exit_code);
+	return exit_code;
 }
 
 END_NAMESPACE

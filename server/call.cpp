@@ -97,7 +97,7 @@ void stack::call::expired(void)
 	linked_pointer<segment> sp;
 	osip_message_t *reply = NULL;
 
-	mutex::protect(this);
+	Mutex::protect(this);
 	switch(state) {
 	case HOLDING:	// hold-recall timer expired...
 
@@ -114,7 +114,7 @@ void stack::call::expired(void)
 					// TODO: initial may have special case if pending!!!
 	case INITIAL:	// if session never used, garbage collect at expire...
 		debug(4, "expiring call %08x:%u\n", source->sequence, source->cid);
-		mutex::release(this);
+		Mutex::release(this);
 		stack::destroy(this);
 		return;
 	}
@@ -130,7 +130,7 @@ void stack::call::expired(void)
 		state = REORDER;
 	}
 
-	mutex::release(this);
+	Mutex::release(this);
 }
 
 END_NAMESPACE

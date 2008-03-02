@@ -79,9 +79,9 @@ public:
 };
 
 #ifdef	DEBUG
-#define	debug(l, s, a...)	process::errlog((errlevel_t)(INFO + l), s, ## a)
+#define	debug(l, a...)	process::errlog((errlevel_t)(INFO + l), ## a)
 #else
-#define	debug(l, s, a...)
+#define	debug(l, a...)
 #endif
 
 END_NAMESPACE

@@ -383,7 +383,7 @@ void process::reply(const char *msg)
 #endif
 	}
 	else {
-		sid = strchr(replytarget, ';');
+		sid = (char *)strchr(replytarget, ';');
 		if(sid)
 			*(sid++) = 0;
 		if(msg)

@@ -211,7 +211,7 @@ void stack::close(session *s)
 		return;
 
 	cr = s->parent;
-	mutex::protect(cr);
+	Mutex::protect(cr);
 	if(s->state != session::CLOSED) {
 		s->state = session::CLOSED;
 		if(s == cr->source || s == cr->source)
@@ -219,7 +219,7 @@ void stack::close(session *s)
 		else
 			cr->closing(s);
 	}
-	mutex::release(cr);
+	Mutex::release(cr);
 }
 	
 void stack::clear(session *s)
@@ -232,17 +232,17 @@ void stack::clear(session *s)
 		return;
 
 	cr = s->parent;
-	mutex::protect(cr);
+	Mutex::protect(cr);
 	if(--cr->count == 0) {
 		debug(4, "clearing call %08x:%u\n", 
 			cr->source->sequence, cr->source->cid);
-		mutex::release(cr);
+		Mutex::release(cr);
 		destroy(cr);
 		return;
 	}
 
 	if(s->cid > 0) {
-		mutex::release(cr);
+		Mutex::release(cr);
 		locking.exclusive();
 		debug(4, "clearing call %08x:%u session %08x:%u\n", 
 			cr->source->sequence, cr->source->cid, s->sequence, s->cid); 
@@ -260,7 +260,7 @@ void stack::clear(session *s)
 		locking.share();
 	}
 	else
-		mutex::release(cr);
+		Mutex::release(cr);
 }
 
 void stack::destroy(session *s)
@@ -486,7 +486,7 @@ void stack::start(service *cfg)
 		process::errlog(FAILURE, "sip cannot bind interface %s, port %d", iface, port);
 	}
 
-	osip_trace_initialize_syslog(TRACE_LEVEL0, "sipwitch");
+	osip_trace_initialize_syslog(TRACE_LEVEL0, (char *)"sipwitch");
 	eXosip_set_user_agent(agent);
 
 #ifdef	EXOSIP2_OPTION_SEND_101

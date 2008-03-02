@@ -1046,7 +1046,7 @@ bool service::check(void)
 
 	while(rtn && rl < RUNLEVELS) {
 		cb = callback::runlevels[rl++];
-		while(rtn && cb) {
+		while(rtn && (bool)cb) {
 			rtn = cb->check();
 			cb.next();
 		}
@@ -1062,7 +1062,7 @@ bool service::commit(const char *user)
 
 	while(rtn && rl < RUNLEVELS) {
 		cb = callback::runlevels[rl++];
-		while(rtn && cb) {
+		while(rtn && (bool)cb) {
 			rtn = cb->reload(this);
 			cb.next();
 		}

@@ -224,7 +224,7 @@ private:
 	};
 
 	snmpserver *snmpservers;
-	char *community;
+	const char *community;
 };
 
 END_NAMESPACE
