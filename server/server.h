@@ -164,7 +164,7 @@ public:
 	__EXPORT static mapped *access(const char *id);
 	__EXPORT static mapped *invite(const char *id);
 	__EXPORT static pattern *getRouting(unsigned trs, const char *id);
-	__EXPORT static void release(mapped *m);
+	__EXPORT static void detach(mapped *m);
 	__EXPORT static bool remove(const char *id);
 	__EXPORT static void cleanup(time_t period); 
 };
@@ -314,7 +314,7 @@ public:
 	__EXPORT static void destroy(session *s);
 	__EXPORT static void destroy(call *cr);
 	__EXPORT static void disjoin(call *cr);
-	__EXPORT static void release(session *s);
+	__EXPORT static void detach(session *s);
 	__EXPORT static void clear(session *s);
 	__EXPORT static void close(session *s);
 	__EXPORT static session *access(int cid);
@@ -348,7 +348,7 @@ private:
 	void dump(FILE *fp);
 
 public:
-	config(char *id);
+	config(const char *id);
 
 	__EXPORT static bool check(void);
 	__EXPORT static profile_t *getProfile(const char *id); 

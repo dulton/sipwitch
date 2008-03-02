@@ -99,7 +99,7 @@ static bool activate(int argc, char **args)
 	}
 	if(!reg->setTargets(addr))
 		rtn = false;
-	registry::release(reg);
+	registry::detach(reg);
 	delete addr;
 	return rtn;
 }

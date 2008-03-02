@@ -150,7 +150,7 @@ public:
 		virtual bool reload(service *cfg);
     };
     
-	service(char *name, size_t s = 0);
+	service(const char *name, size_t s = 0);
 	virtual ~service();
 
 	bool load(FILE *fp, keynode *node = NULL);

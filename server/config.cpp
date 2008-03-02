@@ -18,7 +18,7 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-config::config(char *id) :
+config::config(const char *id) :
 service(id, PAGING_SIZE)
 {
 	assert(id != NULL && *id != 0);
@@ -225,7 +225,7 @@ bool config::confirm(const char *user)
 					digest::md5(digest);
 				if(digest[0]) {
 					mp = (caddr_t)alloc_locked(sizeof(keynode));
-					leaf = new(mp) keynode(node, "digest");
+					leaf = new(mp) keynode(node, (char *)"digest");
 					leaf->setPointer(dup_locked(*digest));
 				}
 			}

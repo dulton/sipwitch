@@ -59,12 +59,12 @@ registry::pointer::pointer(pointer const &copy)
 
 registry::pointer::~pointer()
 {
-	registry::release(entry);
+	registry::detach(entry);
 }
 
 void registry::pointer::operator=(mapped *rr)
 {
-	registry::release(entry);
+	registry::detach(entry);
 	entry = rr;
 }
 
@@ -228,7 +228,7 @@ void registry::snapshot(FILE *fp)
 			else
 				fputc('\n', fp);
 			tp = rr->targets;
-			while((bool)tp) {
+			while(is(tp)) {
 				Socket::getaddress((struct sockaddr *)(&tp->address), buffer, sizeof(buffer));
 				fprintf(fp, "    address=%s, contact=%s", buffer, tp->contact);		
 				if(tp->expires && tp->expires <= now)
@@ -241,11 +241,11 @@ void registry::snapshot(FILE *fp)
 				tp.next();
 			}
 			rp = rr->routes;
-			if((bool)rp && rr->type == MappedRegistry::SERVICE)
+			if(is(rp) && rr->type == MappedRegistry::SERVICE)
 				fprintf(fp, "      services=");
-			else if((bool)rp && rr->type == MappedRegistry::GATEWAY)
+			else if(is(rp) && rr->type == MappedRegistry::GATEWAY)
 				fprintf(fp, "      routes=");
-			while((bool)rp && (rr->type == MappedRegistry::SERVICE || rr->type == MappedRegistry::GATEWAY)) {
+			while(is(rp) && (rr->type == MappedRegistry::SERVICE || rr->type == MappedRegistry::GATEWAY)) {
 				fputs(rp->entry.text, fp);
 				if(rp->getNext())
 					fputc(',', fp);
@@ -552,10 +552,10 @@ registry::mapped *registry::create(const char *id)
 	if(!rp)
 		node->leaf("publish");
 
-	if((bool)rp && rp->getPointer())
+	if(is(rp) && rp->getPointer())
 		rr->addPublished(rp->getPointer());
 
-	if((bool)rp && !rp->getPointer() && !rp->getFirst())
+	if(is(rp) && !rp->getPointer() && !rp->getFirst())
 		rr->addPublished(id);
 
 	if(rp)
@@ -568,7 +568,7 @@ registry::mapped *registry::create(const char *id)
 	}
 	
 	rp = node->leaf("display");
-	if((bool)rp && rp->getPointer())
+	if(is(rp) && rp->getPointer())
 		string::set(rr->display, sizeof(rr->display), rp->getPointer());
 
 	// we add routes while still exclusive owner of registry since
@@ -835,7 +835,7 @@ registry::mapped *registry::access(const char *id)
 	return rr;
 }
 
-void registry::release(mapped *rr)
+void registry::detach(mapped *rr)
 {
 	if(!rr)
 		return;
@@ -845,7 +845,7 @@ void registry::release(mapped *rr)
 
 unsigned registry::mapped::setTarget(Socket::address *target_addr, time_t lease, const char *target_contact)
 {
-	assert(target_addr != NULL && target_addr->getAddr() != 0);
+	assert(target_addr != NULL && !isnull(target_addr));
 	assert(target_contact != NULL && *target_contact != 0);
 
 	Socket::address *origin = NULL;
@@ -864,7 +864,7 @@ unsigned registry::mapped::setTarget(Socket::address *target_addr, time_t lease,
 
 	locking.exclusive();
 	tp = targets;
-	while((bool)tp && count > 1) {
+	while(is(tp) && count > 1) {
 		delete *tp;
 		tp.next();
 		--count;
@@ -988,7 +988,7 @@ bool registry::mapped::refresh(Socket::address *saddr, time_t lease)
 
 unsigned registry::mapped::addTarget(Socket::address *target_addr, time_t lease, const char *target_contact)
 {
-	assert(target_addr != NULL && target_addr->getAddr() != 0);
+	assert(target_addr != NULL && !isnull(target_addr));
 	assert(target_contact != NULL && *target_contact != 0);
 	assert(lease > 0);
 
@@ -1061,7 +1061,7 @@ unsigned registry::mapped::addTarget(Socket::address *target_addr, time_t lease,
 
 unsigned registry::mapped::setTargets(Socket::address *target_addr)
 {
-	assert(target_addr != NULL && target_addr->getAddr() != NULL);
+	assert(target_addr != NULL && !isnull(target_addr));
 
 	struct addrinfo *al;
 	linked_pointer<target> tp;

@@ -239,7 +239,7 @@ service::instance::~instance()
 	service::locking.release();
 }
 
-service::service(char *name, size_t s) :
+service::service(const char *name, size_t s) :
 mempager(s), root()
 {
 	assert(name != NULL && *name != 0);
@@ -250,7 +250,7 @@ mempager(s), root()
 	char **varp = vars;
 	const char *cp;
 
-	root.setId(name);
+	root.setId((char *)name);
 	root.setPointer(NULL);
 	snmpservers = NULL;
 	community = "public";

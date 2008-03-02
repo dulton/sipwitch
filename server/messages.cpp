@@ -53,27 +53,27 @@ bool messages::check(void)
 void messages::cleanup(void)
 {
 	linked_pointer<message> mp;
-	LinkedObject *next;
-	unsigned count = 0;
+	LinkedObject *msgnext;
+	unsigned msgcount = 0;
 	time_t now;
 
 	if(!pending)
 		return;
 
-	while(count < keysize) {
+	while(msgcount < keysize) {
 		msglock.lock();
 		time(&now);
-		mp = msgs[count];
+		mp = msgs[msgcount];
 		while(mp) {
-			next = mp->getNext();
+			msgnext = mp->getNext();
 			if(mp->expires < now) {
-				mp->delist(&msgs[count]);
+				mp->delist(&msgs[msgcount]);
 				mp->enlist(&freelist);
 			}
-			mp = next;
+			mp = msgnext;
 		}
 		msglock.unlock();
-		++count;
+		++msgcount;
 	}
 }
 
@@ -185,12 +185,12 @@ bool messages::send(message *msg)
 	registry::mapped *rr = registry::access(msg->user);
 	unsigned path = NamedObject::keyindex(msg->user, keysize);
 	time_t now;
-	unsigned count = 0;
+	unsigned msgcount = 0;
 
 	time(&now);
 	if(!rr || (rr->expires && rr->expires < now)) {
 delay:
-		registry::release(rr);
+		registry::detach(rr);
 		msglock.lock();
 		++pending;
 		msg->enlist(&msgs[path]);
@@ -209,10 +209,10 @@ delay:
 		tp.next();
 	}
 
-	if(!count)
+	if(!msgcount)
 		goto delay;
 
-	registry::release(rr);
+	registry::detach(rr);
 	msglock.lock();
 	msg->enlist(&freelist);
 	msglock.release();

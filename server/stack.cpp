@@ -452,7 +452,7 @@ stack::session *stack::access(int cid)
 	return *sp;
 }
 
-void stack::release(session *s)
+void stack::detach(session *s)
 {
 	if(s)
 		locking.release();

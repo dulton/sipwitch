@@ -190,7 +190,7 @@ void thread::identify(void)
 	extension = rr->ext;
 	string::set(identity, sizeof(identity), rr->userid);
 	authorized = config::getProvision(identity);
-	registry::release(rr);
+	registry::detach(rr);
 }
 
 const char *thread::getIdent(void)
@@ -225,7 +225,7 @@ bool thread::unauthenticated(void)
 	string::set(display, sizeof(display), rr->display);
 	string::set(identity, sizeof(identity), rr->userid);
 	authorized = config::getProvision(identity);
-	registry::release(rr);
+	registry::detach(rr);
 	if(authorized)
 		return true;
 
@@ -479,7 +479,7 @@ static_routing:
 		target = dbuf;
 		config::release(dialed);
 		if(reginfo)
-			registry::release(reginfo);
+			registry::detach(reginfo);
 		dialed = NULL;
 		reginfo = NULL;
 		destination = LOCAL;
@@ -999,12 +999,12 @@ void thread::run(void)
 		// release access locks for registry and sessions quickly...
 	
 		if(session) {
-			stack::release(session);
+			stack::detach(session);
 			session = NULL;
 		}
 
 		if(reginfo) {
-			registry::release(reginfo);
+			registry::detach(reginfo);
 			reginfo = NULL;
 		}
 
