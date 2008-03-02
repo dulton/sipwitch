@@ -297,7 +297,7 @@ void server::run(const char *user)
 
 		argc = 0;
 		tokens = NULL;
-		while(argc < 64 && NULL != (cp = const_cast<char *>(string::token(cp, &tokens, " \t")))) {
+		while(argc < 64 && NULL != (cp = const_cast<char *>(String::token(cp, &tokens, " \t")))) {
 			argv[argc++] = cp;
 		}
 		argv[argc] = NULL;

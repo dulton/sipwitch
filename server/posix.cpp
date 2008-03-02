@@ -257,8 +257,8 @@ static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 		setenv("CFG", cfgfile, 1);
 	else {			
 		getcwd(buf, sizeof(buf));
-		string::add(buf, sizeof(buf), "/");
-		string::add(buf, sizeof(buf), cfgfile);
+		String::add(buf, sizeof(buf), "/");
+		String::add(buf, sizeof(buf), cfgfile);
 		setenv("CFG", buf, 1);
 	}
 

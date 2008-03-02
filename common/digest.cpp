@@ -448,7 +448,7 @@ unsigned digest::rmd160(unsigned char *digest, const char *str)
 }	
 #endif
 
-unsigned digest::md5(string &d, const char *s)
+unsigned digest::md5(string_t &d, const char *s)
 {
 	char strbuf[33];
 	unsigned char digbuf[16];
@@ -474,7 +474,7 @@ unsigned digest::md5(string &d, const char *s)
 	return 16;
 }
 	
-unsigned digest::sha1(string &d, const char *s)
+unsigned digest::sha1(string_t &d, const char *s)
 {
 	char strbuf[41];
 	unsigned char digbuf[20];
@@ -500,7 +500,7 @@ unsigned digest::sha1(string &d, const char *s)
 	return 20;
 }
 
-unsigned digest::rmd160(string &d, const char *s)
+unsigned digest::rmd160(string_t &d, const char *s)
 {
 	char strbuf[41];
 	unsigned char digbuf[20];

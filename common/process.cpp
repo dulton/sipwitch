@@ -102,7 +102,7 @@ char *process::receive(void)
 
 retry:
 	fgets(buf, sizeof(buf), fifo);
-	cp = string::strip(buf, " \t\r\n");
+	cp = String::strip(buf, " \t\r\n");
 	if(*cp == '/') {
 		if(strstr(cp, ".."))
 			goto retry;
@@ -247,7 +247,7 @@ retry:
 		return NULL;
 	
 	buf[msgresult] = 0;
-	cp = string::strip(buf, " \t\r\n");
+	cp = String::strip(buf, " \t\r\n");
 	
 	if(*cp == '\\') {
 		if(strstr(cp, ".."))

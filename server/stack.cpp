@@ -638,8 +638,8 @@ char *stack::sipIdentity(struct sockaddr_internet *addr, char *buf, const char *
 		return NULL;
 
 	if(user) {
-		string::add(buf, size, user);
-		string::add(buf, size, "@");
+		String::add(buf, size, user);
+		String::add(buf, size, "@");
 	}
 
 	len = strlen(buf);
@@ -684,19 +684,19 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 		port = sip.port;
 
 	if(sip.tlsmode)
-		string::set(buf, size, "sips:");
+		String::set(buf, size, "sips:");
 	else 
-		string::set(buf, size, "sip:");
+		String::set(buf, size, "sip:");
 
 	if(user) {
-		string::add(buf, size, user);
+		String::add(buf, size, user);
 		if(ipv6)
-			string::add(buf, size, "@[");
+			String::add(buf, size, "@[");
 		else			
-			string::add(buf, size, "@");
+			String::add(buf, size, "@");
 	}
 	else if(ipv6)
-		string::add(buf, size, "[");
+		String::add(buf, size, "[");
 
 	len = strlen(buf);
 	Socket::getaddress((struct sockaddr *)addr, buf + len, size - len);
@@ -704,7 +704,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 		snprintf(pbuf, sizeof(pbuf), "]:%u", port);
 	else
 		snprintf(pbuf, sizeof(pbuf), ":%u", port);
-	string::add(buf, size, pbuf);
+	String::add(buf, size, pbuf);
 	return buf;
 }
 	
@@ -730,7 +730,7 @@ Socket::address *stack::getAddress(const char *addr, Socket::address *ap)
 
 #ifdef	AF_INET6
 	if(*addr == '[') {
-		string::set(buffer, sizeof(buffer), ++addr);
+		String::set(buffer, sizeof(buffer), ++addr);
 		family = AF_INET6;
 		ep = strchr(buffer, ']');
 		if(ep)
@@ -740,7 +740,7 @@ Socket::address *stack::getAddress(const char *addr, Socket::address *ap)
 		goto set;
 	} 
 #endif
-	string::set(buffer, sizeof(buffer), addr);
+	String::set(buffer, sizeof(buffer), addr);
 	ep = strchr(buffer, ':');
 	if(ep) {
 		*(ep++) = 0;

@@ -121,7 +121,7 @@ LinkedObject(&list)
 #endif
 	if(!cmds)
 		cmds = "";
-	string::set(listen, sizeof(listen), cmds);
+	String::set(listen, sizeof(listen), cmds);
 	write(header);
 }
 
@@ -152,7 +152,7 @@ void service::subscriber::reopen(const char *cmds)
 
 	if(!cmds)
 		cmds = "";
-	string::set(listen, sizeof(listen), cmds);
+	String::set(listen, sizeof(listen), cmds);
 }
 
 void service::subscriber::write(char *str)
@@ -273,7 +273,7 @@ service::~service()
 
 void service::setHeader(const char *h)
 {
-	string::set(header, sizeof(header) - 1, h);
+	String::set(header, sizeof(header) - 1, h);
 }
 
 long service::uptime(void)
@@ -465,7 +465,7 @@ service::keynode *service::getPath(const char *id)
 	keynode *node = &root, *child;
 
 	while(id && *id && node) {
-		string::set(buf, sizeof(buf), id);
+		String::set(buf, sizeof(buf), id);
 		ep = strchr(buf, '.');
 		if(ep)
 			*ep = 0;
@@ -602,7 +602,7 @@ void service::addAttributes(keynode *node, char *attr)
 			return;
 
 		*(attr++) = 0;
-		id = string::trim(id, " \t\r\n");
+		id = String::trim(id, " \t\r\n");
 		while(isspace(*attr))
 			++attr;
 	
@@ -661,7 +661,7 @@ bool service::load(FILE *fp, keynode *node)
 
 		while(node != top && cp && *cp)
 		{
-			cp = string::trim(cp, " \t\r\n");
+			cp = String::trim(cp, " \t\r\n");
 
 			if(cp && *cp && !node)
 				goto exit;
@@ -679,7 +679,7 @@ bool service::load(FILE *fp, keynode *node)
 					goto exit;
 
 				*bp = 0;
-				cp = string::chop(cp, " \r\n\t");
+				cp = String::chop(cp, " \r\n\t");
 				len = strlen(cp);
 				ep = (char *)mempager::alloc(len + 1);
 				xmldecode(ep, len + 1, cp);
@@ -819,7 +819,7 @@ control:
 			if(stricmp(sb->path, path))
 				sb->write(buf);
 		}
-		else if(!cmdbuf[0] || string::ifind(sb->listen, cmdbuf, " ,;: \t\n"))
+		else if(!cmdbuf[0] || String::ifind(sb->listen, cmdbuf, " ,;: \t\n"))
 			sb->write(buf);
 		sb.next();
 	}

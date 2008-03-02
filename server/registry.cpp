@@ -209,7 +209,7 @@ void registry::snapshot(FILE *fp)
 			if(rr->ext)
 				snprintf(buffer, sizeof(buffer), "%d", rr->ext);
 			else
-				string::set(buffer, sizeof(buffer), "none");
+				String::set(buffer, sizeof(buffer), "none");
 			if(rr->type == MappedRegistry::USER)
 				fprintf(fp, "  user %s; extension=%s, profile=%s, use=%d,",
 					rr->userid, buffer, rr->profile.id, rr->inuse);
@@ -385,7 +385,7 @@ bool registry::reload(service *cfg)
 				mapped_entries = atoi(value);
 			else if(!stricmp(key, "digest") && !isConfigured()) {
 				digest = strdup(value);
-				string::upper((char *)digest);
+				String::upper((char *)digest);
 			}
 			else if(!stricmp(key, "realm") && !isConfigured())
 				realm = strdup(value);
@@ -569,7 +569,7 @@ registry::mapped *registry::create(const char *id)
 	
 	rp = node->leaf("display");
 	if(is(rp) && rp->getPointer())
-		string::set(rr->display, sizeof(rr->display), rp->getPointer());
+		String::set(rr->display, sizeof(rr->display), rp->getPointer());
 
 	// we add routes while still exclusive owner of registry since
 	// they update priority indexes.
@@ -694,7 +694,7 @@ registry::mapped *registry::contact(const char *uri)
 	else if(!strnicmp(uri, "sips:", 5))
 		uri += 5;
 
-	string::set(buffer, sizeof(buffer), uri);
+	String::set(buffer, sizeof(buffer), uri);
 	cp = strchr(buffer, '@');
 	if(cp)
 		*cp = 0;
@@ -845,7 +845,7 @@ void registry::detach(mapped *rr)
 
 unsigned registry::mapped::setTarget(Socket::address *target_addr, time_t lease, const char *target_contact)
 {
-	assert(target_addr != NULL && !isnull(target_addr));
+	assert(target_addr != NULL && !isnullp(target_addr));
 	assert(target_contact != NULL && *target_contact != 0);
 
 	Socket::address *origin = NULL;
@@ -902,7 +902,7 @@ unsigned registry::mapped::setTarget(Socket::address *target_addr, time_t lease,
 		if(origin)
 			delete origin;
 	}
-	string::set(tp->contact, MAX_URI_SIZE, target_contact);
+	String::set(tp->contact, MAX_URI_SIZE, target_contact);
 	locking.share();
 	return 1;
 }
@@ -919,9 +919,9 @@ void registry::mapped::addRoute(const char *route_pattern, unsigned route_priori
 	if(!route_suffix)
 		route_suffix = "";
 
-	string::set(rp->entry.text, MAX_USERID_SIZE, route_pattern);
-	string::set(rp->entry.prefix, MAX_USERID_SIZE, route_prefix);
-	string::set(rp->entry.suffix, MAX_USERID_SIZE, route_suffix);
+	String::set(rp->entry.text, MAX_USERID_SIZE, route_pattern);
+	String::set(rp->entry.prefix, MAX_USERID_SIZE, route_prefix);
+	String::set(rp->entry.suffix, MAX_USERID_SIZE, route_suffix);
 	rp->entry.priority = route_priority;
 	rp->entry.registry = this;
 	rp->entry.enlist(&primap[route_priority]);
@@ -936,7 +936,7 @@ void registry::mapped::addPublished(const char *published_id)
 	unsigned path = NamedObject::keyindex(published_id, keysize);
 	locking.exclusive();
 	route *rp = new route;
-	string::set(rp->entry.text, MAX_USERID_SIZE, published_id);
+	String::set(rp->entry.text, MAX_USERID_SIZE, published_id);
 	rp->entry.priority = 0;
 	rp->entry.registry = this;
 	rp->entry.enlist(&publishing[path]);
@@ -953,7 +953,7 @@ void registry::mapped::addContact(const char *contact_id)
 
 	locking.exclusive();
 	route *rp = new route;
-	string::set(rp->entry.text, MAX_USERID_SIZE, contact_id);
+	String::set(rp->entry.text, MAX_USERID_SIZE, contact_id);
 	rp->entry.priority = 0;
 	rp->entry.registry = this;
 	rp->entry.enlist(&contacts[path]);
@@ -988,7 +988,7 @@ bool registry::mapped::refresh(Socket::address *saddr, time_t lease)
 
 unsigned registry::mapped::addTarget(Socket::address *target_addr, time_t lease, const char *target_contact)
 {
-	assert(target_addr != NULL && !isnull(target_addr));
+	assert(target_addr != NULL && !isnullp(target_addr));
 	assert(target_contact != NULL && *target_contact != 0);
 	assert(lease > 0);
 
@@ -1020,7 +1020,7 @@ unsigned registry::mapped::addTarget(Socket::address *target_addr, time_t lease,
 		tp.next();
 	} 
 	if(tp) {
-		string::set(tp->contact, MAX_URI_SIZE, target_contact);
+		String::set(tp->contact, MAX_URI_SIZE, target_contact);
 		if(expired && expired != *tp) {
 			if(expired->index.address) {
 				expired->index.delist(&addresses[Socket::keyindex(expired->index.address, keysize)]);
@@ -1048,7 +1048,7 @@ unsigned registry::mapped::addTarget(Socket::address *target_addr, time_t lease,
 			delete origin;
 		++count;
 	}
-	string::set(expired->contact, sizeof(expired->contact), target_contact);
+	String::set(expired->contact, sizeof(expired->contact), target_contact);
 	expired->expires = lease;
 	memcpy(&expired->address, ai, len);
 	stack::getInterface((struct sockaddr *)(&expired->iface), (struct sockaddr *)(&expired->address));
@@ -1061,7 +1061,7 @@ unsigned registry::mapped::addTarget(Socket::address *target_addr, time_t lease,
 
 unsigned registry::mapped::setTargets(Socket::address *target_addr)
 {
-	assert(target_addr != NULL && !isnull(target_addr));
+	assert(target_addr != NULL && !isnullp(target_addr));
 
 	struct addrinfo *al;
 	linked_pointer<target> tp;

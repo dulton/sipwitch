@@ -39,11 +39,11 @@ class __EXPORT digest
 {
 public:
 	static unsigned md5(unsigned char *buf, const char *str);
-	static unsigned md5(string &d, const char *str = NULL);
+	static unsigned md5(string_t &d, const char *str = NULL);
 	static unsigned sha1(unsigned char *buf, const char *str);
-	static unsigned sha1(string &d, const char *str = NULL);
+	static unsigned sha1(string_t &d, const char *str = NULL);
 	static unsigned rmd160(unsigned char *buf, const char *str);
-	static unsigned rmd160(string &d, const char *str = NULL);
+	static unsigned rmd160(string_t &d, const char *str = NULL);
 };
 
 END_NAMESPACE

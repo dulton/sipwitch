@@ -160,20 +160,20 @@ messages::message *messages::create(const char *reply, const char *display)
 
 	if(msg->reply) {
 		msg->self = false;
-		string::set(msg->reply, sizeof(msg->reply), reply);
+		String::set(msg->reply, sizeof(msg->reply), reply);
 	}
 	if(reply && !display) {
 		if(!strnicmp(reply, "sip:", 4))
 			reply += 4;
 		else if(!strnicmp(reply, "sips:", 5))
 			reply += 5;
-		string::set(msg->from, sizeof(msg->from), reply);
+		String::set(msg->from, sizeof(msg->from), reply);
 		ep = strchr(msg->from, '@');
 		if(ep)
 			*ep = 0;
 	}	
 	else
-		string::set(msg->from, sizeof(msg->from), display);
+		String::set(msg->from, sizeof(msg->from), display);
 	return msg;
 }
 
@@ -225,8 +225,8 @@ bool messages::sms(const char *reply, const char *to, const char *text, const ch
 	assert(text != NULL);
 
 	message *msg = create(reply, display);
-	string::set(msg->user, sizeof(msg->user), to);
-	string::set(msg->text, sizeof(msg->text), text);
+	String::set(msg->user, sizeof(msg->user), to);
+	String::set(msg->text, sizeof(msg->text), text);
 	msg->type = message::SMS;
 	return send(msg);
 }

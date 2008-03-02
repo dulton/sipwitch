@@ -65,7 +65,7 @@ void thread::invite()
 
 	osip_message_get_body(sevent->request, 0, &body);
 	if(body && body->body)
-		string::set(session->sdp, sizeof(session->sdp), body->body);
+		String::set(session->sdp, sizeof(session->sdp), body->body);
 
 	if(dialed) {
 		target = service::getValue(dialed, "extension");
@@ -85,24 +85,24 @@ void thread::invite()
 		if(extension)
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
-			string::set(session->sysident, sizeof(session->sysident), identity);
+			String::set(session->sysident, sizeof(session->sysident), identity);
 		if(display[0])
-			string::set(session->display, sizeof(session->display), display);
+			String::set(session->display, sizeof(session->display), display);
 		else
-			string::set(session->display, sizeof(session->display), session->sysident);
-		string::set(call->dialed, sizeof(call->dialed), dialing);
+			String::set(session->display, sizeof(session->display), session->sysident);
+		String::set(call->dialed, sizeof(call->dialed), dialing);
 		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
 
 		if(toext)
 			snprintf(call->dialed, sizeof(call->dialed), "%u", toext);
 		else
-			string::set(call->dialed, sizeof(call->dialed), target);
+			String::set(call->dialed, sizeof(call->dialed), target);
 
 		if(!stricmp(session->sysident, call->dialed)) {
 			debug(1, "calling self %08x:%u, id=%s\n", 
 				session->sequence, session->cid, getIdent());
 
-			string::set(call->subject, sizeof(call->subject), "calling self");
+			String::set(call->subject, sizeof(call->subject), "calling self");
 			stack::setBusy(sevent->tid, session);
 			return;
 		}
@@ -114,13 +114,13 @@ void thread::invite()
 	case PUBLIC:
 		time(&call->starting);
 		call->type = stack::call::INCOMING;
-		string::set(call->dialed, sizeof(call->dialed), target);
+		String::set(call->dialed, sizeof(call->dialed), target);
 		stack::sipAddress((struct sockaddr_internet *)from_address->getAddr(), session->identity, from->url->username, sizeof(session->identity)); 
 		stack::sipIdentity((struct sockaddr_internet *)from_address->getAddr(), session->sysident, from->url->username,  sizeof(session->sysident));
 		if(from->displayname)
-			string::set(session->display, sizeof(session->display), from->displayname);
+			String::set(session->display, sizeof(session->display), from->displayname);
 		else
-			string::set(session->display, sizeof(session->display), from->url->username);
+			String::set(session->display, sizeof(session->display), from->url->username);
 		debug(1, "incoming call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, call->dialed, session->sysident);
 		break;
@@ -130,12 +130,12 @@ void thread::invite()
 		if(extension)
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
-			string::set(session->sysident, sizeof(session->sysident), identity);
+			String::set(session->sysident, sizeof(session->sysident), identity);
 		session->reg = registry::invite(session->sysident);
 		if(display[0])
-			string::set(session->display, sizeof(session->display), display);
+			String::set(session->display, sizeof(session->display), display);
 		else
-			string::set(session->display, sizeof(session->display), identity);
+			String::set(session->display, sizeof(session->display), identity);
 		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
 		stack::sipIdentity((struct sockaddr_internet *)request_address->getAddr(), call->dialed, uri->username, sizeof(call->dialed));
 		debug(1, "outgoing call %08x:%u from %s to %s", 
@@ -179,16 +179,16 @@ void thread::identify(void)
 	if(!stack::sip.trusted || !getsource() || !access)
 		return;
 
-	if(!string::ifind(stack::sip.trusted, access->getName(), ",; \t\n"))
+	if(!String::ifind(stack::sip.trusted, access->getName(), ",; \t\n"))
 		return;
 
 	rr = registry::address(via_address->getAddr());
 	if(!rr)
 		return;
 
-	string::set(display, sizeof(display), rr->display);
+	String::set(display, sizeof(display), rr->display);
 	extension = rr->ext;
-	string::set(identity, sizeof(identity), rr->userid);
+	String::set(identity, sizeof(identity), rr->userid);
 	authorized = config::getProvision(identity);
 	registry::detach(rr);
 }
@@ -214,7 +214,7 @@ bool thread::unauthenticated(void)
 	if(!stack::sip.trusted || !getsource() || !access)
 		goto untrusted;
 
-	if(!string::ifind(stack::sip.trusted, access->getName(), ",; \t\n"))
+	if(!String::ifind(stack::sip.trusted, access->getName(), ",; \t\n"))
 		goto untrusted;
 
 	rr = registry::address(via_address->getAddr());
@@ -222,8 +222,8 @@ bool thread::unauthenticated(void)
 		goto untrusted;
 
 	extension = rr->ext;
-	string::set(display, sizeof(display), rr->display);
-	string::set(identity, sizeof(identity), rr->userid);
+	String::set(display, sizeof(display), rr->display);
+	String::set(identity, sizeof(identity), rr->userid);
 	authorized = config::getProvision(identity);
 	registry::detach(rr);
 	if(authorized)
@@ -303,7 +303,7 @@ bool thread::authorize(void)
 	if(local_port != stack::sip.port)
 		goto remote;
 
-	if(string::ifind(stack::sip.localnames, uri->host, " ,;:\t\n"))
+	if(String::ifind(stack::sip.localnames, uri->host, " ,;:\t\n"))
 		goto local;
 
 	stack::getInterface((struct sockaddr *)&iface, request_address->getAddr());
@@ -316,7 +316,7 @@ local:
 	debug(2, "authorizing local; target=%s\n", uri->username);
 	target = uri->username;
 	destination = LOCAL;
-	string::set(dialing, sizeof(dialing), target);
+	String::set(dialing, sizeof(dialing), target);
 
 rewrite:
 	debug(3, "rewrite process; target=%s, dialing=%s\n", target, dialing);
@@ -433,14 +433,14 @@ routing:
 			target += strlen(pp->prefix) - 1;
 	} else if(pp->prefix[0]) {
 		if(strnicmp(target, pp->prefix, strlen(pp->prefix)))
-			string::set(dialing, sizeof(dialing), pp->prefix);
+			String::set(dialing, sizeof(dialing), pp->prefix);
 	}
-	string::add(dialing, sizeof(dialing), target);
+	String::add(dialing, sizeof(dialing), target);
 	if(pp->suffix[0] == '-') {
 		if(strlen(dialing) > strlen(pp->suffix) && !stricmp(dialing + strlen(dialing) - strlen(pp->suffix) + 1, pp->suffix + 1))	
 			dialing[strlen(dialing) - strlen(pp->suffix) + 1] = 0;
 	} else
-		string::add(dialing, sizeof(dialing), pp->suffix);
+		String::add(dialing, sizeof(dialing), pp->suffix);
 	return true;
 
 static_routing:
@@ -464,18 +464,18 @@ static_routing:
 			target += strlen(cp);
 	} else if(cp) {
 		if(strnicmp(target, cp, strlen(cp)))
-			string::set(dialing, sizeof(dialing), cp);
+			String::set(dialing, sizeof(dialing), cp);
 	}
-	string::add(dialing, sizeof(dialing), target);
+	String::add(dialing, sizeof(dialing), target);
 	cp = service::getValue(dialed, "suffix");
 	if(cp && *cp == '-') {
 		--cp;
 		if(strlen(dialing) >= strlen(cp) && !stricmp(dialing + strlen(dialing) - strlen(cp), cp))	
 			dialing[strlen(dialing) - strlen(cp)] = 0;
 	} else if(cp)
-		string::add(dialing, sizeof(dialing), cp);
+		String::add(dialing, sizeof(dialing), cp);
 	if(!stricmp(dialed->getId(), "rewrite")) {
-		string::set(dbuf, sizeof(dbuf), dialing);
+		String::set(dbuf, sizeof(dbuf), dialing);
 		target = dbuf;
 		config::release(dialed);
 		if(reginfo)
@@ -582,7 +582,7 @@ bool thread::authenticate(void)
 	// if subnet restrictions and authenticated from outside, reject
 
 	if(stack::sip.restricted) {
-		if(!getsource() || !access || !string::ifind(stack::sip.restricted, access->getName(), ",; \t\n")) {
+		if(!getsource() || !access || !String::ifind(stack::sip.restricted, access->getName(), ",; \t\n")) {
 			process::errlog(NOTICE, "rejecting restricted %s", auth->username);
 			error = SIP_FORBIDDEN;
 			goto failed;
@@ -615,7 +615,7 @@ bool thread::authenticate(void)
 
 	leaf = node->leaf("display");
 	if(leaf && leaf->getPointer())
-		string::set(display, sizeof(display), leaf->getPointer());
+		String::set(display, sizeof(display), leaf->getPointer());
 
 	leaf = node->leaf("digest");
 	if(!leaf || !leaf->getPointer()) {
@@ -644,7 +644,7 @@ bool thread::authenticate(void)
 		goto failed;
 	}
 	authorized = node;
-	string::set(identity, sizeof(identity), auth->username);
+	String::set(identity, sizeof(identity), auth->username);
 	return true;
 
 failed:

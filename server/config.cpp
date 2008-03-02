@@ -99,14 +99,14 @@ bool config::confirm(const char *user)
 	profiles = NULL;
 	mp = (caddr_t)alloc_locked(sizeof(profile));
 	ppd = new(mp) profile(&profiles);
-	string::set(ppd->value.id, sizeof(ppd->value.id), "*");
+	String::set(ppd->value.id, sizeof(ppd->value.id), "*");
 	ppd->value.level = 1;
 	ppd->value.features = USER_PROFILE_DEFAULT;
 	
 	mp = (caddr_t)alloc_locked(sizeof(profile));
 	pp = new(mp) profile(&profiles);
 	memcpy(&pp->value, &ppd->value, sizeof(profile_t));
-	string::set(pp->value.id, sizeof(pp->value.id), "restricted");
+	String::set(pp->value.id, sizeof(pp->value.id), "restricted");
 	pp->value.level = 0;
 	pp->value.features = USER_PROFILE_RESTRICTED;
 
@@ -195,7 +195,7 @@ bool config::confirm(const char *user)
 			mp = (caddr_t)alloc_locked(sizeof(profile));
 			pp = new(mp) profile(&profiles);
 			memcpy(&pp->value, &ppd->value, sizeof(profile_t));
-			string::set(pp->value.id, sizeof(pp->value.id), id);
+			String::set(pp->value.id, sizeof(pp->value.id), id);
 			leaf = node->leaf("trs");
 			if(leaf && leaf->getPointer())
 				pp->value.level = atoi(leaf->getPointer());

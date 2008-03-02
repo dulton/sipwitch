@@ -47,8 +47,8 @@ static void dispatch()
 		SetEnvironmentVariable("CFG", cfgfile);
 	else {			
 		getcwd(buf, sizeof(buf));
-		string::add(buf, sizeof(buf), "/");
-		string::add(buf, sizeof(buf), cfgfile);
+		String::add(buf, sizeof(buf), "/");
+		String::add(buf, sizeof(buf), cfgfile);
 		SetEnvironmentVariable("CFG", buf);
 	}
 
