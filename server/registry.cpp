@@ -558,10 +558,10 @@ registry::mapped *registry::create(const char *id)
 	if(is(rp) && !rp->getPointer() && !rp->getFirst())
 		rr->addPublished(id);
 
-	if(rp)
+	if(is(rp))
 		rp = rp->getFirst();
 
-	while(rp) {
+	while(is(rp)) {
 		if(!stricmp(rp->getId(), "contact") && rp->getPointer())
 			rr->addPublished(rp->getPointer());
 		rp.next();
