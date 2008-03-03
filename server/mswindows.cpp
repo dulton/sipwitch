@@ -46,7 +46,7 @@ static void dispatch()
 	else if(*cfgfile == '/')
 		SetEnvironmentVariable("CFG", cfgfile);
 	else {			
-		getcwd(buf, sizeof(buf));
+		fsys::getPrefix(buf, sizeof(buf));
 		String::add(buf, sizeof(buf), "/");
 		String::add(buf, sizeof(buf), cfgfile);
 		SetEnvironmentVariable("CFG", buf);
@@ -55,15 +55,15 @@ static void dispatch()
 	GetEnvironmentVariable("APPDATA", buf, 192);
 	len = strlen(buf);
 	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch"); 
-	mkdir(buf, 0770);
-	chdir(buf);
+	fsys::createDir(buf, 0770);
+	fsys::setPrefix(buf);
 	SetEnvironmentVariable("PWD", buf);
 	SetEnvironmentVariable("IDENT", "sipwitch");
 
 	GetEnvironmentVariable("USERPROFILE", buf, 192);
 	len = strlen(buf);
 	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony");
-	mkdir(buf, 0770);
+	fsys::createDir(buf, 0770);
 	SetEnvironmentVariable("HOME", buf);
 	GetEnvironmentVariable("ComSpec", buf, sizeof(buf));
 	SetEnvironmentVariable("SHELL", buf);

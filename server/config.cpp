@@ -124,7 +124,7 @@ bool config::confirm(const char *user)
 		len = strlen(dbuf);
 		snprintf(dbuf + len, sizeof(dbuf) - len, "\\gnutelephony\\sipusers");
 		dirpath = dbuf;
-		mkdir(dbuf, 0700);
+		fsys::createDir(dbuf, 0700);
 		dir = opendir(dbuf);
 	} 
 #else
@@ -133,7 +133,7 @@ bool config::confirm(const char *user)
 		if(dir)
 			dirpath = "/srv/sipw";
 		else {
-			mkdir(DEFAULT_CFGPATH "/sipwitch.d", 0770);
+			fsys::createDir(DEFAULT_CFGPATH "/sipwitch.d", 0770);
 			dirpath = DEFAULT_CFGPATH "/sipwitch.d";
 		}
 	}

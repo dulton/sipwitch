@@ -256,7 +256,7 @@ static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 	else if(*cfgfile == '/')
 		setenv("CFG", cfgfile, 1);
 	else {			
-		getcwd(buf, sizeof(buf));
+		fsys::getPrefix(buf, sizeof(buf));
 		String::add(buf, sizeof(buf), "/");
 		String::add(buf, sizeof(buf), cfgfile);
 		setenv("CFG", buf, 1);
@@ -285,27 +285,27 @@ static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 	}
 
 	if(uid) {
-		mkdir(pwd->pw_dir, 0770);
+		fsys::createDir(pwd->pw_dir, 0770);
 		setenv("PWD", pwd->pw_dir, 1);
-		if(!chdir(pwd->pw_dir)) {
+		if(!fsys::setPrefix(pwd->pw_dir)) {
 			snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/lib/sipwitch");
-			mkdir(buf, 0770);
-			chdir(buf);
+			fsys::createDir(buf, 0770);
+			fsys::setPrefix(buf);
 			setenv("PWD", buf, 1);
 		}
 	}
 	else {
 		snprintf(buf, sizeof(buf), "%s/.sipwitch", pwd->pw_dir);
-		mkdir(buf, 0700);
-		chdir(buf);
+		fsys::createDir(buf, 0700);
+		fsys::setPrefix(buf);
 		setenv("PWD", buf, 1);
 	} 
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch");
-	mkdir(buf, 0775);
+	fsys::createDir(buf, 0775);
 	if(stat(buf, &ino) || !S_ISDIR(ino.st_mode)) {
 		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s", pwd->pw_name);
-		mkdir(buf, 0770);
+		fsys::createDir(buf, 0770);
 	}
 
 	snprintf(buf, sizeof(buf), "%d", pwd->pw_uid);
