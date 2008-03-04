@@ -97,7 +97,7 @@ static bool activate(int argc, char **args)
 		delete addr;
 		return false;
 	}
-	if(!reg->setTargets(addr))
+	if(!reg->setTargets(*addr))
 		rtn = false;
 	registry::detach(reg);
 	delete addr;

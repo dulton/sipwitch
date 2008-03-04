@@ -37,10 +37,10 @@ public:
 	public:
 		void incUse(void);
 		void decUse(void);
-		bool refresh(Socket::address *addr, time_t expires);
-		unsigned setTargets(Socket::address *addr);
-		unsigned addTarget(Socket::address *via, time_t expires, const char *contact);
-		unsigned setTarget(Socket::address *via, time_t expires, const char *contact);
+		bool refresh(Socket::address& addr, time_t expires);
+		unsigned setTargets(Socket::address& addr);
+		unsigned addTarget(Socket::address& via, time_t expires, const char *contact);
+		unsigned setTarget(Socket::address& via, time_t expires, const char *contact);
 		void addContact(const char *id);
 		void addPublished(const char *id);
 		void addRoute(const char *pat, unsigned pri, const char *prefix, const char *suffix);
@@ -419,7 +419,7 @@ private:
 	char dialing[MAX_USERID_SIZE];
 	char display[MAX_DISPLAY_SIZE];
 	struct sockaddr_internet iface;
-	Socket::address *via_address, *from_address, *request_address;
+	Socket::address via_address, from_address, request_address;
 	stack::session *session;
 	osip_header_t *header;
 	long header_expires;

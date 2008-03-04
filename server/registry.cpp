@@ -843,9 +843,9 @@ void registry::detach(mapped *rr)
 	locking.release();
 }
 
-unsigned registry::mapped::setTarget(Socket::address *target_addr, time_t lease, const char *target_contact)
+unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease, const char *target_contact)
 {
-	assert(target_addr != NULL && !isnullp(target_addr));
+	assert(!isnull(target_addr));
 	assert(target_contact != NULL && *target_contact != 0);
 
 	Socket::address *origin = NULL;
@@ -854,9 +854,7 @@ unsigned registry::mapped::setTarget(Socket::address *target_addr, time_t lease,
 	socklen_t len;
 	bool creating = false;
 
-	if(!target_addr)
-		return 0;
-	ai = target_addr->getAddr();
+	ai = target_addr.getAddr();
 	if(!ai)
 		return 0;
 
@@ -961,19 +959,18 @@ void registry::mapped::addContact(const char *contact_id)
 	locking.share();
 }
 
-bool registry::mapped::refresh(Socket::address *saddr, time_t lease)
+bool registry::mapped::refresh(Socket::address& saddr, time_t lease)
 {
-	assert(saddr != NULL);
 	assert(lease > 0);
 
 	linked_pointer<target> tp;
 
-	if(!saddr || !saddr->getAddr() || !expires || type == MappedRegistry::EXPIRED || type == MappedRegistry::TEMPORARY)
+	if(!saddr.getAddr() || !expires || type == MappedRegistry::EXPIRED || type == MappedRegistry::TEMPORARY)
 		return false;
 
 	tp = targets;
 	while(tp) {
-		if(Socket::equal(saddr->getAddr(), (struct sockaddr *)(&tp->address))) {
+		if(Socket::equal(saddr.getAddr(), (struct sockaddr *)(&tp->address))) {
 			Mutex::protect(this);
 			if(lease > expires)
 				expires = lease;
@@ -986,9 +983,9 @@ bool registry::mapped::refresh(Socket::address *saddr, time_t lease)
 	return false;
 }
 
-unsigned registry::mapped::addTarget(Socket::address *target_addr, time_t lease, const char *target_contact)
+unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease, const char *target_contact)
 {
-	assert(target_addr != NULL && !isnullp(target_addr));
+	assert(!isnull(target_addr));
 	assert(target_contact != NULL && *target_contact != 0);
 	assert(lease > 0);
 
@@ -999,9 +996,7 @@ unsigned registry::mapped::addTarget(Socket::address *target_addr, time_t lease,
 	time_t now;
 	socklen_t len;
 
-	if(!target_addr)
-		return 0;
-	ai = target_addr->getAddr();
+	ai = target_addr.getAddr();
 	if(!ai)
 		return 0;
 
@@ -1059,18 +1054,15 @@ unsigned registry::mapped::addTarget(Socket::address *target_addr, time_t lease,
 	return count;
 }
 
-unsigned registry::mapped::setTargets(Socket::address *target_addr)
+unsigned registry::mapped::setTargets(Socket::address& target_addr)
 {
-	assert(target_addr != NULL && !isnullp(target_addr));
+	assert(!isnull(target_addr));
 
 	struct addrinfo *al;
 	linked_pointer<target> tp;
 	socklen_t len;
 
-	if(!target_addr)
-		return 0;
-
-	al = target_addr->getList();
+	al = target_addr.getList();
 	if(!al)
 		return 0;
 

@@ -51,7 +51,6 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	authorized = NULL;
 	reginfo = NULL;
 	session = NULL;
-	via_address = from_address = request_address = NULL;
 }
 
 void thread::invite()
@@ -115,8 +114,8 @@ void thread::invite()
 		time(&call->starting);
 		call->type = stack::call::INCOMING;
 		String::set(call->dialed, sizeof(call->dialed), target);
-		stack::sipAddress((struct sockaddr_internet *)from_address->getAddr(), session->identity, from->url->username, sizeof(session->identity)); 
-		stack::sipIdentity((struct sockaddr_internet *)from_address->getAddr(), session->sysident, from->url->username,  sizeof(session->sysident));
+		stack::sipAddress((struct sockaddr_internet *)from_address.getAddr(), session->identity, from->url->username, sizeof(session->identity)); 
+		stack::sipIdentity((struct sockaddr_internet *)from_address.getAddr(), session->sysident, from->url->username,  sizeof(session->sysident));
 		if(from->displayname)
 			String::set(session->display, sizeof(session->display), from->displayname);
 		else
@@ -137,7 +136,7 @@ void thread::invite()
 		else
 			String::set(session->display, sizeof(session->display), identity);
 		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
-		stack::sipIdentity((struct sockaddr_internet *)request_address->getAddr(), call->dialed, uri->username, sizeof(call->dialed));
+		stack::sipIdentity((struct sockaddr_internet *)request_address.getAddr(), call->dialed, uri->username, sizeof(call->dialed));
 		debug(1, "outgoing call %08x:%u from %s to %s", 
 			session->sequence, session->cid, getIdent(), call->dialed);
 		break;
@@ -182,7 +181,7 @@ void thread::identify(void)
 	if(!String::ifind(stack::sip.trusted, access->getName(), ",; \t\n"))
 		return;
 
-	rr = registry::address(via_address->getAddr());
+	rr = registry::address(via_address.getAddr());
 	if(!rr)
 		return;
 
@@ -217,7 +216,7 @@ bool thread::unauthenticated(void)
 	if(!String::ifind(stack::sip.trusted, access->getName(), ",; \t\n"))
 		goto untrusted;
 
-	rr = registry::address(via_address->getAddr());
+	rr = registry::address(via_address.getAddr());
 	if(!rr)
 		goto untrusted;
 
@@ -292,10 +291,10 @@ bool thread::authorize(void)
 		uri->scheme, uri->username, uri->host, local_port,
 		to->url->scheme, to->url->username, to->url->host, to_port);
 */
-	from_address = new Socket::address(from->url->host, from_port);
-	request_address = new Socket::address(uri->host, local_port);
+	from_address.set(from->url->host, from_port);
+	request_address.set(uri->host, local_port);
 
-	if(request_address->getAddr() == NULL) {
+	if(request_address.getAddr() == NULL) {
 		error = SIP_ADDRESS_INCOMPLETE;
 		goto invalid;
 	}
@@ -306,8 +305,8 @@ bool thread::authorize(void)
 	if(String::ifind(stack::sip.localnames, uri->host, " ,;:\t\n"))
 		goto local;
 
-	stack::getInterface((struct sockaddr *)&iface, request_address->getAddr());
-	if(Socket::equal((struct sockaddr *)&iface, request_address->getAddr()))
+	stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
+	if(Socket::equal((struct sockaddr *)&iface, request_address.getAddr()))
 		goto local;
 
 	goto remote;
@@ -493,7 +492,7 @@ anonymous:
 		goto invalid;
 	}
 
-	if(from_address->getAddr() == NULL) {
+	if(from_address.getAddr() == NULL) {
 		error = SIP_ADDRESS_INCOMPLETE;
 		goto invalid;
 	}
@@ -688,7 +687,7 @@ bool thread::getsource(void)
 	int vpos = 0;
 	unsigned via_port = 5060;
 
-	if(via_address)
+	if(is(via_address))
 		return true;
 
 	via_header = NULL;
@@ -706,8 +705,8 @@ bool thread::getsource(void)
 		via_port = atoi(via_header->port);
 	if(!via_port)
 		via_port = 5060;
-	via_address = new Socket::address(via_header->host, via_port);
-	access = config::getPolicy(via_address->getAddr());
+	via_address.set(via_header->host, via_port);
+	access = config::getPolicy(via_address.getAddr());
 	return true;
 }
 
@@ -1008,18 +1007,9 @@ void thread::run(void)
 			reginfo = NULL;
 		}
 
-		if(via_address) {
-			delete via_address;
-			via_address = NULL;
-		}
-		if(from_address) {
-			delete from_address;
-			from_address = NULL;
-		}
-		if(request_address) {
-			delete request_address;
-			request_address = NULL;
-		}
+		via_address.clear();
+		from_address.clear();
+		request_address.clear();
 
 		// release config access lock(s)...
 
