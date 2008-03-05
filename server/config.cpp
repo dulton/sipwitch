@@ -63,15 +63,15 @@ bool config::confirm(const char *user)
 {
 	assert(user == NULL || *user != 0);
 
+	fsys dir;
 	keynode *access = getPath("access");
 	char *id = NULL, *secret = NULL;
 	const char *ext;
 	linked_pointer<service::keynode> node;
  	service::keynode *leaf;
-	struct dirent *dno;
 	FILE *fp;
-	DIR *dir = NULL;
 	char buf[128];
+	char filename[65];
 	caddr_t mp;
 	profile *pp, *ppd;
 	const char *realm = registry::getRealm();
@@ -116,38 +116,37 @@ bool config::confirm(const char *user)
 	GetEnvironmentVariable("APPDATA", dbuf, 192);
 	len = strlen(dbuf);
 	snprintf(dbuf + len, sizeof(dbuf) - len, "\\sipwitch\\users");
-	dir = opendir(dbuf);
-	if(dir)
+	fsys::open(dir, dbuf, fsys::ACCESS_DIRECTORY);
+	if(is(dir))
 		dirpath = dbuf;
 	else {
 		GetEnvironmentVariable("USERPROFILE", dbuf, 192);
 		len = strlen(dbuf);
 		snprintf(dbuf + len, sizeof(dbuf) - len, "\\gnutelephony\\sipusers");
 		dirpath = dbuf;
-		fsys::createDir(dbuf, 0700);
-		dir = opendir(dbuf);
+		fsys::create(dir, dbuf, fsys::ACCESS_DIRECTORY, 0700);
 	} 
 #else
 	if(user) {
-		dir = opendir("/srv/sipw");
-		if(dir)
+		fsys::open(dir, "/srv/sipw", fsys::ACCESS_DIRECTORY);
+		if(is(dir))
 			dirpath = "/srv/sipw";
 		else {
-			fsys::createDir(DEFAULT_CFGPATH "/sipwitch.d", 0770);
+			fsys::create(dir, DEFAULT_CFGPATH "/sipwitch.d", fsys::ACCESS_DIRECTORY, 0770);
 			dirpath = DEFAULT_CFGPATH "/sipwitch.d";
 		}
 	}
-	if(!dir)
-		dir = opendir(dirpath);
+	if(!is(dir))
+		fsys::open(dir, dirpath, fsys::ACCESS_DIRECTORY);
 #endif
 	if(!stricmp(dirpath, "."))
 		dirpath = getenv("PWD");
 	process::errlog(DEBUG1, "scanning config from %s", dirpath);
-	while(dir && NULL != (dno = readdir(dir))) {
-		ext = strrchr(dno->d_name, '.');
+	while(is(dir) && fsys::read(dir, filename, sizeof(filename)) > 0) {
+		ext = strrchr(filename, '.');
 		if(!ext || stricmp(ext, ".xml"))
 			continue;
-		snprintf(buf, sizeof(buf), "%s/%s", dirpath, dno->d_name);
+		snprintf(buf, sizeof(buf), "%s/%s", dirpath, filename);
 		fp = fopen(buf, "r");
 		fn = strrchr(buf, '/');
 		if(fn)
@@ -161,8 +160,7 @@ bool config::confirm(const char *user)
 				process::errlog(DEBUG1, "loaded %s", fn);
 	}
 
-	if(dir)
-		closedir(dir);
+	fsys::close(dir);
 
 	mp = (caddr_t)alloc_locked(sizeof(cidr));
 	new(mp) cidr(&acl, "127.0.0.0/8", "loopback");
