@@ -401,7 +401,7 @@ void stack::logCall(const char *reason, session *session, const char *joined)
 	time(&now);
 	dt = localtime(&cr->starting);
 
-	process::printlog(NULL, "call %08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s\n",
+	process::printlog("call %08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s\n",
 		session->sequence, session->cid, reason,
 		dt->tm_year + 1900, dt->tm_mon + 1, dt->tm_mday,
 		dt->tm_hour, dt->tm_min, dt->tm_sec, now - cr->starting,

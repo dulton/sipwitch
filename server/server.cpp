@@ -259,6 +259,17 @@ void server::run(const char *user)
 	char *argv[65];
 	char *cp, *tokens;
 	static int exit_code = 0;
+	time_t now;
+	struct tm *dt, hold;
+
+	time(&now);
+	dt = localtime_r(&now, &hold);
+	if(dt->tm_year < 100)
+		dt->tm_year += 1900;
+
+	process::printlog("server startup %04d-%02d-%02 %02d:%02d:%2d\n",
+		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+		dt->tm_hour, dt->tm_min, dt->tm_sec);
 
 	while(running && NULL != (cp = process::receive())) {
         if(!stricmp(cp, "reload")) {
@@ -351,6 +362,14 @@ invalid:
 
 		process::reply("unknown command");
 	}
+	time(&now);
+	dt = localtime_r(&now, &hold);
+	if(dt->tm_year < 100)
+		dt->tm_year += 1900;
+
+	process::printlog("server shutdown %04d-%02d-%02 %02d:%02d:%2d\n",
+		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+		dt->tm_hour, dt->tm_min, dt->tm_sec);
 }
 
 END_NAMESPACE

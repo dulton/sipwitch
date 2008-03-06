@@ -313,11 +313,11 @@ void process::release(void)
 
 errlevel_t process::verbose = FAILURE;
 
-void process::printlog(const char *uid, const char *fmt, ...)
+void process::printlog(const char *fmt, ...)
 {
-	assert(uid == NULL || *uid != 0);
 	assert(fmt != NULL && *fmt != 0);
 
+	const char *uid;
 	fd_t fd;
 	va_list args;
 	char buf[1024];
@@ -327,9 +327,7 @@ void process::printlog(const char *uid, const char *fmt, ...)
 
 	va_start(args, fmt);
 
-	if(!uid)
-		uid = service::getValue(env, "USER");
-
+	uid = service::getValue(env, "USER");
 	fd = logfile(uid);
 	service::release(env);
 
