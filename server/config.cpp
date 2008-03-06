@@ -63,7 +63,7 @@ bool config::confirm(const char *user)
 {
 	assert(user == NULL || *user != 0);
 
-	fsys dir;
+	fsys_t dir;
 	keynode *access = getPath("access");
 	char *id = NULL, *secret = NULL;
 	const char *ext;

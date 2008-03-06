@@ -55,15 +55,15 @@ static void dispatch()
 	GetEnvironmentVariable("APPDATA", buf, 192);
 	len = strlen(buf);
 	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch"); 
-	fsys::createPrefix(buf, 0770);
-	fsys::setPrefix(buf);
+	fsys::createDir(buf, 0770);
+	fsys::changeDir(buf);
 	SetEnvironmentVariable("PWD", buf);
 	SetEnvironmentVariable("IDENT", "sipwitch");
 
 	GetEnvironmentVariable("USERPROFILE", buf, 192);
 	len = strlen(buf);
 	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony");
-	fsys::createPrefix(buf, 0770);
+	fsys::createDir(buf, 0770);
 	SetEnvironmentVariable("HOME", buf);
 	GetEnvironmentVariable("ComSpec", buf, sizeof(buf));
 	SetEnvironmentVariable("SHELL", buf);

@@ -285,27 +285,27 @@ static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 	}
 
 	if(uid) {
-		fsys::createPrefix(pwd->pw_dir, 0770);
+		fsys::createDir(pwd->pw_dir, 0770);
 		setenv("PWD", pwd->pw_dir, 1);
-		if(!fsys::setPrefix(pwd->pw_dir)) {
+		if(!fsys::changeDir(pwd->pw_dir)) {
 			snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/lib/sipwitch");
-			fsys::createPrefix(buf, 0770);
-			fsys::setPrefix(buf);
+			fsys::createDir(buf, 0770);
+			fsys::changeDir(buf);
 			setenv("PWD", buf, 1);
 		}
 	}
 	else {
 		snprintf(buf, sizeof(buf), "%s/.sipwitch", pwd->pw_dir);
-		fsys::createPrefix(buf, 0700);
-		fsys::setPrefix(buf);
+		fsys::createDir(buf, 0700);
+		fsys::changeDir(buf);
 		setenv("PWD", buf, 1);
 	} 
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch");
-	fsys::createPrefix(buf, 0775);
+	fsys::createDir(buf, 0775);
 	if(stat(buf, &ino) || !S_ISDIR(ino.st_mode)) {
 		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s", pwd->pw_name);
-		fsys::createPrefix(buf, 0770);
+		fsys::createDir(buf, 0770);
 	}
 
 	snprintf(buf, sizeof(buf), "%d", pwd->pw_uid);
