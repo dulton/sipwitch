@@ -193,7 +193,6 @@ static void logfile(fsys_t& fd, const char *uid)
 	assert(uid != NULL && *uid != 0);
 
 	char buf[256];
-	fd_t fd;
 	unsigned len;
 
 	GetEnvironmentVariable("APPDATA", buf, 192);
