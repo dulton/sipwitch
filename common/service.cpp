@@ -548,7 +548,7 @@ service::keynode *service::getNode(keynode *base, const char *id, const char *at
 		if(!strcmp(id, node->getId())) {
 			leaf = node->getLeaf(attr);
 			if(leaf) {
-				cp = leaf->getData();
+				cp = leaf->getPointer();
 				if(cp && !stricmp(cp, value))
 					return *node;
 			}
@@ -569,7 +569,7 @@ service::keynode *service::getNode(keynode *base, const char *id, const char *te
 	
 	while(node) {
 		if(!strcmp(id, node->getId())) {
-			cp = node->getData();
+			cp = node->getPointer();
 			if(cp && !stricmp(cp, text))
 				return *node;
 		}
@@ -675,7 +675,7 @@ bool service::load(FILE *fp, keynode *node)
 				break;
 			}
 			if(bp > cp) {
-				if(node->getData() != NULL)
+				if(node->getPointer() != NULL)
 					goto exit;
 
 				*bp = 0;
