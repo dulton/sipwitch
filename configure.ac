@@ -252,6 +252,9 @@ for lib in $UCOMMON_CLINK ; do
 	case "$lib" in
 	-l*)
 		libc=`echo $lib | sed -e "s/^-l//"`
+		AC_CHECK_LIB($libc, localtime_r, [
+			AC_DEFINE(HAVE_LOCALTIME_R, [1], [have localtime_r])
+		])
 		AC_CHECK_LIB($libc, mkfifo, [
 			AC_DEFINE(HAVE_MKFIFO, [1], [fifo control port])
 		])
@@ -323,8 +326,8 @@ AH_BOTTOM([
 #include <ucommon/ucommon.h>
 #include <ucommon/export.h>
 
-#ifdef	_MSWINDOWS_
-#undef	USES_SIGNALS
+#ifndef	HAVE_LOCALTIME_R
+#define	localtime_r(x, y)	localtime(x)
 #endif
 ])
 
