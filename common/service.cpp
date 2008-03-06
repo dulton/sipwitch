@@ -35,8 +35,8 @@ condlock_t service::locking;
 service *service::cfg = NULL;
 
 static char header[80] = "- welcome";
-static SOCKET trap4 = INVALID_SOCKET;
-static SOCKET trap6 = INVALID_SOCKET;
+static socket_t trap4 = INVALID_SOCKET;
+static socket_t trap6 = INVALID_SOCKET;
 static time_t started = 0l;
 
 static size_t xmldecode(char *out, size_t limit, const char *src)
