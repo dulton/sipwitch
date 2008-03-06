@@ -65,21 +65,20 @@ size_t process::attach(const char *uid)
 	return 0;
 }
 
-static fd_t logfile(const char *uid)
+static void logfile(fsys_t &fs, const char *uid)
 {
 	assert(uid != NULL && *uid != 0);
 	char buf[128];
 	fd_t fd;
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/sipwitch.log");
-	fd = open(buf, O_WRONLY | O_CREAT | O_APPEND, 0660);
-	if(fd > -1)
-		return fd;
+	fsys::create(fs, buf, fsys::ACCESS_APPEND, 0660);
+	if(is(fs))
+		return;
 
 	snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/logfile", uid);
-	return open(buf, O_WRONLY | O_CREAT | O_APPEND, 0660);
+	fsys::create(fs, buf, fsys::ACCESS_APPEND, 0660); 
 }
-
 
 void process::release(void)
 {
@@ -189,7 +188,7 @@ static HANDLE hLoopback = INVALID_HANDLE_VALUE;
 static HANDLE hEvent = INVALID_HANDLE_VALUE;
 static OVERLAPPED ovFifo;
 
-static fd_t logfile(const char *uid)
+static void logfile(fsys_t& fd, const char *uid)
 {
 	assert(uid != NULL && *uid != 0);
 
@@ -201,7 +200,7 @@ static fd_t logfile(const char *uid)
 	len = strlen(buf);
 	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\service.log");
 	
-	return CreateFile(buf, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	fsys::create(fd, buf, fsys::ACCESS_APPEND, 0660);
 }
 
 size_t process::attach(const char *uid)
@@ -317,8 +316,8 @@ void process::printlog(const char *fmt, ...)
 {
 	assert(fmt != NULL && *fmt != 0);
 
+	fsys_t log;
 	const char *uid;
-	fd_t fd;
 	va_list args;
 	char buf[1024];
 	int len;
@@ -328,7 +327,7 @@ void process::printlog(const char *fmt, ...)
 	va_start(args, fmt);
 
 	uid = service::getValue(env, "USER");
-	fd = logfile(uid);
+	logfile(log, uid);
 	service::release(env);
 
 	vsnprintf(buf, sizeof(buf) - 1, fmt, args);
@@ -336,18 +335,10 @@ void process::printlog(const char *fmt, ...)
 	if(buf[len - 1] != '\n')
 		buf[len++] = '\n';
 
-#ifdef	_MSWINDOWS_
-	if(fd != INVALID_HANDLE_VALUE) {
-		SetFilePointer(fd, 0, NULL, FILE_END);
-		WriteFile(fd, buf, strlen(buf), NULL, NULL);
-		CloseHandle(fd);
+	if(is(log)) {		
+		fsys::write(log, buf, strlen(buf));
+		fsys::close(log);
 	}
-#else
-	if(fd > -1) {
-		::write(fd, buf, strlen(buf));
-		::close(fd);
-	}
-#endif
 	cp = strchr(buf, '\n');
 	if(cp)
 		*cp = 0;
