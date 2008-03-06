@@ -264,10 +264,10 @@ void server::run(const char *user)
 
 	time(&now);
 	dt = localtime_r(&now, &hold);
-	if(dt->tm_year < 100)
+	if(dt->tm_year < 1900)
 		dt->tm_year += 1900;
 
-	process::printlog("server startup %04d-%02d-%02 %02d:%02d:%2d\n",
+	process::printlog("server startup %04d-%02d-%02d %02d:%02d:%02d\n",
 		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
 		dt->tm_hour, dt->tm_min, dt->tm_sec);
 
@@ -364,10 +364,10 @@ invalid:
 	}
 	time(&now);
 	dt = localtime_r(&now, &hold);
-	if(dt->tm_year < 100)
+	if(dt->tm_year < 1900)
 		dt->tm_year += 1900;
 
-	process::printlog("server shutdown %04d-%02d-%02 %02d:%02d:%2d\n",
+	process::printlog("server shutdown %04d-%02d-%02d %02d:%02d:%02d\n",
 		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
 		dt->tm_hour, dt->tm_min, dt->tm_sec);
 }
