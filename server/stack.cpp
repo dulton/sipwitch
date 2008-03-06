@@ -667,7 +667,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 	if(!addr)
 		return NULL;
 
-	switch(addr->sa_family) {
+	switch(addr->address.sa_family) {
 	case AF_INET:
 		port = ntohs(addr->ipv4.sin_port);
 		break;

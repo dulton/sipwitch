@@ -872,7 +872,7 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 		tp = new target;
 		tp->enlist(&targets);
 		count = 1;
-		tp->address.sa_family = 0;
+		tp->address.address.sa_family = 0;
 		creating = true;
 	}
 	expires = tp->expires = lease;

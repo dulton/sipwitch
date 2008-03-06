@@ -37,7 +37,7 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 
 	Socket::getaddress((struct sockaddr *)a1, buf, sizeof(buf));
 	len = strlen(buf);
-	switch(a1->sa_family) {
+	switch(a1->address.sa_family) {
 	case AF_INET:
 		p1 = (unsigned)ntohs(a1->ipv4.sin_port);
 		break;
@@ -49,7 +49,7 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 	}
 
 	if(a2) {
-		switch(a2->sa_family) {
+		switch(a2->address.sa_family) {
 		case AF_INET:
 			p2 = (unsigned)ntohs(a2->ipv4.sin_port);
 			break;
