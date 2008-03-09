@@ -459,7 +459,7 @@ registry::mapped *registry::invite(const char *id)
 	rr->display[0] = 0;
 	rr->inuse = 1;
 
-	strcpy(rr->userid, id);
+	String::set(rr->userid, sizeof(rr->userid), id);
 	rr->ext = 0;
 	rr->enlist(&keys[path]);
 	rr->status = MappedRegistry::OFFLINE;
@@ -624,7 +624,7 @@ registry::mapped *registry::create(const char *id)
 	rr->status = MappedRegistry::IDLE;
 
 	if(!listed) {
-		strcpy(rr->userid, id);
+		String::set(rr->userid, sizeof(rr->userid), id);
 		rr->enlist(&keys[path]);
 	}
 

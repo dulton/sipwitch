@@ -105,7 +105,7 @@ public:
 		static rwlock_t locking;
 		static LinkedObject *list;
 
-		subscriber(const char *p, const char *listen = NULL);
+		subscriber(const char *p, const char *listen, size_t size);
 		void reopen(const char *listen);
 		void write(char *str);
 		void close(void);

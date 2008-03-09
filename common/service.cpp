@@ -107,13 +107,13 @@ void service::pointer::operator=(keynode *p)
 	node = p;
 }	
 
-service::subscriber::subscriber(const char *name, const char *cmds) :
+service::subscriber::subscriber(const char *name, const char *cmds, size_t size) :
 LinkedObject(&list)
 {
 	assert(name != NULL && *name != 0);
 	assert(cmds != NULL && *cmds != 0);
 
-	strcpy(path, name);
+	String::set(path, size, name);
 #ifdef	_MSWINDOWS_
 	fd = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 #else
@@ -329,7 +329,7 @@ void service::snmptrap(unsigned id, const char *descr)
 	buf[5] = 0x04;
 	buf[6] = strlen(cfg->community);
 
-	strcpy((char *)(buf + 7), cfg->community);
+	String::set((char *)(buf + 7), sizeof(buf) - 7, cfg->community);
 	buf[offset1] = 0xa4;
 
 	if(descr)
@@ -364,7 +364,7 @@ void service::snmptrap(unsigned id, const char *descr)
 	memcpy(buf + offset2 + 16, header2, sizeof(header2));
 	offset2 += 16 + sizeof(header2);
 	buf[offset2] = strlen(descr);
-	strcpy((char *)(buf + offset2 + 1), descr);
+	String::set((char *)buf + offset2 + 1, sizeof(buf) - offset2 - 1, descr);
 	len = offset2 + 1 + strlen(descr);
 
 send:
@@ -848,8 +848,9 @@ void service::subscribe(const char *path, const char *listen)
 		sb->reopen(listen);
 		return;
 	}
-	mp = (caddr_t)cfg->alloc(sizeof(subscriber) + strlen(path));
-	new(mp) subscriber(path, listen);
+	size_t len = strlen(path);
+	mp = (caddr_t)cfg->alloc(sizeof(subscriber) + len);
+	new(mp) subscriber(path, listen, ++len);
 }
 
 void service::startup(void)
