@@ -618,6 +618,7 @@ bool stack::reload(service *cfg)
 		hash = new LinkedObject*[keysize];
 		memset(hash, 0, sizeof(LinkedObject *) * keysize);
 	}
+	Socket::family(family);
 	return true;
 }
 
