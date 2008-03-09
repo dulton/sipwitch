@@ -476,6 +476,7 @@ void stack::start(service *cfg)
 		eXosip_enable_ipv6(1);
 #endif
 
+	Socket::family(family);
 	if(eXosip_listen_addr(protocol, iface, port, family, tlsmode)) {
 #ifdef	AF_INET6
 		if(!iface && protocol == AF_INET6)
@@ -618,7 +619,6 @@ bool stack::reload(service *cfg)
 		hash = new LinkedObject*[keysize];
 		memset(hash, 0, sizeof(LinkedObject *) * keysize);
 	}
-	Socket::family(family);
 	return true;
 }
 

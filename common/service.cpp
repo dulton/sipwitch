@@ -374,7 +374,7 @@ send:
 	while(servers) {
 		int on = 1;
 		socklen_t alen = Socket::getlen((struct sockaddr *)&servers->server);
-		switch(Socket::family(servers->server)) {
+		switch(Socket::getfamily(servers->server)) {
 #ifdef	AF_INET6
 		case AF_INET6:
 			if(trap6 == INVALID_SOCKET) {
