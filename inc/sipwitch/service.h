@@ -41,6 +41,10 @@
 #include <ucommon/string.h>
 #endif
 
+#ifndef	_UCOMMON_FSYS_H_
+#include <ucommon/fsys.h>
+#endif
+
 #ifndef	_SIPWITCH_NAMESPACE_H_
 #include <sipwitch/namespace.h>
 #endif
@@ -111,7 +115,7 @@ public:
 		void close(void);
 
 		mutex_t mutex;
-		fd_t fd;
+		fsys_t fs;
 		char listen[80];
 		char path[1];
 	};

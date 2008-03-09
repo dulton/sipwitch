@@ -114,11 +114,7 @@ LinkedObject(&list)
 	assert(cmds != NULL && *cmds != 0);
 
 	String::set(path, size, name);
-#ifdef	_MSWINDOWS_
-	fd = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-#else
-	fd = ::open(path, O_RDWR);
-#endif
+	fsys::open(fs, path, fsys::ACCESS_RDONLY);
 	if(!cmds)
 		cmds = "";
 	String::set(listen, sizeof(listen), cmds);
@@ -127,15 +123,7 @@ LinkedObject(&list)
 
 void service::subscriber::close(void)
 {
-#ifdef	_MSWINDOWS_
-	if(fd != INVALID_HANDLE_VALUE)
-		CloseHandle(fd);
-	fd = INVALID_HANDLE_VALUE;
-#else
-	if(fd > -1)
-		::close(fd);
-	fd = -1;
-#endif
+	fsys::close(fs);
 }
 
 void service::subscriber::reopen(const char *cmds)
@@ -143,11 +131,7 @@ void service::subscriber::reopen(const char *cmds)
 	assert(cmds != NULL && *cmds != 0);
 
 	close();
-#ifdef	_MSWINDOWS_
-	fd = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-#else
-	fd = ::open(path, O_RDWR);
-#endif
+	fsys::open(fs, path, fsys::ACCESS_RDONLY);
 	write(header);
 
 	if(!cmds)
@@ -166,28 +150,9 @@ void service::subscriber::write(char *str)
 	if(str[len - 1] != '\n')
 		str[len++] = '\n';
 
-#ifdef	_MSWINDOWS_
-	DWORD result = 0;
-
-	if(fd != INVALID_HANDLE_VALUE) {
-		WriteFile(fd, str, (DWORD)len, &result, NULL);
-		if(result < len) {
-			CloseHandle(fd);
-			fd = INVALID_HANDLE_VALUE;
-		}
-	}
-#else
-	if(fd > -1) {
-		while(::write(fd, str, len) < (int)len) {
-			if(errno != EAGAIN) {
-				::close(fd);
-				fd = -1;
-				break;
-			}
-			Thread::sleep(10);
-		}
-	}
-#endif
+	if(is(fs))
+		if(fsys::write(fs, str, len) < len)
+			fsys::close(fs);
 }
 
 service::callback::callback(unsigned rl, const char *name) :
