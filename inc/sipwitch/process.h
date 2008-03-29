@@ -78,7 +78,7 @@ public:
 //	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
 };
 
-#ifdef	DEBUG
+#if defined(DEBUG) || defined(OLD_STDCPP) || defined(NEW_STDCPP)
 #define	debug(l, a...)	process::errlog((errlevel_t)(INFO + l), ## a)
 #else
 #define	debug(l, a...)
