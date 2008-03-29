@@ -396,7 +396,6 @@ unsigned digest::md5(unsigned char *digest, const char *str)
 	gcry_md_final(md5);
 	unsigned char *ptr = gcry_md_read(md5, GCRY_MD_MD5);
 	memcpy(digest, ptr, 16);
-	digest[16] = 0;
 	gcry_md_close(md5);
 	return 16;
 }	
@@ -419,7 +418,6 @@ unsigned digest::sha1(unsigned char *digest, const char *str)
 	gcry_md_final(sha1);
 	unsigned char *ptr = gcry_md_read(sha1, GCRY_MD_SHA1);
 	memcpy(digest, ptr, 20);
-	digest[20] = 0;
 	gcry_md_close(sha1);
 	return 20;
 }	
@@ -442,7 +440,6 @@ unsigned digest::rmd160(unsigned char *digest, const char *str)
 	gcry_md_final(rmd160);
 	unsigned char *ptr = gcry_md_read(rmd160, GCRY_MD_RMD160);
 	memcpy(digest, ptr, 20);
-	digest[20] = 0;
 	gcry_md_close(rmd160);
 	return 20;
 }	
@@ -469,7 +466,7 @@ unsigned digest::md5(string_t &d, const char *s)
 	strbuf[idx * 2] = 0;
 	if(d.size() < 32)
 		d ^= strbuf;
-	else
+	else 
 		d = strbuf;
 	return 16;
 }
