@@ -53,15 +53,27 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	session = NULL;
 }
 
-void thread::invite(registry::target *tp)
+void thread::invite(registry::mapped *rr)
 {
+	linked_pointer<registry::target> tp = rr->targets;
 	time_t now;
 	time(&now);
-	if(tp->expires && tp->expires < now + 2)
+
+	if(rr->expires && rr->expires < now + 1)
 		return;
 
-	if(tp->status != registry::target::READY)
+	if(rr->status != MappedRegistry::IDLE)
 		return;
+	
+	while(is(tp)) {
+		if(tp->expires && tp->expires < now + 1)
+			goto next;
+
+		if(tp->status != registry::target::READY)
+			goto next;
+next:
+		tp.next();
+	}
 }
 
 void thread::invite()
@@ -165,13 +177,7 @@ void thread::invite()
 			dialed = NULL;
 		}
 
-		linked_pointer<registry::target> tp = reginfo->targets;
-
-		while(tp) {
-			invite(tp);
-			tp.next();
-		}
-
+		
 		// TODO: FORWARD CHECK ALL/AWAY-BUSY??
 
 		// invite any available targets; increments cr->invited...
@@ -183,6 +189,7 @@ void thread::invite()
 		// PROCESS DIALED HERE IF EXISTS...
 	}
 
+exit:
 	if(call->invited)
 		return;
 

@@ -438,7 +438,7 @@ private:
 
 	void send_reply(int error);
 	void expiration(void);
-	void invite(registry::target *tp);
+	void invite(registry::mapped *rr);
 	void invite(void);
 	void identify(void);
 	bool getsource(void);
