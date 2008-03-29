@@ -53,6 +53,17 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	session = NULL;
 }
 
+void thread::invite(registry::target *tp)
+{
+	time_t now;
+	time(&now);
+	if(tp->expires && tp->expires < now + 2)
+		return;
+
+	if(tp->status != registry::target::READY)
+		return;
+}
+
 void thread::invite()
 {
 	const char *target = dialing;
@@ -152,6 +163,13 @@ void thread::invite()
 		if(dialed) {
 			config::release(dialed);
 			dialed = NULL;
+		}
+
+		linked_pointer<registry::target> tp = reginfo->targets;
+
+		while(tp) {
+			invite(tp);
+			tp.next();
 		}
 
 		// TODO: FORWARD CHECK ALL/AWAY-BUSY??

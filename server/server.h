@@ -86,6 +86,7 @@ public:
 		struct sockaddr_internet address;
 		struct sockaddr_internet iface; 
 		volatile time_t expires;
+		enum {READY, BUSY, DND} status;
 		char contact[MAX_URI_SIZE]; 
 
 		static void *operator new(size_t size);
@@ -437,6 +438,7 @@ private:
 
 	void send_reply(int error);
 	void expiration(void);
+	void invite(registry::target *tp);
 	void invite(void);
 	void identify(void);
 	bool getsource(void);

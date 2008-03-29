@@ -872,6 +872,7 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 		tp = new target;
 		tp->enlist(&targets);
 		count = 1;
+		tp->status = registry::target::READY;
 		tp->address.address.sa_family = 0;
 		creating = true;
 	}
@@ -1038,6 +1039,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 			oi = ai;
 		expired = new target;
 		expired->enlist(&targets);
+		expired->status = registry::target::READY;
 		memcpy(&contact, oi, len);
 		if(origin)
 			delete origin;
@@ -1088,6 +1090,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
 		stack::getInterface((struct sockaddr *)(&tp->iface), (struct sockaddr *)(&tp->address));
 		stack::sipAddress(&tp->address, tp->contact, userid);
 		tp->expires = 0l;
+		tp->status = registry::target::READY;
 		tp->enlist(&targets);
 		++count;
 		al = al->ai_next;
