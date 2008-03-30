@@ -86,11 +86,11 @@ void thread::invite(stack::session *session, registry::mapped *rr)
 		invite = NULL;
 		eXosip_lock();
 
-		stack::sipAddress(&tp->iface, route + 1, NULL, sizeof(route) - 5);
+		stack::sipAddress(&tp->address, route + 1, NULL, sizeof(route) - 5);
 		route[0] = '<';
 		string::add(route, sizeof(route), ";lr>");
 		snprintf(from, sizeof(from), "\"%s\" <%s>", session->display, session->identity);
-		snprintf(to, sizeof(to), "<%s>", tp->identity);
+		snprintf(to, sizeof(to), "<%s>", tp->contact);
 
 		if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject))
 			goto unlock;
