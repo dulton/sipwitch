@@ -90,7 +90,7 @@ void thread::invite(stack::session *session, registry::mapped *rr)
 		route[0] = '<';
 		string::add(route, sizeof(route), ";lr>");
 		snprintf(from, sizeof(from), "\"%s\" <%s>", session->display, session->identity);
-		snprintf(to, sizeof(to), "<%s>", tp->contact);
+		snprintf(to, sizeof(to), "<%s>", tp->identity);
 
 		if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject))
 			goto unlock;
