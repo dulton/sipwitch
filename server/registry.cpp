@@ -900,7 +900,7 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 			tp->index.enlist(&addresses[Socket::keyindex(tp->index.address, keysize)]);
 		}
 		stack::getInterface((struct sockaddr *)(&tp->iface), (struct sockaddr *)(&tp->address));
-//		stack::sipAddress(&tp->address, tp->identity, up, MAX_URI_SIZE);
+		stack::sipAddress(&tp->address, tp->appears, up, MAX_URI_SIZE);
 		String::set(tp->contact, sizeof(tp->contact), target_contact);
 		if(origin) 
 			delete origin;
@@ -1056,7 +1056,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 	expired->expires = lease;
 	memcpy(&expired->address, ai, len);
 	stack::getInterface((struct sockaddr *)(&expired->iface), (struct sockaddr *)(&expired->address));
-//	stack::sipAddress(&expired->address, expired->identity, up);
+	stack::sipAddress(&expired->address, expired->appears, up);
 	String::set(expired->contact, sizeof(expired->contact), target_contact);
 	expired->index.registry = this;
 	expired->index.address = (struct sockaddr *)(&expired->address);
@@ -1097,7 +1097,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
 		memcpy(&tp->address, al->ai_addr, len);
 		memcpy(&contact, &tp->address, len);
 		stack::getInterface((struct sockaddr *)(&tp->iface), (struct sockaddr *)(&tp->address));
-//		stack::sipAddress(&tp->address, tp->identity, userid);
+		stack::sipAddress(&tp->address, tp->appears, userid);
 		stack::sipAddress(&tp->address, tp->contact, userid);
 		tp->expires = 0l;
 		tp->status = registry::target::READY;

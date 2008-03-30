@@ -86,15 +86,30 @@ void thread::invite(stack::session *session, registry::mapped *rr)
 		invite = NULL;
 		eXosip_lock();
 
-		stack::sipAddress(&tp->address, route + 1, NULL, sizeof(route) - 5);
-		route[0] = '<';
-		string::add(route, sizeof(route), ";lr>");
-		snprintf(from, sizeof(from), "\"%s\" <%s>", session->display, session->identity);
-		snprintf(to, sizeof(to), "<%s>", tp->contact);
+		snprintf(to, sizeof(to), "<%s>", tp->appears);
 
-		if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject))
-			goto unlock;
+		if(destination == PUBLIC) {
+			stack::sipAddress(&tp->iface, route + 1, NULL, sizeof(route) - 5);
+			route[0] = '<';
+			string::add(route, sizeof(route), ";lr>");
+			snprintf(from, sizeof(from), "<%s>", session->identity);
+			if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject))
+				goto unlock;
+		}
+		else {
+			// reply to our uri on the interface target ua is reachable as
+			stack::sipAddress(&tp->iface, from, identity, sizeof(from));
+			if(eXosip_call_build_initial_invite(&invite, to, from, NULL, call->subject))
+				goto unlock;
+		}		
 		
+		snprintf(from, sizeof(from), "\"%s\" <%s>", session->display, session->identity);
+		osip_message_set_from(invite, from);
+		osip_message_set_contact(invite, tp->contact);
+		stack::sipAddress(&tp->iface, route, call->dialed, sizeof(route));
+		snprintf(to, sizeof(to), "\"%s\" <%s>", call->dialed, route);
+		osip_message_set_to(invite, to);
+
 		osip_message_set_supported(invite, "100rel,replaces");
 		osip_message_set_body(invite, session->sdp, strlen(session->sdp));
 		osip_message_set_content_type(invite, "application/sdp");
@@ -207,6 +222,7 @@ void thread::invite()
 			session->sequence, session->cid, getIdent(), call->dialed);
 		break;
 	case ROUTED:
+		String::set(call->dialed, sizeof(call->dialed), dialing);
 		session->reg = registry::invite(identity);
 		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
 			session->sequence, session->cid, target, getIdent(), dialing);
