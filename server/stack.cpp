@@ -708,6 +708,32 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 	String::add(buf, size, pbuf);
 	return buf;
 }
+
+char *stack::sipUserid(const char *addr, char *buf, size_t size)
+{
+	assert(buf != NULL);
+	assert(size > 0);
+
+	buf[0] = 0;
+	char *ep;
+
+	if(!addr)
+		return NULL;
+
+	if(!strnicmp(addr, "sip:", 4))
+		addr += 4;
+	else if(!strnicmp(addr, "sips:", 5))
+		addr += 5;
+	
+	if(!strchr(addr, '@'))
+		return NULL;
+	
+	string::set(buf, size, addr);
+	ep = strchr(buf, '@');
+	if(ep)
+		*ep = 0;
+	return buf;
+}
 	
 Socket::address *stack::getAddress(const char *addr, Socket::address *ap)
 {

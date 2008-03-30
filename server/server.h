@@ -319,8 +319,10 @@ public:
 	__EXPORT static void clear(session *s);
 	__EXPORT static void close(session *s);
 	__EXPORT static session *access(int cid);
+	__EXPORT static char *sipUserid(const char *uri, char *buf, size_t size);
 	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
 	__EXPORT static char *sipIdentity(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_IDENT_SIZE);
+	__EXPORT static char *sipContact(struct sockaddr_internet *addr, char *buf, const char *user = NULL, const char *display = NULL, size_t size = MAX_URI_SIZE);
 	__EXPORT static Socket::address *getAddress(const char *uri, Socket::address *addr = NULL);
 };
 
@@ -438,7 +440,7 @@ private:
 
 	void send_reply(int error);
 	void expiration(void);
-	void invite(registry::mapped *rr);
+	void invite(stack::session *session, registry::mapped *rr);
 	void invite(void);
 	void identify(void);
 	bool getsource(void);

@@ -853,6 +853,8 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 	linked_pointer<target> tp;
 	socklen_t len;
 	bool creating = false;
+	char user[65];
+	char *up = stack::sipUserid(target_contact, user, sizeof(user));
 
 	ai = target_addr.getAddr();
 	if(!ai)
@@ -898,10 +900,10 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 			tp->index.enlist(&addresses[Socket::keyindex(tp->index.address, keysize)]);
 		}
 		stack::getInterface((struct sockaddr *)(&tp->iface), (struct sockaddr *)(&tp->address));
-		if(origin)
+		stack::sipAddress(&tp->address, tp->contact, up, MAX_URI_SIZE);
+		if(origin) 
 			delete origin;
 	}
-	String::set(tp->contact, MAX_URI_SIZE, target_contact);
 	locking.share();
 	return 1;
 }
@@ -996,6 +998,11 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 	target *expired = NULL;
 	time_t now;
 	socklen_t len;
+	char user[65];
+	char *up = stack::sipUserid(target_contact, user, sizeof(user));
+
+	if(!up)
+		up = userid;
 
 	ai = target_addr.getAddr();
 	if(!ai)
@@ -1016,7 +1023,6 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 		tp.next();
 	} 
 	if(tp) {
-		String::set(tp->contact, MAX_URI_SIZE, target_contact);
 		if(expired && expired != *tp) {
 			if(expired->index.address) {
 				expired->index.delist(&addresses[Socket::keyindex(expired->index.address, keysize)]);
@@ -1035,6 +1041,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 		origin = stack::getAddress(target_contact);
 		if(origin)
 			oi = origin->getAddr();
+			
 		if(!oi)
 			oi = ai;
 		expired = new target;
@@ -1045,10 +1052,11 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 			delete origin;
 		++count;
 	}
-	String::set(expired->contact, sizeof(expired->contact), target_contact);
 	expired->expires = lease;
 	memcpy(&expired->address, ai, len);
 	stack::getInterface((struct sockaddr *)(&expired->iface), (struct sockaddr *)(&expired->address));
+	stack::sipAddress(&expired->address, expired->contact, up);
+	printf("**** CONTACT <%s>\n", expired->contact);
 	expired->index.registry = this;
 	expired->index.address = (struct sockaddr *)(&expired->address);
 	expired->index.enlist(&addresses[Socket::keyindex(expired->index.address, keysize)]); 

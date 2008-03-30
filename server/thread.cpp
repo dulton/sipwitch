@@ -53,10 +53,19 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	session = NULL;
 }
 
-void thread::invite(registry::mapped *rr)
+void thread::invite(stack::session *session, registry::mapped *rr)
 {
+	assert(session != NULL && session->parent != NULL);
+	assert(rr != NULL);
+
 	linked_pointer<registry::target> tp = rr->targets;
+	stack::call *call = session->parent;
 	time_t now;
+	osip_message_t *invite;
+	char route[MAX_URI_SIZE];
+	char from[MAX_URI_SIZE + 65];
+	char to[MAX_URI_SIZE];
+
 	time(&now);
 
 	if(rr->expires && rr->expires < now + 1)
@@ -71,6 +80,29 @@ void thread::invite(registry::mapped *rr)
 
 		if(tp->status != registry::target::READY)
 			goto next;
+
+		invite = NULL;
+		eXosip_lock();
+
+		snprintf(from, sizeof(from), "\"%s\" <%s>", session->display, session->identity);
+		snprintf(to, sizeof(to), "<%s>", tp->contact);
+/*
+		if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject))
+			goto unlock;
+		
+		osip_message_set_supported(invite, "100rel,replaces");
+		osip_message_set_body(invite, session->sdp, strlen(session->sdp));
+		osip_message_set_content_type(invite, "application/sdp");
+		cid = eXosip_call_send_initial_invite(invite);
+		if(cid > 0)
+			eXosip_call_set_reference(cid, cref);
+		else
+			goto unlock;
+*/		
+		eXosip_unlock();
+		goto next;	 
+unlock:
+		eXosip_unlock();
 next:
 		tp.next();
 	}
@@ -84,6 +116,8 @@ void thread::invite()
 	unsigned toext = 0;
 
 	printf("******* INVITING!\n");
+
+	string::set(call->subject, sizeof(call->subject), "GNU Sip Witch");
 
 	osip_message_get_body(sevent->request, 0, &body);
 	if(body && body->body)
@@ -177,6 +211,7 @@ void thread::invite()
 			dialed = NULL;
 		}
 
+		invite(session, reginfo);
 		
 		// TODO: FORWARD CHECK ALL/AWAY-BUSY??
 
