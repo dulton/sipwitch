@@ -622,6 +622,13 @@ bool stack::reload(service *cfg)
 	return true;
 }
 
+const char *stack::getScheme(void)
+{
+	if(sip.tlsmode)
+		return "sips";
+	return "sip";
+}
+
 char *stack::sipIdentity(struct sockaddr_internet *addr, char *buf, const char *user, size_t size)
 {
 	assert(addr != NULL);
@@ -645,6 +652,46 @@ char *stack::sipIdentity(struct sockaddr_internet *addr, char *buf, const char *
 
 	len = strlen(buf);
 	Socket::getaddress((struct sockaddr *)addr, buf + len, size - len);
+	return buf;
+}
+
+char *stack::sipPublish(struct sockaddr_internet *addr, char *buf, const char *user, size_t size)
+{
+	assert(addr != NULL);
+	assert(buf != NULL);
+	assert(user == NULL || *user != 0);
+	assert(size > 0);
+
+	char pbuf[10];
+	bool ipv6 = false;
+
+	if(sip.published == NULL)
+		return sipAddress(addr, buf, user, size);
+
+	if(sip.tlsmode)
+		String::set(buf, size, "sips:");
+	else 
+		String::set(buf, size, "sip:");
+
+	if(strchr(sip.published, ':'))
+		ipv6 = true;
+
+	if(user) {
+		String::add(buf, size, user);
+		if(ipv6)
+			String::add(buf, size, "@[");
+		else			
+			String::add(buf, size, "@");
+	}
+	else if(ipv6)
+		String::add(buf, size, "[");
+
+	String::add(buf, size, sip.published);
+	if(ipv6)
+		snprintf(pbuf, sizeof(pbuf), "]:%u", sip.port);
+	else
+		snprintf(pbuf, sizeof(pbuf), ":%u", sip.port);
+	String::add(buf, size, pbuf);
 	return buf;
 }
 

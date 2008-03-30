@@ -154,6 +154,7 @@ public:
 	inline static unsigned getRoutes(void)
 		{return reg.routes;};
 
+
 	__EXPORT static unsigned getEntries(void);
 	__EXPORT static unsigned getIndex(mapped *rr);
 	__EXPORT static bool isExtension(const char *id);
@@ -309,6 +310,7 @@ private:
 public:
 	stack();
 
+	__EXPORT static const char *getScheme(void);
 	__EXPORT static void logCall(const char *reason, session *session, const char *joined = NULL);
 	__EXPORT static void setBusy(int tid, session *session);
 	__EXPORT static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
@@ -322,6 +324,7 @@ public:
 	__EXPORT static session *access(int cid);
 	__EXPORT static char *sipUserid(const char *uri, char *buf, size_t size);
 	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
+	__EXPORT static char *sipPublish(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
 	__EXPORT static char *sipIdentity(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_IDENT_SIZE);
 	__EXPORT static char *sipContact(struct sockaddr_internet *addr, char *buf, const char *user = NULL, const char *display = NULL, size_t size = MAX_URI_SIZE);
 	__EXPORT static Socket::address *getAddress(const char *uri, Socket::address *addr = NULL);
@@ -360,6 +363,7 @@ public:
 	__EXPORT static keynode *getProvision(const char *id);
 	__EXPORT static keynode *getExtension(const char *id);
 	__EXPORT static cidr *getPolicy(struct sockaddr *addr);
+	__EXPORT static bool isLocal(struct sockaddr *addr);
 	__EXPORT static void release(cidr *access);
 	__EXPORT static void release(keynode *node);
 	__EXPORT static void reload(const char *uid);

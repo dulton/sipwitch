@@ -86,29 +86,35 @@ void thread::invite(stack::session *session, registry::mapped *rr)
 		invite = NULL;
 		eXosip_lock();
 
-		snprintf(to, sizeof(to), "<%s>", tp->appears);
+		if(destination == ROUTED) {
+			stack::sipAddress(&tp->address, route, call->dialed, sizeof(route));
+			snprintf(to, sizeof(to), "<%s>", route);
+		}
+		else
+			snprintf(to, sizeof(to), "<%s>", tp->appears);
 
 		if(destination == PUBLIC) {
-			stack::sipAddress(&tp->iface, route + 1, NULL, sizeof(route) - 5);
+			snprintf(from, sizeof(from), "\"%s\" <%s>", session->display, session->identity);
+			stack::sipPublish(&tp->iface, route + 1, NULL, sizeof(route) - 5);
 			route[0] = '<';
 			string::add(route, sizeof(route), ";lr>");
-			snprintf(from, sizeof(from), "<%s>", session->identity);
 			if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject))
 				goto unlock;
 		}
 		else {
+			if(config::isLocal((struct sockaddr *)&tp->address))
+				stack::sipAddress(&tp->iface, route, identity, sizeof(route));
+			else
+				stack::sipPublish(&tp->iface, route, identity, sizeof(route));
+			snprintf(from, sizeof(from), "\"%s\" <%s>", session->display, route);
+
 			// reply to our uri on the interface target ua is reachable as
-			stack::sipAddress(&tp->iface, from, identity, sizeof(from));
 			if(eXosip_call_build_initial_invite(&invite, to, from, NULL, call->subject))
-				goto unlock;
-		}		
-		
-		snprintf(from, sizeof(from), "\"%s\" <%s>", session->display, session->identity);
-		osip_message_set_from(invite, from);
-		osip_message_set_contact(invite, tp->contact);
-		stack::sipAddress(&tp->iface, route, call->dialed, sizeof(route));
-		snprintf(to, sizeof(to), "\"%s\" <%s>", call->dialed, route);
-		osip_message_set_to(invite, to);
+				goto unlock;	
+		}
+
+		if(destination != ROUTED)				
+			osip_message_set_contact(invite, tp->contact);
 
 		osip_message_set_supported(invite, "100rel,replaces");
 		osip_message_set_body(invite, session->sdp, strlen(session->sdp));
@@ -171,7 +177,10 @@ void thread::invite()
 		else
 			String::set(session->display, sizeof(session->display), session->sysident);
 		String::set(call->dialed, sizeof(call->dialed), dialing);
-		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
+		if(access)
+			stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
+		else
+			stack::sipPublish(&iface, session->identity, identity, sizeof(session->identity));
 
 		if(toext)
 			snprintf(call->dialed, sizeof(call->dialed), "%u", toext);
@@ -216,12 +225,13 @@ void thread::invite()
 			String::set(session->display, sizeof(session->display), display);
 		else
 			String::set(session->display, sizeof(session->display), identity);
-		stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
+		stack::sipPublish(&iface, session->identity, identity, sizeof(session->identity));
 		stack::sipIdentity((struct sockaddr_internet *)request_address.getAddr(), call->dialed, uri->username, sizeof(call->dialed));
 		debug(1, "outgoing call %08x:%u from %s to %s", 
 			session->sequence, session->cid, getIdent(), call->dialed);
 		break;
 	case ROUTED:
+		stack::sipPublish(&iface, session->identity, identity, sizeof(session->identity));
 		String::set(call->dialed, sizeof(call->dialed), dialing);
 		session->reg = registry::invite(identity);
 		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 

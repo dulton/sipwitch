@@ -250,6 +250,20 @@ void config::release(cidr *access)
 		locking.release();
 }
 
+bool config::isLocal(struct sockaddr *addr)
+{	
+	bool rtn = false;
+
+	assert(addr != NULL);
+	assert(cfg != NULL);
+	cidr *access = getPolicy(addr);
+	if(access) {
+		rtn = true;
+		locking.release();
+	}
+	return rtn;
+}
+
 cidr *config::getPolicy(struct sockaddr *addr)
 {
 	assert(addr != NULL);
