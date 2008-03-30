@@ -88,7 +88,6 @@ public:
 		volatile time_t expires;
 		enum {READY, BUSY, DND} status;
 		char contact[MAX_URI_SIZE]; 
-		char appears[MAX_URI_SIZE];
 
 		static void *operator new(size_t size);
 		static void operator delete(void *ptr);

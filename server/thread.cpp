@@ -87,34 +87,30 @@ void thread::invite(stack::session *session, registry::mapped *rr)
 		eXosip_lock();
 
 		if(destination == ROUTED) {
-			stack::sipAddress(&tp->address, route, call->dialed, sizeof(route));
-			snprintf(to, sizeof(to), "<%s>", route);
+			stack::sipPublish(&tp->address, route, call->dialed, sizeof(route));
+			snprintf(to, sizeof(to), "\"%s\" <%s>", call->dialed, route);
 		}
 		else
-			snprintf(to, sizeof(to), "<%s>", tp->appears);
+			snprintf(to, sizeof(to), "<%s>", tp->contact);
 
-		if(destination == PUBLIC) {
-			snprintf(from, sizeof(from), "\"%s\" <%s>", session->display, session->identity);
-			stack::sipPublish(&tp->iface, route + 1, NULL, sizeof(route) - 5);
-			route[0] = '<';
-			string::add(route, sizeof(route), ";lr>");
-			if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject))
+		snprintf(from, sizeof(from), "\"%s\" <%s>", 
+			session->display, session->identity);
+		stack::sipPublish(&tp->address, route + 1, NULL, sizeof(route) - 5);
+		route[0] = '<';
+		string::add(route, sizeof(route), ";lr>");
+		if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject))
 				goto unlock;
+	
+		// if not routing, then separate to from request-uri for forwarding
+		if(destination != ROUTED) {
+			stack::sipPublish(&tp->address, route, call->dialed, sizeof(route));
+			snprintf(to, sizeof(to), "\"%s\" <%s>", call->dialed, route);
+			if(invite->to) {
+				osip_to_free(invite->to);
+				invite->to = NULL;
+			}
+			osip_message_set_to(invite, to);
 		}
-		else {
-			if(config::isLocal((struct sockaddr *)&tp->address))
-				stack::sipAddress(&tp->iface, route, identity, sizeof(route));
-			else
-				stack::sipPublish(&tp->iface, route, identity, sizeof(route));
-			snprintf(from, sizeof(from), "\"%s\" <%s>", session->display, route);
-
-			// reply to our uri on the interface target ua is reachable as
-			if(eXosip_call_build_initial_invite(&invite, to, from, NULL, call->subject))
-				goto unlock;	
-		}
-
-		if(destination != ROUTED)				
-			osip_message_set_contact(invite, tp->contact);
 
 		osip_message_set_supported(invite, "100rel,replaces");
 		osip_message_set_body(invite, session->sdp, strlen(session->sdp));
@@ -164,9 +160,10 @@ void thread::invite()
 		toext = reginfo->ext;
 	}
 
+	time(&call->starting);
+
 	switch(destination) {
 	case LOCAL:
-		time(&call->starting);
 		call->type = stack::call::LOCAL;
 		if(extension)
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
@@ -176,11 +173,9 @@ void thread::invite()
 			String::set(session->display, sizeof(session->display), display);
 		else
 			String::set(session->display, sizeof(session->display), session->sysident);
+
 		String::set(call->dialed, sizeof(call->dialed), dialing);
-		if(access)
-			stack::sipAddress(&iface, session->identity, identity, sizeof(session->identity));
-		else
-			stack::sipPublish(&iface, session->identity, identity, sizeof(session->identity));
+		stack::sipPublish(&iface, session->identity, identity, sizeof(session->identity));
 
 		if(toext)
 			snprintf(call->dialed, sizeof(call->dialed), "%u", toext);
@@ -201,10 +196,10 @@ void thread::invite()
 			session->sequence, session->cid, call->dialed, session->sysident);
 		break;
 	case PUBLIC:
-		time(&call->starting);
 		call->type = stack::call::INCOMING;
 		String::set(call->dialed, sizeof(call->dialed), target);
-		stack::sipAddress((struct sockaddr_internet *)from_address.getAddr(), session->identity, from->url->username, sizeof(session->identity)); 
+		snprintf(session->identity, sizeof(session->identity), "%s:%s@%s:%s",
+			from->url->scheme, from->url->username, from->url->host, from->url->port);
 		stack::sipIdentity((struct sockaddr_internet *)from_address.getAddr(), session->sysident, from->url->username,  sizeof(session->sysident));
 		if(from->displayname)
 			String::set(session->display, sizeof(session->display), from->displayname);
@@ -214,7 +209,6 @@ void thread::invite()
 			session->sequence, session->cid, call->dialed, session->sysident);
 		break;
 	case EXTERNAL:
-		time(&call->starting);
 		call->type = stack::call::OUTGOING;
 		if(extension)
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
@@ -231,6 +225,15 @@ void thread::invite()
 			session->sequence, session->cid, getIdent(), call->dialed);
 		break;
 	case ROUTED:
+		call->type = stack::call::OUTGOING;
+		if(extension)
+			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
+		else
+			String::set(session->sysident, sizeof(session->sysident), identity);
+		if(display[0])
+			String::set(session->display, sizeof(session->display), display);
+		else
+			String::set(session->display, sizeof(session->display), session->sysident);
 		stack::sipPublish(&iface, session->identity, identity, sizeof(session->identity));
 		String::set(call->dialed, sizeof(call->dialed), dialing);
 		session->reg = registry::invite(identity);
