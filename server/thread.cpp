@@ -62,9 +62,11 @@ void thread::invite(stack::session *session, registry::mapped *rr)
 	stack::call *call = session->parent;
 	time_t now;
 	osip_message_t *invite;
+	char seqid[64];
 	char route[MAX_URI_SIZE];
 	char from[MAX_URI_SIZE + 65];
 	char to[MAX_URI_SIZE];
+	int cid;
 
 	time(&now);
 
@@ -84,9 +86,12 @@ void thread::invite(stack::session *session, registry::mapped *rr)
 		invite = NULL;
 		eXosip_lock();
 
+		stack::sipAddress(&tp->iface, route + 1, NULL, sizeof(route) - 5);
+		route[0] = '<';
+		string::add(route, sizeof(route), ";lr>");
 		snprintf(from, sizeof(from), "\"%s\" <%s>", session->display, session->identity);
 		snprintf(to, sizeof(to), "<%s>", tp->contact);
-/*
+
 		if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject))
 			goto unlock;
 		
@@ -94,11 +99,15 @@ void thread::invite(stack::session *session, registry::mapped *rr)
 		osip_message_set_body(invite, session->sdp, strlen(session->sdp));
 		osip_message_set_content_type(invite, "application/sdp");
 		cid = eXosip_call_send_initial_invite(invite);
-		if(cid > 0)
-			eXosip_call_set_reference(cid, cref);
+		if(cid > 0) {
+			snprintf(seqid, sizeof(seqid), "%08x-%d", 
+				session->sequence, session->cid);
+			stack::sipAddress(&tp->iface, route, seqid, sizeof(route));
+			eXosip_call_set_reference(cid, route);
+		}
 		else
 			goto unlock;
-*/		
+		
 		eXosip_unlock();
 		goto next;	 
 unlock:
