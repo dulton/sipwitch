@@ -474,14 +474,14 @@ void stack::start(service *cfg)
 		process::errlog(FAILURE, "calls could not be mapped");
 
 #ifdef	AF_INET6
-	if(protocol == AF_INET6)
+	if(family == AF_INET6)
 		eXosip_enable_ipv6(1);
 #endif
 
 	Socket::family(family);
 	if(eXosip_listen_addr(protocol, iface, port, family, tlsmode)) {
 #ifdef	AF_INET6
-		if(!iface && protocol == AF_INET6)
+		if(!iface && family == AF_INET6)
 			iface = "::*";
 #endif
 		if(!iface)
