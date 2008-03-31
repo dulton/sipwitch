@@ -362,6 +362,7 @@ stack::session *stack::create(int cid, int did, int tid)
 	cr->count = 0;
 	cr->forwarding = stack::call::FWD_IGNORE;
 	cr->invited = cr->ringing = cr->ringbusy = cr->unreachable = 0;
+	cr->phone = false;
 	cr->expires = 0l;
 	cr->target = NULL;
 	cr->state = call::INITIAL;
@@ -795,10 +796,15 @@ Socket::address *stack::getAddress(const char *addr, Socket::address *ap)
 	char buffer[MAX_URI_SIZE];
 	int family = sip.family;
 	const char *svc = "sip";
+	const char *sp;
 	char *ep;
 	int proto = SOCK_DGRAM;
 	if(sip.protocol == IPPROTO_TCP)
 		proto = SOCK_STREAM;
+
+	sp = strchr(addr, '<');
+	if(sp)
+		addr = ++sp;
 
 	if(!strnicmp(addr, "sip:", 4))
 		addr += 4;
@@ -811,6 +817,11 @@ Socket::address *stack::getAddress(const char *addr, Socket::address *ap)
 #ifdef	AF_INET6
 	if(*addr == '[') {
 		String::set(buffer, sizeof(buffer), ++addr);
+		if(sp) {
+			ep = strchr(buffer, '>');
+			if(ep)
+				*ep = 0;
+		}
 		family = AF_INET6;
 		ep = strchr(buffer, ']');
 		if(ep)
@@ -821,6 +832,11 @@ Socket::address *stack::getAddress(const char *addr, Socket::address *ap)
 	} 
 #endif
 	String::set(buffer, sizeof(buffer), addr);
+	if(sp) {
+		ep = strchr(buffer, '>');
+		if(ep)
+			*ep = 0;
+	}
 	ep = strchr(buffer, ':');
 	if(ep) {
 		*(ep++) = 0;
@@ -828,6 +844,12 @@ Socket::address *stack::getAddress(const char *addr, Socket::address *ap)
 	}
 
 set:
+	if(svc) {
+		ep = strchr(svc, ';');
+		if(ep)
+			*ep = 0;
+	}
+
 	if(ap)
 		ap->add(buffer, svc, family);
 	else

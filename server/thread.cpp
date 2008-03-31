@@ -129,8 +129,10 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 
 		if(destination == ROUTED) {
 			stack::sipPublish(&tp->address, route, call->dialed, sizeof(route));
-			snprintf(to, sizeof(to), "\"%s\" <%s>", call->dialed, route);
+			snprintf(to, sizeof(to), "\"%s\" <%s;user=phone>", call->dialed, route);
 		}
+		else if(call->phone)
+			snprintf(to, sizeof(to), "<%s;user=phone>", tp->contact);
 		else
 			snprintf(to, sizeof(to), "<%s>", tp->contact);
 
@@ -210,6 +212,8 @@ void thread::invite()
 	switch(destination) {
 	case LOCAL:
 		call->type = stack::call::LOCAL;
+		if(extension && atoi(dialing) == extension)
+			call->phone = true; 
 		if(extension)
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
@@ -271,6 +275,7 @@ void thread::invite()
 		break;
 	case ROUTED:
 		call->type = stack::call::OUTGOING;
+		call->phone = true;
 		if(extension)
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else

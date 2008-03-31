@@ -276,6 +276,7 @@ private:
 		unsigned unreachable;	// number of unreachable segments
 		time_t expires, starting;
 		int experror;			// error at expiration...
+		bool phone;
 
 		static void *operator new(size_t size);
 		static void operator delete(void *obj);
