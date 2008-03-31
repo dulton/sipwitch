@@ -211,7 +211,7 @@ private:
 		time_t expires;					// session/invite expires...
 		time_t ringing;					// ring no-answer timer...
 
-		enum {OPEN, CLOSED, RING, BUSY, FWD, REORDER} state;
+		enum {OPEN, CLOSED, RING, BUSY, REORDER} state;
 
 		char sdp[1024];					// sdp body to use in exchange
 		char identity[MAX_URI_SIZE];	// our effective contact/to point...
@@ -254,6 +254,7 @@ private:
 
 		call();
 
+		char forward[MAX_IDENT_SIZE];	// ref id for forwarding...
 		char dialed[MAX_IDENT_SIZE];	// user or ip address...
 		char subject[MAX_URI_SIZE];		// call subject
 
@@ -267,12 +268,12 @@ private:
 		session *target;
 		segment *select;
 		MappedCall *map;
+		enum {FWD_IGNORE, FWD_NA, FWD_BUSY, FWD_DND, FWD_AWAY} forwarding;
 		unsigned count;			// total open segments
 		unsigned invited;		// pending segments with invites
 		unsigned ringing;		// number of ringing segments
 		unsigned ringbusy;		// number of busy segments
 		unsigned unreachable;	// number of unreachable segments
-		unsigned forwarding;	// number of forwarding segments
 		time_t expires, starting;
 		int experror;			// error at expiration...
 
@@ -445,7 +446,7 @@ private:
 
 	void send_reply(int error);
 	void expiration(void);
-	void invite(stack::session *session, registry::mapped *rr);
+	void inviteLocal(stack::session *session, registry::mapped *rr);
 	void invite(void);
 	void identify(void);
 	bool getsource(void);

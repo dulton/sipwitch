@@ -360,7 +360,8 @@ stack::session *stack::create(int cid, int did, int tid)
 
 	cr->arm(7000);	// Normally we get close in 6 seconds, this assures...
 	cr->count = 0;
-	cr->invited = cr->ringing = cr->ringbusy = cr->unreachable = cr->forwarding = 0;
+	cr->forwarding = stack::call::FWD_IGNORE;
+	cr->invited = cr->ringing = cr->ringbusy = cr->unreachable = 0;
 	cr->expires = 0l;
 	cr->target = NULL;
 	cr->state = call::INITIAL;

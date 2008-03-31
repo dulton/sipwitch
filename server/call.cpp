@@ -58,9 +58,6 @@ void stack::call::closing(session *s)
 		case session::RING:
 			--ringing;
 			break;
-		case session::FWD:
-			--forwarding;
-			break;
 		case session::BUSY:
 			--ringbusy;
 			break;

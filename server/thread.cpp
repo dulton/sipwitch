@@ -53,7 +53,7 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	session = NULL;
 }
 
-void thread::invite(stack::session *session, registry::mapped *rr)
+void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 {
 	assert(session != NULL && session->parent != NULL);
 	assert(rr != NULL);
@@ -72,17 +72,26 @@ void thread::invite(stack::session *session, registry::mapped *rr)
 
 	if(rr->expires && rr->expires < now + 1)
 		return;
-
+	
 	switch(rr->status) {
 	case MappedRegistry::IDLE:
 		break;
-	
-	// some types map to dummy entry for accounting...??
-	
+	case MappedRegistry::BUSY:
+		if(!call->count && call->forwarding == stack::call::FWD_NA)
+			call->forwarding = stack::call::FWD_BUSY;
+		return;
+	case MappedRegistry::DND:
+		if(!call->count && call->forwarding == stack::call::FWD_NA)
+			call->forwarding = stack::call::FWD_DND;
+		return;
+	case MappedRegistry::AWAY:
+		if(!call->count && call->forwarding == stack::call::FWD_NA)
+			call->forwarding = stack::call::FWD_AWAY;
+		return;
 	default:
 		return;
 	}
-	
+		
 	while(is(tp)) {
 		if(tp->expires && tp->expires < now + 1)
 			goto next;
@@ -93,9 +102,24 @@ void thread::invite(stack::session *session, registry::mapped *rr)
 		case registry::target::READY:
 			break;
 
-		// DND & BUSY ADDS TARGETS AS DEAD ENDS IMMEDIATELY TO COUNDS!!!
-		
-		// generic default for now...
+		case registry::target::AWAY:
+			if(call->count)
+				goto next;
+			if(call->forwarding == stack::call::FWD_NA)
+				call->forwarding = stack::call::FWD_AWAY;
+			goto next;
+		case registry::target::DND:
+			if(call->count)
+				goto next;
+			if(call->forwarding == stack::call::FWD_NA || call->forwarding == stack::call::FWD_AWAY)
+				call->forwarding = stack::call::FWD_DND;
+			goto next;
+		case registry::target::BUSY:
+			if(call->count)
+				goto next;
+			if(call->forwarding != stack::call::FWD_IGNORE)
+				call->forwarding = stack::call::FWD_BUSY;
+			goto next;
 		default:
 			goto next;
 		}
@@ -143,6 +167,10 @@ void thread::invite(stack::session *session, registry::mapped *rr)
 			goto unlock;
 		
 		eXosip_unlock();
+
+		if(call->forwarding != stack::call::FWD_IGNORE)
+			call->forwarding = stack::call::FWD_NA;
+
 		goto next;	 
 unlock:
 		eXosip_unlock();
@@ -266,13 +294,9 @@ void thread::invite()
 			dialed = NULL;
 		}
 
-		invite(session, reginfo);
-		
-		// TODO: FORWARD CHECK ALL/AWAY-BUSY??
-
-		// invite any available targets; increments cr->invited...
-		// AWAY handled in inviteLocal, nothing added; busy fallthru!
-		// stack::inviteLocal(session, registry);
+		String::set(session->parent->forward, MAX_USERID_SIZE, reginfo->userid);
+		session->parent->forwarding = stack::call::FWD_NA;
+		inviteLocal(session, reginfo);
 	}
 
 	if(dialed) {
