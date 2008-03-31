@@ -73,15 +73,32 @@ void thread::invite(stack::session *session, registry::mapped *rr)
 	if(rr->expires && rr->expires < now + 1)
 		return;
 
-	if(rr->status != MappedRegistry::IDLE)
+	switch(rr->status) {
+	case MappedRegistry::IDLE:
+		break;
+	
+	// some types map to dummy entry for accounting...??
+	
+	default:
 		return;
+	}
 	
 	while(is(tp)) {
 		if(tp->expires && tp->expires < now + 1)
 			goto next;
 
-		if(tp->status != registry::target::READY)
+		// CONSTRUCT NEW NODE SEGMENT HERE
+
+		switch(tp->status) {
+		case registry::target::READY:
+			break;
+
+		// DND & BUSY ADDS TARGETS AS DEAD ENDS IMMEDIATELY TO COUNDS!!!
+		
+		// generic default for now...
+		default:
 			goto next;
+		}
 
 		invite = NULL;
 		eXosip_lock();

@@ -188,7 +188,7 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	incoming = false;
 	outgoing = false;
 	agent = "sipwitch";
-	restricted = trusted = published = NULL;
+	restricted = trusted = published = proxy = NULL;
 	localnames = "localhost, localhost.localdomain";
 }
 
@@ -546,6 +546,7 @@ bool stack::reload(service *cfg)
 {
 	assert(cfg != NULL);
 
+	const char *new_proxy = NULL;
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("stack");
 	int val;
@@ -596,6 +597,8 @@ bool stack::reload(service *cfg)
 				trusted = cfg->dup(value);
 			else if(!stricmp(key, "published") || !stricmp(key, "public"))
 				published = cfg->dup(value);
+			else if(!stricmp(key, "proxy") || !stricmp(key, "outbound"))
+				new_proxy = cfg->dup(value);
 			else if(!stricmp(key, "agent") && !isConfigured())
 				agent = strdup(value);
 			else if(!stricmp(key, "port") && !isConfigured())
@@ -611,7 +614,9 @@ bool stack::reload(service *cfg)
 		}
 		sp.next();
 	}
+
 	localnames = localhosts;
+	proxy = new_proxy;
 
 	if(!mapped_calls) 
 		mapped_calls = registry::getEntries();

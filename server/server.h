@@ -86,7 +86,7 @@ public:
 		struct sockaddr_internet address;
 		struct sockaddr_internet iface; 
 		volatile time_t expires;
-		enum {READY, BUSY, DND} status;
+		enum {READY, BUSY, AWAY, DND} status;
 		char contact[MAX_URI_SIZE]; 
 
 		static void *operator new(size_t size);
@@ -299,6 +299,7 @@ private:
 	const char *volatile restricted;
 	const char *volatile trusted;
 	const char *volatile published;
+	const char *volatile proxy;
 	const char *iface;
 	const char *agent;
 	short port;
