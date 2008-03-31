@@ -474,15 +474,18 @@ void stack::start(service *cfg)
 		process::errlog(FAILURE, "calls could not be mapped");
 
 #ifdef	AF_INET6
-	if(family == AF_INET6)
+	if(family == AF_INET6) {
 		eXosip_enable_ipv6(1);
+		if(!iface)
+			iface = "::0";
+	}
 #endif
 
 	Socket::family(family);
 	if(eXosip_listen_addr(protocol, iface, port, family, tlsmode)) {
 #ifdef	AF_INET6
 		if(!iface && family == AF_INET6)
-			iface = "::*";
+			iface = "::0";
 #endif
 		if(!iface)
 			iface = "*";
@@ -575,7 +578,7 @@ bool stack::reload(service *cfg)
 				if(strchr(value, ':') != NULL)
 					family = AF_INET6;
 #endif
-				if(!strcmp(value, ":::") || !strcmp(value, "::*") || !stricmp(value, "*") || !*value)
+				if(!strcmp(value, ":::") || !strcmp(value, "::0") || !strcmp(value, "::*") || !stricmp(value, "*") || !*value)
 					value = NULL;
 				if(value)
 					value = strdup(value);
