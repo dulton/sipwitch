@@ -457,6 +457,7 @@ private:
 	bool authenticate(void);
 	bool authorize(void);
 	void registration(void);
+	void validate(void);
 	void reregister(const char *contact, time_t interval);
 	void deregister(void);
 	void challenge(void);

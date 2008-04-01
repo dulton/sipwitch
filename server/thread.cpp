@@ -893,12 +893,90 @@ bool thread::getsource(void)
 	return true;
 }
 
+void thread::validate(void)
+{
+	osip_authorization_t *auth = NULL;
+	service::keynode *node = NULL, *leaf;
+	stringbuf<64> digest;
+	int error = SIP_PROXY_AUTHENTICATION_REQUIRED;
+	const char *cp;
+	char temp[64];
+	osip_message_t *reply = NULL;
+
+	if(!sevent->request || osip_message_get_authorization(sevent->request, 0, &auth) != 0 || !auth || !auth->username || !auth->response) {
+		challenge();
+		return;
+	}
+
+	remove_quotes(auth->username);
+	remove_quotes(auth->uri);
+	remove_quotes(auth->nonce);
+	remove_quotes(auth->response);
+
+	node = config::getProvision(auth->username);
+	if(!node) {
+		error = SIP_NOT_FOUND;
+		goto reply;
+	}
+
+	// reject can be used as a placeholder when manually editing
+	// provisioning records for a user that is being disabled but which
+	// one doesn't want to loose configuration info
+
+	if(!stricmp(node->getId(), "reject")) {
+		error = SIP_FORBIDDEN;
+		cp = service::getValue(node, "error");
+		if(cp)
+			error = atoi(cp);
+		goto reply;
+	}
+
+	leaf = node->leaf("digest");
+	if(!leaf || !leaf->getPointer()) {
+		error = SIP_FORBIDDEN;
+		goto reply;
+	}
+
+	snprintf(buffer, sizeof(buffer), "%s:%s", sevent->request->sip_method, auth->uri);
+	if(!stricmp(registry::getDigest(), "sha1"))
+		digest::sha1(digest, buffer);
+	else if(!stricmp(registry::getDigest(), "rmd160"))
+		digest::rmd160(digest, buffer);
+	else
+		digest::md5(digest, buffer);
+	snprintf(buffer, sizeof(buffer), "%s:%s:%s", leaf->getPointer(), auth->nonce, *digest);
+	if(!stricmp(registry::getDigest(), "sha1"))
+		digest::sha1(digest, buffer);
+	else if(!stricmp(registry::getDigest(), "rmd160"))
+		digest::rmd160(digest, buffer);
+	else
+		digest::md5(digest, buffer);
+ 
+	if(!stricmp(*digest, auth->response)) 
+		error = SIP_OK;
+
+reply:
+	config::release(node);
+	eXosip_lock();
+	eXosip_message_build_answer(sevent->tid, error, &reply);
+	if(reply) {
+		if(error == SIP_OK) {
+			snprintf(temp, sizeof(temp), ";expires=%u", registry::getExpires());
+			osip_message_set_contact(reply, temp);
+			snprintf(temp, sizeof(temp), "%u", registry::getExpires());
+			osip_message_set_expires(reply, temp);
+		}
+		eXosip_message_send_answer(sevent->tid, error, reply);
+	}
+	eXosip_unlock();
+}
+
 void thread::registration(void)
 {	
 	osip_header_t *header = NULL;
 	osip_contact_t *contact = NULL;
 	osip_uri_param_t *param = NULL;
-	osip_uri_t *uri;
+	osip_uri_t *uri = NULL;
 	char *port;
 	int interval = -1;
 	int pos = 0;
@@ -922,7 +1000,7 @@ void thread::registration(void)
 		}
 	}
 
-	if(contact) { 
+	if(contact && contact->url && contact->url->username && contact->url->username[0]) { 
 		uri = contact->url;
 		port = uri->port;
 		if(!port || !port[0])
@@ -932,7 +1010,13 @@ void thread::registration(void)
 	}
 	else
 	{
-		uri = sevent->request->to->url;
+		if(!sevent->request->to)
+			uri = sevent->request->to->url;
+		if(!uri || !uri->username || uri->username[0] == 0) {
+			validate();
+			return;
+		}
+
 		port = uri->port;
 		if(!port || !port[0])
 			port = "5060";
@@ -947,10 +1031,10 @@ void thread::registration(void)
 		}
 
 		if(registry::exists(uri->username))
-			error = 200;
+			error = SIP_OK;
 
 reply:
-		if(error == 200) {
+		if(error == SIP_OK) {
 			stack::sipPublish(&iface, temp + 1, uri->username, sizeof(temp) - 2);
 			temp[0] = '<';
 			String::add(temp, sizeof(temp), ">");
@@ -958,7 +1042,7 @@ reply:
 		eXosip_lock();
 		eXosip_message_build_answer(sevent->tid, error, &reply);
 		if(reply) {
-			if(error == 200)
+			if(error == SIP_OK)
 				osip_message_set_contact(reply, temp);
 			eXosip_message_send_answer(sevent->tid, error, reply);
 		}
