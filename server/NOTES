@@ -8,6 +8,21 @@ Referred-By: <xxx>
     made the effective "to" of the new call leg?
     passed as a "Referred-By" pass-thru?
 
+TRANSFER & FORWARD REFERS!!!!!
+
+* Forwarding to call/hunt groups done as local refer/new call!
+	- re-evaluates dialing plan....
+	- groups do not use "forwarding" same way
+
+* destination leg refer after connect:
+	- always done by sending refer to originating leg.  Required so that
+      sdp negotiation can be re-done for peer-to-peer, ISSUE FOR PROVIDER
+
+* NATTING???
+	refelector?  Maybe just allow endpoint to control it's own direct rtp
+	with forwarding??
+
+
 
 PROVIDERS:
 
