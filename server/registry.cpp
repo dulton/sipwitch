@@ -816,6 +816,26 @@ registry::mapped *registry::getExtension(const char *id)
 	return rr;
 }
 
+bool registry::exists(const char *id)
+{
+	bool rtn = true;
+	time_t now;
+
+	mapped *rr = access(id);
+	if(!rr)
+		return false;
+
+	time(&now);
+	if(rr->expires && rr->expires < now)
+		rtn = false;
+
+	if(rr->type == MappedRegistry::OFFLINE)
+		rtn = false;
+	
+	detach(rr);
+	return rtn;
+}
+
 registry::mapped *registry::access(const char *id)
 {
 	assert(id != NULL && *id != 0);

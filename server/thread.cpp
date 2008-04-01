@@ -899,8 +899,12 @@ void thread::registration(void)
 	osip_contact_t *contact = NULL;
 	osip_uri_param_t *param = NULL;
 	osip_uri_t *uri;
+	char *port;
 	int interval = -1;
 	int pos = 0;
+	int error = SIP_ADDRESS_INCOMPLETE;
+	char temp[MAX_URI_SIZE];
+	osip_message_t *reply = NULL;
 
 	if(!getsource()) {
 		process::errlog(ERRLOG, "cannot determine origin for registration");
@@ -918,14 +922,49 @@ void thread::registration(void)
 		}
 	}
 
-	if(contact) {
+	if(contact) { 
 		uri = contact->url;
+		port = uri->port;
+		if(!port || !port[0])
+			port = "5060";
 		snprintf(buffer, sizeof(buffer), "%s:%s@%s:%s", 
-			uri->scheme, uri->username, uri->host, uri->port);
+			uri->scheme, uri->username, uri->host, port);
 	}
 	else
-		snprintf(buffer, sizeof(buffer), "sip:%s:%s", 
-			origin_header->host, origin_header->port);
+	{
+		uri = sevent->request->to->url;
+		port = uri->port;
+		if(!port || !port[0])
+			port = "5060";
+		request_address.set(uri->host, port);
+		if(request_address.getAddr() == NULL)
+			goto reply;
+		error = SIP_NOT_FOUND;
+		if(!String::ifind(stack::sip.localnames, uri->host, " ,;:\t\n")) {
+			stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
+			if(!Socket::equal((struct sockaddr *)&iface, request_address.getAddr()))
+				goto reply;
+		}
+
+		if(registry::exists(uri->username))
+			error = 200;
+
+reply:
+		if(error == 200) {
+			stack::sipPublish(&iface, temp + 1, uri->username, sizeof(temp) - 2);
+			temp[0] = '<';
+			String::add(temp, sizeof(temp), ">");
+		}
+		eXosip_lock();
+		eXosip_message_build_answer(sevent->tid, error, &reply);
+		if(reply) {
+			if(error == 200)
+				osip_message_set_contact(reply, temp);
+			eXosip_message_send_answer(sevent->tid, error, reply);
+		}
+		eXosip_unlock();
+		return;		
+	}
 
 	if(interval < 0)
 		interval = header_expires;

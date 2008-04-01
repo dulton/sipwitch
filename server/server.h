@@ -165,6 +165,7 @@ public:
 	__EXPORT static mapped *create(const char *id);
 	__EXPORT static mapped *access(const char *id);
 	__EXPORT static mapped *invite(const char *id);
+	__EXPORT static bool exists(const char *id);
 	__EXPORT static pattern *getRouting(unsigned trs, const char *id);
 	__EXPORT static void detach(mapped *m);
 	__EXPORT static bool remove(const char *id);
