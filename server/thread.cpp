@@ -67,6 +67,7 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 	char from[MAX_URI_SIZE + 65];
 	char to[MAX_URI_SIZE];
 	int cid;
+	unsigned count = 0;
 
 	time(&now);
 
@@ -138,21 +139,54 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 
 		snprintf(from, sizeof(from), "\"%s\" <%s>", 
 			session->display, session->identity);
+
 		stack::sipPublish(&tp->address, route + 1, NULL, sizeof(route) - 5);
 		route[0] = '<';
-		string::add(route, sizeof(route), ";lr>");
+		String::add(route, sizeof(route), ";lr>");
 		if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject))
 				goto unlock;
 	
 		// if not routing, then separate to from request-uri for forwarding
 		if(destination != ROUTED) {
 			stack::sipPublish(&tp->address, route, call->dialed, sizeof(route));
+			if(call->phone)
+				String::add(route, sizeof(route), ";user=phone");
 			snprintf(to, sizeof(to), "\"%s\" <%s>", call->dialed, route);
 			if(invite->to) {
 				osip_to_free(invite->to);
 				invite->to = NULL;
 			}
 			osip_message_set_to(invite, to);
+		}
+
+		if(destination == FORWARDED) {
+			switch(call->forwarding) {
+			case stack::call::FWD_ALL:
+				stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
+				snprintf(to, sizeof(to), "<%s>;reason=unconditional", route);
+				osip_message_set_header(invite, "Diversion", to);
+				break;
+			case stack::call::FWD_NA:
+                stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
+                snprintf(to, sizeof(to), "<%s>;reason=no-answer", route);
+                osip_message_set_header(invite, "Diversion", to);
+                break;
+			case stack::call::FWD_BUSY:
+                stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
+                snprintf(to, sizeof(to), "<%s>;reason=user-busy", route);
+                osip_message_set_header(invite, "Diversion", to);
+                break;
+			case stack::call::FWD_DND:
+                stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
+                snprintf(to, sizeof(to), "<%s>;reason=do-not-disturb", route);
+                osip_message_set_header(invite, "Diversion", to);
+                break;
+			case stack::call::FWD_AWAY:
+                stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
+                snprintf(to, sizeof(to), "<%s>;reason=away", route);
+                osip_message_set_header(invite, "Diversion", to);
+                break;
+			}
 		}
 
 		osip_message_set_supported(invite, "100rel,replaces");
@@ -164,6 +198,7 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 				session->sequence, session->cid);
 			stack::sipAddress(&tp->iface, route, seqid, sizeof(route));
 			eXosip_call_set_reference(cid, route);
+			++count;
 		}
 		else
 			goto unlock;
@@ -179,6 +214,10 @@ unlock:
 next:
 		tp.next();
 	}
+	if(count && destination != FORWARDED)
+		String::set(call->refer, sizeof(call->refer), call->dialed);
+	else if(count)
+		String::set(call->refer, sizeof(call->refer), rr->userid);		
 }
 
 void thread::invite()

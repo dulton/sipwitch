@@ -257,6 +257,7 @@ private:
 		char forward[MAX_IDENT_SIZE];	// ref id for forwarding...
 		char dialed[MAX_IDENT_SIZE];	// user or ip address...
 		char subject[MAX_URI_SIZE];		// call subject
+		char refer[MAX_IDENT_SIZE];		// used in forward management
 
 		void expired(void);
 		void closing(session *s);
@@ -268,7 +269,7 @@ private:
 		session *target;
 		segment *select;
 		MappedCall *map;
-		enum {FWD_IGNORE, FWD_NA, FWD_BUSY, FWD_DND, FWD_AWAY} forwarding;
+		enum {FWD_IGNORE, FWD_NA, FWD_BUSY, FWD_DND, FWD_AWAY, FWD_ALL} forwarding;
 		unsigned count;			// total open segments
 		unsigned invited;		// pending segments with invites
 		unsigned ringing;		// number of ringing segments
@@ -438,7 +439,7 @@ private:
 	osip_to_t *to;
 	osip_uri_t *uri;
 
-	enum {EXTERNAL, LOCAL, PUBLIC, ROUTED} destination;
+	enum {EXTERNAL, LOCAL, PUBLIC, ROUTED, FORWARDED} destination;
 	enum {CALL, MESSAGE, NONE} authorizing;
 
 	thread();

@@ -1,3 +1,15 @@
+Call transfer with refer:
+
+eXosip_call_build_refer(did, refer_to, &refer)
+osip_message_set_header(refer, "Referred-By", referred_by)
+eXosip_call_send_request(did, refer)
+
+Referred-By: <xxx>
+    made the effective "to" of the new call leg?
+    passed as a "Referred-By" pass-thru?
+
+
+
 CALL FORWARDING:
 	All outside forward (offsite) DONE BY REFER!!!!
 	All internal forward either to registry targets OR LOCAL REFER!!!!
