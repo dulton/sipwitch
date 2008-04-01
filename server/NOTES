@@ -9,6 +9,11 @@ Referred-By: <xxx>
     passed as a "Referred-By" pass-thru?
 
 
+PROVIDERS:
+
+* PROVIDER SUPPORT MAY FORCE SINGLE SDP ENCODING SO CAN REDIRECT RTP WHEN
+ REFER OPERATIONS HAPPEN!!!
+
 
 CALL FORWARDING:
 	All outside forward (offsite) DONE BY REFER!!!!
