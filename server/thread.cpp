@@ -956,6 +956,11 @@ void thread::validate(void)
 		error = SIP_OK;
 
 reply:
+	if(error == SIP_OK)
+		debug(2, "validating %s; expires=%d", auth->username, registry::getExpires());
+	else
+		debug(2, "rejecting %s; error=%d", auth->username, error);
+
 	config::release(node);
 	eXosip_lock();
 	eXosip_message_build_answer(sevent->tid, error, &reply);
