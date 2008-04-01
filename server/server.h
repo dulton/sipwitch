@@ -234,7 +234,7 @@ private:
 	class __LOCAL segment : public OrderedObject
 	{
 	public:
-		segment(call *cr, int cid, int did = 0, int tid = 0);
+		segment(call *cr, int cid, int did = -1, int tid = 0);
 
 		static void *operator new(size_t size);
 		static void operator delete(void *obj);
