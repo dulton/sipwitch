@@ -206,17 +206,13 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 
 		invited = stack::invite(call, cid);
 		if(rr->ext && atoi(dialing) == rr->ext) 
-			snprintf(session->sysident, sizeof(session->sysident), "%u", rr->ext);
+			snprintf(invited->sysident, sizeof(invited->sysident), "%u", rr->ext);
 		else
-			String::set(session->sysident, sizeof(session->sysident), rr->userid);
-
-		String::set(session->display, sizeof(session->display), rr->display);
-		stack::sipPublish(&tp->iface, route,session->sysident, sizeof(route));
-		session->reg = registry::invite(session->sysident);
-			
-		if(call->forwarding != stack::call::FWD_IGNORE)
-			call->forwarding = stack::call::FWD_NA;
-
+			String::set(invited->sysident, sizeof(invited->sysident), rr->userid);
+		String::set(invited->display, sizeof(invited->display), rr->display);
+		stack::sipPublish(&tp->iface, invited->identity, invited->sysident, sizeof(invited->identity));
+		rr->incUse();
+		invited->reg = rr;
 		goto next;	 
 unlock:
 		eXosip_unlock();
