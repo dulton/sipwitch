@@ -829,7 +829,7 @@ bool registry::exists(const char *id)
 	if(rr->expires && rr->expires < now)
 		rtn = false;
 
-	if(rr->type == MappedRegistry::OFFLINE)
+	if(rr->status == MappedRegistry::OFFLINE)
 		rtn = false;
 	
 	detach(rr);
