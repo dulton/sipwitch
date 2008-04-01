@@ -189,6 +189,7 @@ private:
 
 		static void signal(void);
 	
+
 	private:
 		bool cancelled;
 		bool signalled;
@@ -233,7 +234,7 @@ private:
 	class __LOCAL segment : public OrderedObject
 	{
 	public:
-		segment(call *cr, int cid, int did, int tid);
+		segment(call *cr, int cid, int did = 0, int tid = 0);
 
 		static void *operator new(size_t size);
 		static void operator delete(void *obj);
@@ -319,6 +320,7 @@ public:
 	__EXPORT static void setBusy(int tid, session *session);
 	__EXPORT static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
 	__EXPORT static session *create(int cid, int did, int tid);
+	__EXPORT static session *invite(call *cr, int cid);
 	__EXPORT static void destroy(session *s);
 	__EXPORT static void destroy(call *cr);
 	__EXPORT static void disjoin(call *cr);

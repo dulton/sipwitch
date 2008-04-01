@@ -4,6 +4,13 @@ eXosip_call_build_refer(did, refer_to, &refer)
 osip_message_set_header(refer, "Referred-By", referred_by)
 eXosip_call_send_request(did, refer)
 
+SPECIAL CONFIGURATIONS:
+	<refer>no</refer>
+	disable use of refer and some related options, used in telecenter configs?
+
+
+
+
 Referred-By: <xxx>
     made the effective "to" of the new call leg?
     passed as a "Referred-By" pass-thru?

@@ -59,6 +59,7 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 	assert(rr != NULL);
 
 	linked_pointer<registry::target> tp = rr->targets;
+	stack::session *invited;
 	stack::call *call = session->parent;
 	time_t now;
 	osip_message_t *invite;
@@ -96,8 +97,6 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 	while(is(tp)) {
 		if(tp->expires && tp->expires < now + 1)
 			goto next;
-
-		// CONSTRUCT NEW NODE SEGMENT HERE
 
 		switch(tp->status) {
 		case registry::target::READY:
@@ -205,6 +204,16 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 		
 		eXosip_unlock();
 
+		invited = stack::invite(call, cid);
+		if(rr->ext && atoi(dialing) == rr->ext) 
+			snprintf(session->sysident, sizeof(session->sysident), "%u", rr->ext);
+		else
+			String::set(session->sysident, sizeof(session->sysident), rr->userid);
+
+		String::set(session->display, sizeof(session->display), rr->display);
+		stack::sipPublish(&tp->iface, route,session->sysident, sizeof(route));
+		session->reg = registry::invite(session->sysident);
+			
 		if(call->forwarding != stack::call::FWD_IGNORE)
 			call->forwarding = stack::call::FWD_NA;
 
@@ -220,7 +229,7 @@ next:
 		String::set(call->refer, sizeof(call->refer), rr->userid);		
 }
 
-void thread::invite()
+void thread::invite(void)
 {
 	const char *target = dialing;
 	osip_body_t *body = NULL;
@@ -251,8 +260,6 @@ void thread::invite()
 	switch(destination) {
 	case LOCAL:
 		call->type = stack::call::LOCAL;
-		if(extension && atoi(dialing) == extension)
-			call->phone = true; 
 		if(extension)
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
@@ -265,8 +272,10 @@ void thread::invite()
 		String::set(call->dialed, sizeof(call->dialed), dialing);
 		stack::sipPublish(&iface, session->identity, identity, sizeof(session->identity));
 
-		if(toext)
+		if(toext) {
+			call->phone = true;
 			snprintf(call->dialed, sizeof(call->dialed), "%u", toext);
+		}
 		else
 			String::set(call->dialed, sizeof(call->dialed), target);
 

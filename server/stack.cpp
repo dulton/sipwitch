@@ -347,7 +347,19 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 #endif
 	}
 }
-	
+
+stack::session *stack::invite(call *cr, int cid)
+{
+	assert(cr != NULL);
+	assert(cid > 0);
+
+	locking.modify();
+	segment *sp = new segment(cr, cid);
+	++cr->invited;
+	locking.share();
+	return &sp->sid;
+}
+		
 stack::session *stack::create(int cid, int did, int tid)
 {
 	assert(cid > 0);
