@@ -301,6 +301,7 @@ AC_SUBST_DIR(default_cfgpath, sysconfdir)
 AC_SUBST_DIR(default_varpath, localstatedir)
 AC_SUBST_DIR(default_libpath, plugindir)
 AC_SUBST_DIR(default_incpath, includedir)
+AC_SUBST_DIR(default_libexec, libexecdir)
 
 case "$SIPWITCH_FLAGS -I/usr/include" in
 *-I${default_incpath}*)
@@ -321,6 +322,7 @@ esac
 AC_DEFINE_UNQUOTED(DEFAULT_CFGPATH, "$default_cfgpath", [config path])
 AC_DEFINE_UNQUOTED(DEFAULT_VARPATH, "$default_varpath", [run path])
 AC_DEFINE_UNQUOTED(DEFAULT_LIBPATH, "$default_libpath", [lib path])
+AC_DEFINE_UNQUOTED(DEFAULT_LIBEXEC, "$default_libexec", [script path])
 
 AH_BOTTOM([
 #include <ucommon/ucommon.h>
