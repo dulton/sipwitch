@@ -75,6 +75,7 @@ public:
 	static void reply(const char *err = NULL);
 	static size_t attach(const char *user);
 	static void release(void);
+	static bool system(const char *id, const char *fmt, ...) __PRINTF(2, 3);
 //	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
 };
 

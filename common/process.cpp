@@ -383,6 +383,28 @@ void process::reply(const char *msg)
 	replytarget = NULL;
 }
 
+bool process::system(const char *id, const char *fmt, ...)
+{
+	va_list args;
+	char cmd[128];
+	char buf[256];
+	unsigned len = 0;
+	if(!scripts)
+		return false;
+	
+	snprintf(cmd, sizeof(cmd), "%s/%s", scripts, id);
+	if(!fsys::isfile(cmd))
+		return false;
+	
+	snprintf(buf, sizeof(buf), "\"%s\" ", cmd);
+	len = strlen(buf);
+	va_start(args, fmt);
+	if(fmt)
+		vsnprintf(buf + len, sizeof(buf) - len, fmt, args);
+	va_end(args);
+	return true;
+}
+
 bool process::control(const char *uid, const char *fmt, ...)
 {
 	assert(uid == NULL || *uid != 0);
