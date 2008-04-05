@@ -1023,6 +1023,14 @@ void thread::registration(void)
 	}
 	else
 	{
+		if(stack::sip.restricted) {
+			if(!getsource() || !access || !String::ifind(stack::sip.restricted, access->getName(), ",; \t\n")) {
+				process::errlog(NOTICE, "access restricted");
+				error = SIP_FORBIDDEN;
+				goto reply;
+			}
+		}
+
 		if(sevent->request->to)
 			uri = sevent->request->to->url;
 		if(!uri || !uri->username || uri->username[0] == 0) {
