@@ -994,11 +994,6 @@ void thread::registration(void)
 	char temp[MAX_URI_SIZE];
 	osip_message_t *reply = NULL;
 
-	if(!getsource()) {
-		process::errlog(ERRLOG, "cannot determine origin for registration");
-		return;
-	}
-
 	osip_message_get_expires(sevent->request, 0, &header);
 	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
 		contact = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
@@ -1011,6 +1006,14 @@ void thread::registration(void)
 	}
 
 	if(contact && contact->url && contact->url->username && contact->url->username[0]) { 
+		if(!authenticate())
+			return;
+
+		if(!getsource()) {
+			process::errlog(ERRLOG, "cannot determine origin for registration");
+			return;
+		}
+
 		uri = contact->url;
 		port = uri->port;
 		if(!port || !port[0])
@@ -1020,7 +1023,7 @@ void thread::registration(void)
 	}
 	else
 	{
-		if(!sevent->request->to)
+		if(sevent->request->to)
 			uri = sevent->request->to->url;
 		if(!uri || !uri->username || uri->username[0] == 0) {
 			validate();
@@ -1304,7 +1307,7 @@ void thread::run(void)
 			expiration();
 			if(MSG_IS_OPTIONS(sevent->request))
 				options();
-			else if(MSG_IS_REGISTER(sevent->request) && authenticate())
+			else if(MSG_IS_REGISTER(sevent->request))
 				registration();
 			break;
 		default:

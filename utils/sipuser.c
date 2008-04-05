@@ -26,6 +26,7 @@
 #include <netdb.h>
 #include <eXosip2/eXosip.h>
 
+static int verbose = 0;
 static int port = 0;
 static int family = AF_INET;
 static int protocol = IPPROTO_UDP;
@@ -42,6 +43,13 @@ int main(int argc, char **argv)
 	eXosip_event_t *sevent;
 	const char *cp, *user;
 	char buffer[256];
+	char pbuffer[256];
+	char tbuffer[256];
+	osip_message_t *msg;
+	int rid;
+	unsigned count = 0;
+	osip_contact_t *contact;
+	int pos;
 
 	cp = getenv("SIP_PROXY");
 	if(cp)
@@ -158,7 +166,7 @@ int main(int argc, char **argv)
 			exit(3);
 		}
 
-		if(*argv == '-') {
+		if(**argv == '-') {
 			fprintf(stderr, "*** sipuser: %s: unknown option\n", *argv);
 			exit(3);
 		}
@@ -207,23 +215,70 @@ int main(int argc, char **argv)
 	
 	eXosip_set_user_agent("SIPW/sipuser");
 
+	if(!strncmp(server, "sip:", 4))
+		server += 4;
+	else if(!strncmp(server, "sips:", 5))
+		server += 5;
+
+	if(!proxy)
+		proxy = server;
+
+	if(strncmp(proxy, "sip:", 4) && strncmp(proxy, "sips:", 5)) {
+		if(tls)
+			snprintf(pbuffer, sizeof(pbuffer), "sips:%s", proxy);
+		else
+			snprintf(pbuffer, sizeof(pbuffer), "sip:%s", proxy);
+		proxy = pbuffer;
+	}
+
 	while(*argv) {
 		user = *(argv++);
 		if(tls)
-			snprintf(buffer, sizeof(buffer), "<sips:%s@%s>", user, server);
+			snprintf(buffer, sizeof(buffer), "sips:%s@%s", user, server);
 		else
-			snprintf(buffer, sizeof(buffer), "<sip:%s@%s>", user, server);
-		printf("USER %s\n", buffer);
+			snprintf(buffer, sizeof(buffer), "sip:%s@%s", user, server);
+
+		msg = NULL;
+		eXosip_lock();
+		rid = eXosip_register_build_initial_register(buffer, proxy, NULL, 60, &msg);
+		if(!msg) {
+			error = 1;
+			fprintf(stderr, "*** sipuser: cannot create query for %s\n", user);
+			eXosip_unlock();
+			continue;
+		}
+		++count;
+		snprintf(tbuffer, sizeof(tbuffer), "<%s>", buffer);
+		osip_message_set_to(msg, tbuffer);
+		osip_list_ofchar_free(&msg->contacts);
+		eXosip_register_send_register(rid, msg);	
+		eXosip_unlock();
 	}
 
-	for(;;) {
+	while(count) {
 		sevent = eXosip_event_wait(0, timeout);
 		if(!sevent) {
 			fprintf(stderr, "*** sipuser: timed out\n");
 			break;
 		}
-		printf("sip: event %d; cid=%d, did=%d\n",
-			sevent->type, sevent->cid, sevent->did);
+		
+		if(sevent->type == EXOSIP_REGISTRATION_FAILURE) {
+			error = 1;
+			count = 0;
+		}
+
+		if(sevent->type == EXOSIP_REGISTRATION_SUCCESS) {
+			pos = 0;
+			while(verbose && !osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos)) {
+				contact = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
+				if(contact && contact->url)
+					printf("%s:%s@%s:%s",
+						contact->url->scheme, contact->url->username,
+						contact->url->host, contact->url->port);
+			}
+			if(!(--count))
+				error = 0;
+		}
 
 		eXosip_event_free(sevent);
 	}
