@@ -494,7 +494,7 @@ bool thread::authorize(void)
 		goto local;
 
 	stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
-	if(Socket::equal((struct sockaddr *)&iface, request_address.getAddr()))
+	if(Socket::equalhost((struct sockaddr *)&iface, request_address.getAddr()))
 		goto local;
 
 	goto remote;
@@ -1042,12 +1042,13 @@ void thread::registration(void)
 		if(!port || !port[0])
 			port = "5060";
 		request_address.set(uri->host, port);
-		if(request_address.getAddr() == NULL)
+		if(request_address.getAddr() == NULL) 
 			goto reply;
+
 		error = SIP_NOT_FOUND;
 		if(!String::ifind(stack::sip.localnames, uri->host, " ,;:\t\n")) {
 			stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
-			if(!Socket::equal((struct sockaddr *)&iface, request_address.getAddr()))
+			if(!Socket::equalhost((struct sockaddr *)&iface, request_address.getAddr()) && atoi(port) == stack::sip.port)
 				goto reply;
 		}
 

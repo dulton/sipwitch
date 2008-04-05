@@ -45,11 +45,11 @@ int main(int argc, char **argv)
 	char buffer[256];
 	char pbuffer[256];
 	char tbuffer[256];
-	osip_message_t *msg;
+	osip_message_t *msg = NULL;
 	int rid;
-	unsigned count = 0;
 	osip_contact_t *contact;
-	int pos;
+	int pos = 0;
+	int stop = 0;
 
 	cp = getenv("SIP_PROXY");
 	if(cp)
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
 		}
 
 		if(!strcmp(*argv, "-?") || !strcmp(*argv, "-h") || !strcmp(*argv, "-help")) {
-			fprintf(stderr, "usage: sipuser [options] userid...\n"
+			fprintf(stderr, "usage: sipuser [options] userid\n"
 				"[options]\n"
 				"  -proxy    sip:proxyhost[:port]\n"
 				"  -server   sip:server[:port]\n"
@@ -175,10 +175,15 @@ int main(int argc, char **argv)
 	}
 
 	if(!*argv) {
-		fprintf(stderr, "use: sipuser [options] userid...\n");
+usage:
+		fprintf(stderr, "use: sipuser [options] userid\n");
 		exit(3);
 	}
-		 
+
+	user = *(argv++);
+	if(*argv)
+		goto usage;
+	 
 	if(!port)
 		port = 5060 + getuid();
 
@@ -190,15 +195,11 @@ int main(int argc, char **argv)
 #ifdef	AF_INET6
 	if(family == AF_INET6) {
 		eXosip_enable_ipv6(1); 
-		if(server == NULL)
-			server = "::1";
 		if(binding == NULL)
 			binding = "::0";
 	}
 #endif
-	if(server == NULL)
-		server = "127.0.0.1";
-
+	
 	if(eXosip_listen_addr(protocol, binding, port, family, tls)) {
 #ifdef  AF_INET6
         if(!binding && family == AF_INET6)
@@ -215,10 +216,31 @@ int main(int argc, char **argv)
 	
 	eXosip_set_user_agent("SIPW/sipuser");
 
-	if(!strncmp(server, "sip:", 4))
+	if(!strncmp(user, "sip:", 4)) {
+		tls = 0;
+		user += 4;
+	}
+	else if(!strncmp(user, "sips:", 5)) {
+		tls = 1;
+		user += 5;
+	}
+	
+	if(!server && strchr(user, '@')) {
+		server = strchr(user, '@');
+		++server;
+	}
+
+	if(server && !strncmp(server, "sip:", 4))
 		server += 4;
-	else if(!strncmp(server, "sips:", 5))
+	else if(server && !strncmp(server, "sips:", 5))
 		server += 5;
+
+#ifdef	AF_INET6
+	if(family == AF_INET6 && server == NULL)
+		server = "::1";
+#endif
+	if(server == NULL)
+		server = "127.0.0.1";
 
 	if(!proxy)
 		proxy = server;
@@ -231,31 +253,31 @@ int main(int argc, char **argv)
 		proxy = pbuffer;
 	}
 
-	while(*argv) {
-		user = *(argv++);
-		if(tls)
-			snprintf(buffer, sizeof(buffer), "sips:%s@%s", user, server);
-		else
-			snprintf(buffer, sizeof(buffer), "sip:%s@%s", user, server);
+	if(tls && !strchr(user, '@'))
+		snprintf(buffer, sizeof(buffer), "sips:%s@%s", user, server);
+	else if(!strchr(user, '@'))
+		snprintf(buffer, sizeof(buffer), "sip:%s@%s", user, server);
+	else if(tls)
+		snprintf(buffer, sizeof(buffer), "sips:%s", user);
+	else
+		snprintf(buffer, sizeof(buffer), "sip:%s", user);
 
-		msg = NULL;
-		eXosip_lock();
-		rid = eXosip_register_build_initial_register(buffer, proxy, NULL, 60, &msg);
-		if(!msg) {
-			error = 1;
-			fprintf(stderr, "*** sipuser: cannot create query for %s\n", user);
-			eXosip_unlock();
-			continue;
-		}
-		++count;
-		snprintf(tbuffer, sizeof(tbuffer), "<%s>", buffer);
-		osip_message_set_to(msg, tbuffer);
-		osip_list_ofchar_free(&msg->contacts);
-		eXosip_register_send_register(rid, msg);	
+
+	eXosip_lock();
+	rid = eXosip_register_build_initial_register(buffer, proxy, NULL, 60, &msg);
+	if(!msg) {
+		error = 1;
+		fprintf(stderr, "*** sipuser: cannot create query for %s\n", user);
 		eXosip_unlock();
+		exit(3);
 	}
+	snprintf(tbuffer, sizeof(tbuffer), "<%s>", buffer);
+	osip_message_set_to(msg, tbuffer);
+	osip_list_ofchar_free(&msg->contacts);
+	eXosip_register_send_register(rid, msg);	
+	eXosip_unlock();
 
-	while(count) {
+	while(!stop) {
 		sevent = eXosip_event_wait(0, timeout);
 		if(!sevent) {
 			fprintf(stderr, "*** sipuser: timed out\n");
@@ -264,7 +286,7 @@ int main(int argc, char **argv)
 		
 		if(sevent->type == EXOSIP_REGISTRATION_FAILURE) {
 			error = 1;
-			count = 0;
+			++stop;
 		}
 
 		if(sevent->type == EXOSIP_REGISTRATION_SUCCESS) {
@@ -276,12 +298,13 @@ int main(int argc, char **argv)
 						contact->url->scheme, contact->url->username,
 						contact->url->host, contact->url->port);
 			}
-			if(!(--count))
-				error = 0;
+			error = 0;
+			++stop;
 		}
 
 		eXosip_event_free(sevent);
 	}
+	eXosip_register_remove(rid);
 	eXosip_quit();
 	return error;
 }
