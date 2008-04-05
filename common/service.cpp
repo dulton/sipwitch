@@ -14,6 +14,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <config.h>
+#include <ucommon/ucommon.h>
+#include <ucommon/export.h>
 #include <sipwitch/service.h>
 #include <sipwitch/process.h>
 #include <ctype.h>

@@ -9,16 +9,13 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
-AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
-LDADD = @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@
+AM_CFLAGS = -I$(top_srcdir)/inc
+LDADD = @SIPWITCH_EXOSIP2@ 
 
-# bin_PROGRAMS = sipuser sipauth sipreg
+bin_PROGRAMS = sipuser
 
-# sipuser_SOURCES = sipuser.cpp
+sipuser_SOURCES = sipuser.c
 
-# sipauth_SOURCES = sipauth.cpp
-
-# sipreg_SOURCES = sipreg.cpp
 
 
 

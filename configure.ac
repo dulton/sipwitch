@@ -325,9 +325,6 @@ AC_DEFINE_UNQUOTED(DEFAULT_LIBPATH, "$default_libpath", [lib path])
 AC_DEFINE_UNQUOTED(DEFAULT_LIBEXEC, "$default_libexec", [script path])
 
 AH_BOTTOM([
-#include <ucommon/ucommon.h>
-#include <ucommon/export.h>
-
 #ifndef	HAVE_LOCALTIME_R
 #define	localtime_r(x, y)	localtime(x)
 #endif
