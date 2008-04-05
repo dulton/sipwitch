@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2007 David Sugar, Tycho Softworks.
+# Copyright (C) 2008 David Sugar, Tycho Softworks.
 #
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without
@@ -8,14 +8,17 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-AUTOMAKE_OPTIONS = no-dependencies dist-shar dist-zip
-EXTRA_DIST = autogen.sh README *.pc.in TODO Doxyfile NOTES cmodel.sh
-#  *.pc.in *.spec.in *.spec
+MAINTAINERCLEANFILES = Makefile.in Makefile
+AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
+LDADD = @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@
 
-SUBDIRS = @BUILD_SUBDIRS@ utils inc test
-DIST_SUBDIRS = common server utils inc test
+# bin_PROGRAMS = sipuser sipauth sipreg
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libsipwitch.pc
+# sipuser_SOURCES = sipuser.cpp
+
+# sipauth_SOURCES = sipauth.cpp
+
+# sipreg_SOURCES = sipreg.cpp
+
 
 

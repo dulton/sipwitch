@@ -434,9 +434,7 @@ bool process::control(const char *uid, const char *fmt, ...)
 		scripts = "/etc/sysconfig/sipwitch-scripts";
 	else if(fsys::isdir(DEFAULT_LIBEXEC "/sipwitch"))
 		scripts = DEFAULT_LIBEXEC "/sipwitch";
-	if(access(scripts, R_OK))
-		scripts = NULL;
-	if(!scripts && home) {
+	else if(home) {
 		snprintf(buf, sizeof(buf), "%s/.sipwitch-scripts", home);
 		if(fsys::isdir(buf))
 			scripts = strdup(buf);

@@ -349,5 +349,5 @@ AC_SUBST(SIPWITCH_EXOSIP2)
 AC_SUBST(BUILD_SUBDIRS)
 AC_SUBST(CXXFLAGS)
 AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile 
-server/Makefile test/Makefile libsipwitch.pc)
+server/Makefile utils/Makefile test/Makefile libsipwitch.pc)
 
