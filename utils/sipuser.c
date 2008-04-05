@@ -41,6 +41,7 @@ int main(int argc, char **argv)
 	int error = 2;
 	eXosip_event_t *sevent;
 	const char *cp, *user;
+	char buffer[256];
 
 	cp = getenv("SIP_PROXY");
 	if(cp)
@@ -52,6 +53,11 @@ int main(int argc, char **argv)
 
 	
 	while(NULL != *(++argv)) {
+		if(!strcmp(*argv, "--")) {
+			++argv;
+			break;
+		}
+
 		if(!strncmp(*argv, "--", 2))
 			++*argv;
 
@@ -203,7 +209,11 @@ int main(int argc, char **argv)
 
 	while(*argv) {
 		user = *(argv++);
-		printf("USER %s\n", user);
+		if(tls)
+			snprintf(buffer, sizeof(buffer), "<sips:%s@%s>", user, server);
+		else
+			snprintf(buffer, sizeof(buffer), "<sip:%s@%s>", user, server);
+		printf("USER %s\n", buffer);
 	}
 
 	for(;;) {
