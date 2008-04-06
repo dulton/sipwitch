@@ -69,6 +69,17 @@ int main(int argc, char **argv)
 		if(!strncmp(*argv, "--", 2))
 			++*argv;
 
+		if(!strcmp(*argv, "-q") || !strcmp(*argv, "-quiet")) {
+			verbose = 0;
+			continue;
+		}
+
+		if(!strcmp(*argv, "-v") || !strcmp(*argv, "-verbose")) {
+			verbose = 1;
+			continue;
+		}
+
+
 		if(!strcmp(*argv, "-t") || !strcmp(*argv, "-timeout")) {
 			if(NULL == *(++argv)) {
 				fprintf(stderr, "*** sipuser: timeout option missing timeout\n");
@@ -162,7 +173,8 @@ int main(int argc, char **argv)
 				"  -server   sip:server[:port]\n"
 				"  -forward  ip-address\n"
 				"  -port     port-numer\n"
-				"  -timeout  seconds\n");
+				"  -timeout  seconds\n"
+				"  -verbsose\n");
 			exit(3);
 		}
 
@@ -291,10 +303,10 @@ usage:
 
 		if(sevent->type == EXOSIP_REGISTRATION_SUCCESS) {
 			pos = 0;
-			while(verbose && !osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos)) {
-				contact = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
+			while(verbose && sevent->response && !osip_list_eol(OSIP2_LIST_PTR sevent->response->contacts, pos)) {
+				contact = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->response->contacts, pos++);
 				if(contact && contact->url)
-					printf("%s:%s@%s:%s",
+					printf("%s:%s@%s:%s\n",
 						contact->url->scheme, contact->url->username,
 						contact->url->host, contact->url->port);
 			}
