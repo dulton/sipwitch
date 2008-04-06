@@ -1025,7 +1025,6 @@ void thread::registration(void)
 	{
 		if(stack::sip.restricted) {
 			if(!getsource() || !access || !String::ifind(stack::sip.restricted, access->getName(), ",; \t\n")) {
-				process::errlog(NOTICE, "access restricted");
 				error = SIP_FORBIDDEN;
 				goto reply;
 			}
@@ -1057,10 +1056,13 @@ void thread::registration(void)
 
 reply:
 		if(error == SIP_OK) {
+			debug(3, "querying %s", uri->username);
 			stack::sipPublish(&iface, temp + 1, uri->username, sizeof(temp) - 2);
 			temp[0] = '<';
 			String::add(temp, sizeof(temp), ">");
 		}
+		else
+			debug(3, "query rejected for %s; error=%d", uri->username, error);
 		eXosip_lock();
 		eXosip_message_build_answer(sevent->tid, error, &reply);
 		if(reply) {
