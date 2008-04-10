@@ -145,9 +145,12 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 		stack::sipPublish(&tp->address, route + 1, NULL, sizeof(route) - 5);
 		route[0] = '<';
 		String::add(route, sizeof(route), ";lr>");
-		if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject))
-				goto unlock;
-	
+		if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject)) {
+			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
+			process::errlog(ERRLOG, "cannot invite %s; build failed", route);
+			goto unlock;
+		}
+
 		// if not routing, then separate to from request-uri for forwarding
 		if(destination != ROUTED) {
 			stack::sipPublish(&tp->address, route, call->dialed, sizeof(route));
@@ -204,8 +207,11 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 			eXosip_call_set_reference(cid, route);
 			++count;
 		}
-		else
+		else {
+			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
+			process::errlog(ERRLOG, "invite failed for %s", route);
 			goto unlock;
+		}
 		
 		eXosip_unlock();
 
@@ -218,15 +224,17 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 		stack::sipPublish(&tp->iface, invited->identity, invited->sysident, sizeof(invited->identity));
 		rr->incUse();
 		invited->reg = rr;
+
+		stack::sipPublish(&tp->address, route, NULL, sizeof(route));
 		switch(destination) {
 		case FORWARDED:
-			debug(3, "forwarding to %s\n", tp->contact);
+			debug(3, "forwarding to %s\n", route);
 			break;
 		case ROUTED:
-			debug(3, "routing to %s\n", tp->contact);
+			debug(3, "routing to %s\n", route);
 			break;
 		default:
-			debug(3, "inviting %s\n", tp->contact);
+			debug(3, "inviting %s; expires=%s\n", route, invexpires);
 		}
 		goto next;	 
 unlock:
