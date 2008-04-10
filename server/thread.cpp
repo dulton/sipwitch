@@ -63,6 +63,7 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 	stack::call *call = session->parent;
 	time_t now;
 	osip_message_t *invite;
+	char invexpires[32];
 	char seqid[64];
 	char route[MAX_URI_SIZE];
 	char from[MAX_URI_SIZE + 65];
@@ -71,6 +72,8 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 	unsigned count = 0;
 
 	time(&now);
+
+	snprintf(invexpires, sizeof(invexpires), "%ld", header_expires);
 
 	if(rr->expires && rr->expires < now + 1)
 		return;
@@ -188,9 +191,11 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 			}
 		}
 
+		osip_message_set_expires(invite, invexpires);
 		osip_message_set_supported(invite, "100rel,replaces");
 		osip_message_set_body(invite, session->sdp, strlen(session->sdp));
 		osip_message_set_content_type(invite, "application/sdp");
+
 		cid = eXosip_call_send_initial_invite(invite);
 		if(cid > 0) {
 			snprintf(seqid, sizeof(seqid), "%08x-%d", 
@@ -213,6 +218,16 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 		stack::sipPublish(&tp->iface, invited->identity, invited->sysident, sizeof(invited->identity));
 		rr->incUse();
 		invited->reg = rr;
+		switch(destination) {
+		case FORWARDED:
+			debug(3, "forwarding to %s\n", tp->contact);
+			break;
+		case ROUTED:
+			debug(3, "routing to %s\n", tp->contact);
+			break;
+		default:
+			debug(3, "inviting %s\n", tp->contact);
+		}
 		goto next;	 
 unlock:
 		eXosip_unlock();
@@ -231,10 +246,17 @@ void thread::invite(void)
 	osip_body_t *body = NULL;
 	stack::call *call = session->parent;
 	unsigned toext = 0;
+	osip_header_t *header = NULL;
 
 	printf("******* INVITING!\n");
 
 	string::set(call->subject, sizeof(call->subject), "GNU Sip Witch");
+
+	osip_message_get_expires(sevent->request, 0, &header);
+	if(header && header->hvalue && atol(header->hvalue))
+		header_expires = atol(header->hvalue);
+	else
+		header_expires = 120;
 
 	osip_message_get_body(sevent->request, 0, &body);
 	if(body && body->body)
@@ -353,10 +375,13 @@ void thread::invite(void)
 	}
 
 exit:
-	if(call->invited)
+	if(!call->invited) {
+		stack::setBusy(sevent->tid, session);
 		return;
+	}
 
-	stack::setBusy(sevent->tid, session);
+	debug(2, "call proceeding %08x:%u\n", session->sequence, session->cid);
+	send_reply(SIP_TRYING);
 }
 
 void thread::identify(void)
