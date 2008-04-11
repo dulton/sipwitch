@@ -99,8 +99,9 @@ void stack::call::expired(void)
 	case HOLDING:	// hold-recall timer expired...
 
 	case RINGING:	// maybe ring-no-answer with forward? invite expired?
+	case RINGBACK:
 	case BUSY:		// invite expired
-	case ACTIVE:	// active call session expired without re-invite
+	case JOINED:	// active call session expired without re-invite
 		if(experror != 0 && source != NULL && source->state != session::CLOSED)
 			break;
 
