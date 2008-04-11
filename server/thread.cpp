@@ -104,6 +104,7 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 	}
 		
 	while(is(tp)) {
+		invited = NULL;
 		if(tp->expires && tp->expires < now + 1)
 			goto next;
 

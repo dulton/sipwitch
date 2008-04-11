@@ -221,10 +221,10 @@ void stack::siplog(osip_message_t *msg)
 
 		service::release(env);
 		if(is(log)) {
-//			mutex::protect(&stack::sip.dumping);
+			mutex::protect(&stack::sip.dumping);
 			fsys::write(log, text, tlen);
 			fsys::write(log, "---\n\n", 5);
-//			mutex::release(&stack::sip.dumping);
+			mutex::release(&stack::sip.dumping);
 			fsys::close(log);
 		}
 		osip_free(text);
@@ -250,6 +250,12 @@ void stack::close(session *s)
 		return;
 
 	cr = s->parent;
+
+	if(s->reg) {
+		s->reg->decUse();
+		s->reg = NULL;
+	}
+
 	Mutex::protect(cr);
 	if(s->state != session::CLOSED) {
 		s->state = session::CLOSED;
@@ -270,8 +276,14 @@ void stack::clear(session *s)
 	if(!s)
 		return;
 
+	if(s->reg) {
+		s->reg->decUse();
+		s->reg = NULL;
+	}
+
 	cr = s->parent;
 	Mutex::protect(cr);
+
 	if(--cr->count == 0) {
 		debug(4, "clearing call %08x:%u\n", 
 			cr->source->sequence, cr->source->cid);
@@ -292,10 +304,6 @@ void stack::clear(session *s)
 		s->delist(&hash[s->cid % keysize]);
 		s->cid = 0;
 		s->did = -1;
-		if(s->reg) {
-			s->reg->decUse();
-			s->reg = NULL;
-		}
 		locking.share();
 	}
 	else
@@ -392,7 +400,7 @@ stack::session *stack::invite(call *cr, int cid)
 	assert(cr != NULL);
 	assert(cid > 0);
 
-	locking.modify();
+	locking.exclusive();
 	segment *sp = new segment(cr, cid);
 	++cr->invited;
 	locking.share();
