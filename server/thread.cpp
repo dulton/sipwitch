@@ -61,6 +61,8 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 	linked_pointer<registry::target> tp = rr->targets;
 	stack::session *invited;
 	stack::call *call = session->parent;
+	linked_pointer<stack::segment> sp = call->segments.begin();
+
 	time_t now;
 	osip_message_t *invite;
 	char invexpires[32];
@@ -77,6 +79,13 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 
 	if(rr->expires && rr->expires < now + 1)
 		return;
+
+	// make sure we do not re-invite an existing active member again
+	while(is(sp)) {
+		if(sp->sid.reg == rr && sp->sid.state == stack::session::OPEN)
+			return;
+		sp.next();
+	}
 	
 	switch(rr->status) {
 	case MappedRegistry::IDLE:
@@ -255,8 +264,6 @@ void thread::invite(void)
 	stack::call *call = session->parent;
 	unsigned toext = 0;
 	osip_header_t *header = NULL;
-
-	printf("******* INVITING!\n");
 
 	string::set(call->subject, sizeof(call->subject), "GNU Sip Witch");
 
