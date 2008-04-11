@@ -185,11 +185,50 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	family = AF_INET;
 	tlsmode = 0;
 	send101 = 1;
+	dumping = false;
 	incoming = false;
 	outgoing = false;
 	agent = "sipwitch";
 	restricted = trusted = published = proxy = NULL;
 	localnames = "localhost, localhost.localdomain";
+}
+
+void stack::siplog(osip_message_t *msg)
+{
+    fsys_t log;
+    const char *uid;
+    int len;
+    service::keynode *env = service::getEnviron();
+    char *cp;
+	char buf[128];
+	char *text = NULL;
+	unsigned tlen;
+
+	if(!msg || !stack::sip.dumping)
+		return;
+
+	osip_message_to_str(msg, &text, &tlen);
+	if(text) {
+	
+		uid = service::getValue(env, "USER");
+
+		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/sipdump.log");
+		fsys::create(log, buf, fsys::ACCESS_APPEND, 0660);
+		if(!is(log)) {
+			snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/sipdump", uid);
+			fsys::create(log, buf, fsys::ACCESS_APPEND, 0660);
+		}
+
+		service::release(env);
+		if(is(log)) {
+//			mutex::protect(&stack::sip.dumping);
+			fsys::write(log, text, tlen);
+			fsys::write(log, "---\n\n", 5);
+//			mutex::release(&stack::sip.dumping);
+			fsys::close(log);
+		}
+		osip_free(text);
+	}
 }
 
 void stack::modify(void)
@@ -440,6 +479,7 @@ void stack::setBusy(int tid, session *session)
 
 	eXosip_lock();
 	eXosip_call_build_answer(tid, SIP_BUSY_HERE, &reply);
+	stack::siplog(reply);
 	eXosip_call_send_answer(tid, SIP_BUSY_HERE, reply);
 	eXosip_unlock();		
 
@@ -583,6 +623,8 @@ bool stack::reload(service *cfg)
 				incoming = tobool(value);
 			else if(!stricmp(key, "outgoing"))
 				outgoing = tobool(value);
+			else if(!stricmp(key, "trace") || !stricmp(key, "dumping"))
+				dumping = tobool(value);
 			else if(!stricmp(key, "keysize") && !isConfigured())
 				keysize = atoi(value);
 			else if(!stricmp(key, "interface") && !isConfigured()) {

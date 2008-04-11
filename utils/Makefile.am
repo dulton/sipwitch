@@ -14,7 +14,7 @@ LDADD = @SIPWITCH_EXOSIP2@
 
 bin_PROGRAMS = sipquery
 
-sipuser_SOURCES = sipquery.c
+sipquery_SOURCES = sipquery.c
 
 
 

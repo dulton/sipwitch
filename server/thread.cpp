@@ -65,7 +65,6 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 
 	time_t now;
 	osip_message_t *invite;
-	char invexpires[32];
 	char seqid[64];
 	char route[MAX_URI_SIZE];
 	char from[MAX_URI_SIZE + 65];
@@ -74,8 +73,6 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 	unsigned count = 0;
 
 	time(&now);
-
-	snprintf(invexpires, sizeof(invexpires), "%ld", header_expires);
 
 	if(rr->expires && rr->expires < now + 1)
 		return;
@@ -203,11 +200,10 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 			}
 		}
 
-		osip_message_set_expires(invite, invexpires);
 		osip_message_set_supported(invite, "100rel,replaces");
 		osip_message_set_body(invite, session->sdp, strlen(session->sdp));
 		osip_message_set_content_type(invite, "application/sdp");
-
+		stack::siplog(invite);
 		cid = eXosip_call_send_initial_invite(invite);
 		if(cid > 0) {
 			snprintf(seqid, sizeof(seqid), "%08x-%d", 
@@ -243,7 +239,7 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 			debug(3, "routing to %s\n", route);
 			break;
 		default:
-			debug(3, "inviting %s; expires=%s\n", route, invexpires);
+			debug(3, "inviting %s\n", route);
 		}
 		goto next;	 
 unlock:
@@ -265,8 +261,14 @@ void thread::invite(void)
 	unsigned toext = 0;
 	osip_header_t *header = NULL;
 
-	string::set(call->subject, sizeof(call->subject), "GNU Sip Witch");
+	header = NULL;
+	osip_message_get_subject(sevent->request, 0, &header);
+	if(header && header->hvalue && header->hvalue[0])
+		string::set(call->subject, sizeof(call->subject), header->hvalue);
+	else
+		string::set(call->subject, sizeof(call->subject), "inviting call");
 
+	header = NULL;
 	osip_message_get_expires(sevent->request, 0, &header);
 	if(header && header->hvalue && atol(header->hvalue))
 		header_expires = atol(header->hvalue);
@@ -771,10 +773,12 @@ void thread::send_reply(int error)
 	switch(authorizing) {
 	case CALL:
 		eXosip_call_build_answer(sevent->tid, error, &reply);
+		stack::siplog(reply);
 		eXosip_call_send_answer(sevent->tid, error, reply);
 		break;
 	case MESSAGE:
 		eXosip_message_build_answer(sevent->tid, error, &reply);
+		stack::siplog(reply);
 		eXosip_message_send_answer(sevent->tid, error, reply);
 		break;
 	default:
@@ -897,11 +901,13 @@ void thread::challenge(void)
 	case MESSAGE:
 		eXosip_message_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
 		osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
+		stack::siplog(reply);
 		eXosip_message_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
 		break;
 	case CALL:
 		eXosip_call_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
 		osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
+		stack::siplog(reply);
 		eXosip_call_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
 		break;
 	case NONE:
@@ -1016,6 +1022,7 @@ reply:
 			snprintf(temp, sizeof(temp), "%u", registry::getExpires());
 			osip_message_set_expires(reply, temp);
 		}
+		stack::siplog(reply);
 		eXosip_message_send_answer(sevent->tid, error, reply);
 	}
 	eXosip_unlock();
@@ -1108,6 +1115,7 @@ reply:
 		if(reply) {
 			if(error == SIP_OK)
 				osip_message_set_contact(reply, temp);
+			stack::siplog(reply);
 			eXosip_message_send_answer(sevent->tid, error, reply);
 		}
 		eXosip_unlock();
@@ -1195,6 +1203,7 @@ void thread::reregister(const char *contact, time_t interval)
 reply:
 	eXosip_lock();
 	eXosip_message_build_answer(sevent->tid, answer, &reply);
+	stack::siplog(reply);
 	eXosip_message_send_answer(sevent->tid, answer, reply);
 	eXosip_unlock();
 	if(reginfo && reginfo->type == MappedRegistry::USER && answer == SIP_OK)
@@ -1234,6 +1243,7 @@ void thread::options(void)
     if(eXosip_options_build_answer(sevent->tid, SIP_OK, &reply) == 0) {
 		osip_message_set_header(reply, ACCEPT, "application/sdp, text/plain");
 		osip_message_set_header(reply, ALLOW, "INVITE,ACK,CANCEL,OPTIONS,INFO,REFER,MESSAGE,SUBSCRIBE,NOTIFY,REGISTER,PRACK"); 
+		stack::siplog(reply);
         eXosip_options_send_answer(sevent->tid, SIP_OK, reply);
 	}
 	eXosip_unlock();
@@ -1315,6 +1325,7 @@ void thread::run(void)
 
 		switch(sevent->type) {
 		case EXOSIP_CALL_CANCELLED:
+			stack::siplog(sevent->response);
 			authorizing = CALL;
 			if(sevent->cid > 0) {
 				session = stack::access(sevent->cid);
@@ -1324,6 +1335,7 @@ void thread::run(void)
 			send_reply(SIP_OK);
 			break;
 		case EXOSIP_CALL_CLOSED:
+			stack::siplog(sevent->response);
 			authorizing = CALL;
 			if(sevent->cid > 0) {
 				session = stack::access(sevent->cid);
@@ -1332,6 +1344,7 @@ void thread::run(void)
 			send_reply(SIP_OK);
 			break;
 		case EXOSIP_CALL_RELEASED:
+			stack::siplog(sevent->response);
 			authorizing = NONE;
 			if(sevent->cid > 0) {
 				authorizing = CALL;
@@ -1341,6 +1354,7 @@ void thread::run(void)
 			}
 			break;
 		case EXOSIP_CALL_INVITE:
+			stack::siplog(sevent->request);
 			authorizing = CALL;
 			if(!sevent->request)
 				break;
@@ -1352,6 +1366,7 @@ void thread::run(void)
 				invite();
 			break;
 		case EXOSIP_MESSAGE_NEW:
+			stack::siplog(sevent->request);
 			authorizing = MESSAGE;
 			if(!sevent->request)
 				break;
@@ -1362,6 +1377,10 @@ void thread::run(void)
 				registration();
 			break;
 		default:
+			if(sevent->response)
+				stack::siplog(sevent->response);
+			else
+				stack::siplog(sevent->request);
 			process::errlog(WARN, "unknown message");
 		}
 

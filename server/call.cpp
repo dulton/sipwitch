@@ -122,7 +122,11 @@ void stack::call::expired(void)
 		stack::disjoin(this);
 
 		// notify caller....
-		eXosip_call_send_answer(source->tid, experror, NULL);
+		eXosip_lock();
+		eXosip_call_build_answer(source->tid, experror, &reply);
+		stack::siplog(reply);
+		eXosip_call_send_answer(source->tid, experror, reply);
+		eXosip_unlock();
 		experror = 0;
 		state = REORDER;
 	}
