@@ -218,8 +218,8 @@ private:
 		char sdp[1024];					// sdp body to use in exchange
 		char identity[MAX_URI_SIZE];	// our effective contact/to point...
 		char sysident[MAX_IDENT_SIZE];	// ident of this session
-		char display[MAX_DISPLAY_SIZE];	// displayed caller name
-		char from[MAX_URI_SIZE];		// formatted from line for endpoint
+		char display[MAX_DISPLAY_SIZE];	// callerid reference field
+		char from[MAX_URI_SIZE + MAX_DISPLAY_SIZE];	// formatted from line for endpoint
 
 		char authid[MAX_USERID_SIZE];	// for authentication...
 		char secret[MAX_USERID_SIZE];

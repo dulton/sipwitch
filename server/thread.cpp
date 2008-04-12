@@ -67,7 +67,6 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 	osip_message_t *invite;
 	char seqid[64];
 	char route[MAX_URI_SIZE];
-	char from[MAX_URI_SIZE + 65];
 	char to[MAX_URI_SIZE];
 	int cid;
 	unsigned count = 0;
@@ -146,16 +145,10 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 		else
 			snprintf(to, sizeof(to), "<%s>", tp->contact);
 
-		snprintf(from, sizeof(from), "\"%s\" <%s>", 
-			session->display, session->identity);
-
 		stack::sipPublish(&tp->address, route + 1, NULL, sizeof(route) - 5);
 		route[0] = '<';
 		String::add(route, sizeof(route), ";lr>");
-		printf("FROM %s\n", from);
-		printf("TO %s\n", to);
-		printf("ROUTE %s\n", route);
-		if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject)) {
+		if(eXosip_call_build_initial_invite(&invite, to, session->from, route, call->subject)) {
 			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
 			process::errlog(ERRLOG, "cannot invite %s; build failed", route);
 			goto unlock;
@@ -225,12 +218,25 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 		eXosip_unlock();
 
 		invited = stack::invite(call, cid);
-		if(rr->ext && atoi(dialing) == rr->ext) 
+
+		if(rr->ext) 
 			snprintf(invited->sysident, sizeof(invited->sysident), "%u", rr->ext);
 		else
 			String::set(invited->sysident, sizeof(invited->sysident), rr->userid);
-		String::set(invited->display, sizeof(invited->display), rr->display);
+		if(rr->display[0])
+			String::set(invited->display, sizeof(invited->display), rr->display);
+		else
+			String::set(invited->display, sizeof(invited->display), invited->sysident);
 		stack::sipPublish(&tp->iface, invited->identity, invited->sysident, sizeof(invited->identity));
+		if(rr->ext && !rr->display[0])
+			snprintf(invited->from, sizeof(invited->from), 
+				"\"%s\" <%s;user=phone>", invited->sysident, invited->identity);
+		else if(rr->display[0])
+			snprintf(invited->from, sizeof(invited->from),
+				"\"%s\" <%s>", rr->display, invited->identity);
+		else
+			snprintf(invited->from, sizeof(invited->from),
+				"<%s>", invited->identity);
 		rr->incUse();
 		invited->reg = rr;
 
@@ -331,6 +337,18 @@ void thread::invite(void)
 			return;
 		}
 
+		printf("EXT %u, DISPLAY <%s>\n", extension, display);
+
+		if(extension && !display[0])
+			snprintf(session->from, sizeof(session->from), 
+				"\"%s\" <%s;user=phone>", session->sysident, session->identity);
+		else if(display[0])
+			snprintf(session->from, sizeof(session->from),
+				"\"%s\" <%s>", session->display, session->identity);
+		else
+			snprintf(session->from, sizeof(session->from),
+				"<%s>", session->identity);
+
 		session->reg = registry::invite(session->sysident);
 		debug(1, "local call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, call->dialed, session->sysident);
@@ -341,10 +359,16 @@ void thread::invite(void)
 		snprintf(session->identity, sizeof(session->identity), "%s:%s@%s:%s",
 			from->url->scheme, from->url->username, from->url->host, from->url->port);
 		stack::sipIdentity((struct sockaddr_internet *)from_address.getAddr(), session->sysident, from->url->username,  sizeof(session->sysident));
-		if(from->displayname)
+		if(from->displayname) {
 			String::set(session->display, sizeof(session->display), from->displayname);
-		else
+			snprintf(session->from, sizeof(session->from),
+				"\"%s\" <%s>", from->displayname, session->identity); 
+		}
+		else {
 			String::set(session->display, sizeof(session->display), from->url->username);
+			snprintf(session->from, sizeof(session->from), 
+				"<%s>", session->identity);
+		}
 		debug(1, "incoming call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, call->dialed, session->sysident);
 		break;
@@ -361,6 +385,17 @@ void thread::invite(void)
 			String::set(session->display, sizeof(session->display), identity);
 		stack::sipPublish(&iface, session->identity, session->sysident, sizeof(session->identity));
 		stack::sipIdentity((struct sockaddr_internet *)request_address.getAddr(), call->dialed, uri->username, sizeof(call->dialed));
+
+		if(extension && !display[0])
+			snprintf(session->from, sizeof(session->from), 
+				"\"%s\" <%s;user=phone>", session->sysident, session->identity);
+		else if(display[0])
+			snprintf(session->from, sizeof(session->from),
+				"\"%s\" <%s>", display, session->identity);
+		else
+			snprintf(session->from, sizeof(session->from),
+				"<%s>", session->identity);
+
 		debug(1, "outgoing call %08x:%u from %s to %s", 
 			session->sequence, session->cid, getIdent(), call->dialed);
 		break;
@@ -376,6 +411,13 @@ void thread::invite(void)
 		else
 			String::set(session->display, sizeof(session->display), session->sysident);
 		stack::sipPublish(&iface, session->identity, session->sysident, sizeof(session->identity));
+		if(extension)
+			snprintf(session->from, sizeof(session->from), 
+				"\"%s\" <%s;user=phone>", session->display, session->identity);
+		else
+			snprintf(session->from, sizeof(session->from),
+				"\"%s\" <%s>", session->display, session->identity);
+	
 		String::set(call->dialed, sizeof(call->dialed), dialing);
 		session->reg = registry::invite(identity);
 		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
