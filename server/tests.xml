@@ -1,0 +1,29 @@
+<!-- Here we generate and access special server tests under telephone
+     extensions.  There were created to debug or evaluate some aspect of
+	 the server.
+-->
+<provision>
+ <test id="test1">
+  <extension>299</extension>
+  <answer>12</answer>
+  <duration>120</duration>
+  <display>Testing</display>
+ </test>
+ <test id="ringerr">
+  <extension>298</extension>
+  <error>180</error>
+ </test>
+ <test id="busyerr">
+  <extension>297</extension>
+  <error>486</error>
+ </test>
+ <test id="looperr">
+  <extension>296</extension>
+  <error>482</error>
+ </test>
+ <test id="reorder">
+  <extension>295</extension>
+  <error>484</error>
+ </test>
+</provision>
+

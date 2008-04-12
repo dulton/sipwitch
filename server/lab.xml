@@ -1,0 +1,57 @@
+<!-- Here is a provisioning node for a group of users.  We might do a
+     provisioning node per user, and have an external program manage each
+	 user's data, or we might collect a group of user entries together like
+	 we do here.
+-->
+<provision>
+ <!-- Physical softphone units in lab -->
+ <user id="tycho1">
+  <secret>slugfish</secret>
+  <extension>201</extension>
+  <display>Tycho 201</display>
+ </user>
+ <user id="tycho2">
+  <secret>slugfish</secret>
+  <extension>202</extension>
+  <display>Tycho 202</display>
+ </user>
+ <user id="tycho3">
+  <secret>slugfish</secret>
+  <extension>203</extension>
+  <display>Tycho 203</display>
+ </user>
+ <!-- Used to dock testing apps/softphones "multi-docked" -->
+ <user id="testing">
+  <secret>slugfish</secret>
+  <extension>210</extension>
+  <display>Testing 210</display>
+ </user>
+ <!-- Used to serially test individual desktop softphones... -->
+ <user id="user1">
+  <secret>slugfish</secret>
+  <extension>211</extension>
+  <display>User 211</display>
+ </user>
+ <user id="user2">
+  <secret>slugfish</secret>
+  <extension>212</extension>
+  <display>User 212</display>
+ </user>
+ <user id="user3">
+  <secret>slugfish</secret>
+  <extension>213</extension>
+  <display>User 213</display>
+ </user>
+ <user id="user4">
+  <secret>slugfish</secret>
+  <extension>214</extension>
+  <display>User 214</display>
+ </user>
+ <user id="user5">
+  <secret>slugfish</secret>
+  <extension>215</extension>
+  <display>User 215</display>
+ </user>
+</provision>
+
+

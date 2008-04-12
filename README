@@ -1,5 +1,6 @@
 SIP Witch is an official package of the GNU Project as of August 10th 2007.
-GNU SIP Witch is also part of GNU Telephony & the GNU Telecom subsystem.
+GNU SIP Witch is also part of GNU Telephony & the GNU Telecom subsystem.  The
+server directory includes some basic example server configurations.
 
 GNU SIP Witch is a call and registration server for the SIP protocol. As a call
 server it services call registration for SIP devices and destination routing
@@ -8,7 +9,9 @@ proxying and thereby enables SIP endpoints to directly peer negotiate call
 setting and process peer to peer media streaming even when when multiple SIP
 Witch call nodes at multiple locations are involved.  This means GNU SIP Witch
 operates without introducing additional media latency or offering a central
-point for media capture.
+point for media capture.  This also means GNU SIP Witch can act as a secure
+calling server where all peers directly maintain peer encrypted sessions
+without central supervision of keys or central decryption of media traffic.
 
 GNU SIP Witch is designed to support network scaling of telephony services,
 rather than the heavily compute-bound solutions we find in use today.  This
@@ -16,6 +19,15 @@ means a call node has a local authentication/registration database, and this
 will be mirrored, so that any active call node in a cluster will be able to
 accept and service a call.  This allows for the possibility of live failover
 support in the future as well.
+
+GNU SIP Witch is not a multi-protocol telephone server or IP-PBX, and does not
+try to address the same things like asterisk, freeswitch, yate, all of which
+require direct media processing.  Instead, GNU SIP Witch focuses on doing one
+thing as a pure SIP call server, and is being developed specifically to do
+that one thing very well.  Our goal is to focus on achieving a network scalable
+telephone architecture that can be deeply embedded, which can support secure
+calling nodes, and that can integrate well with other SIP based/standards
+compliant components.
 
 GNU SIP Witch is not a SIP "router", and does not try to address the same
 things as a project like iptel "Ser".  GNU SIP Witch is being designed to
