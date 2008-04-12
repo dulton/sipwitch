@@ -152,6 +152,9 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 		stack::sipPublish(&tp->address, route + 1, NULL, sizeof(route) - 5);
 		route[0] = '<';
 		String::add(route, sizeof(route), ";lr>");
+		printf("FROM %s\n", from);
+		printf("TO %s\n", to);
+		printf("ROUTE %s\n", route);
 		if(eXosip_call_build_initial_invite(&invite, to, from, route, call->subject)) {
 			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
 			process::errlog(ERRLOG, "cannot invite %s; build failed", route);
@@ -310,7 +313,7 @@ void thread::invite(void)
 			String::set(session->display, sizeof(session->display), session->sysident);
 
 		String::set(call->dialed, sizeof(call->dialed), dialing);
-		stack::sipPublish(&iface, session->sysident, identity, sizeof(session->identity));
+		stack::sipPublish(&iface, session->identity, session->sysident, sizeof(session->identity));
 
 		if(toext) {
 			call->phone = true;

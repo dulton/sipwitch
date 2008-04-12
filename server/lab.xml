@@ -5,10 +5,11 @@
 -->
 <provision>
  <!-- Physical softphone units in lab -->
+ <!-- Note displayname includes display + uri ext # by default -->
  <user id="tycho1">
   <secret>xxx</secret>
   <extension>201</extension>
-  <display>Tycho 201</display>
+  <display>Tycho</display>
  </user>
  <user id="tycho2">
   <secret>xxx</secret>
@@ -24,33 +25,29 @@
  <user id="testing">
   <secret>xxx</secret>
   <extension>210</extension>
-  <display>Testing 210</display>
+  <display>Testing</display>
  </user>
  <!-- Used to serially test individual desktop softphones... -->
+ <!-- Note; because there is no display, will be ext# from user=phone -->
  <user id="user1">
   <secret>xxx</secret>
   <extension>211</extension>
-  <display>User 211</display>
  </user>
  <user id="user2">
   <secret>xxx</secret>
   <extension>212</extension>
-  <display>User 212</display>
  </user>
  <user id="user3">
   <secret>xxx</secret>
   <extension>213</extension>
-  <display>User 213</display>
  </user>
  <user id="user4">
   <secret>xxx</secret>
   <extension>214</extension>
-  <display>User 214</display>
  </user>
  <user id="user5">
   <secret>xxx</secret>
   <extension>215</extension>
-  <display>User 215</display>
  </user>
 </provision>
 
