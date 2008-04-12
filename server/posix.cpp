@@ -536,6 +536,7 @@ extern "C" int main(int argc, char **argv)
 	static unsigned concurrency = 0;
 	static int exit_code = 0;
 	static bool restartable = false;
+	static bool dumping = false;
 
 	char *cp, *tokens;
 	char *args[65];
@@ -577,6 +578,11 @@ extern "C" int main(int argc, char **argv)
 		if(!strcmp(*argv, "-r") || !stricmp(*argv, "-restartable")) {
 			restartable = true;
 			daemon = true;
+			continue;
+		}
+
+		if(!strcmp(*argv, "-t") || !stricmp(*argv, "-trace")) {
+			dumping = true;
 			continue;
 		}
 
@@ -807,6 +813,9 @@ extern "C" int main(int argc, char **argv)
 		restart();
 
 	config::startup();
+
+	if(dumping)
+		stack::enableDumping();
 
 	if(concurrency)
 		Thread::concurrency(concurrency);

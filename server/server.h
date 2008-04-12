@@ -336,6 +336,7 @@ public:
 	__EXPORT static char *sipContact(struct sockaddr_internet *addr, char *buf, const char *user = NULL, const char *display = NULL, size_t size = MAX_URI_SIZE);
 	__EXPORT static Socket::address *getAddress(const char *uri, Socket::address *addr = NULL);
 	__EXPORT static void siplog(osip_message_t *msg);
+	__EXPORT static void enableDumping(void);
 };
 
 class __LOCAL config : public service

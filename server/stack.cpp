@@ -193,6 +193,25 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	localnames = "localhost, localhost.localdomain";
 }
 
+void stack::enableDumping(void)
+{
+	char buf[128];
+	const char *uid;
+	service::keynode *env = service::getEnviron();
+
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/sipdump.log");
+	fsys::remove(buf);
+	if(env)
+		uid = service::getValue(env, "USER");
+	if(uid) {
+		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/sipdump", uid);
+		fsys::remove(buf);
+
+	}
+	service::release(env);
+	stack::sip.dumping = true;
+}
+
 void stack::siplog(osip_message_t *msg)
 {
     fsys_t log;

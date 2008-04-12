@@ -151,6 +151,7 @@ void server::usage(void)
 #else
 		"  -restartable			 Run server as restartable daemon\n"
 #endif
+		"  -trace                Trace/dump sip messages\n"
 		"  -config=<cfgfile>     Use cfgfile in place of default one\n"
 		"  -user=<userid>        Change to effective user from root\n" 
 #ifndef	_MSWINDOWS_

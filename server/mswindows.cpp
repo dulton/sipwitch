@@ -117,6 +117,7 @@ static void WINAPI start(DWORD argc, LPSTR *argv)
 
 extern "C" int main(int argc, char **argv)
 {
+	static bool dumping = false;
 	static bool daemon = false;
 	static bool warned = false;
 	static unsigned priority = 0;
@@ -158,6 +159,11 @@ extern "C" int main(int argc, char **argv)
 
 		if(!strcmp(*argv, "-d") || !stricmp(*argv, "-background")) {
 			daemon = true;
+			continue;
+		}
+
+		if(!strcmp(*argv, "-t") || !stricmp(*argv, "-trace")) {
+			dumping = true;
 			continue;
 		}
 
@@ -329,6 +335,10 @@ exitcontrol:
 		}
 		return 0;
 	}
+
+	if(dumping)
+		stack::enableDumping();
+
 	dispatch();
 	exit(exit_code);
 }
