@@ -261,6 +261,10 @@ void thread::invite(void)
 	stack::call *call = session->parent;
 	unsigned toext = 0;
 	osip_header_t *header = NULL;
+	char fromext[32];
+
+	if(extension)
+		snprintf(fromext, sizeof(fromext), "%u", extension);
 
 	header = NULL;
 	osip_message_get_subject(sevent->request, 0, &header);
@@ -306,7 +310,7 @@ void thread::invite(void)
 			String::set(session->display, sizeof(session->display), session->sysident);
 
 		String::set(call->dialed, sizeof(call->dialed), dialing);
-		stack::sipPublish(&iface, session->identity, identity, sizeof(session->identity));
+		stack::sipPublish(&iface, session->sysident, identity, sizeof(session->identity));
 
 		if(toext) {
 			call->phone = true;
@@ -352,7 +356,7 @@ void thread::invite(void)
 			String::set(session->display, sizeof(session->display), display);
 		else
 			String::set(session->display, sizeof(session->display), identity);
-		stack::sipPublish(&iface, session->identity, identity, sizeof(session->identity));
+		stack::sipPublish(&iface, session->identity, session->sysident, sizeof(session->identity));
 		stack::sipIdentity((struct sockaddr_internet *)request_address.getAddr(), call->dialed, uri->username, sizeof(call->dialed));
 		debug(1, "outgoing call %08x:%u from %s to %s", 
 			session->sequence, session->cid, getIdent(), call->dialed);
@@ -368,7 +372,7 @@ void thread::invite(void)
 			String::set(session->display, sizeof(session->display), display);
 		else
 			String::set(session->display, sizeof(session->display), session->sysident);
-		stack::sipPublish(&iface, session->identity, identity, sizeof(session->identity));
+		stack::sipPublish(&iface, session->identity, session->sysident, sizeof(session->identity));
 		String::set(call->dialed, sizeof(call->dialed), dialing);
 		session->reg = registry::invite(identity);
 		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
