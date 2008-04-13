@@ -734,7 +734,7 @@ bool stack::reload(service *cfg)
 	proxy = new_proxy;
 
 	if(ring_value && ring_value < 100)
-		ring_timer = ring_value;
+		ring_timer = ring_value * 1000l;
 	else if(ring_value >= 100)
 		ring_timer = ring_value;
 	
