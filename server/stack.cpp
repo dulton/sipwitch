@@ -641,10 +641,10 @@ bool stack::reload(service *cfg)
 	int val;
 	const char *localhosts = "localhost, localhost.localdomain";
 
-	unsigned cfna_value = (unsigned)(cfna_timer / ring_timer);
-	unsigned ring_value = (unsigned)(ring_timer / 1000);
-	unsigned init_value = (unsigned)(init_timer / 1000);
-	unsigned reset_value = (unsigned)(reset_timer / 1000);
+	unsigned cfna_value = 0;
+	unsigned ring_value = 0;
+	unsigned init_value = 0;
+	unsigned reset_value = 0;
 
 	while(sp) {
 		key = sp->getId();
@@ -734,18 +734,14 @@ bool stack::reload(service *cfg)
 	localnames = localhosts;
 	proxy = new_proxy;
 
-	if(ring_value > 1000) {
+	if(ring_value && ring_value < 100)
 		ring_timer = ring_value;
-		if(cfna_value && cfna_value < 1000)
+	else if(ring_value >= 100)
+		ring_timer = ring_value;
+	
+	if(cfna_value && cfna_value < 1000)
 			cfna_timer = ring_timer *cfna_value;
-	}
-	else if(ring_value) {
-		ring_timer = ring_value * 1000l;
-		if(cfna_value && cfna_value < 1000)
-			cfna_timer = ring_timer * cfna_value;
-	}
-
-	if(cfna_value > 1000)
+	else if(cfna_value >= 1000)
 		cfna_timer = cfna_value;
 
 	if(init_value && init_value < 100)
