@@ -312,6 +312,7 @@ private:
 	bool incoming, outgoing, dumping;
 	int send101;
 	int family, tlsmode, protocol;
+	timeout_t ring_timer, cfna_timer;
 
 public:
 	stack();
@@ -337,6 +338,12 @@ public:
 	__EXPORT static Socket::address *getAddress(const char *uri, Socket::address *addr = NULL);
 	__EXPORT static void siplog(osip_message_t *msg);
 	__EXPORT static void enableDumping(void);
+
+	inline static timeout_t getRingTimeout(void)
+		{return stack::sip.ring_timer;};
+
+	inline static timeout_t getCFNATimeout(void)
+		{return stack::sip.cfna_timer;};
 };
 
 class __LOCAL config : public service

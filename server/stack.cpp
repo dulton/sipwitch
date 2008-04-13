@@ -191,6 +191,8 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	agent = "sipwitch";
 	restricted = trusted = published = proxy = NULL;
 	localnames = "localhost, localhost.localdomain";
+	ring_timer = 4000;
+	cfna_timer = 16000;
 }
 
 void stack::enableDumping(void)
@@ -628,13 +630,17 @@ void stack::snapshot(FILE *fp)
 
 bool stack::reload(service *cfg)
 {
-	assert(cfg != NULL);
+	assert(cfg != NULL);	
 
 	const char *new_proxy = NULL;
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("stack");
+	linked_pointer<service::keynode> tp = cfg->getList("timers");
 	int val;
 	const char *localhosts = "localhost, localhost.localdomain";
+
+	unsigned cfna_value = (unsigned)(cfna_timer / ring_timer);
+	unsigned ring_value = (unsigned)(ring_timer / 1000);
 
 	while(sp) {
 		key = sp->getId();
@@ -652,6 +658,10 @@ bool stack::reload(service *cfg)
 				outgoing = tobool(value);
 			else if(!stricmp(key, "trace") || !stricmp(key, "dumping"))
 				dumping = tobool(value);
+			else if(!stricmp(key, "ring"))
+				ring_value = atoi(value);
+			else if(!stricmp(key, "cfna"))
+				cfna_value = atoi(value); 
 			else if(!stricmp(key, "keysize") && !isConfigured())
 				keysize = atoi(value);
 			else if(!stricmp(key, "interface") && !isConfigured()) {
@@ -701,8 +711,26 @@ bool stack::reload(service *cfg)
 		sp.next();
 	}
 
+	while(is(tp)) {
+		key = tp->getId();
+		value = tp->getPointer();
+		if(key && value) {
+			if(!stricmp(key, "ring"))
+				ring_value = atoi(value);
+			else if(!stricmp(key, "cfna"))
+				cfna_value = atoi(value); 
+		}
+		tp.next();
+	}
+
 	localnames = localhosts;
 	proxy = new_proxy;
+
+	if(ring_value) {
+		ring_timer = ring_value * 1000l;
+		if(cfna_value)
+			cfna_timer = ring_timer * cfna_value;
+	}
 
 	if(!mapped_calls) 
 		mapped_calls = registry::getEntries();
