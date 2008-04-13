@@ -191,8 +191,10 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	agent = "sipwitch";
 	restricted = trusted = published = proxy = NULL;
 	localnames = "localhost, localhost.localdomain";
+	init_timer = 7000;
 	ring_timer = 4000;
 	cfna_timer = 16000;
+	reset_timer = 1000;
 }
 
 void stack::enableDumping(void)
@@ -438,7 +440,7 @@ stack::session *stack::create(int cid, int did, int tid)
 	locking.modify();
 	cr = new call;
 
-	cr->arm(7000);	// Normally we get close in 6 seconds, this assures...
+	cr->arm(stack::initTimeout());	// Normally we get close in 6 seconds, this assures...
 	cr->count = 0;
 	cr->forwarding = stack::call::FWD_IGNORE;
 	cr->invited = cr->ringing = cr->ringbusy = cr->unreachable = 0;
@@ -641,6 +643,8 @@ bool stack::reload(service *cfg)
 
 	unsigned cfna_value = (unsigned)(cfna_timer / ring_timer);
 	unsigned ring_value = (unsigned)(ring_timer / 1000);
+	unsigned init_value = (unsigned)(init_timer / 1000);
+	unsigned reset_value = (unsigned)(reset_timer / 1000);
 
 	while(sp) {
 		key = sp->getId();
@@ -719,6 +723,10 @@ bool stack::reload(service *cfg)
 				ring_value = atoi(value);
 			else if(!stricmp(key, "cfna"))
 				cfna_value = atoi(value); 
+			else if(!stricmp(key, "init"))
+				init_value = atoi(value);
+			else if(!stricmp(key, "reset"))
+				reset_value = atoi(value);
 		}
 		tp.next();
 	}
@@ -726,11 +734,29 @@ bool stack::reload(service *cfg)
 	localnames = localhosts;
 	proxy = new_proxy;
 
-	if(ring_value) {
+	if(ring_value > 1000) {
+		ring_timer = ring_value;
+		if(cfna_value && cfna_value < 1000)
+			cfna_timer = ring_timer *cfna_value;
+	}
+	else if(ring_value) {
 		ring_timer = ring_value * 1000l;
-		if(cfna_value)
+		if(cfna_value && cfna_value < 1000)
 			cfna_timer = ring_timer * cfna_value;
 	}
+
+	if(cfna_value > 1000)
+		cfna_timer = cfna_value;
+
+	if(init_value && init_value < 100)
+		init_timer = init_value * 1000l;
+	else if(init_value >= 100)
+		init_timer = init_value;
+
+	if(reset_value && reset_value < 100)
+		reset_timer = reset_value * 1000l;
+	else if(reset_value >= 100)
+		reset_timer = reset_value;
 
 	if(!mapped_calls) 
 		mapped_calls = registry::getEntries();

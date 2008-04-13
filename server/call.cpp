@@ -41,11 +41,9 @@ void stack::call::disconnect(void)
 		sp.next();
 	}
 
-	if(state != INITIAL) {
-		state = FINAL;
-		set((timeout_t)7000);
-		update();
-	}
+	state = FINAL;
+	arm(stack::resetTimeout());
+	update();
 }
 
 void stack::call::closing(session *s)
@@ -70,31 +68,17 @@ void stack::call::closing(session *s)
 		--invited;
 	}
 
-	if(invited) {
-		update();
-		return;
-	}
-
-	disconnect();
-}
-
-void stack::call::update(void)
-{
-	// TODO: switch by call state to see if we send reply code!
-	if(state == INITIAL) {
-		// if(forwarding && invited - unreachable - ringbusy == forwarding)
-		// else if(ringing && invited - unreachable - ringbusy == ringing + forwarding)...
-		// else if(ringbusy && invited - unreachable == ringbusy) ...
-		// else if(invited == unreachable) ...
-	}
+	if(!invited)
+		disconnect();
 }
 
 void stack::call::trying(thread *thread)
 {
-	if(state == call::INITIAL)
+	if(state == INITIAL)
 		thread->send_reply(SIP_TRYING);
-	state = call::TRYING;
+	state = TRYING;
 	arm(stack::ringTimeout());
+	update();
 }
 
 void stack::call::expired(void)
@@ -113,11 +97,9 @@ void stack::call::expired(void)
 		if(experror != 0 && source != NULL && source->state != session::CLOSED)
 			break;
 
-	case FINAL:		// session expects to be cleared....
 	case REORDER:	// only different in logging
 	case TRYING:	// gateway trying attempt, waiting for 183...
-
-					// TODO: initial may have special case if pending!!!
+	case FINAL:		// session expects to be cleared....
 	case INITIAL:	// if session never used, garbage collect at expire...
 		debug(4, "expiring call %08x:%u\n", source->sequence, source->cid);
 		Mutex::release(this);

@@ -337,8 +337,6 @@ void thread::invite(void)
 			return;
 		}
 
-		printf("EXT %u, DISPLAY <%s>\n", extension, display);
-
 		if(extension && !display[0])
 			snprintf(session->from, sizeof(session->from), 
 				"\"%s\" <%s;user=phone>", session->sysident, session->identity);
@@ -447,8 +445,8 @@ exit:
 		return;
 	}
 
-	debug(2, "call proceeding %08x:%u\n", session->sequence, session->cid);
 	call->trying(this);
+	debug(2, "call proceeding %08x:%u\n", session->sequence, session->cid);
 }
 
 void thread::identify(void)

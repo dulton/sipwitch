@@ -266,7 +266,6 @@ private:
 		void expired(void);
 		void closing(session *s);
 		void disconnect(void);
-		void update(void);
 
 		OrderedIndex segments;
 		session *source;
@@ -314,6 +313,7 @@ private:
 	int send101;
 	int family, tlsmode, protocol;
 	timeout_t ring_timer, cfna_timer;
+	timeout_t reset_timer, init_timer;
 
 public:
 	stack();
@@ -345,6 +345,12 @@ public:
 
 	inline static timeout_t cfnaTimeout(void)
 		{return stack::sip.cfna_timer;};
+
+	inline static timeout_t initTimeout(void)
+		{return stack::sip.init_timer;};
+
+	inline static timeout_t resetTimeout(void)
+		{return stack::sip.reset_timer;};
 };
 
 class __LOCAL config : public service
