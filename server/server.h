@@ -314,6 +314,7 @@ private:
 	int family, tlsmode, protocol;
 	timeout_t ring_timer, cfna_timer;
 	timeout_t reset_timer, init_timer;
+	unsigned invite_expires;
 
 public:
 	stack();
@@ -351,6 +352,9 @@ public:
 
 	inline static timeout_t resetTimeout(void)
 		{return stack::sip.reset_timer;};
+
+	inline static unsigned inviteExpires(void)
+		{return stack::sip.invite_expires;};
 };
 
 class __LOCAL config : public service

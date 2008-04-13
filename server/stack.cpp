@@ -195,6 +195,7 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	ring_timer = 4000;
 	cfna_timer = 16000;
 	reset_timer = 1000;
+	invite_expires = 120;
 }
 
 void stack::enableDumping(void)
@@ -662,10 +663,6 @@ bool stack::reload(service *cfg)
 				outgoing = tobool(value);
 			else if(!stricmp(key, "trace") || !stricmp(key, "dumping"))
 				dumping = tobool(value);
-			else if(!stricmp(key, "ring"))
-				ring_value = atoi(value);
-			else if(!stricmp(key, "cfna"))
-				cfna_value = atoi(value); 
 			else if(!stricmp(key, "keysize") && !isConfigured())
 				keysize = atoi(value);
 			else if(!stricmp(key, "interface") && !isConfigured()) {
@@ -727,6 +724,8 @@ bool stack::reload(service *cfg)
 				init_value = atoi(value);
 			else if(!stricmp(key, "reset"))
 				reset_value = atoi(value);
+			else if(!stricmp(key, "invite"))
+				invite_expires = atoi(value);
 		}
 		tp.next();
 	}
