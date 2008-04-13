@@ -188,7 +188,7 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	dumping = false;
 	incoming = false;
 	outgoing = false;
-	agent = "sipwitch";
+	agent = "sipwitch-" VERSION "/eXosip";
 	restricted = trusted = published = proxy = NULL;
 	localnames = "localhost, localhost.localdomain";
 	init_timer = 7000;
