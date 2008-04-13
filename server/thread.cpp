@@ -448,7 +448,7 @@ exit:
 	}
 
 	debug(2, "call proceeding %08x:%u\n", session->sequence, session->cid);
-	send_reply(SIP_TRYING);
+	call->trying(this);
 }
 
 void thread::identify(void)

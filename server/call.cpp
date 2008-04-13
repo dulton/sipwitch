@@ -89,6 +89,14 @@ void stack::call::update(void)
 	}
 }
 
+void stack::call::trying(thread *thread)
+{
+	if(state == call::INITIAL)
+		thread->send_reply(SIP_TRYING);
+	state = call::TRYING;
+	arm(stack::ringTimeout());
+}
+
 void stack::call::expired(void)
 {
 	linked_pointer<segment> sp;

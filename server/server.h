@@ -262,6 +262,7 @@ private:
 		char subject[MAX_URI_SIZE];		// call subject
 		char refer[MAX_IDENT_SIZE];		// used in forward management
 
+		void trying(thread *thread);
 		void expired(void);
 		void closing(session *s);
 		void disconnect(void);
@@ -339,10 +340,10 @@ public:
 	__EXPORT static void siplog(osip_message_t *msg);
 	__EXPORT static void enableDumping(void);
 
-	inline static timeout_t getRingTimeout(void)
+	inline static timeout_t ringTimeout(void)
 		{return stack::sip.ring_timer;};
 
-	inline static timeout_t getCFNATimeout(void)
+	inline static timeout_t cfnaTimeout(void)
 		{return stack::sip.cfna_timer;};
 };
 
