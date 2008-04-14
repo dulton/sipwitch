@@ -217,7 +217,7 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 		
 		eXosip_unlock();
 
-		invited = stack::invite(call, cid);
+		invited = stack::create(call, cid);
 
 		if(rr->ext) 
 			snprintf(invited->sysident, sizeof(invited->sysident), "%u", rr->ext);
@@ -333,7 +333,7 @@ void thread::invite(void)
 				session->sequence, session->cid, getIdent());
 
 			String::set(call->subject, sizeof(call->subject), "calling self");
-			stack::setBusy(sevent->tid, session);
+			call->busy(this);
 			return;
 		}
 
@@ -441,7 +441,7 @@ void thread::invite(void)
 
 exit:
 	if(!call->invited) {
-		stack::setBusy(sevent->tid, session);
+		call->busy(this);
 		return;
 	}
 

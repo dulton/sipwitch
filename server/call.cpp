@@ -22,7 +22,7 @@ stack::call::call() : TimerQueue::event(Timer::reset), segments()
 {
 }
 
-void stack::call::disconnect(void)
+void stack::call::disconnectLocked(void)
 {
 	debug(4, "disconnecting call %08x:%u\n", source->sequence, source->cid);
 
@@ -45,7 +45,7 @@ void stack::call::disconnect(void)
 	arm(stack::resetTimeout());
 }
 
-void stack::call::closing(session *s)
+void stack::call::closingLocked(session *s)
 {
 	assert(s != NULL);
 
@@ -68,7 +68,17 @@ void stack::call::closing(session *s)
 	}
 
 	if(!invited)
-		disconnect();
+		disconnectLocked();
+}
+
+void stack::call::busy(thread *thread)
+{
+	mutex::protect(this);
+	state = BUSY;
+	disarm();
+	mutex::release(this);
+	thread->send_reply(SIP_BUSY_HERE);
+	stack::logCall("busy", source);
 }
 
 void stack::call::trying(thread *thread)

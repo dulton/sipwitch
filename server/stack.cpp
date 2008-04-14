@@ -297,9 +297,9 @@ void stack::close(session *s)
 	if(s->state != session::CLOSED) {
 		s->state = session::CLOSED;
 		if(s == cr->source || s == cr->source)
-			cr->disconnect();
+			cr->disconnectLocked();
 		else
-			cr->closing(s);
+			cr->closingLocked(s);
 	}
 	Mutex::release(cr);
 }
@@ -432,7 +432,7 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 	}
 }
 
-stack::session *stack::invite(call *cr, int cid)
+stack::session *stack::create(call *cr, int cid)
 {
 	assert(cr != NULL);
 	assert(cid > 0);
@@ -505,30 +505,6 @@ void stack::logCall(const char *reason, session *session, const char *joined)
 		session->sysident, cr->dialed, joined, session->display);		
 	
 	cr->starting = 0l;
-}
-
-void stack::setBusy(int tid, session *session)
-{
-	assert(session != NULL);
-
-	osip_message_t *reply = NULL;
-	call *cr;
-	if(!session)
-		return;
-
-	cr = session->parent;
-	mutex::protect(cr);
-	cr->state = call::BUSY;
-	cr->disarm();
-	mutex::release(cr);
-
-	eXosip_lock();
-	eXosip_call_build_answer(tid, SIP_BUSY_HERE, &reply);
-	stack::siplog(reply);
-	eXosip_call_send_answer(tid, SIP_BUSY_HERE, reply);
-	eXosip_unlock();		
-
-	logCall("busy", session);
 }
 
 stack::session *stack::access(int cid)

@@ -263,10 +263,11 @@ private:
 		char subject[MAX_URI_SIZE];		// call subject
 		char refer[MAX_IDENT_SIZE];		// used in forward management
 
+		void busy(thread *thread);
 		void trying(thread *thread);
 		void expired(void);
-		void closing(session *s);
-		void disconnect(void);
+		void closingLocked(session *s);
+		void disconnectLocked(void);
 
 		OrderedIndex segments;
 		session *source;
@@ -321,10 +322,9 @@ public:
 
 	__EXPORT static const char *getScheme(void);
 	__EXPORT static void logCall(const char *reason, session *session, const char *joined = NULL);
-	__EXPORT static void setBusy(int tid, session *session);
 	__EXPORT static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
 	__EXPORT static session *create(int cid, int did, int tid);
-	__EXPORT static session *invite(call *cr, int cid);
+	__EXPORT static session *create(call *cr, int cid);
 	__EXPORT static void destroy(session *s);
 	__EXPORT static void destroy(call *cr);
 	__EXPORT static void disjoin(call *cr);
