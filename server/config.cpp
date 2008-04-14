@@ -41,11 +41,9 @@ unsigned config::forwarding(keynode *leaf)
 	cp = service::getValue(leaf, "busy");
 	if(cp && *cp)
 		mask |= FWD_BUSY_ENABLED;
-	cp = service::getValue(leaf, "na");
-	if(!cp)
-		cp = getValue(leaf, "noanswer");
+	cp = service::getValue(leaf, "bna");
 	if(cp && *cp)
-		mask |= FWD_NA_ENABLED;
+		mask |= FWD_BNA_ENABLED;
 	cp = service::getValue(leaf, "dnd");
 	if(cp && *cp)
 		mask |= FWD_DND_ENABLED;
