@@ -2,6 +2,14 @@ SIP Witch is an official package of the GNU Project as of August 10th 2007.
 GNU SIP Witch is also part of GNU Telephony & the GNU Telecom subsystem.  The
 server directory includes some basic example server configurations.
 
+The goal of this package is to operate as a pure SIP based office telephone
+call server supporting generic key system features like call forwarding, hunt
+groups and call distribution, call coverage and ring groups, holding and call
+transfer, as well as offering SIP specific capabilities such as presence and
+messaging.  Support for using secure telephone extensions, for placing and
+receiving b2b calls directly over the internet, and intercept/decrypt-free
+peer-to-peer audio is also being incorporated into the sipwitch design.
+
 GNU SIP Witch is a call and registration server for the SIP protocol. As a call
 server it services call registration for SIP devices and destination routing
 through SIP gateways.  GNU SIP Witch does not perform codec operations or media
