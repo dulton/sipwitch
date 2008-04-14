@@ -981,7 +981,7 @@ void registry::mapped::addContact(const char *contact_id)
 	locking.share();
 }
 
-void registry::mapped::expire(Socket::address& saddr)
+bool registry::mapped::expire(Socket::address& saddr)
 {
 	unsigned count = 0;
 	time_t now;
@@ -990,7 +990,7 @@ void registry::mapped::expire(Socket::address& saddr)
 	time(&now);
 
 	if(!saddr.getAddr() || !expires || expires < now || type == MappedRegistry::EXPIRED || type == MappedRegistry::TEMPORARY)
-		return;
+		return false;
 
 	tp = targets;
 	while(tp) {
@@ -1007,6 +1007,10 @@ void registry::mapped::expire(Socket::address& saddr)
 		expires = 0;
 		mutex::release(this);
 	}
+	if(!count)
+		return false;
+
+	return true;
 }
 
 bool registry::mapped::refresh(Socket::address& saddr, time_t lease)

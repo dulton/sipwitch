@@ -1261,12 +1261,14 @@ reply:
 
 void thread::deregister()
 {
+	bool unreg = false;
 	registry::mapped *rr = registry::access(identity);
 	if(rr) {
-		rr->expire(via_address);
+		unreg = rr->expire(via_address);
 		registry::detach(rr);
 	}
-	process::errlog(DEBUG1, "unregister %s", getIdent());
+	if(unreg)
+		process::errlog(DEBUG1, "unregister %s", getIdent());
 }
 
 void thread::getDevice(registry::mapped *rr)

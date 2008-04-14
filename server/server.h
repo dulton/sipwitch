@@ -37,7 +37,7 @@ public:
 	public:
 		void incUse(void);
 		void decUse(void);
-		void expire(Socket::address& addr);
+		bool expire(Socket::address& addr);
 		bool refresh(Socket::address& addr, time_t expires);
 		unsigned setTargets(Socket::address& addr);
 		unsigned addTarget(Socket::address& via, time_t expires, const char *contact);
