@@ -1008,9 +1008,9 @@ bool registry::mapped::expire(Socket::address& saddr)
 		mutex::release(this);
 	}
 	if(!count)
-		return false;
+		return true;
 
-	return true;
+	return false;
 }
 
 bool registry::mapped::refresh(Socket::address& saddr, time_t lease)
