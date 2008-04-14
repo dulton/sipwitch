@@ -37,6 +37,7 @@ public:
 	public:
 		void incUse(void);
 		void decUse(void);
+		void expire(Socket::address& addr);
 		bool refresh(Socket::address& addr, time_t expires);
 		unsigned setTargets(Socket::address& addr);
 		unsigned addTarget(Socket::address& via, time_t expires, const char *contact);
@@ -264,6 +265,9 @@ private:
 		char subject[MAX_URI_SIZE];		// call subject
 		char refer[MAX_IDENT_SIZE];		// used in forward management
 
+		void reply_source(int error);
+		void decline(thread *thread);
+		void ring(thread *thread);
 		void busy(thread *thread);
 		void trying(thread *thread);
 		void expired(void);

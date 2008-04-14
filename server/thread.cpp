@@ -347,7 +347,7 @@ void thread::invite(void)
 			snprintf(session->from, sizeof(session->from),
 				"<%s>", session->identity);
 
-		session->reg = registry::invite(session->sysident);
+		session->reg = registry::invite(identity);
 		debug(1, "local call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, call->dialed, session->sysident);
 		break;
@@ -376,7 +376,7 @@ void thread::invite(void)
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
 			String::set(session->sysident, sizeof(session->sysident), identity);
-		session->reg = registry::invite(session->sysident);
+		session->reg = registry::invite(identity);
 		if(display[0])
 			String::set(session->display, sizeof(session->display), display);
 		else
@@ -1261,6 +1261,11 @@ reply:
 
 void thread::deregister()
 {
+	registry::mapped *rr = registry::access(identity);
+	if(rr) {
+		rr->expire(via_address);
+		registry::detach(rr);
+	}
 	process::errlog(DEBUG1, "unregister %s", getIdent());
 }
 
@@ -1385,6 +1390,19 @@ void thread::run(void)
 			}
 			send_reply(SIP_OK);
 			break;
+		case EXOSIP_CALL_GLOBALFAILURE:
+			stack::siplog(sevent->response);
+			authorizing = CALL;
+			if(!sevent->response || sevent->cid <= 0)
+				break;
+			session = stack::access(sevent->cid);
+			if(!session)
+				break;
+			switch(sevent->response->status_code) {
+			case SIP_DECLINE:
+				stack::close(session);
+			}
+			break;	
 		case EXOSIP_CALL_CLOSED:
 			stack::siplog(sevent->response);
 			authorizing = CALL;
@@ -1407,6 +1425,16 @@ void thread::run(void)
 					stack::clear(session);
 					send_reply(SIP_OK);
 				}
+			}
+			break;
+		case EXOSIP_CALL_RINGING:
+			stack::siplog(sevent->response);
+			authorizing = NONE;
+			if(sevent->cid > 0) {
+				authorizing = CALL;
+				session = stack::access(sevent->cid);
+				if(session && session->parent)
+					session->parent->ring(this);
 			}
 			break;
 		case EXOSIP_CALL_INVITE:

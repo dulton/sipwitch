@@ -37,6 +37,9 @@ void stack::call::disconnectLocked(void)
 {
 	debug(4, "disconnecting call %08x:%u\n", source->sequence, source->cid);
 
+	if(source->state == session::OPEN && state == RINGING)
+		reply_source(SIP_DECLINE);
+
 	linked_pointer<segment> sp = segments.begin();
 	while(sp) {
 		if(sp->sid.reg) {
@@ -82,6 +85,32 @@ void stack::call::closingLocked(session *s)
 		disconnectLocked();
 }
 
+void stack::call::reply_source(int error)
+{
+	osip_message_t *reply = NULL;
+
+	eXosip_lock();
+	eXosip_call_build_answer(source->tid, error, &reply);
+	stack::siplog(reply);
+	eXosip_call_send_answer(source->tid, error, reply);
+	eXosip_unlock();
+}
+
+void stack::call::ring(thread *thread)
+{
+	bool starting = false;
+
+	mutex::protect(this);
+	if(state != RINGING && source) {
+		state = RINGING;
+		starting = true;
+		arm(stack::ringTimeout());
+	}
+	mutex::release(this);
+	if(starting)
+		reply_source(SIP_RINGING);
+}
+
 void stack::call::busy(thread *thread)
 {
 	bool logging = false;
@@ -124,7 +153,11 @@ void stack::call::expired(void)
 	switch(state) {
 	case HOLDING:	// hold-recall timer expired...
 
-	case RINGING:	// maybe ring-no-answer with forward? invite expired?
+	case RINGING:	// re-generate ring event to origination...
+			arm(stack::ringTimeout());	
+			mutex::release(this);
+			reply_source(SIP_RINGING);
+			return;
 	case RINGBACK:
 	case BUSY:		// invite expired
 	case JOINED:	// active call session expired without re-invite

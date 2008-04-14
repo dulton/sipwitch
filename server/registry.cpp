@@ -512,6 +512,7 @@ registry::mapped *registry::create(const char *id)
 
 	if(node)
 		cp = node->getId();
+
 	if(!stricmp(cp, "user"))
 		rr->type = MappedRegistry::USER;
 	else if(!stricmp(cp, "refer"))
@@ -980,13 +981,44 @@ void registry::mapped::addContact(const char *contact_id)
 	locking.share();
 }
 
+void registry::mapped::expire(Socket::address& saddr)
+{
+	unsigned count = 0;
+	time_t now;
+	linked_pointer<target> tp;
+
+	time(&now);
+
+	if(!saddr.getAddr() || !expires || expires < now || type == MappedRegistry::EXPIRED || type == MappedRegistry::TEMPORARY)
+		return;
+
+	tp = targets;
+	while(tp) {
+		if(Socket::equal(saddr.getAddr(), (struct sockaddr *)(&tp->address))) 
+			tp->expires = now - 10;
+		else if(tp->expires >= now)
+			++count;
+		tp.next();
+	}
+	if(!count) {
+		mutex::protect(this);
+		status = MappedRegistry::OFFLINE;
+		type = MappedRegistry::EXPIRED;
+		expires = 0;
+		mutex::release(this);
+	}
+}
+
 bool registry::mapped::refresh(Socket::address& saddr, time_t lease)
 {
 	assert(lease > 0);
 
+	time_t now;
 	linked_pointer<target> tp;
 
-	if(!saddr.getAddr() || !expires || type == MappedRegistry::EXPIRED || type == MappedRegistry::TEMPORARY)
+	time(&now);
+
+	if(!saddr.getAddr() || !expires || expires < now || type == MappedRegistry::EXPIRED || type == MappedRegistry::TEMPORARY)
 		return false;
 
 	tp = targets;

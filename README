@@ -3,7 +3,7 @@ GNU SIP Witch is also part of GNU Telephony & the GNU Telecom subsystem.  The
 server directory includes some basic example server configurations.
 
 The goal of this package is to operate as a pure SIP based office telephone
-call server supporting generic key system features like call forwarding, hunt
+call server supporting generic phone system features like call forwarding, hunt
 groups and call distribution, call coverage and ring groups, holding and call
 transfer, as well as offering SIP specific capabilities such as presence and
 messaging.  Support for using secure telephone extensions, for placing and
@@ -57,5 +57,5 @@ GNU Common C++ 2.0 later this year or early next year.  CVS for and new
 distributions of UCommon will be found in the GNU Telecom project on an interim
 basis until then.  GNU SIP Witch also uses libeXosip2 and GNU oSIP, and these
 may be found at their respective sites.  GNU SIP Witch is licensed under the
-GNU General Public License V3 or later.
+GNU General Public License Version 3 or later.
 
