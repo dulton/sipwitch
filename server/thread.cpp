@@ -1390,6 +1390,7 @@ void thread::run(void)
 			}
 			send_reply(SIP_OK);
 			break;
+		case EXOSIP_CALL_REQUESTFAILURE:
 		case EXOSIP_CALL_GLOBALFAILURE:
 			stack::siplog(sevent->response);
 			authorizing = CALL;
@@ -1401,6 +1402,11 @@ void thread::run(void)
 			switch(sevent->response->status_code) {
 			case SIP_DECLINE:
 				stack::close(session);
+				break;
+			case SIP_BUSY_HERE:
+				printf("*** START BUSY!\n");
+				session->parent->busy(this, session);
+				break;
 			}
 			break;	
 		case EXOSIP_CALL_CLOSED:
@@ -1434,7 +1440,7 @@ void thread::run(void)
 				authorizing = CALL;
 				session = stack::access(sevent->cid);
 				if(session && session->parent)
-					session->parent->ring(this);
+					session->parent->ring(this, session);
 			}
 			break;
 		case EXOSIP_CALL_INVITE:

@@ -282,6 +282,7 @@ void stack::close(session *s)
 	assert(s != NULL);
 
 	call *cr;
+	const char *reason = NULL;
 
 	if(!s)
 		return;
@@ -296,8 +297,8 @@ void stack::close(session *s)
 	Mutex::protect(cr);
 	if(s->state != session::CLOSED) {
 		s->state = session::CLOSED;
-		if(s == cr->source || s == cr->source)
-			cr->disconnectLocked();
+		if(s == cr->source)
+			cr->terminateLocked();
 		else
 			cr->closingLocked(s);
 	}
@@ -386,6 +387,8 @@ void stack::destroy(call *cr)
 
 	linked_pointer<segment> sp;
 
+	cr->log();
+
 	// we assume access lock was already held when we call this...
 
 	locking.exclusive();
@@ -458,42 +461,6 @@ stack::session *stack::create(int cid, int did, int tid)
 
 	locking.share();
 	return cr->source;
-}
-
-void stack::logCall(const char *reason, session *session, const char *joined)
-{
-	assert(reason != NULL && *reason != 0);
-	assert(session != NULL);
-
-	time_t now;
-	struct tm *dt;
-	call *cr;
-
-	if(!session)
-		return;
-
-	cr = session->parent;
-	session = cr->source;
-
-	if(!cr || !cr->starting)
-		return;
-
-	if(!joined && cr->target)
-		joined = cr->target->sysident;
-
-	if(!joined)
-		joined = "n/a";
-
-	time(&now);
-	dt = localtime(&cr->starting);
-
-	process::printlog("call %08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s\n",
-		session->sequence, session->cid, reason,
-		dt->tm_year + 1900, dt->tm_mon + 1, dt->tm_mday,
-		dt->tm_hour, dt->tm_min, dt->tm_sec, now - cr->starting,
-		session->sysident, cr->dialed, joined, session->display);		
-	
-	cr->starting = 0l;
 }
 
 stack::session *stack::access(int cid)

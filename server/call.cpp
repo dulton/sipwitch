@@ -30,16 +30,45 @@ stack::call::call() : TimerQueue::event(Timer::reset), segments()
 	target = source = NULL;
 	state = INITIAL;
 	enlist(&stack::sip);
-	starting = 0l;
+	starting = ending = 0l;
+	reason = joined = NULL;
+}
+
+void stack::call::terminateLocked(void)
+{
+	if(state != INITIAL)
+		state = TERMINATE;
+	disconnectLocked();
 }
 
 void stack::call::disconnectLocked(void)
 {
 	debug(4, "disconnecting call %08x:%u\n", source->sequence, source->cid);
 
-	if(source->state == session::OPEN && state == RINGING)
+	switch(state) {
+	case RINGING:
+	case RINGBACK:
+		reason = "declined";
 		reply_source(SIP_DECLINE);
-
+		break;
+	case BUSY:
+		reason = "busy";
+		reply_source(SIP_BUSY_HERE);
+		break;
+	case TRYING:
+		reason = "failed";
+		break;
+	case TERMINATE:
+		reason = "terminated";
+		break;
+	case INITIAL:
+	case FINAL:
+		break;
+	default:
+		if(!reason)
+			reason = "terminated";
+	}
+		
 	linked_pointer<segment> sp = segments.begin();
 	while(sp) {
 		if(sp->sid.reg) {
@@ -55,7 +84,11 @@ void stack::call::disconnectLocked(void)
 		sp.next();
 	}
 
-	state = FINAL;
+	if(state != INITIAL && state != FINAL) {
+		time(&ending);
+		state = FINAL;
+	}
+	
 	arm(stack::resetTimeout());
 }
 
@@ -63,23 +96,8 @@ void stack::call::closingLocked(session *s)
 {
 	assert(s != NULL);
 
-	if(invited) {
-		switch(s->state)
-		{
-		case session::RING:
-			--ringing;
-			break;
-		case session::BUSY:
-			--ringbusy;
-			break;
-		case session::REORDER:
-			--unreachable;
-			break;
-		default:
-			break;
-		}
+	if(invited)
 		--invited;
-	}
 
 	if(!invited)
 		disconnectLocked();
@@ -96,38 +114,65 @@ void stack::call::reply_source(int error)
 	eXosip_unlock();
 }
 
-void stack::call::ring(thread *thread)
+void stack::call::ring(thread *thread, session *s)
 {
+	assert(thread != NULL);
+
 	bool starting = false;
 
 	mutex::protect(this);
-	if(state != RINGING && source) {
+	if(s && s != source && s->state != session::RING) {
+		++ringing;
+		s->state = session::RING;
+	}
+	else if(!s)
+		++ringing;
+
+	switch(state) {
+	case INITIAL:
+	case TRYING:
+	case BUSY:
 		state = RINGING;
 		starting = true;
 		arm(stack::ringTimeout());
 	}
+
 	mutex::release(this);
 	if(starting)
 		reply_source(SIP_RINGING);
 }
 
-void stack::call::busy(thread *thread)
+void stack::call::busy(thread *thread, session *s)
 {
-	bool logging = false;
-	bool sending = false;
-	
+	assert(thread != NULL);
+
 	mutex::protect(this);
-	if(state != INITIAL && state != BUSY)
-		logging = true;
-	if(state != BUSY)
-		sending = true;
-	state = BUSY;
-	disarm();
+	if(s && s != source) {
+		if(s->state == session::RING)
+			--ringing;
+		if(s->state != session::BUSY) {
+			++ringbusy;
+			s->state = session::BUSY;
+		}
+	}
+	else if(!s)
+		++ringbusy;
+
+	switch(state) {
+	case INITIAL:
+	case RINGING:
+	case RINGBACK:
+		if(!ringing && ringbusy) {
+			state = BUSY;
+			disarm();
+		}
+	}
+
 	mutex::release(this);
-	if(sending)
-		thread->send_reply(SIP_BUSY_HERE);
-	if(logging)
-		stack::logCall("busy", source);
+	if(s)
+		stack::close(s);
+	else 
+		stack::close(source);
 }
 
 void stack::call::trying(thread *thread)
@@ -192,5 +237,37 @@ void stack::call::expired(void)
 
 	Mutex::release(this);
 }
+
+void stack::call::log(void)
+{
+	struct tm *dt;
+	call *cr;
+
+	if(!reason)
+		return;
+
+	if(!starting)
+		return;
+
+	if(!ending)
+		time(&ending);
+
+	if(!joined && target)
+		joined = target->sysident;
+
+	if(!joined)
+		joined = "n/a";
+
+	dt = localtime(&starting);
+
+	process::printlog("call %08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s\n",
+		source->sequence, source->cid, reason,
+		dt->tm_year + 1900, dt->tm_mon + 1, dt->tm_mday,
+		dt->tm_hour, dt->tm_min, dt->tm_sec, ending - starting,
+		source->sysident, dialed, joined, source->display);		
+	
+	starting = 0l;
+}
+
 
 END_NAMESPACE

@@ -255,7 +255,7 @@ private:
 
 		enum {LOCAL, INCOMING, OUTGOING, REFER} type;
 
-		enum {INITIAL, TRYING, RINGING, RINGBACK, REORDER, HOLDING, JOINED, BUSY, FINAL} state;
+		enum {INITIAL, TRYING, RINGING, RINGBACK, REORDER, HOLDING, JOINED, BUSY, TERMINATE, FINAL} state;
 
 		call();
 
@@ -267,14 +267,18 @@ private:
 
 		void reply_source(int error);
 		void decline(thread *thread);
-		void ring(thread *thread);
-		void busy(thread *thread);
+		void ring(thread *thread, session *s = NULL);
+		void busy(thread *thread, session *s = NULL);
 		void trying(thread *thread);
 		void expired(void);
 		void closingLocked(session *s);
+		void terminateLocked(void);
 		void disconnectLocked(void);
+		void log(void);
 
 		OrderedIndex segments;
+		const char *reason;
+		const char *joined;
 		session *source;
 		session *target;
 		segment *select;
@@ -285,7 +289,7 @@ private:
 		unsigned ringing;		// number of ringing segments
 		unsigned ringbusy;		// number of busy segments
 		unsigned unreachable;	// number of unreachable segments
-		time_t expires, starting;
+		time_t expires, starting, ending;
 		int experror;			// error at expiration...
 		bool phone;
 
@@ -326,7 +330,6 @@ public:
 	stack();
 
 	__EXPORT static const char *getScheme(void);
-	__EXPORT static void logCall(const char *reason, session *session, const char *joined = NULL);
 	__EXPORT static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
 	__EXPORT static session *create(int cid, int did, int tid);
 	__EXPORT static session *create(call *cr, int cid);
