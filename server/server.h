@@ -187,6 +187,7 @@ private:
 
 		static background *thread;
 
+		static void modify(void);
 		static void signal(void);
 	
 

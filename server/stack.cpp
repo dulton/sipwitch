@@ -124,9 +124,13 @@ void stack::background::cancel(void)
 	thread->Conditional::unlock();
 }
 
-void stack::background::signal(void)
+void stack::background::modify(void)
 {
 	thread->Conditional::lock();
+}
+
+void stack::background::signal(void)
+{
 	thread->signalled = true;
 	thread->Conditional::signal();
 	thread->Conditional::unlock();
@@ -256,6 +260,7 @@ void stack::siplog(osip_message_t *msg)
 
 void stack::modify(void)
 {
+	background::modify();
 }
 
 void stack::update(void)

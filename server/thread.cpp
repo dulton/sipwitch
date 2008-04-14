@@ -1377,8 +1377,10 @@ void thread::run(void)
 			authorizing = CALL;
 			if(sevent->cid > 0) {
 				session = stack::access(sevent->cid);
-				if(session->did == sevent->did)
+				if(session && session->did == sevent->did)
 					stack::close(session);
+				else
+					break;
 			}
 			send_reply(SIP_OK);
 			break;
@@ -1387,7 +1389,10 @@ void thread::run(void)
 			authorizing = CALL;
 			if(sevent->cid > 0) {
 				session = stack::access(sevent->cid);
-				stack::close(session);
+				if(session)
+					stack::close(session);
+				else
+					break;
 			}
 			send_reply(SIP_OK);
 			break;
@@ -1397,8 +1402,10 @@ void thread::run(void)
 			if(sevent->cid > 0) {
 				authorizing = CALL;
 				session = stack::access(sevent->cid);
-				stack::clear(session);
-				send_reply(SIP_OK);
+				if(session) {
+					stack::clear(session);
+					send_reply(SIP_OK);
+				}
 			}
 			break;
 		case EXOSIP_CALL_INVITE:
