@@ -358,6 +358,26 @@ void stack::destroy(session *s)
 	destroy(s->parent);
 }
 
+void stack::setDialog(session *s, int did)
+{
+	assert(s != NULL && s->parent != NULL);
+	mutex::protect(s->parent);
+	s->did = did;
+	mutex::release(s->parent);
+}
+
+int stack::getDialog(session *s)
+{
+	int did = -1;
+
+	if(s && s->parent) {
+		mutex::protect(s->parent);
+		did = s->did;
+		mutex::release(s->parent);
+	}
+	return did;
+}
+
 void stack::infomsg(session *source, eXosip_event_t *sevent)
 {
 	assert(source);
@@ -375,7 +395,8 @@ void stack::infomsg(session *source, eXosip_event_t *sevent)
 	else if(cr->target == source)
 		target = cr->source;
 
-	if(!target || target->did < 1)
+	int did = getDialog(target);
+	if(did < 1)
 		return;
 
 	ct = sevent->request->content_type;
@@ -384,7 +405,7 @@ void stack::infomsg(session *source, eXosip_event_t *sevent)
 
 	osip_message_get_body(sevent->request, 0, &body);
 	eXosip_lock();
-	eXosip_call_build_info(target->did, &msg);
+	eXosip_call_build_info(did, &msg);
 	if(!msg) {
 		eXosip_unlock();
 		return;
@@ -395,7 +416,7 @@ void stack::infomsg(session *source, eXosip_event_t *sevent)
 		snprintf(type, sizeof(type), "%s", ct->type);
 	osip_message_set_content_type(msg, type);
 	osip_message_set_body(msg, body->body, strlen(body->body));
-	eXosip_call_send_request(target->did, msg);
+	eXosip_call_send_request(did, msg);
 	eXosip_unlock();		
 }
 

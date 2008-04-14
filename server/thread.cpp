@@ -1384,14 +1384,14 @@ void thread::run(void)
 			stack::siplog(sevent->response);
 			session = stack::access(sevent->cid);
 			if(session)
-				session->did = sevent->did;
+				stack::setDialog(session, sevent->did);
 			break;
 		case EXOSIP_CALL_CANCELLED:
 			stack::siplog(sevent->response);
 			authorizing = CALL;
 			if(sevent->cid > 0) {
 				session = stack::access(sevent->cid);
-				if(session && session->did == sevent->did)
+				if(stack::getDialog(session) == sevent->did)
 					stack::close(session);
 				else
 					break;
@@ -1460,7 +1460,7 @@ closing:
 				authorizing = CALL;
 				session = stack::access(sevent->cid);
 				if(session && session->parent) {
-					session->did = sevent->did;
+					stack::setDialog(session, sevent->did);
 					session->parent->ring(this, session);
 				}
 			}

@@ -206,7 +206,7 @@ private:
 	{
 	public:
 		registry::mapped *reg;
-		int cid, did, tid;
+		int cid, tid, did;
 		time_t activates;
 		uint32_t sequence;
 		call *parent;
@@ -350,6 +350,8 @@ public:
 	__EXPORT static void siplog(osip_message_t *msg);
 	__EXPORT static void enableDumping(void);
 	__EXPORT static void infomsg(session *session, eXosip_event_t *sevent);
+	__EXPORT static void setDialog(session *session, int did);
+	__EXPORT static int getDialog(session *session);
 
 	inline static timeout_t ringTimeout(void)
 		{return stack::sip.ring_timer;};
