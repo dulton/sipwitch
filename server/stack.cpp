@@ -517,8 +517,10 @@ void stack::setBusy(int tid, session *session)
 		return;
 
 	cr = session->parent;
+	mutex::protect(cr);
 	cr->state = call::BUSY;
 	cr->disarm();
+	mutex::release(cr);
 
 	eXosip_lock();
 	eXosip_call_build_answer(tid, SIP_BUSY_HERE, &reply);

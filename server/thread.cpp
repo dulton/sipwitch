@@ -328,7 +328,7 @@ void thread::invite(void)
 		else
 			String::set(call->dialed, sizeof(call->dialed), target);
 
-		if(!stricmp(session->sysident, call->dialed)) {
+		if(reginfo && !strcmp(reginfo->userid, identity)) {
 			debug(1, "calling self %08x:%u, id=%s\n", 
 				session->sequence, session->cid, getIdent());
 
