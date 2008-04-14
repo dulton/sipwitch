@@ -1423,8 +1423,6 @@ void thread::run(void)
 			case SIP_SERVICE_UNAVAILABLE:
 				session->parent->busy(this, session);
 				break;
-			case SIP_BAD_REQUEST:
-				break;
 			default:
 				session->parent->failed(this, session);
 				break;
