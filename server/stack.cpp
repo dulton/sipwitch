@@ -358,6 +358,47 @@ void stack::destroy(session *s)
 	destroy(s->parent);
 }
 
+void stack::infomsg(session *source, eXosip_event_t *sevent)
+{
+	assert(source);
+	assert(sevent);
+
+	char type[128];
+	osip_content_type_t *ct;
+	osip_message_t *msg = NULL;
+	osip_body_t *body = NULL;
+	session *target = NULL;
+	call *cr = source->parent;
+
+	if(cr->source == source)
+		target = cr->target;
+	else if(cr->target == source)
+		target = cr->source;
+
+	if(!target || target->did < 1)
+		return;
+
+	ct = sevent->request->content_type;
+	if(!ct || !ct->type)
+		return;
+
+	osip_message_get_body(sevent->request, 0, &body);
+	eXosip_lock();
+	eXosip_call_build_info(target->did, &msg);
+	if(!msg) {
+		eXosip_unlock();
+		return;
+	}
+	if(ct->subtype)
+		snprintf(type, sizeof(type), "%s/%s", ct->type, ct->subtype);
+	else
+		snprintf(type, sizeof(type), "%s", ct->type);
+	osip_message_set_content_type(msg, type);
+	osip_message_set_body(msg, body->body, strlen(body->body));
+	eXosip_call_send_request(target->did, msg);
+	eXosip_unlock();		
+}
+
 void stack::disjoin(call *cr)
 {
 	assert(cr != NULL);

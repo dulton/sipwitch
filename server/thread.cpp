@@ -1380,6 +1380,12 @@ void thread::run(void)
 			sevent->type, sevent->cid, sevent->did, instance);
 
 		switch(sevent->type) {
+		case EXOSIP_CALL_PROCEEDING:
+			stack::siplog(sevent->response);
+			session = stack::access(sevent->cid);
+			if(session)
+				session->did = sevent->did;
+			break;
 		case EXOSIP_CALL_CANCELLED:
 			stack::siplog(sevent->response);
 			authorizing = CALL;
@@ -1404,12 +1410,20 @@ void thread::run(void)
 				break;
 			switch(sevent->response->status_code) {
 			case SIP_DECLINE:
+			case SIP_REQUEST_TIME_OUT:
+			case SIP_SERVER_TIME_OUT:
+			case SIP_REQUEST_TERMINATED:
 				stack::close(session);
 				break;
+			case SIP_GONE:
+			case SIP_NOT_FOUND:
 			case SIP_BUSY_HERE:
 			case SIP_BUSY_EVRYWHERE:
 			case SIP_TEMPORARILY_UNAVAILABLE:
+			case SIP_SERVICE_UNAVAILABLE:
 				session->parent->busy(this, session);
+				break;
+			case SIP_BAD_REQUEST:
 				break;
 			default:
 				session->parent->failed(this, session);
@@ -1418,6 +1432,7 @@ void thread::run(void)
 			break;	
 		case EXOSIP_CALL_CLOSED:
 			stack::siplog(sevent->response);
+closing:
 			authorizing = CALL;
 			if(sevent->cid > 0) {
 				session = stack::access(sevent->cid);
@@ -1446,8 +1461,10 @@ void thread::run(void)
 			if(sevent->cid > 0) {
 				authorizing = CALL;
 				session = stack::access(sevent->cid);
-				if(session && session->parent)
+				if(session && session->parent) {
+					session->did = sevent->did;
 					session->parent->ring(this, session);
+				}
 			}
 			break;
 		case EXOSIP_CALL_INVITE:
@@ -1472,6 +1489,18 @@ void thread::run(void)
 				options();
 			else if(MSG_IS_REGISTER(sevent->request))
 				registration();
+			else if(MSG_IS_BYE(sevent->request))
+				goto closing;
+			else if(!MSG_IS_INFO(sevent->request)) {
+				debug(2, "unsupported %s in dialog", sevent->request->sip_method);
+				break;
+			}
+			if(sevent->cid > 0) {
+				session = stack::access(sevent->cid);
+				if(session)
+					stack::infomsg(session, sevent);
+			}
+			send_reply(SIP_OK);
 			break;
 		default:
 			if(sevent->response)

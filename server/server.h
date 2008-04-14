@@ -349,6 +349,7 @@ public:
 	__EXPORT static Socket::address *getAddress(const char *uri, Socket::address *addr = NULL);
 	__EXPORT static void siplog(osip_message_t *msg);
 	__EXPORT static void enableDumping(void);
+	__EXPORT static void infomsg(session *session, eXosip_event_t *sevent);
 
 	inline static timeout_t ringTimeout(void)
 		{return stack::sip.ring_timer;};
@@ -448,6 +449,7 @@ class __LOCAL thread : private DetachedThread
 {
 private:
 	friend class stack;
+	friend class stack::call;
 
 	unsigned instance;
 	unsigned extension;
