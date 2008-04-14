@@ -142,6 +142,42 @@ void stack::call::ring(thread *thread, session *s)
 		reply_source(SIP_RINGING);
 }
 
+void stack::call::failed(thread *thread, session *s)
+{
+	assert(thread != NULL);
+
+	mutex::protect(this);
+	if(s->state == session::RING)
+		--ringing;
+	else if(s->state == session::BUSY)
+		--ringbusy;
+	if(s->state != session::CLOSED)
+		s->state = session::OPEN;
+	switch(state) {
+	case RINGING:
+		if(!ringing && ringbusy)
+			state = BUSY;
+		else if(!ringing) {
+			arm(stack::resetTimeout());
+			state = TRYING;
+		}
+		break;
+	case INITIAL:
+		state = TRYING;	
+		arm(stack::resetTimeout());
+		break;
+	case BUSY:
+		if(!ringbusy) {
+			state = TRYING;
+			arm(stack::resetTimeout());
+		}
+	default:
+		break;
+	}
+	mutex::release(this);
+	stack::close(s);
+}
+
 void stack::call::busy(thread *thread, session *s)
 {
 	assert(thread != NULL);

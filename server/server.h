@@ -269,6 +269,7 @@ private:
 		void decline(thread *thread);
 		void ring(thread *thread, session *s = NULL);
 		void busy(thread *thread, session *s = NULL);
+		void failed(thread *thread, session *s);
 		void trying(thread *thread);
 		void expired(void);
 		void closingLocked(session *s);

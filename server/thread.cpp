@@ -1392,6 +1392,7 @@ void thread::run(void)
 			}
 			send_reply(SIP_OK);
 			break;
+		case EXOSIP_CALL_SERVERFAILURE:
 		case EXOSIP_CALL_REQUESTFAILURE:
 		case EXOSIP_CALL_GLOBALFAILURE:
 			stack::siplog(sevent->response);
@@ -1406,8 +1407,12 @@ void thread::run(void)
 				stack::close(session);
 				break;
 			case SIP_BUSY_HERE:
-				printf("*** START BUSY!\n");
+			case SIP_BUSY_EVRYWHERE:
+			case SIP_TEMPORARILY_UNAVAILABLE:
 				session->parent->busy(this, session);
+				break;
+			default:
+				session->parent->failed(this, session);
 				break;
 			}
 			break;	
