@@ -157,10 +157,12 @@ void stack::background::run(void)
 				timeout = interval;
 			Conditional::wait(interval);
 		}
-		if(signalled || !expires.get()) {
+		timeout = expires.get();
+		if(signalled || !timeout) {
 			signalled = false;
 			Conditional::unlock();
-			debug(4, "background timer expired\n");
+			if(!timeout)
+				debug(4, "background timer expired\n");
 			locking.access();
 			expires = stack::sip.expire();
 			locking.release();
