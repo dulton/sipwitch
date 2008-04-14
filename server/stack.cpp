@@ -453,17 +453,6 @@ stack::session *stack::create(int cid, int did, int tid)
 
 	locking.modify();
 	cr = new call;
-
-	cr->arm(stack::resetTimeout());	// Normally we get close in 6 seconds, this assures...
-	cr->count = 0;
-	cr->forwarding = stack::call::FWD_IGNORE;
-	cr->invited = cr->ringing = cr->ringbusy = cr->unreachable = 0;
-	cr->phone = false;
-	cr->expires = 0l;
-	cr->target = NULL;
-	cr->state = call::INITIAL;
-	cr->enlist(&stack::sip);
-	cr->starting = 0l;
 	sp = new segment(cr, cid, did, tid);	// after count set to 0!
 	cr->source = &(sp->sid);
 

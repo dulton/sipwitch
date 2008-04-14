@@ -467,7 +467,7 @@ registry::mapped *registry::invite(const char *id)
 	locking.commit();
 	return rr;
 }
-	
+
 registry::mapped *registry::create(const char *id)
 {
 	assert(id != NULL && *id != 0);
@@ -603,7 +603,6 @@ registry::mapped *registry::create(const char *id)
 			rr->addRoute(pattern, priority, prefix, suffix);
 		rp.next();
 	}
-
 	leaf = node->leaf("extension");
 	if(leaf && leaf->getPointer())
 		ext = atoi(leaf->getPointer());

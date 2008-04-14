@@ -27,6 +27,38 @@ service(id, PAGING_SIZE)
 	acl = NULL;
 }
 
+unsigned config::forwarding(keynode *leaf)
+{
+	unsigned mask = 0;
+	const char *cp;
+
+	if(!leaf)
+		return 0;
+
+	cp = service::getValue(leaf, "all");
+	if(cp && *cp)
+		mask |= FWD_ALL_ENABLED;
+	cp = service::getValue(leaf, "busy");
+	if(cp && *cp)
+		mask |= FWD_BUSY_ENABLED;
+	cp = service::getValue(leaf, "na");
+	if(!cp)
+		cp = getValue(leaf, "noanswer");
+	if(cp && *cp)
+		mask |= FWD_NA_ENABLED;
+	cp = service::getValue(leaf, "dnd");
+	if(cp && *cp)
+		mask |= FWD_DND_ENABLED;
+	cp = service::getValue(leaf, "away");
+	if(cp && *cp)
+		mask |= FWD_AWAY_ENABLED;
+	cp = service::getValue(leaf, "public");
+	if(cp && *cp)
+		mask |= FWD_PUBLIC_ENABLED;
+
+	return mask;
+}
+
 service::keynode *config::find(const char *id)
 {
 	assert(id != NULL && *id != 0);
@@ -399,6 +431,19 @@ service::keynode *config::getRouting(const char *id)
 	return NULL;
 }
 	
+unsigned config::getForwarding(const char *uid)
+{
+	assert(uid != NULL);
+
+	keynode *node = getProvision(uid);
+	unsigned mask = forwarding(node);
+	
+	if(node)
+		release(node);
+
+	return mask;
+}
+
 service::keynode *config::getProvision(const char *uid)
 {
 	assert(uid != NULL && *uid != 0);

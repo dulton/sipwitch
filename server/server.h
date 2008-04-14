@@ -258,6 +258,7 @@ private:
 
 		call();
 
+		unsigned fwdmask;				// forwarding mask in effect...
 		char forward[MAX_IDENT_SIZE];	// ref id for forwarding...
 		char dialed[MAX_IDENT_SIZE];	// user or ip address...
 		char subject[MAX_URI_SIZE];		// call subject
@@ -386,6 +387,7 @@ public:
 	__EXPORT static keynode *getRouting(const char *id);
 	__EXPORT static keynode *getProvision(const char *id);
 	__EXPORT static keynode *getExtension(const char *id);
+	__EXPORT static unsigned getForwarding(const char *id);
 	__EXPORT static cidr *getPolicy(struct sockaddr *addr);
 	__EXPORT static bool isLocal(struct sockaddr *addr);
 	__EXPORT static void release(cidr *access);
@@ -393,6 +395,7 @@ public:
 	__EXPORT static void reload(const char *uid);
 	__EXPORT static void utils(const char *uid);
 	__EXPORT static Socket::address *getContact(const char *id);
+	__EXPORT static unsigned forwarding(keynode *node);
 };
 
 class __LOCAL messages : public service::callback

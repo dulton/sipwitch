@@ -20,6 +20,17 @@ using namespace UCOMMON_NAMESPACE;
 
 stack::call::call() : TimerQueue::event(Timer::reset), segments()
 {
+	arm(stack::resetTimeout());
+	count = 0;
+	fwdmask = 0;
+	forwarding = FWD_IGNORE;
+	invited = ringing = ringbusy = unreachable = 0;
+	phone = false;
+	expires = 0l;
+	target = source = NULL;
+	state = INITIAL;
+	enlist(&stack::sip);
+	starting = 0l;
 }
 
 void stack::call::disconnectLocked(void)

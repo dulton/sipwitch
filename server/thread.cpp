@@ -309,6 +309,7 @@ void thread::invite(void)
 	switch(destination) {
 	case LOCAL:
 		call->type = stack::call::LOCAL;
+		call->fwdmask = config::getForwarding(identity);
 		if(extension)
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
@@ -353,6 +354,7 @@ void thread::invite(void)
 		break;
 	case PUBLIC:
 		call->type = stack::call::INCOMING;
+		call->fwdmask = config::getForwarding(identity);
 		String::set(call->dialed, sizeof(call->dialed), target);
 		snprintf(session->identity, sizeof(session->identity), "%s:%s@%s:%s",
 			from->url->scheme, from->url->username, from->url->host, from->url->port);
@@ -400,6 +402,9 @@ void thread::invite(void)
 	case ROUTED:
 		call->type = stack::call::OUTGOING;
 		call->phone = true;
+		if(identity)
+			call->fwdmask = config::getForwarding(identity);
+
 		if(extension)
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
