@@ -191,10 +191,9 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	agent = "sipwitch-" VERSION "/eXosip";
 	restricted = trusted = published = proxy = NULL;
 	localnames = "localhost, localhost.localdomain";
-	init_timer = 7000;
 	ring_timer = 4000;
 	cfna_timer = 16000;
-	reset_timer = 1000;
+	reset_timer = 6000;
 	invite_expires = 120;
 }
 
@@ -441,7 +440,7 @@ stack::session *stack::create(int cid, int did, int tid)
 	locking.modify();
 	cr = new call;
 
-	cr->arm(stack::initTimeout());	// Normally we get close in 6 seconds, this assures...
+	cr->arm(stack::resetTimeout());	// Normally we get close in 6 seconds, this assures...
 	cr->count = 0;
 	cr->forwarding = stack::call::FWD_IGNORE;
 	cr->invited = cr->ringing = cr->ringbusy = cr->unreachable = 0;
@@ -455,7 +454,6 @@ stack::session *stack::create(int cid, int did, int tid)
 	cr->source = &(sp->sid);
 
 	locking.share();
-	cr->update();
 	return cr->source;
 }
 
@@ -507,7 +505,6 @@ void stack::setBusy(int tid, session *session)
 	cr = session->parent;
 	cr->state = call::BUSY;
 	cr->disarm();
-	cr->update();
 
 	eXosip_lock();
 	eXosip_call_build_answer(tid, SIP_BUSY_HERE, &reply);
@@ -644,7 +641,6 @@ bool stack::reload(service *cfg)
 
 	unsigned cfna_value = 0;
 	unsigned ring_value = 0;
-	unsigned init_value = 0;
 	unsigned reset_value = 0;
 
 	while(sp) {
@@ -720,8 +716,6 @@ bool stack::reload(service *cfg)
 				ring_value = atoi(value);
 			else if(!stricmp(key, "cfna"))
 				cfna_value = atoi(value); 
-			else if(!stricmp(key, "init"))
-				init_value = atoi(value);
 			else if(!stricmp(key, "reset"))
 				reset_value = atoi(value);
 			else if(!stricmp(key, "invite"))
@@ -742,11 +736,6 @@ bool stack::reload(service *cfg)
 			cfna_timer = ring_timer *cfna_value;
 	else if(cfna_value >= 1000)
 		cfna_timer = cfna_value;
-
-	if(init_value && init_value < 100)
-		init_timer = init_value * 1000l;
-	else if(init_value >= 100)
-		init_timer = init_value;
 
 	if(reset_value && reset_value < 100)
 		reset_timer = reset_value * 1000l;

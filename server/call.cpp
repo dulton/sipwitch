@@ -43,7 +43,6 @@ void stack::call::disconnect(void)
 
 	state = FINAL;
 	arm(stack::resetTimeout());
-	update();
 }
 
 void stack::call::closing(session *s)
@@ -78,7 +77,6 @@ void stack::call::trying(thread *thread)
 		thread->send_reply(SIP_TRYING);
 	state = TRYING;
 	arm(stack::ringTimeout());
-	update();
 }
 
 void stack::call::expired(void)

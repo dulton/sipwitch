@@ -312,8 +312,7 @@ private:
 	bool incoming, outgoing, dumping;
 	int send101;
 	int family, tlsmode, protocol;
-	timeout_t ring_timer, cfna_timer;
-	timeout_t reset_timer, init_timer;
+	timeout_t ring_timer, cfna_timer, reset_timer;
 	unsigned invite_expires;
 
 public:
@@ -346,9 +345,6 @@ public:
 
 	inline static timeout_t cfnaTimeout(void)
 		{return stack::sip.cfna_timer;};
-
-	inline static timeout_t initTimeout(void)
-		{return stack::sip.init_timer;};
 
 	inline static timeout_t resetTimeout(void)
 		{return stack::sip.reset_timer;};
