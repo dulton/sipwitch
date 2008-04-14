@@ -73,12 +73,21 @@ void stack::call::closingLocked(session *s)
 
 void stack::call::busy(thread *thread)
 {
+	bool logging = false;
+	bool sending = false;
+	
 	mutex::protect(this);
+	if(state != INITIAL && state != BUSY)
+		logging = true;
+	if(state != BUSY)
+		sending = true;
 	state = BUSY;
 	disarm();
 	mutex::release(this);
-	thread->send_reply(SIP_BUSY_HERE);
-	stack::logCall("busy", source);
+	if(sending)
+		thread->send_reply(SIP_BUSY_HERE);
+	if(logging)
+		stack::logCall("busy", source);
 }
 
 void stack::call::trying(thread *thread)
