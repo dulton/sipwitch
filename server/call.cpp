@@ -73,10 +73,16 @@ void stack::call::closing(session *s)
 
 void stack::call::trying(thread *thread)
 {
+	// if we are in initial state, then send call trying, otherwise
+	// turn-over state and set timer to wait for all invites to become
+	// busy or one or more to start ringing...
 	if(state == INITIAL)
 		thread->send_reply(SIP_TRYING);
+
+	mutex::protect(this);
 	state = TRYING;
 	arm(stack::ringTimeout());
+	mutex::release(this);
 }
 
 void stack::call::expired(void)
@@ -95,10 +101,11 @@ void stack::call::expired(void)
 		if(experror != 0 && source != NULL && source->state != session::CLOSED)
 			break;
 
-	case REORDER:	// only different in logging
-	case TRYING:	// gateway trying attempt, waiting for 183...
-	case FINAL:		// session expects to be cleared....
-	case INITIAL:	// if session never used, garbage collect at expire...
+	case REORDER:	// session recycled that is in reorder state
+	case TRYING:	// session expired before any ringing or all bisy
+	case FINAL:		// session expired that expects to be recycled.
+	case INITIAL:	// never used session recycled.
+		// The call record is garbage collected
 		debug(4, "expiring call %08x:%u\n", source->sequence, source->cid);
 		Mutex::release(this);
 		stack::destroy(this);

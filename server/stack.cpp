@@ -160,9 +160,16 @@ void stack::background::run(void)
 		timeout = expires.get();
 		if(signalled || !timeout) {
 			signalled = false;
+			// release lock in case expire calls update timer methods...
 			Conditional::unlock();
 			if(!timeout)
 				debug(4, "background timer expired\n");
+			// expire() must be in the shared session lock, and may be made
+			// exclusive when an expired call is destroyed.  This cannot
+			// be in the conditional::lock because the event dispatch may
+			// call something that arms or clears a timer and doing so
+			// will callback modify to acquire the conditional mutex, 
+			// otherwise the conditional mutex will be accessed recursivily...
 			locking.access();
 			expires = stack::sip.expire();
 			locking.release();
