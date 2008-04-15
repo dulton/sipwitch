@@ -1,1 +1,48 @@
-Fix trusted to confirm via = contact to enable, disable for proxy registration
+Only the most basic call processing for ring/busy/answer states of direct
+targetted extensions is supported initially.  Distributed calling by multi-
+registration on a single id is supported.
+
+While call forwarding information is processed from config, and diversion
+headers in invites are coded, it is not acted upon in any way.  In theory, we
+will forward to registry entries, and other types of references to call groups
+and/or external entries will be done by refer.
+
+Hunt groups, Call Coverage and distribution models, day/night/state mode
+processing.
+
+b2b outside dialing of arbitrary sip uri's.
+
+Messaging and presense.
+
+Triggered shell scripts for registration and unregistration.
+
+Routing and gateway operations including forced join on first ringer.
+
+Ring mode for 183 ringback/preconnect.
+
+Feature codes and dynamic setting of forwarding.
+
+Message waiting notification.
+
+Routing plans and inter-node refers.
+
+Smarter management of no answer processing.
+
+Call hold and recall.
+
+Call transfer/refer pass-thru on connected sessions.
+
+Mysql db module plugin.
+
+Service discovery (avahi) plugin.
+
+Packet forward plugin.
+
+Radius auth plugin.
+
+Stun plugin.
+
+shell utility to server auth method.
+
+shell utility to manage sipuser auth file.
+

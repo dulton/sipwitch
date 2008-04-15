@@ -1,0 +1,75 @@
+This seemed a good place to talk about those few things that do work
+in the initial release:
+
+Registry:
+
+The basic registry function allows one or more devices to register under a
+single id.  Multi-device registration can be used for example if one wants
+to assign a laptop softphone under the same user id/pwd as the desktop phone
+and then have both ring when the target id is dialed.
+
+Registry items can have a logical (email) name and also optionally bound to
+an extension #.  The latter is for the convenience of places that use SIP
+phone instruments rather than softphone applications.  This means a given
+station can be dialed by it's extension # and by a named uri.  The latter is
+used mostly for external (public) access to a user's extension if allowed.
+
+There is a class of service system that supports whether a given registry
+entry supports multi-target registrations, allows external access to uri's,
+etc.
+
+The registry supports peer authentication mode and external validation
+where external SIP devices and applications can use sip witch as a SIP 
+authentication resource, to query whether a given uri is active, etc.
+
+Calling:
+
+At the time of writing, basic call processing is being completed.  Each call is
+managed as a seperate session, and one or more targets can be invited into a
+call and rang concurrently.  ring/busy/failure states are handled, and all SIP
+responses are mapped into success/ring/busy or failure.  In theory when for
+the first target ua to respond with a 200 OK to accept a call and offers it's
+sdp, then any other invited targets are released and a single joined session is
+formed passing the sdp back up the originating call leg.
+
+There is a lot of code to process call forwarding information, but none of it
+is used to perform actual call forwarding operations yet.
+
+Unanswered calls, when all targets have refused to answer, are reported to the
+originating ua as "declined" calls.  If all invited targets report busy, then
+the originating ua is notified "busy here".  We do not distinguish between
+temporary busy, busy everywhere, etc, but report a consolidated busy state to
+the target.
+
+At present only registered ua's can be dialed, either by ext# if they have one
+or by uri name.  Display management is part of the server, and the display is
+regenerated with a custom "from" message for each call leg as needed by the
+server. 
+
+Messaging:
+
+SIP info messages are hoped between connected sessions.  There is no proper
+error responses yet if info's cannot be handled, so they are all acknowledged
+as 200 OK even if info actually could not be processed.
+
+What we don't do:
+
+sipwitch does NOT operate as a "transparent" proxy and is not meant to do so.
+Each call leg is a separately managed session of the server with all sip
+message content artificially generated as appropriate and needed by the server
+itself.  All SDP and media actions happen between the peer devices.  
+
+There is no media processing in sipwitch and no desire to add the latency,
+connection states, and conversion issues that would engender.  This also allows
+sipwitch to be used intercept-free with secure telephone units such as ZRTP
+clients and without licensing issues associated with patent encumbered codecs.
+If the UA's support it, video as well as audio can be used since again sipwitch
+has no effect on nor participates in peer media processing.
+
+There is no media application processing in sipwitch.  The intent is to use
+sipwitch with multi-protocol gateway servers mapped through sipwitch routing
+plans to interconnect with the pstn, the bastardized sip offered by tethered
+"service providers", with iax nodes, etc.  Applications like ivr, voice mail,
+etc, can be provided by an external SIP capable application server such as
+GNU Bayonne.
+
