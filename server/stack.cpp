@@ -416,6 +416,8 @@ void stack::infomsg(session *source, eXosip_event_t *sevent)
 		snprintf(type, sizeof(type), "%s", ct->type);
 	osip_message_set_content_type(msg, type);
 	osip_message_set_body(msg, body->body, strlen(body->body));
+	osip_message_set_header(msg, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+	osip_message_set_header(msg, ALLOW_EVENTS, "talk, hold, refer");
 	eXosip_call_send_request(did, msg);
 	eXosip_unlock();		
 }

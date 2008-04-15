@@ -65,6 +65,7 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 
 	time_t now;
 	osip_message_t *invite;
+	char expheader[32];
 	char seqid[64];
 	char route[MAX_URI_SIZE];
 	char to[MAX_URI_SIZE];
@@ -197,7 +198,15 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 			}
 		}
 
-		osip_message_set_supported(invite, "100rel,replaces");
+		osip_message_set_header(invite, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+		osip_message_set_header(invite, ALLOW_EVENTS, "talk, hold, refer");
+		osip_message_set_supported(invite, "100rel,replaces,timer");
+
+		if(call->expires) {
+			snprintf(expheader, sizeof(expheader), "%ld", call->expires - now - 1);
+			osip_message_set_header(invite, SESSION_EXPIRES, expheader);
+		}
+
 		osip_message_set_body(invite, session->sdp, strlen(session->sdp));
 		osip_message_set_content_type(invite, "application/sdp");
 		stack::siplog(invite);
@@ -273,6 +282,13 @@ void thread::invite(void)
 	if(extension)
 		snprintf(fromext, sizeof(fromext), "%u", extension);
 
+	header = NULL;
+	osip_message_header_get_byname(sevent->request, SESSION_EXPIRES, 0, &header);
+	if(header && header->hvalue && header->hvalue[0]) {
+		time(&call->expires);
+		call->expires += atol(header->hvalue);
+	}
+		
 	header = NULL;
 	osip_message_get_subject(sevent->request, 0, &header);
 	if(header && header->hvalue && header->hvalue[0])
@@ -822,13 +838,21 @@ void thread::send_reply(int error)
 	switch(authorizing) {
 	case CALL:
 		eXosip_call_build_answer(sevent->tid, error, &reply);
-		stack::siplog(reply);
-		eXosip_call_send_answer(sevent->tid, error, reply);
+		if(reply) {
+			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+			osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
+			stack::siplog(reply);
+			eXosip_call_send_answer(sevent->tid, error, reply);
+		}
 		break;
 	case MESSAGE:
 		eXosip_message_build_answer(sevent->tid, error, &reply);
-		stack::siplog(reply);
-		eXosip_message_send_answer(sevent->tid, error, reply);
+		if(reply) {
+			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+			osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
+			stack::siplog(reply);
+			eXosip_message_send_answer(sevent->tid, error, reply);
+		}
 		break;
 	default:
 		break;
@@ -949,15 +973,23 @@ void thread::challenge(void)
 	switch(authorizing) {
 	case MESSAGE:
 		eXosip_message_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
-		osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
-		stack::siplog(reply);
-		eXosip_message_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
+		if(reply) {
+			osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
+			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+			osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
+			stack::siplog(reply);
+			eXosip_message_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
+		}
 		break;
 	case CALL:
 		eXosip_call_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
-		osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
-		stack::siplog(reply);
-		eXosip_call_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
+		if(reply) {
+			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+			osip_message_set_header(reply, ALLOW_EVENTS, "talk, hold, refer");
+			osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
+			stack::siplog(reply);
+			eXosip_call_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
+		}
 		break;
 	case NONE:
 		break;
@@ -1071,6 +1103,8 @@ reply:
 			snprintf(temp, sizeof(temp), "%u", registry::getExpires());
 			osip_message_set_expires(reply, temp);
 		}
+		osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+		osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
 		stack::siplog(reply);
 		eXosip_message_send_answer(sevent->tid, error, reply);
 	}
@@ -1164,6 +1198,8 @@ reply:
 		if(reply) {
 			if(error == SIP_OK)
 				osip_message_set_contact(reply, temp);
+			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+			osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
 			stack::siplog(reply);
 			eXosip_message_send_answer(sevent->tid, error, reply);
 		}
@@ -1252,8 +1288,12 @@ void thread::reregister(const char *contact, time_t interval)
 reply:
 	eXosip_lock();
 	eXosip_message_build_answer(sevent->tid, answer, &reply);
-	stack::siplog(reply);
-	eXosip_message_send_answer(sevent->tid, answer, reply);
+	if(reply) {
+		osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+		osip_message_set_header(reply, ALLOW_EVENTS, "talk, hold, refer");
+		stack::siplog(reply);
+		eXosip_message_send_answer(sevent->tid, answer, reply);
+	}
 	eXosip_unlock();
 	if(reginfo && reginfo->type == MappedRegistry::USER && answer == SIP_OK)
 		messages::update(identity);
@@ -1298,7 +1338,8 @@ void thread::options(void)
     eXosip_lock();
     if(eXosip_options_build_answer(sevent->tid, SIP_OK, &reply) == 0) {
 		osip_message_set_header(reply, ACCEPT, "application/sdp, text/plain");
-		osip_message_set_header(reply, ALLOW, "INVITE,ACK,CANCEL,OPTIONS,INFO,REFER,MESSAGE,SUBSCRIBE,NOTIFY,REGISTER,PRACK"); 
+		osip_message_set_header(reply, ALLOW, "INVITE,ACK,CANCEL,OPTIONS,INFO,REFER,MESSAGE,SUBSCRIBE,NOTIFY,REGISTER,PRACK");
+		osip_message_set_header(reply, ALLOW_EVENTS, "talk, hold, refer"); 
 		stack::siplog(reply);
         eXosip_options_send_answer(sevent->tid, SIP_OK, reply);
 	}

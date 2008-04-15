@@ -109,8 +109,12 @@ void stack::call::reply_source(int error)
 
 	eXosip_lock();
 	eXosip_call_build_answer(source->tid, error, &reply);
-	stack::siplog(reply);
-	eXosip_call_send_answer(source->tid, error, reply);
+	if(reply) {
+		osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+		osip_message_set_header(reply, ALLOW_EVENTS, "talk, hold, refer");
+		stack::siplog(reply);
+		eXosip_call_send_answer(source->tid, error, reply);
+	}
 	eXosip_unlock();
 }
 
@@ -132,14 +136,18 @@ void stack::call::ring(thread *thread, session *s)
 	case INITIAL:
 	case TRYING:
 	case BUSY:
+		// we offset the first ring by 1 second because some servers
+		// send a 180 immediately followed by a 200 because they do
+		// artificial ringback within a connected session (asterisk for
+		// example).  Also, we might get a 200 OK accept from another
+		// invited ua, and so we do not want to start a partial ring
+		// followed by a connect...
 		state = RINGING;
 		starting = true;
-		arm(stack::ringTimeout());
+		arm(1000);
 	}
 
 	mutex::release(this);
-	if(starting)
-		reply_source(SIP_RINGING);
 }
 
 void stack::call::failed(thread *thread, session *s)
