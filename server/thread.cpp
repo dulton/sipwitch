@@ -838,9 +838,7 @@ void thread::send_reply(int error)
 	switch(authorizing) {
 	case CALL:
 		eXosip_call_build_answer(sevent->tid, error, &reply);
-		if(reply) {
-			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
-			osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
+		if(reply != NULL) {
 			stack::siplog(reply);
 			eXosip_call_send_answer(sevent->tid, error, reply);
 		}
@@ -849,14 +847,12 @@ void thread::send_reply(int error)
 		break;
 	case MESSAGE:
 		eXosip_message_build_answer(sevent->tid, error, &reply);
-		if(reply) {
-			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
-			osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
+		if(reply != NULL) {
 			stack::siplog(reply);
 			eXosip_message_send_answer(sevent->tid, error, reply);
 		}
 		else
-			eXosip_message_send_answer(sevent->tid, SIP_BAD_REQUEST, NULL);
+			eXosip_call_send_answer(sevent->tid, SIP_BAD_REQUEST, NULL);
 		break;
 	default:
 		break;
@@ -977,7 +973,7 @@ void thread::challenge(void)
 	switch(authorizing) {
 	case MESSAGE:
 		eXosip_message_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
-		if(reply) {
+		if(reply != NULL) {
 			osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
 			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
 			osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
@@ -987,7 +983,7 @@ void thread::challenge(void)
 		break;
 	case CALL:
 		eXosip_call_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
-		if(reply) {
+		if(reply != NULL) {
 			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
 			osip_message_set_header(reply, ALLOW_EVENTS, "talk, hold, refer");
 			osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
@@ -1100,7 +1096,7 @@ reply:
 	config::release(node);
 	eXosip_lock();
 	eXosip_message_build_answer(sevent->tid, error, &reply);
-	if(reply) {
+	if(reply != NULL) {
 		if(error == SIP_OK) {
 			snprintf(temp, sizeof(temp), ";expires=%u", registry::getExpires());
 			osip_message_set_contact(reply, temp);
@@ -1201,7 +1197,7 @@ reply:
 			debug(3, "query rejected for %s; error=%d", uri->username, error);
 		eXosip_lock();
 		eXosip_message_build_answer(sevent->tid, error, &reply);
-		if(reply) {
+		if(reply != NULL) {
 			if(error == SIP_OK)
 				osip_message_set_contact(reply, temp);
 			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
@@ -1296,7 +1292,7 @@ void thread::reregister(const char *contact, time_t interval)
 reply:
 	eXosip_lock();
 	eXosip_message_build_answer(sevent->tid, answer, &reply);
-	if(reply) {
+	if(reply != NULL) {
 		osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
 		osip_message_set_header(reply, ALLOW_EVENTS, "talk, hold, refer");
 		stack::siplog(reply);
@@ -1483,7 +1479,6 @@ void thread::run(void)
 			break;	
 		case EXOSIP_CALL_CLOSED:
 			stack::siplog(sevent->response);
-closing:
 			authorizing = CALL;
 			if(sevent->cid > 0) {
 				session = stack::access(sevent->cid);
@@ -1492,7 +1487,6 @@ closing:
 				else
 					break;
 			}
-			send_reply(SIP_OK);
 			break;
 		case EXOSIP_CALL_RELEASED:
 			stack::siplog(sevent->response);
@@ -1500,10 +1494,8 @@ closing:
 			if(sevent->cid > 0) {
 				authorizing = CALL;
 				session = stack::access(sevent->cid);
-				if(session) {
+				if(session)
 					stack::clear(session);
-					send_reply(SIP_OK);
-				}
 			}
 			break;
 		case EXOSIP_CALL_RINGING:
@@ -1540,8 +1532,18 @@ closing:
 				options();
 			else if(MSG_IS_REGISTER(sevent->request))
 				registration();
-			else if(MSG_IS_BYE(sevent->request))
-				goto closing;
+			else if(MSG_IS_BYE(sevent->request)) {
+				authorizing = CALL;
+				if(sevent->cid > 0)
+					session = stack::access(sevent->cid);
+				if(session) {
+					send_reply(SIP_OK);
+					stack::close(session);
+				}
+				else
+					send_reply(SIP_BAD_REQUEST);
+				break;
+			}
 			else if(!MSG_IS_INFO(sevent->request)) {
 				debug(2, "unsupported %s in dialog", sevent->request->sip_method);
 				break;

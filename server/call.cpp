@@ -106,12 +106,9 @@ void stack::call::closingLocked(session *s)
 void stack::call::reply_source(int error)
 {
 	osip_message_t *reply = NULL;
-
 	eXosip_lock();
 	eXosip_call_build_answer(source->tid, error, &reply);
-	if(reply) {
-		osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
-		osip_message_set_header(reply, ALLOW_EVENTS, "talk, hold, refer");
+	if(reply != NULL) {
 		stack::siplog(reply);
 		eXosip_call_send_answer(source->tid, error, reply);
 	}
@@ -127,6 +124,10 @@ void stack::call::ring(thread *thread, session *s)
 	bool starting = false;
 
 	mutex::protect(this);
+	if(state == FINAL) {
+		mutex::release(this);
+		return;
+	}
 	if(s && s != source && s->state != session::RING) {
 		++ringing;
 		s->state = session::RING;
@@ -135,8 +136,8 @@ void stack::call::ring(thread *thread, session *s)
 		++ringing;
 
 	switch(state) {
-	case INITIAL:
 	case TRYING:
+	case INITIAL:
 	case BUSY:
 		// we offset the first ring by 1 second because some servers
 		// send a 180 immediately followed by a 200 because they do
@@ -157,6 +158,10 @@ void stack::call::failed(thread *thread, session *s)
 	assert(thread != NULL);
 
 	mutex::protect(this);
+	if(state == FINAL) {
+		mutex::release(this);
+		return;
+	}
 	if(s->state == session::RING)
 		--ringing;
 	else if(s->state == session::BUSY)
@@ -193,6 +198,10 @@ void stack::call::busy(thread *thread, session *s)
 	assert(thread != NULL);
 
 	mutex::protect(this);
+	if(state == FINAL) {
+		mutex::release(this);
+		return;
+	}
 	if(s && s != source) {
 		if(s->state == session::RING)
 			--ringing;
@@ -226,8 +235,10 @@ void stack::call::trying(thread *thread)
 	// if we are in initial state, then send call trying, otherwise
 	// turn-over state and set timer to wait for all invites to become
 	// busy or one or more to start ringing...
-	if(state == INITIAL)
-		thread->send_reply(SIP_TRYING);
+	//
+	if(state == INITIAL) 
+		// we cannot reply_source because build always fails!
+		eXosip_call_send_answer(source->tid, SIP_TRYING, NULL);
 
 	mutex::protect(this);
 	state = TRYING;
