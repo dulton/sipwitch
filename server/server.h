@@ -303,6 +303,7 @@ private:
 		void disconnectLocked(void);
 		void joinLocked(session *s);
 		void log(void);
+		void bye(session *s);
 
 		OrderedIndex segments;
 		const char *reason;

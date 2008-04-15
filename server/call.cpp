@@ -49,7 +49,7 @@ void stack::call::joinLocked(session *join)
 	if(target)
 		return;
 
-	debug(2, "joining call %08x:%u to session %08x:%u",
+	debug(2, "joining call %08x:%u with session %08x:%u",
 		source->sequence, source->cid, join->sequence, join->cid);
 
 	target = join;
@@ -69,6 +69,7 @@ void stack::call::joinLocked(session *join)
 		}
 		sp.next();
 	}
+	source->state = target->state = session::OPEN;
 }
 
 void stack::call::disconnectLocked(void)
@@ -153,6 +154,35 @@ void stack::call::reply_source(int error)
 	eXosip_unlock();
 }
 
+void stack::call::bye(session *s)
+{
+	bool closing = false;
+	mutex::protect(this);
+	switch(state) {
+	case JOINED:
+	case ANSWERED:
+	case HOLDING:
+		if(s == source || s == target) {
+			s->state = session::CLOSED;
+			terminateLocked();
+		}
+		break;
+	case TRYING:
+	case RINGING:
+	case RINGBACK:
+		if(s == source) {
+			s->state = session::CLOSED;
+			terminateLocked();
+		}
+		else
+			closing = true;
+		break;
+	}
+	mutex::release(this);
+	if(closing)
+		stack::close(s);
+}
+		
 void stack::call::ring(thread *thread, session *s)
 {
 	assert(thread != NULL);
@@ -285,6 +315,7 @@ void stack::call::answer(thread *thread, session *s)
 	eXosip_lock();
 	eXosip_call_build_answer(tid, SIP_OK, &reply);
 	if(reply != NULL) {
+		printf("*** SENDING 200 OK!!!\n");
 		osip_message_set_body(reply, s->sdp, strlen(s->sdp));
 		osip_message_set_content_type(reply, "application/sdp");
 		stack::siplog(reply);

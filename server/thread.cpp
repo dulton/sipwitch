@@ -1438,7 +1438,7 @@ void thread::run(void)
 				stack::setDialog(session, sevent->did);
 			break;
 		case EXOSIP_CALL_ACK:
-			stack::siplog(sevent->response);
+			stack::siplog(sevent->ack);
 			authorizing = CALL;
 			if(sevent->cid <= 0)
 				break;
@@ -1489,7 +1489,7 @@ void thread::run(void)
 				break;
 			// copy target sdp into session object...
 			body = NULL;
-			osip_message_get_body(sevent->request, 0, &body);
+			osip_message_get_body(sevent->response, 0, &body);
 			if(body && body->body)
 				String::set(session->sdp, sizeof(session->sdp), body->body);
 			session->parent->answer(this, session);
@@ -1569,6 +1569,18 @@ void thread::run(void)
 			if(authorize()) 
 				invite();
 			break;
+		case EXOSIP_CALL_MESSAGE_NEW:
+			stack::siplog(sevent->request);
+			authorizing = CALL;
+			if(MSG_IS_BYE(sevent->request)) {
+				if(sevent->cid > 0)
+					session = stack::access(sevent->cid);
+				if(session) {
+					send_reply(SIP_OK);
+					session->parent->bye(session);
+				}
+			}
+			break;
 		case EXOSIP_MESSAGE_NEW:
 			stack::siplog(sevent->request);
 			authorizing = MESSAGE;
@@ -1580,7 +1592,6 @@ void thread::run(void)
 			else if(MSG_IS_REGISTER(sevent->request))
 				registration();
 			else if(MSG_IS_BYE(sevent->request)) {
-				authorizing = CALL;
 				if(sevent->cid > 0)
 					session = stack::access(sevent->cid);
 				if(session) {
