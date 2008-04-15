@@ -115,6 +115,8 @@ void stack::call::reply_source(int error)
 		stack::siplog(reply);
 		eXosip_call_send_answer(source->tid, error, reply);
 	}
+	else
+		eXosip_call_send_answer(source->tid, SIP_BAD_REQUEST, NULL);
 	eXosip_unlock();
 }
 

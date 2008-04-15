@@ -844,6 +844,8 @@ void thread::send_reply(int error)
 			stack::siplog(reply);
 			eXosip_call_send_answer(sevent->tid, error, reply);
 		}
+		else
+			eXosip_call_send_answer(sevent->tid, SIP_BAD_REQUEST, NULL);
 		break;
 	case MESSAGE:
 		eXosip_message_build_answer(sevent->tid, error, &reply);
@@ -853,6 +855,8 @@ void thread::send_reply(int error)
 			stack::siplog(reply);
 			eXosip_message_send_answer(sevent->tid, error, reply);
 		}
+		else
+			eXosip_message_send_answer(sevent->tid, SIP_BAD_REQUEST, NULL);
 		break;
 	default:
 		break;
@@ -1108,6 +1112,8 @@ reply:
 		stack::siplog(reply);
 		eXosip_message_send_answer(sevent->tid, error, reply);
 	}
+	else
+		eXosip_message_send_answer(sevent->tid, SIP_BAD_REQUEST, NULL);
 	eXosip_unlock();
 }
 
@@ -1203,6 +1209,8 @@ reply:
 			stack::siplog(reply);
 			eXosip_message_send_answer(sevent->tid, error, reply);
 		}
+		else
+			eXosip_message_send_answer(sevent->tid, SIP_BAD_REQUEST, NULL);
 		eXosip_unlock();
 		return;		
 	}
@@ -1294,6 +1302,8 @@ reply:
 		stack::siplog(reply);
 		eXosip_message_send_answer(sevent->tid, answer, reply);
 	}
+	else
+		eXosip_message_send_answer(sevent->tid, SIP_BAD_REQUEST, NULL);
 	eXosip_unlock();
 	if(reginfo && reginfo->type == MappedRegistry::USER && answer == SIP_OK)
 		messages::update(identity);
@@ -1343,6 +1353,8 @@ void thread::options(void)
 		stack::siplog(reply);
         eXosip_options_send_answer(sevent->tid, SIP_OK, reply);
 	}
+	else
+		eXosip_options_send_answer(sevent->tid, SIP_BAD_REQUEST, NULL);
 	eXosip_unlock();
 }
 
