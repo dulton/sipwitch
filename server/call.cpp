@@ -41,6 +41,36 @@ void stack::call::terminateLocked(void)
 	disconnectLocked();
 }
 
+void stack::call::joinLocked(session *join)
+{
+	linked_pointer<segment> sp = segments.begin();
+	session *s;
+
+	if(target)
+		return;
+
+	debug(2, "joining call %08x:%u to session %08x:%u",
+		source->sequence, source->cid, join->sequence, join->cid);
+
+	target = join;
+	while(sp) {
+		s = &(sp->sid);
+		if(s != source && s != target) {
+			if(s->reg) {
+				s->reg->decUse();
+				s->reg = NULL;
+			}
+			if(s->cid > 0 && s->state != session::CLOSED) {
+				s->state = session::CLOSED;
+				eXosip_lock();
+				eXosip_call_terminate(s->cid, s->did);
+				eXosip_unlock();
+			}
+		}
+		sp.next();
+	}
+}
+
 void stack::call::disconnectLocked(void)
 {
 	debug(4, "disconnecting call %08x:%u\n", source->sequence, source->cid);
@@ -163,7 +193,6 @@ void stack::call::failed(thread *thread, session *s)
 	mutex::protect(this);
 	switch(state) {
 	case JOINED:
-	case ANSWERED:
 	case FINAL:
 	case TERMINATE:
 	case FAILED:
@@ -189,6 +218,7 @@ void stack::call::failed(thread *thread, session *s)
 		}
 		break;
 	case INITIAL:
+	case ANSWERED:
 		state = FAILED;	
 		arm(stack::resetTimeout());
 		break;
@@ -206,6 +236,67 @@ void stack::call::failed(thread *thread, session *s)
 
 void stack::call::answer(thread *thread, session *s)
 {
+	osip_message_t *reply = NULL;
+	osip_body_t *body = NULL;
+	int did, tid;
+
+	assert(thread != NULL);
+	assert(s != NULL);
+
+	mutex::protect(this);
+	if(s == source || (target != NULL && target != s)) {
+		mutex::release(this);
+		debug(2, "cannot answer call %08x:%u from specified session", 
+			source->sequence, source->cid);
+		return;
+	} 
+	switch(state) {
+	case RINGING:
+	case RINGBACK:
+	case TRYING:
+		joinLocked(s);
+		state = ANSWERED;
+		arm(16000l);
+	case ANSWERED:
+		if(thread->sevent->did > -1)
+			s->did = thread->sevent->did;
+		tid = source->tid;
+		break;
+	case JOINED:
+	case HOLDING:
+		// if already joined, then we assume that the target ua never
+		// saw the ack the originating ua had sent although we did, and 
+		// so we resend it.
+		if(thread->sevent->did > -1)
+			s->did = thread->sevent->did;
+		did = target->did;
+		mutex::release(this);
+		eXosip_lock();
+		eXosip_call_send_ack(did, NULL);
+		eXosip_unlock();
+		return;	
+	default:
+		mutex::release(this);
+		debug(2, "cannot answer non-ringing call %08x:%u",
+			source->sequence, source->cid);
+		return;
+	}
+	mutex::release(this);	
+	eXosip_lock();
+	eXosip_call_build_answer(tid, SIP_OK, &reply);
+	if(reply != NULL) {
+		osip_message_set_body(reply, s->sdp, strlen(s->sdp));
+		osip_message_set_content_type(reply, "application/sdp");
+		stack::siplog(reply);
+		eXosip_call_send_answer(tid, SIP_OK, reply);
+		eXosip_unlock();
+	}
+	else {
+		eXosip_unlock();
+		debug(2, "answer failed for call %08x:%u",
+			source->sequence, source->cid);
+		failed(thread, source);
+	}
 }
 
 void stack::call::confirm(thread *thread, session *s)
@@ -215,38 +306,20 @@ void stack::call::confirm(thread *thread, session *s)
 
 	osip_message_t *ack = NULL;
 	time_t now;
+	int did;
 
 	mutex::protect(this);
-	if(s != source) {
+	if(s != source || target == NULL) {
+		mutex::release(this);
 		debug(2, "cannot confirm call %08x:%u from session %08x:%u\n", 
 			source->sequence, source->cid, s->sequence, s->cid); 
+		return;
 	}
-	else if(state != ANSWERED && state != JOINED) {
-		if(state != FINAL)
-			debug(2, "cannot confirm unaswered call %08x:%u\n",
-				source->sequence, source->cid);
-	}
-	else if(target && target->state != session::CLOSED && source->state != session::CLOSED) {
-		eXosip_lock();
-		eXosip_call_build_ack(target->did, &ack);
-		if(ack) {
-			state = JOINED;
-			stack::siplog(ack);
-			eXosip_call_send_ack(target->did, ack);
-		}
-		else {
-			debug(2, "confirm failed for call %08x:%u",
-				source->sequence, source->cid);
-		}
-		eXosip_unlock();
-	}
-	else {
-		debug(2, "failed confirming call %08x:%u",
-			source->sequence, source->cid);
-		state = FAILED;
-		disconnectLocked();
-	}
-	if(state == JOINED) {
+	switch(state)
+	{
+	case ANSWERED:
+	case JOINED:
+		state = JOINED;
 		source->state = target->state = session::OPEN;
 		if(thread->sevent->did > -1)
 			s->did = thread->sevent->did;
@@ -256,8 +329,27 @@ void stack::call::confirm(thread *thread, session *s)
 		}
 		else
 			arm((timeout_t)DAY_TIMEOUT);
+	case HOLDING:
+		did = target->did;
+		break;
+	default:
+		mutex::release(this);
+		debug(2, "cannot confirm unanswered call %08x:%u",
+			source->sequence, source->cid);
+		return;
 	}
 	mutex::release(this);
+	eXosip_lock();
+	eXosip_call_build_ack(did, &ack);
+	if(ack) {
+		stack::siplog(ack);
+		eXosip_call_send_ack(did, ack);
+	}
+	else {
+		debug(2, "confirm failed to send for call %08x:%u",
+			source->sequence, source->cid);
+	}
+	eXosip_unlock();
 }
 
 void stack::call::busy(thread *thread, session *s)

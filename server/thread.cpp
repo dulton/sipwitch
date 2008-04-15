@@ -1394,6 +1394,8 @@ void thread::expiration(void)
 
 void thread::run(void)
 {
+	osip_body_t *body;
+	
 	instance = ++startup_count;
 	process::errlog(DEBUG1, "starting thread %d", instance);
 
@@ -1485,6 +1487,11 @@ void thread::run(void)
 			session = stack::access(sevent->cid);
 			if(!session)
 				break;
+			// copy target sdp into session object...
+			body = NULL;
+			osip_message_get_body(sevent->request, 0, &body);
+			if(body && body->body)
+				String::set(session->sdp, sizeof(session->sdp), body->body);
 			session->parent->answer(this, session);
 			break;
 		case EXOSIP_CALL_SERVERFAILURE:

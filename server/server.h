@@ -301,6 +301,7 @@ private:
 		void closingLocked(session *s);
 		void terminateLocked(void);
 		void disconnectLocked(void);
+		void joinLocked(session *s);
 		void log(void);
 
 		OrderedIndex segments;
