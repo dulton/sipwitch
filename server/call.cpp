@@ -51,22 +51,28 @@ void stack::call::disconnectLocked(void)
 		reason = "declined";
 		reply_source(SIP_DECLINE);
 		break;
+	case REORDER:
+		reason = "rejected";
+		break;
 	case BUSY:
 		reason = "busy";
 		reply_source(SIP_BUSY_HERE);
 		break;
 	case TRYING:
+	case ANSWERED:
+	case FAILED:
 		reason = "failed";
 		break;
+	case JOINED:
+		reason = "expired";
+		break;
+	case HOLDING:
 	case TERMINATE:
 		reason = "terminated";
 		break;
 	case INITIAL:
 	case FINAL:
 		break;
-	default:
-		if(!reason)
-			reason = "terminated";
 	}
 		
 	linked_pointer<segment> sp = segments.begin();
@@ -124,21 +130,10 @@ void stack::call::ring(thread *thread, session *s)
 	bool starting = false;
 
 	mutex::protect(this);
-	if(state == FINAL) {
-		mutex::release(this);
-		return;
-	}
-	if(s && s != source && s->state != session::RING) {
-		++ringing;
-		s->state = session::RING;
-	}
-	else if(!s)
-		++ringing;
-
 	switch(state) {
 	case TRYING:
 	case INITIAL:
-	case BUSY:
+	case BUSY:	
 		// we offset the first ring by 1 second because some servers
 		// send a 180 immediately followed by a 200 because they do
 		// artificial ringback within a connected session (asterisk for
@@ -148,8 +143,16 @@ void stack::call::ring(thread *thread, session *s)
 		state = RINGING;
 		starting = true;
 		arm(1000);
+	case RINGING:
+		if(s && s != source && s->state != session::RING) {
+			++ringing;
+			s->state = session::RING;
+		}
+		else if(!s)
+			++ringing;
+	default:
+		break;
 	}
-
 	mutex::release(this);
 }
 
@@ -158,32 +161,40 @@ void stack::call::failed(thread *thread, session *s)
 	assert(thread != NULL);
 
 	mutex::protect(this);
-	if(state == FINAL) {
+	switch(state) {
+	case JOINED:
+	case ANSWERED:
+	case FINAL:
+	case TERMINATE:
+	case FAILED:
+	case HOLDING:
 		mutex::release(this);
 		return;
 	}
+
 	if(s->state == session::RING)
 		--ringing;
 	else if(s->state == session::BUSY)
 		--ringbusy;
 	if(s->state != session::CLOSED)
 		s->state = session::OPEN;
+
 	switch(state) {
 	case RINGING:
 		if(!ringing && ringbusy)
 			state = BUSY;
 		else if(!ringing) {
 			arm(stack::resetTimeout());
-			state = TRYING;
+			state = FAILED;
 		}
 		break;
 	case INITIAL:
-		state = TRYING;	
+		state = FAILED;	
 		arm(stack::resetTimeout());
 		break;
 	case BUSY:
 		if(!ringbusy) {
-			state = TRYING;
+			state = FAILED;
 			arm(stack::resetTimeout());
 		}
 	default:
@@ -193,15 +204,77 @@ void stack::call::failed(thread *thread, session *s)
 	stack::close(s);
 }
 
+void stack::call::answer(thread *thread, session *s)
+{
+}
+
+void stack::call::confirm(thread *thread, session *s)
+{
+	assert(thread != NULL);
+	assert(s != NULL);
+
+	osip_message_t *ack = NULL;
+	time_t now;
+
+	mutex::protect(this);
+	if(s != source) {
+		debug(2, "cannot confirm call %08x:%u from session %08x:%u\n", 
+			source->sequence, source->cid, s->sequence, s->cid); 
+	}
+	else if(state != ANSWERED && state != JOINED) {
+		if(state != FINAL)
+			debug(2, "cannot confirm unaswered call %08x:%u\n",
+				source->sequence, source->cid);
+	}
+	else if(target && target->state != session::CLOSED && source->state != session::CLOSED) {
+		eXosip_lock();
+		eXosip_call_build_ack(target->did, &ack);
+		if(ack) {
+			state = JOINED;
+			stack::siplog(ack);
+			eXosip_call_send_ack(target->did, ack);
+		}
+		else {
+			debug(2, "confirm failed for call %08x:%u",
+				source->sequence, source->cid);
+		}
+		eXosip_unlock();
+	}
+	else {
+		debug(2, "failed confirming call %08x:%u",
+			source->sequence, source->cid);
+		state = FAILED;
+		disconnectLocked();
+	}
+	if(state == JOINED) {
+		source->state = target->state = session::OPEN;
+		if(thread->sevent->did > -1)
+			s->did = thread->sevent->did;
+		if(expires) {
+			time(&now);
+			arm((timeout_t)((expires - now) * 1000l));
+		}
+		else
+			arm((timeout_t)DAY_TIMEOUT);
+	}
+	mutex::release(this);
+}
+
 void stack::call::busy(thread *thread, session *s)
 {
 	assert(thread != NULL);
 
 	mutex::protect(this);
-	if(state == FINAL) {
+	switch(state) {
+	case FINAL:
+	case HOLDING:
+	case JOINED:
+	case ANSWERED:
+	case FAILED:
 		mutex::release(this);
 		return;
 	}
+	
 	if(s && s != source) {
 		if(s->state == session::RING)
 			--ringing;
@@ -260,14 +333,16 @@ void stack::call::expired(void)
 			mutex::release(this);
 			reply_source(SIP_RINGING);
 			return;
+			
 	case RINGBACK:
 	case BUSY:		// invite expired
 	case JOINED:	// active call session expired without re-invite
-		if(experror != 0 && source != NULL && source->state != session::CLOSED)
+	case ANSWERED:	
+	case REORDER:
+	case TRYING:
+	case FAILED:
+			disconnectLocked();
 			break;
-
-	case REORDER:	// session recycled that is in reorder state
-	case TRYING:	// session expired before any ringing or all bisy
 	case FINAL:		// session expired that expects to be recycled.
 	case INITIAL:	// never used session recycled.
 		// The call record is garbage collected
@@ -275,21 +350,6 @@ void stack::call::expired(void)
 		Mutex::release(this);
 		stack::destroy(this);
 		return;
-	}
-
-	if(experror && source) {
-		debug(4, "suspending call %08x:%u, error=%d\n", source->sequence, source->cid, experror);
-		// drop any active invites...
-		stack::disjoin(this);
-
-		// notify caller....
-		eXosip_lock();
-		eXosip_call_build_answer(source->tid, experror, &reply);
-		stack::siplog(reply);
-		eXosip_call_send_answer(source->tid, experror, reply);
-		eXosip_unlock();
-		experror = 0;
-		state = REORDER;
 	}
 
 	Mutex::release(this);

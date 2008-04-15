@@ -203,7 +203,7 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 		osip_message_set_supported(invite, "100rel,replaces,timer");
 
 		if(call->expires) {
-			snprintf(expheader, sizeof(expheader), "%ld", call->expires - now - 1);
+			snprintf(expheader, sizeof(expheader), "%ld", call->expires);
 			osip_message_set_header(invite, SESSION_EXPIRES, expheader);
 		}
 
@@ -1435,6 +1435,16 @@ void thread::run(void)
 			if(session)
 				stack::setDialog(session, sevent->did);
 			break;
+		case EXOSIP_CALL_ACK:
+			stack::siplog(sevent->response);
+			authorizing = CALL;
+			if(sevent->cid <= 0)
+				break;
+			session = stack::access(sevent->cid);
+			if(!session)
+				break;
+			session->parent->confirm(this, session);
+			break;
 		case EXOSIP_CALL_CANCELLED:
 			stack::siplog(sevent->response);
 			authorizing = CALL;
@@ -1446,6 +1456,36 @@ void thread::run(void)
 					break;
 			}
 			send_reply(SIP_OK);
+			break;
+		case EXOSIP_CALL_NOANSWER:
+			stack::siplog(sevent->response);
+			authorizing = CALL;
+			if(sevent->cid <= 0)
+				break;
+			session = stack::access(sevent->cid);
+			if(!session)
+				break;
+			stack::close(session);
+			break;
+		case EXOSIP_CALL_TIMEOUT:
+			stack::siplog(sevent->response);
+			authorizing = CALL;
+			if(sevent->cid <= 0)
+				break;
+			session = stack::access(sevent->cid);
+			if(!session)
+				break;
+			session->parent->failed(this, session);
+			break;
+		case EXOSIP_CALL_ANSWERED:
+			stack::siplog(sevent->response);
+			authorizing = CALL;
+			if(!sevent->response || sevent->cid <= 0)
+				break;
+			session = stack::access(sevent->cid);
+			if(!session)
+				break;
+			session->parent->answer(this, session);
 			break;
 		case EXOSIP_CALL_SERVERFAILURE:
 		case EXOSIP_CALL_REQUESTFAILURE:

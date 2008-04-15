@@ -279,7 +279,7 @@ private:
 
 		enum {LOCAL, INCOMING, OUTGOING, REFER} type;
 
-		enum {INITIAL, TRYING, RINGING, RINGBACK, REORDER, HOLDING, JOINED, BUSY, TERMINATE, FINAL} state;
+		enum {INITIAL, TRYING, RINGING, RINGBACK, REORDER, HOLDING, ANSWERED, JOINED, BUSY, TERMINATE, FAILED, FINAL} state;
 
 		call();
 
@@ -294,7 +294,9 @@ private:
 		void ring(thread *thread, session *s = NULL);
 		void busy(thread *thread, session *s = NULL);
 		void failed(thread *thread, session *s);
+		void answer(thread *thread, session *s);
 		void trying(thread *thread);
+		void confirm(thread *thread, session *s);
 		void expired(void);
 		void closingLocked(session *s);
 		void terminateLocked(void);
