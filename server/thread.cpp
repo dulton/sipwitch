@@ -356,7 +356,7 @@ void thread::invite(void)
 	msgheader = NULL;
 	osip_message_get_subject(sevent->request, 0, &msgheader);
 	if(msgheader && msgheader->hvalue && msgheader->hvalue[0])
-		string::set(call->subject, sizeof(call->subject), header->hvalue);
+		string::set(call->subject, sizeof(call->subject), msgheader->hvalue);
 	else
 		string::set(call->subject, sizeof(call->subject), "inviting call");
 
