@@ -57,7 +57,7 @@ successfully deliver to registered targets, and does not queue messages for
 offline users for later delivery yet.  However, queing support and delivery
 to external targets will be added.
 
-What we don't do:
+What we will never do:
 
 sipwitch does NOT operate as a "transparent" proxy and is not meant to do so.
 Each call leg is a separately managed session of the server with all sip

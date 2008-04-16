@@ -1,4 +1,11 @@
-SIP Witch NEWS -- history of visible user changes. 2007-08-10
+SIP Witch NEWS -- history of visible user changes. Updated 2008-04-15
 
 SIP Witch is an official package of the GNU Project as of August 10th 2007.
 GNU SIP Witch is also part of GNU Telephony & the GNU Telecom subsystem.
+
+sipwitch 0.1 codebase initial public release with support of SIP registration,
+multi-target registration, authentication peering over SIP, and registration
+querying of user agents, basic call processing between registered user agents
+including call distribution for multi-target registrations, and basic SIP
+instant messaging support.
+
