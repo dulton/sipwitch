@@ -157,7 +157,7 @@ void stack::call::reply_source(int error)
 void stack::call::bye(session *s)
 {
 	bool closing = false;
-	mutex::protect(this);
+	Mutex::protect(this);
 	switch(state) {
 	case JOINED:
 	case ANSWERED:
@@ -178,7 +178,7 @@ void stack::call::bye(session *s)
 			closing = true;
 		break;
 	}
-	mutex::release(this);
+	Mutex::release(this);
 	if(closing)
 		stack::close(s);
 }
@@ -187,9 +187,7 @@ void stack::call::ring(thread *thread, session *s)
 {
 	assert(thread != NULL);
 
-	bool starting = false;
-
-	mutex::protect(this);
+	Mutex::protect(this);
 	switch(state) {
 	case TRYING:
 	case INITIAL:
@@ -201,7 +199,6 @@ void stack::call::ring(thread *thread, session *s)
 		// invited ua, and so we do not want to start a partial ring
 		// followed by a connect...
 		state = RINGING;
-		starting = true;
 		arm(1000);
 	case RINGING:
 		if(s && s != source && s->state != session::RING) {
@@ -213,21 +210,21 @@ void stack::call::ring(thread *thread, session *s)
 	default:
 		break;
 	}
-	mutex::release(this);
+	Mutex::release(this);
 }
 
 void stack::call::failed(thread *thread, session *s)
 {
 	assert(thread != NULL);
 
-	mutex::protect(this);
+	Mutex::protect(this);
 	switch(state) {
 	case JOINED:
 	case FINAL:
 	case TERMINATE:
 	case FAILED:
 	case HOLDING:
-		mutex::release(this);
+		Mutex::release(this);
 		return;
 	}
 
@@ -260,7 +257,7 @@ void stack::call::failed(thread *thread, session *s)
 	default:
 		break;
 	}
-	mutex::release(this);
+	Mutex::release(this);
 	stack::close(s);
 }
 
@@ -273,9 +270,9 @@ void stack::call::answer(thread *thread, session *s)
 	assert(thread != NULL);
 	assert(s != NULL);
 
-	mutex::protect(this);
+	Mutex::protect(this);
 	if(s == source || (target != NULL && target != s)) {
-		mutex::release(this);
+		Mutex::release(this);
 		debug(2, "cannot answer call %08x:%u from specified session", 
 			source->sequence, source->cid);
 		return;
@@ -300,18 +297,18 @@ void stack::call::answer(thread *thread, session *s)
 		if(thread->sevent->did > -1)
 			s->did = thread->sevent->did;
 		did = target->did;
-		mutex::release(this);
+		Mutex::release(this);
 		eXosip_lock();
 		eXosip_call_send_ack(did, NULL);
 		eXosip_unlock();
 		return;	
 	default:
-		mutex::release(this);
+		Mutex::release(this);
 		debug(2, "cannot answer non-ringing call %08x:%u",
 			source->sequence, source->cid);
 		return;
 	}
-	mutex::release(this);	
+	Mutex::release(this);	
 	eXosip_lock();
 	eXosip_call_build_answer(tid, SIP_OK, &reply);
 	if(reply != NULL) {
@@ -339,9 +336,9 @@ void stack::call::confirm(thread *thread, session *s)
 	time_t now;
 	int did;
 
-	mutex::protect(this);
+	Mutex::protect(this);
 	if(s != source || target == NULL) {
-		mutex::release(this);
+		Mutex::release(this);
 		debug(2, "cannot confirm call %08x:%u from session %08x:%u\n", 
 			source->sequence, source->cid, s->sequence, s->cid); 
 		return;
@@ -364,12 +361,12 @@ void stack::call::confirm(thread *thread, session *s)
 		did = target->did;
 		break;
 	default:
-		mutex::release(this);
+		Mutex::release(this);
 		debug(2, "cannot confirm unanswered call %08x:%u",
 			source->sequence, source->cid);
 		return;
 	}
-	mutex::release(this);
+	Mutex::release(this);
 	eXosip_lock();
 	eXosip_call_build_ack(did, &ack);
 	if(ack) {
@@ -387,14 +384,14 @@ void stack::call::busy(thread *thread, session *s)
 {
 	assert(thread != NULL);
 
-	mutex::protect(this);
+	Mutex::protect(this);
 	switch(state) {
 	case FINAL:
 	case HOLDING:
 	case JOINED:
 	case ANSWERED:
 	case FAILED:
-		mutex::release(this);
+		Mutex::release(this);
 		return;
 	}
 	
@@ -419,7 +416,7 @@ void stack::call::busy(thread *thread, session *s)
 		}
 	}
 
-	mutex::release(this);
+	Mutex::release(this);
 	if(s)
 		stack::close(s);
 	else 
@@ -436,10 +433,10 @@ void stack::call::trying(thread *thread)
 		// we cannot reply_source because build always fails!
 		eXosip_call_send_answer(source->tid, SIP_TRYING, NULL);
 
-	mutex::protect(this);
+	Mutex::protect(this);
 	state = TRYING;
 	arm(stack::ringTimeout());
-	mutex::release(this);
+	Mutex::release(this);
 }
 
 void stack::call::expired(void)
@@ -453,7 +450,7 @@ void stack::call::expired(void)
 
 	case RINGING:	// re-generate ring event to origination...
 			arm(stack::ringTimeout());	
-			mutex::release(this);
+			Mutex::release(this);
 			reply_source(SIP_RINGING);
 			return;
 			

@@ -53,14 +53,14 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	session = NULL;
 }
 
-void thread::inviteLocal(stack::session *session, registry::mapped *rr)
+void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 {
-	assert(session != NULL && session->parent != NULL);
+	assert(s != NULL && s->parent != NULL);
 	assert(rr != NULL);
 
 	linked_pointer<registry::target> tp = rr->targets;
 	stack::session *invited;
-	stack::call *call = session->parent;
+	stack::call *call = s->parent;
 	linked_pointer<stack::segment> sp = call->segments.begin();
 
 	time_t now;
@@ -68,7 +68,7 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 	char expheader[32];
 	char seqid[64];
 	char route[MAX_URI_SIZE];
-	char to[MAX_URI_SIZE];
+	char touri[MAX_URI_SIZE];
 	int cid;
 	unsigned count = 0;
 
@@ -139,17 +139,17 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 
 		if(destination == ROUTED) {
 			stack::sipPublish(&tp->address, route, call->dialed, sizeof(route));
-			snprintf(to, sizeof(to), "\"%s\" <%s;user=phone>", call->dialed, route);
+			snprintf(touri, sizeof(touri), "\"%s\" <%s;user=phone>", call->dialed, route);
 		}
 		else if(call->phone)
-			snprintf(to, sizeof(to), "<%s;user=phone>", tp->contact);
+			snprintf(touri, sizeof(touri), "<%s;user=phone>", tp->contact);
 		else
-			snprintf(to, sizeof(to), "<%s>", tp->contact);
+			snprintf(touri, sizeof(touri), "<%s>", tp->contact);
 
 		stack::sipPublish(&tp->address, route + 1, NULL, sizeof(route) - 5);
 		route[0] = '<';
 		String::add(route, sizeof(route), ";lr>");
-		if(eXosip_call_build_initial_invite(&invite, to, session->from, route, call->subject)) {
+		if(eXosip_call_build_initial_invite(&invite, touri, s->from, route, call->subject)) {
 			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
 			process::errlog(ERRLOG, "cannot invite %s; build failed", route);
 			goto unlock;
@@ -160,40 +160,40 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 			stack::sipPublish(&tp->address, route, call->dialed, sizeof(route));
 			if(call->phone)
 				String::add(route, sizeof(route), ";user=phone");
-			snprintf(to, sizeof(to), "\"%s\" <%s>", call->dialed, route);
+			snprintf(touri, sizeof(touri), "\"%s\" <%s>", call->dialed, route);
 			if(invite->to) {
 				osip_to_free(invite->to);
 				invite->to = NULL;
 			}
-			osip_message_set_to(invite, to);
+			osip_message_set_to(invite, touri);
 		}
 
 		if(destination == FORWARDED) {
 			switch(call->forwarding) {
 			case stack::call::FWD_ALL:
 				stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
-				snprintf(to, sizeof(to), "<%s>;reason=unconditional", route);
-				osip_message_set_header(invite, "Diversion", to);
+				snprintf(touri, sizeof(touri), "<%s>;reason=unconditional", route);
+				osip_message_set_header(invite, "Diversion", touri);
 				break;
 			case stack::call::FWD_NA:
                 stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
-                snprintf(to, sizeof(to), "<%s>;reason=no-answer", route);
-                osip_message_set_header(invite, "Diversion", to);
+                snprintf(touri, sizeof(touri), "<%s>;reason=no-answer", route);
+                osip_message_set_header(invite, "Diversion", touri);
                 break;
 			case stack::call::FWD_BUSY:
                 stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
-                snprintf(to, sizeof(to), "<%s>;reason=user-busy", route);
-                osip_message_set_header(invite, "Diversion", to);
+                snprintf(touri, sizeof(touri), "<%s>;reason=user-busy", route);
+                osip_message_set_header(invite, "Diversion", touri);
                 break;
 			case stack::call::FWD_DND:
                 stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
-                snprintf(to, sizeof(to), "<%s>;reason=do-not-disturb", route);
-                osip_message_set_header(invite, "Diversion", to);
+                snprintf(touri, sizeof(touri), "<%s>;reason=do-not-disturb", route);
+                osip_message_set_header(invite, "Diversion", touri);
                 break;
 			case stack::call::FWD_AWAY:
                 stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
-                snprintf(to, sizeof(to), "<%s>;reason=away", route);
-                osip_message_set_header(invite, "Diversion", to);
+                snprintf(touri, sizeof(touri), "<%s>;reason=away", route);
+                osip_message_set_header(invite, "Diversion", touri);
                 break;
 			}
 		}
@@ -207,13 +207,12 @@ void thread::inviteLocal(stack::session *session, registry::mapped *rr)
 			osip_message_set_header(invite, SESSION_EXPIRES, expheader);
 		}
 
-		osip_message_set_body(invite, session->sdp, strlen(session->sdp));
+		osip_message_set_body(invite, s->sdp, strlen(s->sdp));
 		osip_message_set_content_type(invite, "application/sdp");
 		stack::siplog(invite);
 		cid = eXosip_call_send_initial_invite(invite);
 		if(cid > 0) {
-			snprintf(seqid, sizeof(seqid), "%08x-%d", 
-				session->sequence, session->cid);
+			snprintf(seqid, sizeof(seqid), "%08x-%d", s->sequence, s->cid);
 			stack::sipAddress(&tp->iface, route, seqid, sizeof(route));
 			eXosip_call_set_reference(cid, route);
 			++count;
@@ -275,7 +274,7 @@ void thread::message(void)
 	osip_content_type_t *ct;
 	osip_body_t *body = NULL;
 	char address[MAX_URI_SIZE];
-	char from[MAX_URI_SIZE];
+	char fromhdr[MAX_URI_SIZE];
 	char msgtype[64];
 	char sysid[64];
 	char *msglen = NULL;
@@ -308,13 +307,13 @@ void thread::message(void)
 
 	stack::sipPublish(&iface, address, sysid, sizeof(address));
 	if(extension && !display[0])
-		snprintf(from, sizeof(from), 
+		snprintf(fromhdr, sizeof(fromhdr), 
 			"\"%u\" <%s;user=phone>", extension, address);
 	else if(display[0])
-		snprintf(from, sizeof(from),
+		snprintf(fromhdr, sizeof(fromhdr),
 			"\"%s\" <%s>", display, address);
 	else
-		snprintf(from, sizeof(from),
+		snprintf(fromhdr, sizeof(fromhdr),
 			"<%s>", address);
 
 
@@ -328,7 +327,7 @@ void thread::message(void)
 		send_reply(SIP_BAD_REQUEST);
 		return;
 	}
-	if(messages::publish(id, sysid, from, body->body, atoi(msglen), msgtype))		
+	if(messages::publish(id, sysid, fromhdr, body->body, atoi(msglen), msgtype))		
 		send_reply(SIP_OK);
 	else
 		send_reply(SIP_MESSAGE_TOO_LARGE);
@@ -341,30 +340,30 @@ void thread::invite(void)
 	osip_body_t *body = NULL;
 	stack::call *call = session->parent;
 	unsigned toext = 0;
-	osip_header_t *header = NULL;
+	osip_header_t *msgheader = NULL;
 	char fromext[32];
 
 	if(extension)
 		snprintf(fromext, sizeof(fromext), "%u", extension);
 
-	header = NULL;
-	osip_message_header_get_byname(sevent->request, SESSION_EXPIRES, 0, &header);
-	if(header && header->hvalue && header->hvalue[0]) {
+	msgheader = NULL;
+	osip_message_header_get_byname(sevent->request, SESSION_EXPIRES, 0, &msgheader);
+	if(msgheader && msgheader->hvalue && msgheader->hvalue[0]) {
 		time(&call->expires);
-		call->expires += atol(header->hvalue);
+		call->expires += atol(msgheader->hvalue);
 	}
 		
-	header = NULL;
-	osip_message_get_subject(sevent->request, 0, &header);
-	if(header && header->hvalue && header->hvalue[0])
+	msgheader = NULL;
+	osip_message_get_subject(sevent->request, 0, &msgheader);
+	if(msgheader && msgheader->hvalue && msgheader->hvalue[0])
 		string::set(call->subject, sizeof(call->subject), header->hvalue);
 	else
 		string::set(call->subject, sizeof(call->subject), "inviting call");
 
-	header = NULL;
-	osip_message_get_expires(sevent->request, 0, &header);
-	if(header && header->hvalue && atol(header->hvalue))
-		header_expires = atol(header->hvalue);
+	msgheader = NULL;
+	osip_message_get_expires(sevent->request, 0, &msgheader);
+	if(msgheader && msgheader->hvalue && atol(msgheader->hvalue))
+		header_expires = atol(msgheader->hvalue);
 	else
 		header_expires = 120;
 
@@ -589,7 +588,7 @@ bool thread::unauthenticated(void)
 		return true;
 
 untrusted:
-	debug(2, "challenge request required");
+	debug(2, "challenge request required", 0);
 	challenge();
 	return false;
 }
@@ -1188,10 +1187,9 @@ reply:
 
 void thread::registration(void)
 {	
-	osip_header_t *header = NULL;
 	osip_contact_t *contact = NULL;
 	osip_uri_param_t *param = NULL;
-	osip_uri_t *uri = NULL;
+	osip_uri_t *reguri = NULL;
 	char *port;
 	int interval = -1;
 	int pos = 0;
@@ -1199,11 +1197,10 @@ void thread::registration(void)
 	char temp[MAX_URI_SIZE];
 	osip_message_t *reply = NULL;
 
-	osip_message_get_expires(sevent->request, 0, &header);
 	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
 		contact = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
 		if(contact && contact->url) {
-			osip_contact_param_get_byname(contact, "expires", &param);
+			osip_contact_param_get_byname(contact, (char *)"expires", &param);
 			if(param && param->gvalue)
 				interval = osip_atoi(param->gvalue);
 			break;
@@ -1219,12 +1216,12 @@ void thread::registration(void)
 			return;
 		}
 
-		uri = contact->url;
-		port = uri->port;
+		reguri = contact->url;
+		port = reguri->port;
 		if(!port || !port[0])
-			port = "5060";
+			port = (char *)"5060";
 		snprintf(buffer, sizeof(buffer), "%s:%s@%s:%s", 
-			uri->scheme, uri->username, uri->host, port);
+			reguri->scheme, reguri->username, reguri->host, port);
 	}
 	else
 	{
@@ -1236,38 +1233,38 @@ void thread::registration(void)
 		}
 
 		if(sevent->request->to)
-			uri = sevent->request->to->url;
-		if(!uri || !uri->username || uri->username[0] == 0) {
+			reguri = sevent->request->to->url;
+		if(!uri || !reguri->username || reguri->username[0] == 0) {
 			validate();
 			return;
 		}
 
-		port = uri->port;
+		port = reguri->port;
 		if(!port || !port[0])
-			port = "5060";
-		request_address.set(uri->host, port);
+			port = (char *)"5060";
+		request_address.set(reguri->host, port);
 		if(request_address.getAddr() == NULL) 
 			goto reply;
 
 		error = SIP_NOT_FOUND;
-		if(!String::ifind(stack::sip.localnames, uri->host, " ,;:\t\n")) {
+		if(!String::ifind(stack::sip.localnames, reguri->host, " ,;:\t\n")) {
 			stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
 			if(!Socket::equalhost((struct sockaddr *)&iface, request_address.getAddr()) && atoi(port) == stack::sip.port)
 				goto reply;
 		}
 
-		if(registry::exists(uri->username))
+		if(registry::exists(reguri->username))
 			error = SIP_OK;
 
 reply:
 		if(error == SIP_OK) {
-			debug(3, "querying %s", uri->username);
-			stack::sipPublish(&iface, temp + 1, uri->username, sizeof(temp) - 2);
+			debug(3, "querying %s", reguri->username);
+			stack::sipPublish(&iface, temp + 1, reguri->username, sizeof(temp) - 2);
 			temp[0] = '<';
 			String::add(temp, sizeof(temp), ">");
 		}
 		else
-			debug(3, "query rejected for %s; error=%d", uri->username, error);
+			debug(3, "query rejected for %s; error=%d", reguri->username, error);
 		eXosip_lock();
 		eXosip_message_build_answer(sevent->tid, error, &reply);
 		if(reply != NULL) {
@@ -1444,7 +1441,7 @@ void thread::wait(unsigned count) {
 
 void thread::expiration(void)
 {
-	osip_header_t *header = NULL;
+	osip_header_t *msgheader = NULL;
 	osip_uri_param_t *expires = NULL;
 	osip_contact_t *contact;
 	int pos = 0;
@@ -1452,12 +1449,12 @@ void thread::expiration(void)
 	assert(sevent->request != NULL);	
 	
 	header_expires = 0l;
-	osip_message_get_expires(sevent->request, 0, &header);
-	if(header && header->hvalue)
-		header_expires = atol(header->hvalue);
+	osip_message_get_expires(sevent->request, 0, &msgheader);
+	if(msgheader && msgheader->hvalue)
+		header_expires = atol(msgheader->hvalue);
 	else while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
 		contact = (osip_contact_t*)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos);
-		if(osip_contact_param_get_byname(contact, "expires", &expires) != 0 && expires != NULL) {
+		if(osip_contact_param_get_byname(contact, (char *)"expires", &expires) != 0 && expires != NULL) {
 			header_expires = atol(expires->gvalue);
 			break;
 		}

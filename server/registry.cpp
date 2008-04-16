@@ -983,7 +983,7 @@ void registry::mapped::addContact(const char *contact_id)
 
 bool registry::mapped::expire(Socket::address& saddr)
 {
-	unsigned count = 0;
+	unsigned active_count = 0;
 	time_t now;
 	linked_pointer<target> tp;
 
@@ -997,17 +997,17 @@ bool registry::mapped::expire(Socket::address& saddr)
 		if(Socket::equal(saddr.getAddr(), (struct sockaddr *)(&tp->address))) 
 			tp->expires = now - 10;
 		else if(tp->expires >= now)
-			++count;
+			++active_count;
 		tp.next();
 	}
-	if(!count) {
-		mutex::protect(this);
+	if(!active_count) {
+		Mutex::protect(this);
 		status = MappedRegistry::OFFLINE;
 		type = MappedRegistry::EXPIRED;
 		expires = 0;
-		mutex::release(this);
+		Mutex::release(this);
 	}
-	if(!count)
+	if(!active_count)
 		return true;
 
 	return false;

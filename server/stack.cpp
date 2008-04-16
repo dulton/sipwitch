@@ -161,7 +161,7 @@ void stack::background::run(void)
 			// release lock in case expire calls update timer methods...
 			Conditional::unlock();
 			if(!timeout)
-				debug(4, "background timer expired\n");
+				debug(4, "background timer expired\n", 0);
 			// expire() must be in the shared session lock, and may be made
 			// exclusive when an expired call is destroyed.  This cannot
 			// be in the conditional::lock because the event dispatch may
@@ -255,10 +255,10 @@ void stack::siplog(osip_message_t *msg)
 
 		service::release(env);
 		if(is(log)) {
-			mutex::protect(&stack::sip.dumping);
+			Mutex::protect(&stack::sip.dumping);
 			fsys::write(log, text, tlen);
 			fsys::write(log, "---\n\n", 5);
-			mutex::release(&stack::sip.dumping);
+			Mutex::release(&stack::sip.dumping);
 			fsys::close(log);
 		}
 		osip_free(text);
@@ -359,10 +359,10 @@ void stack::destroy(session *s)
 void stack::setDialog(session *s, int did)
 {
 	assert(s != NULL && s->parent != NULL);
-	mutex::protect(s->parent);
+	Mutex::protect(s->parent);
 	if(did > -1)
 		s->did = did;
-	mutex::release(s->parent);
+	Mutex::release(s->parent);
 }
 
 int stack::getDialog(session *s)
@@ -370,9 +370,9 @@ int stack::getDialog(session *s)
 	int did = -1;
 
 	if(s && s->parent) {
-		mutex::protect(s->parent);
+		Mutex::protect(s->parent);
 		did = s->did;
-		mutex::release(s->parent);
+		Mutex::release(s->parent);
 	}
 	return did;
 }
@@ -966,7 +966,7 @@ Socket::address *stack::getAddress(const char *addr, Socket::address *ap)
 #endif
 	String::set(buffer, sizeof(buffer), addr);
 	if(sp) {
-		ep = strchr(buffer, '>');
+		ep = (char *)strchr(buffer, '>');
 		if(ep)
 			*ep = 0;
 	}
@@ -978,7 +978,7 @@ Socket::address *stack::getAddress(const char *addr, Socket::address *ap)
 
 set:
 	if(svc) {
-		ep = strchr(svc, ';');
+		ep = (char *)strchr(svc, ';');
 		if(ep)
 			*ep = 0;
 	}
