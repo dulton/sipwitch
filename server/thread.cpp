@@ -279,8 +279,9 @@ void thread::message(void)
 	char msgtype[64];
 	char sysid[64];
 	char *msglen = NULL;
+	const char *id;
 
-	if(!reginfo || destination != LOCAL) {
+	if(!dialed || destination != LOCAL) {
 		debug(3, "cannot send message for %s", dialing);
 		send_reply(SIP_DECLINE);
 		return;
@@ -316,17 +317,18 @@ void thread::message(void)
 		snprintf(from, sizeof(from),
 			"<%s>", address);
 
-	if(reginfo->ext)
-		debug(3, "sending message from %s to %u\n", sysid, reginfo->ext);
-	else
-		debug(3, "sending message from %s to %s\n", sysid, reginfo->userid);	
 
+	id = service::getValue(dialed, "extension");
+	if(!id)
+		id = service::getValue(dialed, "id");
+
+	debug(3, "sending message from %s to %s\n", sysid, id);
 	osip_content_length_to_str(sevent->request->content_length, &msglen);
 	if(!msglen) {
 		send_reply(SIP_BAD_REQUEST);
 		return;
 	}
-	if(messages::publish(reginfo->userid, from, body->body, atoi(msglen), msgtype))		
+	if(messages::publish(id, sysid, from, body->body, atoi(msglen), msgtype))		
 		send_reply(SIP_OK);
 	else
 		send_reply(SIP_MESSAGE_TOO_LARGE);
@@ -716,8 +718,11 @@ rewrite:
 		}
 		if(!stricmp(dialed->getId(), "queue"))
 			goto anonymous;
-		if(!stricmp(dialed->getId(), "user"))
+		if(!stricmp(dialed->getId(), "user")) {
+			if(MSG_IS_MESSAGE(sevent->request))
+				goto trying;
 			process::errlog(NOTIFY, "unregistered destination %s", target);
+		}
 		else
 			process::errlog(ERRLOG, "invalid destination %s, type=%s\n", target, dialed->getId());
 		error = SIP_GONE;	
@@ -725,6 +730,8 @@ rewrite:
 	}
 
 	if(reginfo && reginfo->type == MappedRegistry::TEMPORARY) {
+		if(MSG_IS_MESSAGE(sevent->request))
+			goto trying;
 		error = SIP_GONE;
 		goto invalid;
 	}
@@ -732,19 +739,22 @@ rewrite:
 	time(&now);
 
 	if(reginfo && reginfo->expires && reginfo->expires < now) {
-		error = SIP_GONE;
-		goto invalid;
+		if(!MSG_IS_MESSAGE(sevent->request)) {
+			error = SIP_GONE;
+			goto invalid;
+		}
 	}
 	else if(reginfo && !dialed) {
 		error = SIP_NOT_FOUND;
 		goto invalid;
 	}
 
+trying:
 	// extension references always require authentication
 	if(registry::isExtension(target)) {
 		if(!authenticate())
 			return false;
-		if(!reginfo)
+		if(!reginfo && !MSG_IS_MESSAGE(sevent->request))
 			goto invalid;
 		return true;
 	}
@@ -1631,6 +1641,11 @@ void thread::run(void)
 			session = stack::create(sevent->cid, sevent->did, sevent->tid);
 			if(authorize()) 
 				invite();
+			break;
+		case EXOSIP_MESSAGE_ANSWERED:
+			// we already acknowledged SMS message when posting, so we
+			// throw this response away....
+			stack::siplog(sevent->response);
 			break;
 		case EXOSIP_CALL_MESSAGE_NEW:
 			stack::siplog(sevent->request);

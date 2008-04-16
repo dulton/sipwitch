@@ -444,12 +444,12 @@ private:
 	{
 	public:
 		time_t expires;
-		bool self;
 		char user[MAX_USERID_SIZE];
 		char type[64];
 		char from[MAX_URI_SIZE];
-		char text[1024];
-		
+		char body[1024];
+		char reply[MAX_USERID_SIZE];
+		int msglen;
 		void create();
 	};
 
@@ -467,7 +467,7 @@ public:
 
 	static void automatic(void);
 	static void update(const char *userid);
-	static bool publish(const char *to, const char *from, caddr_t body, size_t size, const char *msgtype);
+	static bool publish(const char *to, const char *reply, const char *from, caddr_t body, size_t size, const char *msgtype);
 };
 
 

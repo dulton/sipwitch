@@ -34,9 +34,9 @@ void messages::message::create(void)
 
 	from[0] = 0;
 	type[0] = 0;
-	text[0] = 0;
+	body[0] = 0;
 	user[0] = 0;
-	self = true;
+	msglen = 0;
 }
 
 messages::messages() :
@@ -144,7 +144,7 @@ void messages::update(const char *uid)
 	msglock.unlock();
 }
 
-bool messages::publish(const char *to, const char *from, caddr_t text, size_t len, const char *msgtype)
+bool messages::publish(const char *to, const char *reply, const char *from, caddr_t text, size_t len, const char *msgtype)
 {
 	message *msg;
 	char *ep;
@@ -152,7 +152,7 @@ bool messages::publish(const char *to, const char *from, caddr_t text, size_t le
 	if(!msgtype)
 		msgtype = "text/plain";
 
-	if(len > sizeof(msg->text))
+	if(len > sizeof(msg->body))
 		return false;
 
 	msglock.lock();
@@ -165,12 +165,15 @@ bool messages::publish(const char *to, const char *from, caddr_t text, size_t le
 		msg = new message();
 	}
 	msg->create();
+	String::set(msg->reply, sizeof(msg->reply), reply);
 	String::set(msg->user, sizeof(msg->user), to);
 	String::set(msg->from, sizeof(msg->from), from);
 	String::set(msg->type, sizeof(msg->type), msgtype);	
-	memset(msg->text, sizeof(msg->text), 0);
+	memset(msg->body, sizeof(msg->body), 0);
 	if(len)
-		memcpy(msg->text, text, len);
+		memcpy(msg->body, text, len);
+	msg->msglen = len;
+	deliver(msg);
 	return true;
 }
 
@@ -181,27 +184,49 @@ bool messages::deliver(message *msg)
 	linked_pointer<registry::target> tp;
 	registry::mapped *rr = registry::access(msg->user);
 	unsigned path = NamedObject::keyindex(msg->user, keysize);
+	osip_message_t *im;
 	time_t now;
 	unsigned msgcount = 0;
-	char contact[MAX_URI_SIZE];
+	char to[MAX_URI_SIZE];
 
 	time(&now);
 	if(!rr || (rr->expires && rr->expires < now)) {
 delay:
-		registry::detach(rr);
+		debug(3, "instant message pending for %s from %s", msg->user, msg->reply);
+		goto final;
+/*		registry::detach(rr);
 		msglock.lock();
 		++pending;
 		msg->enlist(&msgs[path]);
 		msglock.unlock();
-		return false;
+*/		return false;
 	}
 
+	debug(3, "instant message delivered to %s from %s", msg->user, msg->reply);
 	tp = rr->targets;
 	while(tp) {
 		if(!rr->expires || tp->expires > now) {
-			if(msg->self) 
-				stack::sipAddress(&tp->iface, contact, msg->user, sizeof(contact)); 
+			stack::sipAddress(&tp->address, to + 1, msg->user, sizeof(to) - 6); 
+			to[0] = '<';
+			String::add(to, sizeof(to), ";lr>");
 			eXosip_lock();
+			im = NULL;
+			eXosip_message_build_request(&im, "MESSAGE", tp->contact, msg->from, to); 
+			if(im != NULL) {
+				stack::sipAddress(&tp->address, to + 1, msg->user, sizeof(to) - 2); 
+				to[0] = '<';
+				String::add(to, sizeof(to), ">");
+				if(im->to) {
+					osip_to_free(im->to);
+					im->to = NULL;
+				}
+				osip_message_set_to(im, to);
+				osip_message_set_body(im, msg->body, msg->msglen);
+				osip_message_set_content_type(im, msg->type);				
+				stack::siplog(im);
+				if(!eXosip_message_send_request(im))
+					++msgcount;
+			}
 			eXosip_unlock();
 		}
 		tp.next();
@@ -210,6 +235,7 @@ delay:
 	if(!msgcount)
 		goto delay;
 
+final:
 	registry::detach(rr);
 	msglock.lock();
 	msg->enlist(&freelist);

@@ -24,6 +24,9 @@ Feature codes and dynamic setting of forwarding.
 
 Message waiting notification.
 
+More complete instant messaging support with offline queuing and offsite
+destinations.
+
 Routing plans and inter-node refers.
 
 Smarter management of no answer processing.

@@ -52,6 +52,11 @@ SIP info messages are hoped between connected sessions.  There is no proper
 error responses yet if info's cannot be handled, so they are all acknowledged
 as 200 OK even if info actually could not be processed.
 
+Basic instant messaging support over SIP exists.  However, it can only
+successfully deliver to registered targets, and does not queue messages for
+offline users for later delivery yet.  However, queing support and delivery
+to external targets will be added.
+
 What we don't do:
 
 sipwitch does NOT operate as a "transparent" proxy and is not meant to do so.
