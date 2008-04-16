@@ -30,10 +30,12 @@ static time_t volatile duration = 900;
 void messages::message::create(void) 
 {
 	time(&expires);
-	expires += duration; 
+	expires += duration;
+
 	from[0] = 0;
+	type[0] = 0;
+	text[0] = 0;
 	user[0] = 0;
-	reply[0] = 0;
 	self = true;
 }
 
@@ -142,10 +144,16 @@ void messages::update(const char *uid)
 	msglock.unlock();
 }
 
-messages::message *messages::create(const char *reply, const char *display)
+bool messages::publish(const char *to, const char *from, caddr_t text, size_t len, const char *msgtype)
 {
 	message *msg;
 	char *ep;
+
+	if(!msgtype)
+		msgtype = "text/plain";
+
+	if(len > sizeof(msg->text))
+		return false;
 
 	msglock.lock();
 	msg = static_cast<message *>(freelist);
@@ -157,27 +165,16 @@ messages::message *messages::create(const char *reply, const char *display)
 		msg = new message();
 	}
 	msg->create();
-
-	if(msg->reply) {
-		msg->self = false;
-		String::set(msg->reply, sizeof(msg->reply), reply);
-	}
-	if(reply && !display) {
-		if(!strnicmp(reply, "sip:", 4))
-			reply += 4;
-		else if(!strnicmp(reply, "sips:", 5))
-			reply += 5;
-		String::set(msg->from, sizeof(msg->from), reply);
-		ep = strchr(msg->from, '@');
-		if(ep)
-			*ep = 0;
-	}	
-	else
-		String::set(msg->from, sizeof(msg->from), display);
-	return msg;
+	String::set(msg->user, sizeof(msg->user), to);
+	String::set(msg->from, sizeof(msg->from), from);
+	String::set(msg->type, sizeof(msg->type), msgtype);	
+	memset(msg->text, sizeof(msg->text), 0);
+	if(len)
+		memcpy(msg->text, text, len);
+	return true;
 }
 
-bool messages::send(message *msg)
+bool messages::deliver(message *msg)
 {
 	assert(msg != NULL);
 
@@ -186,6 +183,7 @@ bool messages::send(message *msg)
 	unsigned path = NamedObject::keyindex(msg->user, keysize);
 	time_t now;
 	unsigned msgcount = 0;
+	char contact[MAX_URI_SIZE];
 
 	time(&now);
 	if(!rr || (rr->expires && rr->expires < now)) {
@@ -202,7 +200,7 @@ delay:
 	while(tp) {
 		if(!rr->expires || tp->expires > now) {
 			if(msg->self) 
-				stack::sipAddress(&tp->iface, msg->reply, NULL, sizeof(msg->reply)); 
+				stack::sipAddress(&tp->iface, contact, msg->user, sizeof(contact)); 
 			eXosip_lock();
 			eXosip_unlock();
 		}
@@ -217,18 +215,6 @@ delay:
 	msg->enlist(&freelist);
 	msglock.release();
 	return true;
-}
-
-bool messages::sms(const char *reply, const char *to, const char *text, const char *display)
-{
-	assert(to != NULL && *to != 0);
-	assert(text != NULL);
-
-	message *msg = create(reply, display);
-	String::set(msg->user, sizeof(msg->user), to);
-	String::set(msg->text, sizeof(msg->text), text);
-	msg->type = message::SMS;
-	return send(msg);
 }
 
 void messages::automatic(void)
@@ -249,7 +235,7 @@ void messages::automatic(void)
 			msg = NULL;	
 		}
 		msglock.release();
-		if(!msg || send(msg))
+		if(!msg || deliver(msg))
 			return;
 	}
 }

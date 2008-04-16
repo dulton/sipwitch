@@ -270,6 +270,69 @@ next:
 		String::set(call->refer, sizeof(call->refer), rr->userid);		
 }
 
+void thread::message(void)
+{
+	osip_content_type_t *ct;
+	osip_body_t *body = NULL;
+	char address[MAX_URI_SIZE];
+	char from[MAX_URI_SIZE];
+	char msgtype[64];
+	char sysid[64];
+	char *msglen = NULL;
+
+	if(!reginfo || destination != LOCAL) {
+		debug(3, "cannot send message for %s", dialing);
+		send_reply(SIP_DECLINE);
+		return;
+	}
+
+	osip_message_get_body(sevent->request, 0, &body);
+	ct = sevent->request->content_type;
+	if(!body || !ct || !ct->type) {
+		send_reply(SIP_BAD_REQUEST);
+		return;
+	}
+	
+	if(ct->subtype)
+		snprintf(msgtype, sizeof(msgtype), "%s/%s",
+			ct->type, ct->subtype);
+	else
+		snprintf(msgtype, sizeof(msgtype), "%s",
+			ct->type);
+
+	if(extension)
+		snprintf(sysid, sizeof(sysid), "%u", extension);
+	else
+		String::set(sysid, sizeof(sysid), identity);
+
+	stack::sipPublish(&iface, address, sysid, sizeof(address));
+	if(extension && !display[0])
+		snprintf(from, sizeof(from), 
+			"\"%u\" <%s;user=phone>", extension, address);
+	else if(display[0])
+		snprintf(from, sizeof(from),
+			"\"%s\" <%s>", display, address);
+	else
+		snprintf(from, sizeof(from),
+			"<%s>", address);
+
+	if(reginfo->ext)
+		debug(3, "sending message from %s to %u\n", sysid, reginfo->ext);
+	else
+		debug(3, "sending message from %s to %s\n", sysid, reginfo->userid);	
+
+	osip_content_length_to_str(sevent->request->content_length, &msglen);
+	if(!msglen) {
+		send_reply(SIP_BAD_REQUEST);
+		return;
+	}
+	if(messages::publish(reginfo->userid, from, body->body, atoi(msglen), msgtype))		
+		send_reply(SIP_OK);
+	else
+		send_reply(SIP_MESSAGE_TOO_LARGE);
+	osip_free(msglen);
+}
+
 void thread::invite(void)
 {
 	const char *target = dialing;
@@ -1600,6 +1663,11 @@ void thread::run(void)
 				}
 				else
 					send_reply(SIP_BAD_REQUEST);
+				break;
+			}
+			else if(MSG_IS_MESSAGE(sevent->request)) {
+				if(authorize())
+					message();
 				break;
 			}
 			else if(!MSG_IS_INFO(sevent->request)) {

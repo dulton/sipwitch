@@ -444,14 +444,11 @@ private:
 	{
 	public:
 		time_t expires;
-		enum {
-			SMS
-		}	type;
 		bool self;
 		char user[MAX_USERID_SIZE];
-		char from[MAX_USERID_SIZE];
-		char reply[MAX_URI_SIZE];
-		char text[MAX_URI_SIZE];
+		char type[64];
+		char from[MAX_URI_SIZE];
+		char text[1024];
 		
 		void create();
 	};
@@ -463,15 +460,14 @@ private:
 	void cleanup(void);
 	void snapshot(FILE *fp);
 
-	static message *create(const char *reply, const char *display);
-	static bool send(message *msg);
+	static bool deliver(message *msg);
 
 public:
 	messages();
 
 	static void automatic(void);
 	static void update(const char *userid);
-	static bool sms(const char *reply, const char *to, const char *text, const char *from = NULL);
+	static bool publish(const char *to, const char *from, caddr_t body, size_t size, const char *msgtype);
 };
 
 
@@ -521,6 +517,7 @@ private:
 	bool authorize(void);
 	void registration(void);
 	void validate(void);
+	void message(void);
 	void reregister(const char *contact, time_t interval);
 	void deregister(void);
 	void challenge(void);
