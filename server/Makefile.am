@@ -10,7 +10,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
-LDADD = ../common/libgnusipwitch.la @SIPWITCH_EXOSIP2@ @DAEMON_LIBS@
+LDADD = ../common/libgnusipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ @DAEMON_LIBS@
 EXTRA_DIST = *.xml *.conf
 
 sbin_PROGRAMS = sipw
