@@ -236,7 +236,7 @@ void stack::siplog(osip_message_t *msg)
     char *cp;
 	char buf[128];
 	char *text = NULL;
-	unsigned tlen;
+	size_t tlen;
 
 	if(!msg || !stack::sip.dumping)
 		return;
