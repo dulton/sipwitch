@@ -177,6 +177,38 @@ bool messages::publish(const char *to, const char *reply, const char *from, cadd
 	return true;
 }
 
+bool messages::system(const char *to, const char *text)
+{
+	char from[MAX_URI_SIZE];
+	const char *scheme;
+	const char *sysid = stack::sip.system;
+	const char *host = stack::sip.published;
+	unsigned short port  = stack::sip.port;
+
+	if(stack::sip.tlsmode)
+		scheme = "sips";
+	else
+		scheme = "sip";
+
+	if(!host) {
+		host = "127.0.0.1";
+#ifdef	AF_INET6
+		if(!host && stack::sip.family == AF_INET6)
+			host = "::1";
+#endif
+	}
+
+	if(strchr(host, ':'))
+		snprintf(from, sizeof(from), "<%s:%s@[%s]:%u>", 
+			scheme, sysid, host, port);
+	else	
+		snprintf(from, sizeof(from), "<%s:%s@%s:%u>", 
+			scheme, sysid, host, port);
+
+	return publish(to, sysid, from, (caddr_t)text, strlen(text), "text/plain");
+}
+
+
 bool messages::deliver(message *msg)
 {
 	assert(msg != NULL);

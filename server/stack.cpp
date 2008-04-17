@@ -200,6 +200,8 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	incoming = false;
 	outgoing = false;
 	agent = "sipwitch-" VERSION "/eXosip";
+	system = "sipwitch";
+	anon = "anonymous";
 	restricted = trusted = published = proxy = NULL;
 	localnames = "localhost, localhost.localdomain";
 	ring_timer = 4000;
@@ -649,6 +651,8 @@ bool stack::reload(service *cfg)
 	linked_pointer<service::keynode> tp = cfg->getList("timers");
 	int val;
 	const char *localhosts = "localhost, localhost.localdomain";
+	const char *system_id = "sipwitch";
+	const char *anon_id = "anonymous";
 
 	unsigned cfna_value = 0;
 	unsigned ring_value = 0;
@@ -699,6 +703,10 @@ bool stack::reload(service *cfg)
 				localhosts = cfg->dup(value);
 			else if(!stricmp(key, "trusted"))
 				trusted = cfg->dup(value);
+			else if(!stricmp(key, "system"))
+				system_id = cfg->dup(value);
+			else if(!stricmp(key, "anon"))
+				anon_id = cfg->dup(value);
 			else if(!stricmp(key, "published") || !stricmp(key, "public"))
 				published = cfg->dup(value);
 			else if(!stricmp(key, "proxy") || !stricmp(key, "outbound"))
@@ -735,6 +743,8 @@ bool stack::reload(service *cfg)
 		tp.next();
 	}
 
+	system = system_id;
+	anon = anon_id;
 	localnames = localhosts;
 	proxy = new_proxy;
 

@@ -173,6 +173,7 @@ void server::usage(void)
 		"  check                 Test for thread deadlocks\n"
 		"  snapshot              Create snapshot file\n"
 		"  dump                  Dump in-memory config tables\n"
+		"  message <user> <text> Send instant message to user agent\n"
 		"  digest <user> <pass>  Compute digest based on server realm\n"
 		"  registry              List registrations from shared memory\n"
 		"  activate <user>       Activate static user registration\n"
@@ -273,6 +274,8 @@ void server::run(const char *user)
 		dt->tm_hour, dt->tm_min, dt->tm_sec);
 
 	while(running && NULL != (cp = process::receive())) {
+		debug(9, "received request %s\n", cp);
+
         if(!stricmp(cp, "reload")) {
             config::reload(user);
             continue;
@@ -309,7 +312,8 @@ void server::run(const char *user)
 
 		argc = 0;
 		tokens = NULL;
-		while(argc < 64 && NULL != (cp = const_cast<char *>(String::token(cp, &tokens, " \t")))) {
+		while(argc < 64 && NULL != (cp = const_cast<char *>(String::token(cp, &tokens, " \t", "{}")))) {
+			printf("TOKEN %s\n", cp);
 			argv[argc++] = cp;
 		}
 		argv[argc] = NULL;
@@ -330,6 +334,13 @@ invalid:
 			if(argc != 2)
 				goto invalid;
 			Thread::concurrency(atoi(argv[1]));
+			continue;
+		}
+
+		if(!stricmp(argv[0], "message")) {
+			if(argc != 3)
+				goto invalid;
+			messages::system(argv[1], argv[2]);
 			continue;
 		}
 

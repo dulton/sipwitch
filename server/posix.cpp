@@ -538,8 +538,12 @@ extern "C" int main(int argc, char **argv)
 	static bool restartable = false;
 	static bool dumping = false;
 
+	const char *userid;
+	const char *secret;
+	const char *text;
 	char *cp, *tokens;
 	char *args[65];
+	char tbuf[512];
 
 	corefiles();
 
@@ -717,9 +721,21 @@ extern "C" int main(int argc, char **argv)
 			exit(0);
 		}
 
+		if(!stricmp(*argv, "message")) {
+			userid = *(++argv);
+			text = *(++argv);
+
+			if(!userid || !text) {
+				fprintf(stderr, "*** sipw: use message userid \"text\"\n");
+				exit(-1);
+			}
+			snprintf(tbuf, sizeof(tbuf), "message %s {%s}", userid, text);
+			command(user, tbuf, 30);
+		}
+
 		if(!stricmp(*argv, "digest")) {
-			const char *userid = *(++argv);
-			const char *secret = *(++argv);
+			userid = *(++argv);
+			secret = *(++argv);
 			string_t digest;		
 	
 			if(!userid || !secret) {

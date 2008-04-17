@@ -201,6 +201,7 @@ class __LOCAL stack : private service::callback, private mapped_reuse<MappedCall
 {
 private:
 	friend class thread;
+	friend class messages;
 
 	class call;
 
@@ -348,6 +349,8 @@ private:
 	const char *volatile proxy;
 	const char *iface;
 	const char *agent;
+	const char *system;
+	const char *anon;
 	short port;
 	bool incoming, outgoing, dumping;
 	int send101;
@@ -468,6 +471,7 @@ public:
 	static void automatic(void);
 	static void update(const char *userid);
 	static bool publish(const char *to, const char *reply, const char *from, caddr_t body, size_t size, const char *msgtype);
+	static bool system(const char *to, const char *message);
 };
 
 

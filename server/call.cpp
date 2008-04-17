@@ -312,7 +312,6 @@ void stack::call::answer(thread *thread, session *s)
 	eXosip_lock();
 	eXosip_call_build_answer(tid, SIP_OK, &reply);
 	if(reply != NULL) {
-		printf("*** SENDING 200 OK!!!\n");
 		osip_message_set_body(reply, s->sdp, strlen(s->sdp));
 		osip_message_set_content_type(reply, "application/sdp");
 		stack::siplog(reply);

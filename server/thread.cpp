@@ -682,6 +682,16 @@ rewrite:
 	if(!target || !*target || strlen(target) >= MAX_USERID_SIZE)
 		goto invalid;
 
+	// handle anon@here and system@here identities...
+
+	if(!stricmp(target, stack::sip.anon))
+		goto invalid;
+
+	if(!stricmp(target, stack::sip.system)) {
+		error = SIP_FORBIDDEN;
+		goto invalid;
+	}
+
 	reginfo = registry::access(target);
 	dialed = config::getProvision(target);
 
@@ -1639,6 +1649,8 @@ void thread::run(void)
 			if(authorize()) 
 				invite();
 			break;
+		case EXOSIP_CALL_MESSAGE_ANSWERED:
+			// probably got here as result of sending BYE to UA...
 		case EXOSIP_MESSAGE_ANSWERED:
 			// we already acknowledged SMS message when posting, so we
 			// throw this response away....
