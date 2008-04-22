@@ -15,15 +15,40 @@
 
 #define	CUTIL_ONLY
 #include <config.h>
+
+#if defined(_MSC_VER) || defined(WIN32) || defined(_WIN32)
+
+#if defined(_MWIN32_WINNT) && _WIN32_WINNT < 0x0501
+#undef	_WIN32_WINNT
+#endif
+
+#ifndef	_WIN32_WINNT
+#define	_WIN32_WINNT	0x0501
+#endif
+
+#if !defined(_MSC_VER) || _MSC_VER < 1400
+#include <windows.h>
+#endif
+
+#include <ws2tcpip.h>
+#include <winsock2.h>
+
+#if _MSC_VER >= 1400
+#include <windows.h>
+#endif
+
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#endif
+
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
 #include <eXosip2/eXosip.h>
 
 static int verbose = 0;
@@ -195,9 +220,14 @@ usage:
 	user = *(argv++);
 	if(*argv)
 		goto usage;
-	 
+
+#if defined(WIN32) || defined(_WIn32)
+	if(!port)
+		port = 5060;
+#else	 
 	if(!port)
 		port = 5060 + getuid();
+#endif
 
 	if(eXosip_init()) {
 		fprintf(stderr, "*** sipuser: failed exosip init\n");

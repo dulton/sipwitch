@@ -10,12 +10,11 @@
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CFLAGS = -I$(top_srcdir)/inc
-LDADD = @SIPWITCH_EXOSIP2@ 
+LDADD = @SIPWITCH_EXOSIP2@ @LIB_UTILS@
 
 bin_PROGRAMS = sipquery
 
 sipquery_SOURCES = sipquery.c
-
 
 
 
