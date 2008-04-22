@@ -330,10 +330,8 @@ AH_BOTTOM([
 #endif
 ])
 
-LIB_UTILS=""
 DAEMON_LIBS=""
 AC_CHECK_LIB(msvcrt, fopen, [
-	LIB_UTILS="-lmingwex -lmingw32 -lws2_32 -lwsock32 -lkernel32 -lmsvcrt -lgcc"
 	DAEMON_LIBS="-ladvapi32"
 ])
 
@@ -347,7 +345,6 @@ AC_SUBST(SIPWITCH_FLAGS)
 AC_SUBST(SIPWITCH_LIBS)
 AC_SUBST(SIPWITCH_EXOSIP2)
 AC_SUBST(BUILD_SUBDIRS)
-AC_SUBST(LIB_UTILS)
 AC_SUBST(CXXFLAGS)
 AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile 
 server/Makefile utils/Makefile test/Makefile libsipwitch.pc)

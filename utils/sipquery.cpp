@@ -13,43 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#define	CUTIL_ONLY
-#include <config.h>
-
-#if defined(_MSC_VER) || defined(WIN32) || defined(_WIN32)
-
-#if defined(_MWIN32_WINNT) && _WIN32_WINNT < 0x0501
-#undef	_WIN32_WINNT
-#endif
-
-#ifndef	_WIN32_WINNT
-#define	_WIN32_WINNT	0x0501
-#endif
-
-#if !defined(_MSC_VER) || _MSC_VER < 1400
-#include <windows.h>
-#endif
-
-#include <ws2tcpip.h>
-#include <winsock2.h>
-
-#if _MSC_VER >= 1400
-#include <windows.h>
-#endif
-
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-
-#include <ctype.h>
-#include <errno.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
+#include <ucommon/ucommon.h>
 #include <eXosip2/eXosip.h>
+#include <config.h>
 
 static int verbose = 0;
 static int port = 0;
@@ -62,7 +28,14 @@ static const char *binding = NULL;
 static unsigned timeout = 1000;
 static int tls = 0;
 
-int main(int argc, char **argv)
+#if defined(_MSWINDOWS_) && defined(__GNUC__)
+// binds addrinfo for mingw32 linkage since otherwise mingw32 cannot
+// cannot link proper getaddrinfo/freeaddrinfo calls that eXosip uses.
+using namespace UCOMMON_NAMESPACE;
+static Socket::address localhost("127.0.0.1");
+#endif
+
+extern "C" int main(int argc, char **argv)
 {
 	int error = 2;
 	eXosip_event_t *sevent;

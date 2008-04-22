@@ -9,12 +9,12 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
-AM_CFLAGS = -I$(top_srcdir)/inc
-LDADD = @SIPWITCH_EXOSIP2@ @LIB_UTILS@
+AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
+LDADD = @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ 
 
 bin_PROGRAMS = sipquery
 
-sipquery_SOURCES = sipquery.c
+sipquery_SOURCES = sipquery.cpp
 
 
 
