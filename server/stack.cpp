@@ -906,6 +906,38 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 	return buf;
 }
 
+char *stack::sipHostid(const char *addr, char *buf, size_t size)
+{
+	assert(buf != NULL);
+	assert(size > 0);
+
+	char *ep;
+	const char *cp;
+	buf[0] = 0;
+
+	if(!addr)
+		return NULL;
+
+	if(!strnicmp(addr, "sip:", 4))
+		addr += 4;
+	else if(!strnicmp(addr, "sips:", 5))
+		addr += 5;
+
+	cp = strchr(addr, '@');
+	if(cp)
+		addr = ++cp;
+	
+	String::set(buf, size, addr);
+	if(buf[0] == '[')
+		ep = strchr(buf, ']');
+	else
+		ep = strrchr(buf, ':');
+	
+	if(ep)
+		*ep = 0;
+	return buf;
+}
+
 char *stack::sipUserid(const char *addr, char *buf, size_t size)
 {
 	assert(buf != NULL);

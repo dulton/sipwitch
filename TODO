@@ -10,7 +10,7 @@ and/or external entries will be done by refer.
 Hunt groups, Call Coverage and distribution models, day/night/state mode
 processing.
 
-b2b outside dialing of arbitrary sip uri's.
+authentication handling for b2b outside dialing of arbitrary sip uri's.
 
 Messaging and presense.
 

@@ -1,6 +1,7 @@
 From version 0.1.0 to 0.1.1
 - introduction of "system" and "anon" user identifiers.
 - support for generating sms messages to ua's from the control interface.
+- outbound/external uri dialing support, authentication needs to be added.
 
 Initial Release 0.1.0
 	

@@ -372,6 +372,7 @@ public:
 	__EXPORT static void clear(session *s);
 	__EXPORT static void close(session *s);
 	__EXPORT static session *access(int cid);
+	__EXPORT static char *sipHostid(const char *uri, char *buf, size_t size);
 	__EXPORT static char *sipUserid(const char *uri, char *buf, size_t size);
 	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
 	__EXPORT static char *sipPublish(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
@@ -493,6 +494,7 @@ private:
 	char identity[MAX_USERID_SIZE];
 	char dialing[MAX_USERID_SIZE];
 	char display[MAX_DISPLAY_SIZE];
+	char requesting[MAX_URI_SIZE];
 	struct sockaddr_internet iface;
 	Socket::address via_address, from_address, request_address;
 	stack::session *session;
@@ -512,6 +514,7 @@ private:
 
 	void send_reply(int error);
 	void expiration(void);
+	void inviteRemote(stack::session *session, const char *uri);
 	void inviteLocal(stack::session *session, registry::mapped *rr);
 	void invite(void);
 	void identify(void);
