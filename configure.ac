@@ -96,7 +96,13 @@ if test -z "$enable_sipwitch_server" ; then
 AC_ARG_WITH(crypto, 
 	AC_HELP_STRING([--with-crypto=lib],[specify crypto library]),[
 	case "$with_crypto" in
-	none|openssl|gcrypt|sasl)
+	libcrypto|crypto)
+		ac_with_crypto="openssl"
+		;;
+	gnutls|libgcrypt)
+		ac_with_crypto="gcrypt"
+		;;
+	none|openssl|gcrypt|crypto|sasl)
 		ac_with_crypto="$with_crypto"
 		;;
 	*)
@@ -135,8 +141,8 @@ gcrypt)
 		ac_with_crypto="none"
 	])
 	;;
-openssl)
-	AC_CHECK_LIB(openssl, MD5_Init, [
+openssl|crypto)
+	AC_CHECK_LIB(crypto, MD5_Init, [
 		AC_DEFINE(HAVE_OPENSSL_CRYPTO, [1], [openssl crypto used])
 		EXPORT_LIBS="$EXPORT_LIBS -lcrypto"
 	],[

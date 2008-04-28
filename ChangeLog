@@ -1,3 +1,6 @@
+From version 0.1.1 to 0.1.2
+- more and better crypto library detection support.
+
 From version 0.1.0 to 0.1.1
 - introduction of "system" and "anon" user identifiers.
 - support for generating sms messages to ua's from the control interface.
