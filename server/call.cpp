@@ -385,6 +385,13 @@ void stack::call::busy(thread *thread, session *s)
 
 	Mutex::protect(this);
 	switch(state) {
+	case INITIAL:
+		if(!s) {
+			state = BUSY;
+			disconnectLocked();
+			Mutex::release(this);
+			return;
+		}
 	case FINAL:
 	case HOLDING:
 	case JOINED:
