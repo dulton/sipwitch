@@ -418,7 +418,7 @@ void stack::call::busy(thread *thread, session *s)
 	case RINGBACK:
 		if(!ringing && ringbusy) {
 			state = BUSY;
-			disarm();
+			disconnectLocked();
 		}
 	}
 
