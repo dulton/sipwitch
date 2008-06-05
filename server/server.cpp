@@ -134,11 +134,12 @@ caddr_t server::allocate(size_t size, LinkedObject **list, volatile unsigned *co
 #define	DLL_SUFFIX	".so"
 #endif
 
-void server::plugins(const char *list)
+void server::plugins(const char *argv0, const char *list)
 {
 	char buffer[256];
 	char path[256];
 	char *tp = NULL;
+	char *ep;
 	const char *cp;
 	fsys	module;
 
@@ -147,14 +148,20 @@ void server::plugins(const char *list)
 
 	string::set(buffer, sizeof(buffer), list);
 	while(NULL != (cp = string::token(buffer, &tp, ", ;:\r\n"))) {
-		if(fsys::isdir(LIB_PREFIX)) {
-			snprintf(path, sizeof(path), LIB_PREFIX "/%s" DLL_SUFFIX, cp);
-			process::errlog(INFO, "loading %s" DLL_SUFFIX " locally", cp);
+		string::set(path, sizeof(path), argv0);
+		ep = strstr(path, LIB_PREFIX + 1);
+		if(ep) {
+			ep[strlen(LIB_PREFIX)] = 0;
+			string::add(path, sizeof(path), cp);
+			string::add(path, sizeof(path), DLL_SUFFIX);
+			if(fsys::isfile(path)) {
+				process::errlog(INFO, "loading %s" DLL_SUFFIX " locally", cp);
+				goto loader;
+			}
 		}
-		else {
-			snprintf(path, sizeof(path), DEFAULT_LIBPATH "/sipwitch/%s" DLL_SUFFIX, cp);
-			process::errlog(INFO, "loading %s", path);
-		}	
+		snprintf(path, sizeof(path), DEFAULT_LIBPATH "/sipwitch/%s" DLL_SUFFIX, cp);
+		process::errlog(INFO, "loading %s", path);
+loader:
 		if(fsys::load(path)) 
 			process::errlog(ERRLOG, "failed loading %s", path);
 	}

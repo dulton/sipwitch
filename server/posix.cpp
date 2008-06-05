@@ -545,6 +545,7 @@ extern "C" int main(int argc, char **argv)
 	char *cp, *tokens;
 	char *args[65];
 	char tbuf[512];
+	const char *argv0 = argv[0];
 
 	corefiles();
 
@@ -838,7 +839,7 @@ extern "C" int main(int argc, char **argv)
 #endif
 
 	if(plugins)
-		server::plugins(plugins);
+		server::plugins(argv0, plugins);
 
 	if(daemon)
 		background(user, cfgfile, priority);
