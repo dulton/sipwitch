@@ -540,6 +540,7 @@ public:
 class __EXPORT server
 {
 public:
+	static void plugins(const char *names);
 	static void usage(void);
 	static void version(void);
 	static void run(const char *user);

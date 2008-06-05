@@ -126,61 +126,38 @@ caddr_t server::allocate(size_t size, LinkedObject **list, volatile unsigned *co
 	return mp;
 }
 
-void server::version(void)
-{
-	printf("SIP Witch " VERSION "\n"
-        "Copyright (C) 2007-2008 David Sugar, Tycho Softworks\n"
-		"License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
-		"This is free software: you are free to change and redistribute it.\n"
-        "There is NO WARRANTY, to the extent permitted by law.\n");
-    exit(0);
-}
+#ifdef	_MSWINDOWS_
+#define	DLL_SUFFIX	".dll"
+#define	LIB_PREFIX	"_libs"
+#else
+#define	LIB_PREFIX	".libs"
+#define	DLL_SUFFIX	".so"
+#endif
 
-void server::usage(void)
+void server::plugins(const char *list)
 {
-#ifdef	USES_COMMANDS
-	printf("Usage: sipw [options] [command...]\n"
-#else
-	printf("Usage: sipw [options]\n"
-#endif
-		"Options:\n"
-		"  --help                Display this information\n"
-		"  -foreground           Run server in foreground\n"
-		"  -background           Run server as daemon\n"
-#ifdef	_MSWINDOWS_
-#else
-		"  -restartable			 Run server as restartable daemon\n"
-#endif
-		"  -trace                Trace/dump sip messages\n"
-		"  -config=<cfgfile>     Use cfgfile in place of default one\n"
-		"  -user=<userid>        Change to effective user from root\n" 
-#ifndef	_MSWINDOWS_
-		"  -concurrency=<level>  Increase thread concurrency\n"
-#endif
-		"  -priority=<level>     Increase process priority\n"
-		"  -v[vv], -x<n>         Select verbosity or debug level\n"
-#if defined(USES_COMMANDS) || defined(_MSWINDOWS_)
-		"Commands:\n"
-		"  stop                  Stop running server\n"
-		"  reload                Reload config file\n"
-#ifdef	_MSWINDOWS_
-		"  register              Register as service deamon\n"
-		"  release               Release service deamon registeration\n"
-#endif
-#endif
-#ifdef	USES_COMMANDS
-		"  restart               Restart server\n"
-		"  check                 Test for thread deadlocks\n"
-		"  snapshot              Create snapshot file\n"
-		"  dump                  Dump in-memory config tables\n"
-		"  message <user> <text> Send instant message to user agent\n"
-		"  digest <user> <pass>  Compute digest based on server realm\n"
-		"  registry              List registrations from shared memory\n"
-		"  activate <user>       Activate static user registration\n"
-		"  release <user>        Release registered user\n"
-#endif
-	);
-	exit(0);
+	char buffer[256];
+	char path[256];
+	char *tp = NULL;
+	const char *cp;
+	fsys	module;
+
+	if(!list || !*list)
+		return;
+
+	string::set(buffer, sizeof(buffer), list);
+	while(NULL != (cp = string::token(buffer, &tp, ", ;:\r\n"))) {
+		if(fsys::isdir(LIB_PREFIX)) {
+			snprintf(path, sizeof(path), LIB_PREFIX "/%s" DLL_SUFFIX, cp);
+			process::errlog(INFO, "loading %s" DLL_SUFFIX " locally", cp);
+		}
+		else {
+			snprintf(path, sizeof(path), DEFAULT_LIBPATH "/sipwitch/%s" DLL_SUFFIX, cp);
+			process::errlog(INFO, "loading %s", path);
+		}	
+		if(fsys::load(path)) 
+			process::errlog(ERRLOG, "failed loading %s", path);
+	}
 }
 
 void server::regdump(void)
@@ -382,6 +359,66 @@ invalid:
 	process::printlog("server shutdown %04d-%02d-%02d %02d:%02d:%02d\n",
 		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
 		dt->tm_hour, dt->tm_min, dt->tm_sec);
+}
+
+void server::version(void)
+{
+	printf("SIP Witch " VERSION "\n"
+        "Copyright (C) 2007-2008 David Sugar, Tycho Softworks\n"
+		"License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
+		"This is free software: you are free to change and redistribute it.\n"
+        "There is NO WARRANTY, to the extent permitted by law.\n");
+    exit(0);
+}
+
+void server::usage(void)
+{
+#ifdef	USES_COMMANDS
+	printf("Usage: sipw [options] [command...]\n"
+#else
+	printf("Usage: sipw [options]\n"
+#endif
+		"Options:\n"
+		"  --help                Display this information\n"
+		"  -foreground           Run server in foreground\n"
+		"  -background           Run server as daemon\n"
+#ifdef	_MSWINDOWS_
+#else
+		"  -restartable			 Run server as restartable daemon\n"
+#endif
+		"  -trace                Trace/dump sip messages\n"
+		"  -config=<cfgfile>     Use cfgfile in place of default one\n"
+#ifndef	_MSWINDOWS
+		"  -plugins=<list>       List of plugins to load\n"
+#endif
+		"  -user=<userid>        Change to effective user from root\n" 
+#ifndef	_MSWINDOWS_
+		"  -concurrency=<level>  Increase thread concurrency\n"
+#endif
+		"  -priority=<level>     Increase process priority\n"
+		"  -v[vv], -x<n>         Select verbosity or debug level\n"
+#if defined(USES_COMMANDS) || defined(_MSWINDOWS_)
+		"Commands:\n"
+		"  stop                  Stop running server\n"
+		"  reload                Reload config file\n"
+#ifdef	_MSWINDOWS_
+		"  register              Register as service deamon\n"
+		"  release               Release service deamon registeration\n"
+#endif
+#endif
+#ifdef	USES_COMMANDS
+		"  restart               Restart server\n"
+		"  check                 Test for thread deadlocks\n"
+		"  snapshot              Create snapshot file\n"
+		"  dump                  Dump in-memory config tables\n"
+		"  message <user> <text> Send instant message to user agent\n"
+		"  digest <user> <pass>  Compute digest based on server realm\n"
+		"  registry              List registrations from shared memory\n"
+		"  activate <user>       Activate static user registration\n"
+		"  release <user>        Release registered user\n"
+#endif
+	);
+	exit(0);
 }
 
 END_NAMESPACE

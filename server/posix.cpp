@@ -528,6 +528,7 @@ static void command(const char *uid, const char *cmd, unsigned timeout)
 extern "C" int main(int argc, char **argv)
 {
 	static const char *user = NULL;
+	static char *plugins = NULL;
 	static char *cfgfile = NULL;
 	static bool daemon = false;
 	static bool warned = false;
@@ -566,6 +567,10 @@ extern "C" int main(int argc, char **argv)
 	cp = getenv("CFGFILE");
 	if(cp)
 		cfgfile = strdup(cp);
+
+	cp = getenv("PLUGINS");
+	if(cp)
+		plugins = strdup(cp);
 
 	if(!getuid())
 		daemon = true;
@@ -617,6 +622,20 @@ extern "C" int main(int argc, char **argv)
 
 		if(!strnicmp(*argv, "-concurrency=", 13)) {
 			concurrency = atoi(*argv + 13);
+			continue;
+		} 
+
+		if(!stricmp(*argv, "-l") || !stricmp(*argv, "-plugins")) {
+			plugins = *(++argv);
+			if(!plugins) {
+				fprintf(stderr, "*** sipw: plugins option missing\n");
+				exit(-1);
+			}
+			continue;
+		}
+
+		if(!strnicmp(*argv, "-plugins=", 9)) {
+			plugins = *argv + 9;
 			continue;
 		} 
 
@@ -817,6 +836,9 @@ extern "C" int main(int argc, char **argv)
 	if(priority)
 		Thread::policy(SCHED_RR);
 #endif
+
+	if(plugins)
+		server::plugins(plugins);
 
 	if(daemon)
 		background(user, cfgfile, priority);

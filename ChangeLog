@@ -1,3 +1,6 @@
+From version 0.1.2 to 0.2.0
+- plugin support
+
 From version 0.1.1 to 0.1.2
 - more and better crypto library detection support.
 - busy handling at initial call connection fixed.
