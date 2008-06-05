@@ -28,6 +28,7 @@ public:
 
 private:
 	void start(service *cfg);
+	bool reload(service *cfg);
 };
 
 static scripting scripting_plugin;
@@ -38,8 +39,20 @@ service::callback(0)
 	process::errlog(INFO, "scripting plugin loaded");
 }
 
+bool scripting::reload(service *cfg)
+{
+	assert(cfg != NULL);
+
+	if(dirpath == NULL)
+		start(cfg);
+	
+	return true;
+}
+
 void scripting::start(service *cfg)
 {
+	assert(cfg != NULL);
+	
 	static char buf[256];
 	service::keynode *env = cfg->getPath("environ");
 	const char *home = service::getValue(env, "HOME");
