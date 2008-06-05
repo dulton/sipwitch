@@ -49,6 +49,10 @@
 #include <sipwitch/namespace.h>
 #endif
 
+#ifndef	_SIPWITCH_MAPPED_H_
+#include <sipwitch/mapped.h>
+#endif
+
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
@@ -148,6 +152,8 @@ public:
 			{return active_flag;};
 
 		virtual bool check(void);
+		virtual void activating(MappedRegistry *rr);
+		virtual void expiring(MappedRegistry *rr);
 		virtual void snapshot(FILE *fp);
 		virtual void start(service *cfg);
 		virtual void stop(service *cfg);
@@ -204,6 +210,8 @@ public:
 	virtual bool confirm(const char *user);
 	bool commit(const char *user);
 
+	static void activate(MappedRegistry *rr);
+	static void expire(MappedRegistry *rr);
 	static bool check(void);
 	static void release(keynode *node);
 

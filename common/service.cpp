@@ -16,8 +16,8 @@
 #include <config.h>
 #include <ucommon/ucommon.h>
 #include <ucommon/export.h>
-#include <sipwitch/service.h>
 #include <sipwitch/process.h>
+#include <sipwitch/service.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -171,6 +171,14 @@ OrderedObject()
 service::callback::~callback()
 {
 	LinkedObject::delist(&runlevels[runlevel]);
+}
+
+void service::callback::activating(MappedRegistry *rr)
+{
+}
+
+void service::callback::expiring(MappedRegistry *rr)
+{
 }
 
 void service::callback::snapshot(FILE *fp)
@@ -929,6 +937,34 @@ void service::dumpfile(const char *uid)
 		cfg->service::dump(fp);
 	locking.release();
 	fclose(fp);
+}
+
+void service::activate(MappedRegistry *rr)
+{
+	unsigned rl = 0;
+	linked_pointer<callback> cb;
+
+	while(rl < RUNLEVELS) {
+		cb = callback::runlevels[rl++];
+		while(cb) {
+			cb->activating(rr);
+			cb.next();
+		}
+	}
+}
+
+void service::expire(MappedRegistry *rr)
+{
+	unsigned rl = 0;
+	linked_pointer<callback> cb;
+
+	while(rl < RUNLEVELS) {
+		cb = callback::runlevels[rl++];
+		while(cb) {
+			cb->expiring(rr);
+			cb.next();
+		}
+	}
 }
 
 void service::snapshot(const char *uid)

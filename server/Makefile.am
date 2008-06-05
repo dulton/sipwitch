@@ -14,8 +14,9 @@ LDADD = ../common/libgnusipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ @DAEMON_L
 EXTRA_DIST = *.xml *.conf
 
 sbin_PROGRAMS = sipw
-pkglibdir=$(libdir)/sipw
+pkglibdir=$(libdir)/sipwitch
 noinst_HEADERS = server.h
+pkglib_LTLIBRARIES = scripting.la
 
 sipw_SOURCES = server.cpp config.cpp registry.cpp stack.cpp thread.cpp \
 	call.cpp messages.cpp posix.cpp mswindows.cpp
@@ -23,3 +24,6 @@ sipw_SOURCES = server.cpp config.cpp registry.cpp stack.cpp thread.cpp \
 sysconf_DATA = sipwitch.conf
 
 localstate_DATA = *.xml 
+
+scripting_la_SOURCES = scripting.cpp
+scripting_la_LDFLAGS = -module -avoid-version

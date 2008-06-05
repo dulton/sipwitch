@@ -28,7 +28,6 @@ using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
 static const char *replytarget = NULL;
-static const char *scripts = NULL;
 
 #ifndef	_MSWINDOWS_
 
@@ -385,16 +384,12 @@ void process::reply(const char *msg)
 	replytarget = NULL;
 }
 
-bool process::system(const char *id, const char *fmt, ...)
+bool process::system(const char *cmd, const char *fmt, ...)
 {
 	va_list args;
-	char cmd[128];
 	char buf[256];
 	unsigned len = 0;
-	if(!scripts)
-		return false;
 	
-	snprintf(cmd, sizeof(cmd), "%s/%s", scripts, id);
 	if(!fsys::isfile(cmd))
 		return false;
 	
@@ -428,19 +423,8 @@ bool process::control(const char *uid, const char *fmt, ...)
 		return false;
 
 #else
-	const char *home = service::getValue(env, "HOME");
 	if(!uid)
 		uid = service::getValue(env, "USER");
-
-	if(fsys::isdir("/etc/sysconfig/sipwitch-scripts"))
-		scripts = "/etc/sysconfig/sipwitch-scripts";
-	else if(fsys::isdir(DEFAULT_LIBEXEC "/sipwitch"))
-		scripts = DEFAULT_LIBEXEC "/sipwitch";
-	else if(home) {
-		snprintf(buf, sizeof(buf), "%s/.sipwitch-scripts", home);
-		if(fsys::isdir(buf))
-			scripts = strdup(buf);
-	}
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch/control");
 	fd = ::open(buf, O_WRONLY | O_NONBLOCK);
