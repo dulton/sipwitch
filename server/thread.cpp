@@ -1485,8 +1485,10 @@ void thread::reregister(const char *contact, time_t interval)
 	}
 	if(refresh) 
 		debug(2, "refreshing %s for %ld seconds from %s:%s", getIdent(), interval, via_header->host, via_header->port);
-	else if(count)
-			process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%s", getIdent(), interval, via_header->host, via_header->port);
+	else if(count) {
+		service::activate(reginfo);
+		process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%s", getIdent(), interval, via_header->host, via_header->port);
+	}
 	else {
 		process::errlog(ERRLOG, "cannot register %s from %s", getIdent(), buffer);
 		answer = SIP_FORBIDDEN;
@@ -1526,6 +1528,8 @@ void thread::deregister()
 	registry::mapped *rr = registry::access(identity);
 	if(rr) {
 		unreg = rr->expire(via_address);
+		if(unreg)
+			service::expire(rr);
 		registry::detach(rr);
 	}
 	if(unreg)

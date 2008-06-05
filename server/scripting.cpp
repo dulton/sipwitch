@@ -29,6 +29,8 @@ public:
 private:
 	void start(service *cfg);
 	bool reload(service *cfg);
+	void activating(MappedRegistry *rr);
+	void expiring(MappedRegistry *rr);
 };
 
 static scripting scripting_plugin;
@@ -71,6 +73,23 @@ void scripting::start(service *cfg)
 		process::errlog(INFO, "scripting plugin path %s", dirpath);
 	else
 		process::errlog(ERRLOG, "scripting plugin disabled; no script directory");
+}
+
+void scripting::activating(MappedRegistry *rr)
+{
+	char addr[128];
+	if(!dirpath)
+		return;
+
+	Socket::getaddress((struct sockaddr *)&rr->contact, addr, sizeof(addr));
+	process::system("%s/sipup %s %d %s:%d %d", dirpath, rr->userid, rr->ext, 
+		addr, Socket::getservice((struct sockaddr *)&rr->contact), 
+		(int)(rr->type - MappedRegistry::EXPIRED));
+}
+
+void scripting::expiring(MappedRegistry *rr)
+{
+	process::system("%s/sipdown %s %d", dirpath, rr->userid, rr->ext);
 }
 
 END_NAMESPACE

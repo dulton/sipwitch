@@ -363,8 +363,10 @@ void registry::cleanup(time_t period)
 		time(&now);
 		rr = static_cast<mapped*>(reg.pos(regcount++));
 		locking.modify();
-		if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires + period < now && !rr->inuse)
+		if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires + period < now && !rr->inuse) {
+			service::expire(rr);
 			expire(rr);
+		}
 		locking.commit();
 		Thread::yield();
 	}

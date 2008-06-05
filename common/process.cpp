@@ -384,21 +384,47 @@ void process::reply(const char *msg)
 	replytarget = NULL;
 }
 
-bool process::system(const char *cmd, const char *fmt, ...)
+bool process::system(const char *fmt, ...)
 {
+	assert(fmt != NULL);
+
 	va_list args;
 	char buf[256];
-	unsigned len = 0;
 	
-	if(!fsys::isfile(cmd))
-		return false;
-	
-	snprintf(buf, sizeof(buf), "\"%s\" ", cmd);
-	len = strlen(buf);
 	va_start(args, fmt);
 	if(fmt)
-		vsnprintf(buf + len, sizeof(buf) - len, fmt, args);
+		vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
+#ifdef	_MSWINDOWS_
+#else
+	int max = sizeof(fd_set) * 8;
+	pid_t pid = fork();
+#ifdef  RLIMIT_NOFILE
+	struct rlimit rlim;
+
+	if(!getrlimit(RLIMIT_NOFILE, &rlim))
+		max = rlim.rlim_max;
+#endif
+	if(pid) {
+		waitpid(pid, NULL, 0); 
+		return true;
+	}
+	::signal(SIGQUIT, SIG_DFL);
+	::signal(SIGINT, SIG_DFL);
+	::signal(SIGCHLD, SIG_DFL);
+	::signal(SIGPIPE, SIG_DFL);
+	int fd = ::open("/dev/null", O_RDWR);
+	dup2(fd, 0);
+	dup2(fd, 2);
+	dup2(::fileno(fifo), 1);
+	for(fd = 3; fd < max; ++fd)
+		::close(fd);
+	pid = fork();
+	if(pid > 0)
+		::exit(0);
+	::execlp("/bin/sh", "sh", "-c", buf, NULL);
+	::exit(127); 
+#endif
 	return true;
 }
 
