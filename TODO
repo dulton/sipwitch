@@ -14,8 +14,6 @@ authentication handling for b2b outside dialing of arbitrary sip uri's.
 
 Messaging and presense.
 
-Triggered shell scripts for registration and unregistration.
-
 Routing and gateway operations including forced join on first ringer.
 
 Ring mode for 183 ringback/preconnect.
@@ -36,8 +34,6 @@ Call hold and recall.
 Call transfer/refer pass-thru on connected sessions.
 
 Mysql db module plugin.
-
-Service discovery (avahi) plugin.
 
 Packet forward plugin.
 
