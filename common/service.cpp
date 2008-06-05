@@ -157,10 +157,14 @@ void service::subscriber::write(char *str)
 			fsys::close(fs);
 }
 
-service::callback::callback(unsigned rl, const char *name) :
+service::callback::callback(int rl, const char *name) :
 OrderedObject()
 {
-	crit(rl < RUNLEVELS, "service runlevel invalid");
+	crit(rl < (int)RUNLEVELS, "service runlevel invalid");
+	if(rl < 0) {
+		rl += RUNLEVELS;
+		crit(rl > 0, "service runlevel invalid");
+	}
 	LinkedObject::enlist(&runlevels[rl]);
 	id = name;
 	active_flag = false;

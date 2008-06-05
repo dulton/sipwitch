@@ -136,7 +136,7 @@ public:
 		static LinkedObject *runlevels[4];
 		static unsigned count;
 
-        callback(unsigned level = 0, const char *id = NULL);
+        callback(int level = 0, const char *id = NULL);
         virtual ~callback();
 
 		inline void *alloc(service *cfgp, size_t size)
@@ -238,6 +238,9 @@ private:
 	snmpserver *snmpservers;
 	const char *community;
 };
+
+#define	RUNLEVELS	(sizeof(callback::runlevels) / sizeof(LinkedObject *))
+
 
 END_NAMESPACE
 

@@ -16,7 +16,7 @@ EXTRA_DIST = *.xml *.conf
 sbin_PROGRAMS = sipw
 pkglibdir=$(libdir)/sipwitch
 noinst_HEADERS = server.h
-pkglib_LTLIBRARIES = scripting.la
+pkglib_LTLIBRARIES = scripting.la zeroconf.la
 
 sipw_SOURCES = server.cpp config.cpp registry.cpp stack.cpp thread.cpp \
 	call.cpp messages.cpp posix.cpp mswindows.cpp
@@ -25,5 +25,8 @@ sysconf_DATA = sipwitch.conf
 
 localstate_DATA = *.xml 
 
-scripting_la_SOURCES = scripting.cpp
+scripting_la_SOURCES = scripting.cpp 
 scripting_la_LDFLAGS = -module -avoid-version
+
+zeroconf_la_SOURCES = zeroconf.cpp 
+zeroconf_la_LDFLAGS = -module -avoid-version @ZEROCONF_LIBS@

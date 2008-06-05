@@ -330,6 +330,15 @@ AC_DEFINE_UNQUOTED(DEFAULT_VARPATH, "$default_varpath", [run path])
 AC_DEFINE_UNQUOTED(DEFAULT_LIBPATH, "$default_libpath", [lib path])
 AC_DEFINE_UNQUOTED(DEFAULT_LIBEXEC, "$default_libexec", [script path])
 
+zeroconf=""
+ZEROCONF_LIBS=""
+if test -z "$zeroconf" ; then
+    PKG_CHECK_MODULES(ZEROCONF, avahi-client > 0.3, [
+        AC_DEFINE(ZEROCONF_AVAHI, 1, [zeroconf avahi client])
+        zeroconf="avahi"
+    ],[AC_MSG_RESULT(no avahi)])
+fi
+
 AH_BOTTOM([
 #ifndef	HAVE_LOCALTIME_R
 #define	localtime_r(x, y)	localtime(x)
@@ -350,6 +359,7 @@ AC_SUBST(EXPORT_LIBS)
 AC_SUBST(SIPWITCH_FLAGS)
 AC_SUBST(SIPWITCH_LIBS)
 AC_SUBST(SIPWITCH_EXOSIP2)
+AC_SUBST(ZEROCONF_LIBS)
 AC_SUBST(BUILD_SUBDIRS)
 AC_SUBST(CXXFLAGS)
 AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile 
