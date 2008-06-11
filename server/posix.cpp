@@ -549,6 +549,50 @@ extern "C" int main(int argc, char **argv)
 
 	corefiles();
 
+#ifdef	USES_COMMANDS
+	if(argv[1] && (!strcmp(argv[1], "-gdb") || !strcmp(argv[1], "--gdb"))) {
+		argc = 0;
+		args[argc++] = (char *)"gdb";
+		args[argc++] = (char *)"--args";
+		args[argc++] = (char *)argv0;
+		argv += 2;
+		while(*argv && argc < 63)
+			args[argc++] = *(argv++);
+		args[argc++] = NULL;
+		execvp("gdb", args);
+		exit(-1);
+	}
+	
+	if(argv[1] && (!strcmp(argv[1], "-memcheck") || !strcmp(argv[1], "--memcheck"))) {
+		argc = 0;
+		args[argc++] = (char *)"valgrind";
+		args[argc++] = (char *)"--tool=memcheck";
+		args[argc++] = (char *)argv0;
+		argv += 2;
+		while(*argv && argc < 63)
+			args[argc++] = *(argv++);
+		args[argc++] = NULL;
+		execvp("valgrind", args);
+		exit(-1);
+	}	
+	
+	if(argv[1] && (!strcmp(argv[1], "-memleak") || !strcmp(argv[1], "--memleak"))) {
+		argc = 0;
+		args[argc++] = (char *)"valgrind";
+		args[argc++] = (char *)"--tool=memcheck";
+		args[argc++] = (char *)"--leak-check=yes";
+		args[argc++] = (char *)"--show-reachable=yes";
+		args[argc++] = (char *)argv0;
+		argv += 2;
+		while(*argv && argc < 63)
+			args[argc++] = *(argv++);
+		args[argc++] = NULL;
+		execvp("valgrind", args);
+		exit(-1);
+	}
+	
+#endif
+
 	// for deaemon env usually loaded from /etc/defaults or /etc/sysconfig
 
 	cp = getenv("CONCURRENCY");

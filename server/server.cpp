@@ -380,7 +380,9 @@ void server::version(void)
 
 void server::usage(void)
 {
-#ifdef	USES_COMMANDS
+#if !defined(_MSWINDOWS_) && defined(USES_COMMANDS)
+	printf("Usage: sipw [debug] [options] [command...]\n"
+#elif defined(USES_COMMANDS)
 	printf("Usage: sipw [options] [command...]\n"
 #else
 	printf("Usage: sipw [options]\n"
@@ -423,6 +425,12 @@ void server::usage(void)
 		"  registry              List registrations from shared memory\n"
 		"  activate <user>       Activate static user registration\n"
 		"  release <user>        Release registered user\n"
+#endif
+#if defined(USES_COMMANDS) && !defined(_MSWINDOWS_)
+		"Debug Option:\n"
+		"  -gdb                  Run server from gdb\n"
+		"  -memcheck             Check for memory leaks with valgrind\n"
+		"  -memleak              Find where leaks are with valgrind\n"
 #endif
 	);
 	exit(0);
