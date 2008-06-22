@@ -1,6 +1,7 @@
 From version 0.2.0 to 0.2.1
 - integrated debug/memleak detection, used to start gdb or valgrind for
   ".libs/lt-sipw" when started with libtool "wrapper" scripts in build area.
+- fix for avahi detection in configure
 
 From version 0.1.2 to 0.2.0
 - plugin support, zeroconf and scripting plugins added

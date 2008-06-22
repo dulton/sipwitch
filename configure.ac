@@ -10,11 +10,11 @@
 
 AC_INIT(autogen.sh)
 
-VERSION="0.2.0"
+VERSION="0.2.1"
 LT_RELEASE="0.2"
-LT_VERSION="0:0"
+LT_VERSION="0:1"
 
-UCOMMON_REQUIRES="1.9.0"
+UCOMMON_REQUIRES="1.9.3"
 
 AC_CONFIG_AUX_DIR(autoconf)
 AC_CANONICAL_SYSTEM
@@ -336,7 +336,7 @@ if test -z "$zeroconf" ; then
     PKG_CHECK_MODULES(ZEROCONF, avahi-client > 0.3, [
         AC_DEFINE(ZEROCONF_AVAHI, 1, [zeroconf avahi client])
         zeroconf="avahi"
-    ],[AC_MSG_RESULT(no avahi)])
+    ],[zeroconf="$zeroconf"])
 fi
 
 AH_BOTTOM([
