@@ -287,7 +287,7 @@ static void logs(void)
 {
 }
 
-static void registry(void)
+static void registry(const char *id)
 {
 	mapped_view<MappedRegistry> reg("sipwitch.regmap");
 	unsigned count = reg.getCount();
@@ -295,17 +295,73 @@ static void registry(void)
 	volatile const MappedRegistry *member;
 	MappedRegistry buffer;
 	time_t now;
-	char ext[8], exp[8], use[8];
+	char buf[64];
 	const char *type;
+	unsigned port;
 
 	if(!count) 
 		error(405, "Server unavailable");
 
 	printf(
 		"Status: 200 OK\r\n"
-		"Content-Type: text/plain\r\n"
+		"Content-Type: text/xml\r\n"
 		"\r\n");
 
+	printf("<?xml version=\"1.0\"?>\n");
+	printf("<mappedRegistry>\n");
+	time(&now);
+	while(index < count) {
+		member = reg(index++);
+		do {	
+			memcpy(&buffer, (const void *)member, sizeof(buffer));
+		} while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
+		if(buffer.type == MappedRegistry::EXPIRED)
+			continue;
+		else if(buffer.type == MappedRegistry::TEMPORARY && !buffer.inuse)
+			continue;
+		if(id && buffer.ext && atoi(id) == buffer.ext)
+			goto use;
+		if(id && stricmp(id, buffer.userid))
+			continue;
+use:
+		printf(" <entry id=\"%s\">\n", buffer.userid);
+		if(buffer.ext)
+			printf("  <extension>%d</extension>\n", buffer.ext);
+		printf("  <used>%u</used>\n", buffer.inuse);
+		if(buffer.expires && buffer.type != MappedRegistry::TEMPORARY)
+			printf("  <expires>%ld</expires>\n", buffer.expires - now);
+		switch(buffer.type) {
+		case MappedRegistry::REJECT:
+			type = "reject";
+			break;
+		case MappedRegistry::REFER:
+			type = "refer";
+			break;
+		case MappedRegistry::GATEWAY:
+			type = "gateway";
+			break;
+		case MappedRegistry::SERVICE:
+			type = "peer";
+			break;
+		case MappedRegistry::TEMPORARY:
+			type = "temp";
+			break;
+		default:
+			type = "user";
+		};
+		printf("  <type>%s</type>\n", type);
+		printf("  <class>%s</class>\n", buffer.profile.id);
+
+		Socket::getaddress((struct sockaddr *)&buffer.contact, buf, sizeof(buf));
+		port = Socket::getservice((struct sockaddr *)&buffer.contact);
+		printf("  <address>%s</address>\n", buf);
+		printf("  <service>%u</service>\n", port);
+		printf(" </entry>\n");
+		fflush(stdout);
+	}
+	printf("</mappedRegistry>\n");
+	fflush(stdout);
+	exit(0);
 }
 
 extern "C" int main(int argc, char **argv)
@@ -383,6 +439,12 @@ extern "C" int main(int argc, char **argv)
 
 		if(!stricmp(cgi_query, "dump"))
 			dump();
+
+		if(!stricmp(cgi_query, "registry"))
+			registry(NULL);
+		
+		if(!strnicmp(cgi_query, "registry=", 9))
+			registry(cgi_query + 9); 
 	}
 
 	config();
