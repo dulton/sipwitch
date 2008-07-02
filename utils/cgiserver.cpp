@@ -1,0 +1,391 @@
+// Copyright (C) 2008 David Sugar, Tycho Softworks.
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#include <sipwitch/sipwitch.h>
+#include <config.h>
+
+using namespace UCOMMON_NAMESPACE;
+using namespace SIPWITCH_NAMESPACE;
+
+static char *cgi_version = NULL;
+static char *cgi_remuser = NULL;
+static char *cgi_method = NULL;
+static char *cgi_query = NULL;
+static char *cgi_content = NULL;
+static unsigned cgi_length = 0;
+static const char *save_file;
+static const char *temp_file;
+static const char *control_file;
+static const char *snapshot_file;
+static const char *dump_file;
+
+static void error(unsigned err, const char *text)
+{
+	printf(
+		"Status: %d %s\r\n"
+		"Content-Type: text/plain\r\n"
+		"\r\n"
+		"%s\r\n");
+	exit(0);
+}
+
+#ifdef	_MSWINDOWS_
+
+static void cgilock(void)
+{
+}
+
+static void cgiunlock(void)
+{
+}
+
+#else
+
+#include <fcntl.h>
+
+static pid_t pidfile(void)
+{
+	struct stat ino;
+	time_t now;
+	fd_t fd;
+	pid_t pid;
+	char buf[65];
+
+	fd = open(DEFAULT_VARPATH "/run/sipwitch/cgilock", O_RDONLY);
+	if(fd < 0 && errno == EPERM)
+		error(403, "Lock access forbidden");
+
+	if(fd < 0)
+		return 0;
+
+	if(read(fd, buf, 16) < 1) {
+		goto bydate;
+	}
+	buf[16] = 0;
+	pid = atoi(buf);
+	if(pid == 1)
+		goto bydate;
+
+	close(fd);
+	if(kill(pid, 0) && errno == ESRCH)
+		return 0;
+
+	return pid;
+
+bydate:
+	time(&now);
+	fstat(fd, &ino);
+	close(fd);
+	if(ino.st_mtime + 30 < now)
+		return 0;
+	return 1;
+}
+
+static void cgiunlock(void)
+{
+	remove(DEFAULT_VARPATH "/run/sipwitch/cgilock");
+}
+
+static void cgilock(void)
+{
+	unsigned count = 90;
+	pid_t opid;
+	struct stat ino;
+	fd_t fd;
+	char buf[65];
+
+retry:
+	fd = open(DEFAULT_VARPATH "/run/sipwitch/cgilock", O_CREAT|O_WRONLY|O_TRUNC|O_EXCL, 0755);
+	if(fd < 0) {
+		opid = pidfile();
+		if(!opid || opid == 1) {
+			remove(buf);
+			goto retry;
+		}
+		if(count) {
+			--count;
+			::sleep(1);
+		}
+		else
+			error(408, "Lock timed out");
+	}
+
+	snprintf(buf, sizeof(buf), "%d\n", getpid());
+	write(fd, buf, strlen(buf));
+	close(fd);
+}
+
+#endif
+
+static void request(const char *fmt, ...)
+{
+	char buf[512];
+	unsigned len = 0;
+	va_list args;
+	FILE *fp;
+
+#ifndef	_MSWINDOWS_
+	int signo;
+	sigset_t sigs;
+	sigemptyset(&sigs);
+	sigaddset(&sigs, SIGUSR1);
+	sigaddset(&sigs, SIGUSR2);
+	sigaddset(&sigs, SIGALRM);
+	sigprocmask(SIG_BLOCK, &sigs, NULL);
+	snprintf(buf, sizeof(buf), "%d ", getpid());
+	len = strlen(buf);
+#endif
+
+	va_start(args, fmt);
+	vsnprintf(buf + len, sizeof(buf) - len, fmt, args);
+	va_end(args);
+	if(!strchr(buf, '\n'))
+		String::add(buf, sizeof(buf), "\n");
+
+	fp = fopen(control_file, "w");
+	if(!fp)
+		error(405, "Server unavailable");
+
+	fputs(buf, fp);
+	fclose(fp);
+#ifndef	_MSWINDOWS_
+	alarm(60);
+#ifdef	HAVE_SIGWAIT2
+	sigwait(&sigs, &signo);
+#else
+	signo = sigwait(&sigs);
+#endif
+	if(signo == SIGUSR2)
+		error(405, "Request failed");
+	if(signo == SIGALRM)
+		error(408, "Request timed out");
+#endif
+}
+
+static void dump(void)
+{
+	char buf[512];
+
+	cgilock();
+	request("dump");
+	FILE *fp = fopen(dump_file, "r");
+	cgiunlock();
+	if(!fp)
+		error(403, "Dump unavailable");
+
+	printf(
+		"Status: 200 OK\r\n"
+		"Content-Type: text/plain\r\n"
+		"\r\n");
+
+	while(!feof(fp)) {
+		fgets(buf, sizeof(buf) - 1, fp);
+		fputs(buf, stdout);
+	}
+	fflush(stdout);
+	exit(0);
+}
+
+static void snapshot(void)
+{
+	char buf[512];
+
+	cgilock();
+	request("snapshot");
+	FILE *fp = fopen(snapshot_file, "r");
+	cgiunlock();
+	if(!fp)
+		error(403, "Snapshot unavailable");
+
+	printf(
+		"Status: 200 OK\r\n"
+		"Content-Type: text/plain\r\n"
+		"\r\n");
+
+	while(!feof(fp)) {
+		fgets(buf, sizeof(buf) - 1, fp);
+		fputs(buf, stdout);
+	}
+	fflush(stdout);
+	exit(0);
+}
+
+static void config(void)
+{
+	char buf[512];
+	FILE *fp = fopen(save_file, "r");
+	if(!fp)
+		error(403, "Config unavailable");
+
+	printf(
+		"Status: 200 OK\r\n"
+		"Content-Type: text/xml\r\n"
+		"\r\n");
+
+	while(!feof(fp)) {
+		fgets(buf, sizeof(buf) - 1, fp);
+		fputs(buf, stdout);
+	}
+	fflush(stdout);
+	exit(0);
+}
+
+static void post(void)
+{
+	FILE *fp;
+	char buf[257];
+	char *cp;
+	long len;
+
+	if(!cgi_length)
+		error(411, "Length required");
+	if(!cgi_content || stricmp(cgi_content, "text/xml"))
+		error(415, "Unsupported media type");
+
+	cgilock();
+	remove(temp_file);
+	fp = fopen(temp_file, "w");
+	if(!fp)
+		error(403, "Access forbidden");
+
+	while(cgi_length > 0) {
+		if(cgi_length > sizeof(buf) - 1)
+			len = sizeof(buf) - 1;
+		else
+			len = cgi_length;
+
+		if(fread(buf, len, 1, stdin) < 1)
+			error(500, "Invalid read of config");
+		if(fwrite(buf, len, 1, fp) < 1)
+			error(500, "Invalid write of config");
+		cgi_length -= len;
+	}
+	fclose(fp);
+	rename(temp_file, save_file);
+	cgiunlock();
+	request("reload");
+	error(200, "ok");
+}
+
+static void history(void)
+{
+}
+
+static void logs(void)
+{
+}
+
+static void registry(void)
+{
+	mapped_view<MappedRegistry> reg("sipwitch.regmap");
+	unsigned count = reg.getCount();
+	unsigned found = 0, index = 0;
+	volatile const MappedRegistry *member;
+	MappedRegistry buffer;
+	time_t now;
+	char ext[8], exp[8], use[8];
+	const char *type;
+
+	if(!count) 
+		error(405, "Server unavailable");
+
+	printf(
+		"Status: 200 OK\r\n"
+		"Content-Type: text/plain\r\n"
+		"\r\n");
+
+}
+
+extern "C" int main(int argc, char **argv)
+{
+#ifdef _MSWINDOWS_
+	char buf[256];
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	unsigned len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\config.xml");
+	save_file = strdup(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\config.tmp");
+	temp_file = strdup(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\snapshot.log");
+	snapshot_file = strdup(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\dumpfile.log");
+	dump_file = strdup(buf);
+	if(GetEnvironmentVariable("GATEWAY_INTERFACE", buf, sizeof(buf)) > 0)
+		cgi_version = strdup(buf);
+	if(GetEnvironmentVariable("REMOTE_USER", buf, sizeof(buf)) > 0)
+		cgi_remuser = strdup(buf);
+	if(GetEnvironmentVariable("REQUEST_METHOD", buf, sizeof(buf)) > 0)
+		cgi_method = strdup(buf);
+	if(GetEnvironmentVariable("QUERY_STRING", buf, sizeof(buf)) > 0)
+		cgi_query = strdup(buf);
+	if(GetEnvironmentVariable("CONTENT_TYPE", buf, sizeof(buf)) > 0)
+		cgi_content = strdup(buf);
+	if(GetEnvironmentVariable("CONTENT_LENGTH", buf, sizeof(buf)) > 0)
+		cgi_length = atol(buf);
+	control_file = "\\\\.\\mailslot\\sipwitch_ctrl";
+#else
+	save_file = DEFAULT_VARPATH "/run/sipwitch/config.xml";
+	temp_file = DEFAULT_VARPATH "/run/sipwitch/config.tmp";
+	control_file = DEFAULT_VARPATH "/run/sipwitch/control";
+	dump_file = DEFAULT_VARPATH "/run/sipwitch/dumpfile";
+	snapshot_file = DEFAULT_VARPATH "/run/sipwitch/snapshot";
+	cgi_version = getenv("GATEWAY_INTERFACE");
+	cgi_remuser = getenv("REMOTE_USER");
+	cgi_method = getenv("REQUEST_METHOD");
+	cgi_query = getenv("QUERY_STRING");
+	cgi_content = getenv("CONTENT_LENGTH");
+	if(cgi_content)
+		cgi_length = atol(cgi_content);
+	cgi_content = getenv("CONTENT_TYPE");
+#endif
+
+	if(!cgi_version) {
+		fprintf(stderr, "*** sipwitch.cgi must execute from http server on password protected resource\n");
+		exit(-1);
+	}
+
+	if(!cgi_remuser || !*cgi_remuser) 
+		error(403, "Unauthorized to access sipwitch interface");
+
+	if(cgi_method && !stricmp(cgi_method, "post"))
+		post();
+
+	if(cgi_query) {
+		if(!stricmp(cgi_query, "reload")) {
+			request("reload");
+			error(200, "ok");
+		}
+
+		if(!stricmp(cgi_query, "restart")) {
+			request("restart");
+			error(200, "ok");
+		}
+
+		if(!stricmp(cgi_query, "check")) {
+			request("check");
+			error(200, "ok");
+		}
+
+		if(!stricmp(cgi_query, "snapshot"))
+			snapshot();
+
+		if(!stricmp(cgi_query, "dump"))
+			dump();
+	}
+
+	config();
+}
+
+
