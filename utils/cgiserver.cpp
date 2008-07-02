@@ -295,6 +295,7 @@ static void registry(const char *id)
 	volatile const MappedRegistry *member;
 	MappedRegistry buffer;
 	time_t now;
+	struct tm *dt;
 	char buf[64];
 	const char *type;
 	unsigned port;
@@ -318,6 +319,9 @@ static void registry(const char *id)
 		if(buffer.type == MappedRegistry::EXPIRED)
 			continue;
 		else if(buffer.type == MappedRegistry::TEMPORARY && !buffer.inuse)
+			continue;
+		time(&now);
+		if(buffer.expires && buffer.expires < now)
 			continue;
 		if(id && buffer.ext && atoi(id) == buffer.ext)
 			goto use;
@@ -351,6 +355,14 @@ use:
 		};
 		printf("  <type>%s</type>\n", type);
 		printf("  <class>%s</class>\n", buffer.profile.id);
+
+		dt = localtime(&buffer.created);
+		if(dt->tm_year < 1000)
+			dt->tm_year += 1900;
+
+		printf("  <created>%04d%02d%02dT%02d%02d%02d</created>\n",
+			dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+			dt->tm_hour, dt->tm_min, dt->tm_sec);
 
 		Socket::getaddress((struct sockaddr *)&buffer.contact, buf, sizeof(buf));
 		port = Socket::getservice((struct sockaddr *)&buffer.contact);

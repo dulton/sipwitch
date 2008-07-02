@@ -97,9 +97,11 @@ static bool activate(int argc, char **args)
 		delete addr;
 		return false;
 	}
+	time(&reg->created);
 	if(!reg->setTargets(*addr))
 		rtn = false;
 	registry::detach(reg);
+	service::activate(reg);
 	delete addr;
 	return rtn;
 }

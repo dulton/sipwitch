@@ -1486,6 +1486,7 @@ void thread::reregister(const char *contact, time_t interval)
 	if(refresh) 
 		debug(2, "refreshing %s for %ld seconds from %s:%s", getIdent(), interval, via_header->host, via_header->port);
 	else if(count) {
+		time(&reginfo->created);
 		service::activate(reginfo);
 		process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%s", getIdent(), interval, via_header->host, via_header->port);
 	}
