@@ -158,10 +158,13 @@ bool config::confirm(const char *user)
 	} 
 #else
 	if(user) {
-		fsys::open(dir, "/srv/sipw", fsys::ACCESS_DIRECTORY);
-		if(is(dir))
+		if(fsys::isdir("/srv/sipw"))
 			dirpath = "/srv/sipw";
-		else {
+		else
+			dirpath = DEFAULT_VARPATH "/lib/sipwitch";
+
+		fsys::open(dir, dirpath, fsys::ACCESS_DIRECTORY);
+		if(!dir) {
 			fsys::create(dir, DEFAULT_CFGPATH "/sipwitch.d", fsys::ACCESS_DIRECTORY, 0770);
 			dirpath = DEFAULT_CFGPATH "/sipwitch.d";
 		}
@@ -539,13 +542,32 @@ void config::reload(const char *uid)
 {
 	assert(uid == NULL || *uid != 0);
 
-	FILE *fp = service::open(uid);
+	char buf[256];
+	FILE *state = NULL;
+
+#ifdef _MSWINDOWS_
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	unsigned len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\state.xml");
+	state = fopen(buf, "r");
+#else
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch/state.xml");
+	state = fopen(buf, "r");
+#endif
+
 	config *cfgp = new config("sipwitch");
 
 	static config *reclaim = NULL;
 	
 	crit(cfgp != NULL, "reload without config");
 
+	if(state) {
+		process::errlog(DEBUG1, "pre-loading state configuration");
+		if(!cfgp->load(state))
+			process::errlog(ERRLOG, "invalid state");
+	}
+
+	FILE *fp = service::open(uid);
 	if(fp)
 		if(!cfgp->load(fp)) {
 			process::errlog(ERRLOG, "invalid config");

@@ -1085,6 +1085,30 @@ bool service::commit(const char *user)
 	return true;
 }
 
+bool service::state(const char *state)
+{
+	char buf[256];
+
+#ifdef	_MSWINDOWS_
+	return false;
+#else
+	snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/sipwitch/%s.xml", state);
+	if(!fsys::isfile(buf))
+		return false;
+	remove(DEFAULT_VARPATH "/run/sipwitch/state.xml");
+	if(!stricmp(state, "up") || !stricmp(state, "none"))
+		return true;
+#ifdef	HAVE_SYMLINK
+	if(symlink(buf, DEFAULT_VARPATH "/run/sipwitch/state.xml"))
+		return false;
+#else
+	if(link(buf, DEFAULT_VARPATH "/run/sipwitch/state.xml"))
+		return false;
+#endif
+	return true;
+#endif
+}
+
 FILE *service::open(const char *uid, const char *cfgfile)
 {
 	assert(cfgfile == NULL || *cfgfile != 0);

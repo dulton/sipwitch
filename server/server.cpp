@@ -316,6 +316,15 @@ invalid:
 			continue;
 		}
 
+		if(!stricmp(argv[0], "state")) {
+			if(argc != 2)
+				goto invalid;
+			if(!service::state(argv[1]))
+				process::reply("invalid state");
+			config::reload(user);
+			continue;
+		}
+
 		if(!stricmp(argv[0], "concurrency")) {
 			if(argc != 2)
 				goto invalid;
@@ -425,6 +434,7 @@ void server::usage(void)
 		"  message <user> <text> Send instant message to user agent\n"
 		"  digest <user> <pass>  Compute digest based on server realm\n"
 		"  registry              List registrations from shared memory\n"
+		"  state <level>         Set server running state\n"
 		"  activate <user>       Activate static user registration\n"
 		"  release <user>        Release registered user\n"
 #endif

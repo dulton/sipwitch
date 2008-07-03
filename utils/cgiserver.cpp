@@ -287,6 +287,20 @@ static void logs(void)
 {
 }
 
+static void info(void)
+{
+	printf(
+		"Status: 200 OK\r\n"
+		"Content-Type: text/xml\r\n"
+		"\r\n");
+
+	printf("<?xml version=\"1.0\"?>\n");
+	printf("<serviceInfo>\n");
+	printf(" <version>" VERSION "</version>\n");
+	printf("</serviceInfo>\n");
+	error(200, "ok");
+}
+
 static void registry(const char *id)
 {
 	mapped_view<MappedRegistry> reg("sipwitch.regmap");
@@ -431,6 +445,11 @@ extern "C" int main(int argc, char **argv)
 		post();
 
 	if(cgi_query) {
+		if(!strnicmp(cgi_query, "state-", 6) || !strnicmp(cgi_query, "state=", 6) || !strnicmp(cgi_query, "state_", 6)) {
+			request("state %s", cgi_query + 6);
+			error(200, "ok");
+		}
+ 
 		if(!stricmp(cgi_query, "reload")) {
 			request("reload");
 			error(200, "ok");
@@ -451,6 +470,9 @@ extern "C" int main(int argc, char **argv)
 
 		if(!stricmp(cgi_query, "dump"))
 			dump();
+
+		if(!stricmp(cgi_query, "info"))
+			info();
 
 		if(!stricmp(cgi_query, "registry"))
 			registry(NULL);

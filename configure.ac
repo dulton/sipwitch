@@ -267,6 +267,9 @@ for lib in $UCOMMON_CLINK ; do
 		AC_CHECK_LIB($libc, setpgrp, [
 			AC_DEFINE(HAVE_SETPGR, [1], [process set group])
 		])
+		AC_CHECK_LIB($libc, symlink, [
+			AC_DEFINE(HAVE_SYMLINK, [1], [support symlinks])
+		])
 		;;
 	*)
 		;;

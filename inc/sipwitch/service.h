@@ -192,6 +192,7 @@ public:
 	static void publish(const char *path, const char *fmt, ...) __PRINTF(2, 3);
 	static void result(const char *value);
 	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
+	static bool state(const char *value);
 	static void startup(void);
 	static void shutdown(void);
 	static void snmptrap(unsigned id, const char *descr);
