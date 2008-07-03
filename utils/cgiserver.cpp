@@ -289,6 +289,8 @@ static void logs(void)
 
 static void info(void)
 {
+	char buf[256];
+	char *cp;
 	printf(
 		"Status: 200 OK\r\n"
 		"Content-Type: text/xml\r\n"
@@ -297,6 +299,20 @@ static void info(void)
 	printf("<?xml version=\"1.0\"?>\n");
 	printf("<serviceInfo>\n");
 	printf(" <version>" VERSION "</version>\n");
+	FILE *fp = fopen(DEFAULT_VARPATH "/run/sipwitch/state.def", "r");
+	String::set(buf, sizeof(buf), "up");
+	if(fp) {
+		fgets(buf, sizeof(buf), fp);
+		fclose(fp);
+	}
+	cp = strchr(buf, '\r');
+	if(!cp)
+		cp = strchr(buf, '\n');
+	if(cp)
+		*cp = 0;
+	if(!stricmp(buf, "none"))
+		String::set(buf, sizeof(buf), "up"); 
+	printf(" <state>%s</state>\n", buf);
 	printf("</serviceInfo>\n");
 	error(200, "ok");
 }

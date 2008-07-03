@@ -245,10 +245,12 @@ void server::run(const char *user)
 {
 	int argc;
 	char *argv[65];
+	char *state;
 	char *cp, *tokens;
 	static int exit_code = 0;
 	time_t now;
 	struct tm *dt, hold;
+	FILE *fp;
 
 	time(&now);
 	dt = localtime_r(&now, &hold);
@@ -319,8 +321,15 @@ invalid:
 		if(!stricmp(argv[0], "state")) {
 			if(argc != 2)
 				goto invalid;
-			if(!service::state(argv[1]))
+			state = String::unquote(argv[1], "\"\"\'\'()[]{}");
+			if(!service::state(state))
 				process::reply("invalid state");
+			fp = fopen(DEFAULT_VARPATH "/run/sipwitch/state.def", "w");
+			if(fp) {
+				fputs(state, fp);
+				fclose(fp);
+			}
+			process::errlog(NOTICE, "state changed to %s", state);
 			config::reload(user);
 			continue;
 		}
