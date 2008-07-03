@@ -310,8 +310,23 @@ static void info(void)
 		cp = strchr(buf, '\n');
 	if(cp)
 		*cp = 0;
-	if(!stricmp(buf, "none"))
+	if(!stricmp(buf, "none") || !buf[0])
 		String::set(buf, sizeof(buf), "up"); 
+#ifndef	_MSWINDOWS_
+	pid_t pid = 0;
+	fp = fopen(DEFAULT_VARPATH "/run/sipwitch/pidfile", "r");
+	if(fp) {
+		fgets(buf, sizeof(buf), fp);
+		fclose(fp);
+		pid = atol(buf);
+		if(pid) {
+			if(kill(pid, 0) && errno == ESRCH)
+				pid = 0;
+		}
+	}
+	if(!pid)
+		String::set(buf, sizeof(buf), "down");
+#endif		
 	printf(" <state>%s</state>\n", buf);
 	printf("</serviceInfo>\n");
 	error(200, "ok");
