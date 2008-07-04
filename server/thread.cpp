@@ -1047,7 +1047,6 @@ invalid:
 void thread::send_reply(int error)
 {
 	assert(error >= 100);
-	assert(authorizing == CALL || authorizing == MESSAGE);
 
 	osip_message_t *reply = NULL;
 
