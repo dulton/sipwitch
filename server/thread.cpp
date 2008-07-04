@@ -1062,6 +1062,7 @@ void thread::send_reply(int error)
 		else
 			eXosip_call_send_answer(sevent->tid, SIP_BAD_REQUEST, NULL);
 		break;
+	case REGISTRAR:
 	case MESSAGE:
 		eXosip_message_build_answer(sevent->tid, error, &reply);
 		if(reply != NULL) {
@@ -1188,6 +1189,16 @@ void thread::challenge(void)
 
 	eXosip_lock();
 	switch(authorizing) {
+	case REGISTRAR:
+		eXosip_message_build_answer(sevent->tid, SIP_UNAUTHORIZED, &reply);
+		if(reply != NULL) {
+			osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
+			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+			osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
+			stack::siplog(reply);
+			eXosip_message_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
+		}
+		break;
 	case MESSAGE:
 		eXosip_message_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
 		if(reply != NULL) {
@@ -1816,8 +1827,10 @@ void thread::run(void)
 			expiration();
 			if(MSG_IS_OPTIONS(sevent->request))
 				options();
-			else if(MSG_IS_REGISTER(sevent->request))
+			else if(MSG_IS_REGISTER(sevent->request)) {
+				authorizing = REGISTRAR;
 				registration();
+			}
 			else if(MSG_IS_BYE(sevent->request)) {
 				if(sevent->cid > 0)
 					session = stack::access(sevent->cid);

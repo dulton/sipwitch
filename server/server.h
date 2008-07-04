@@ -506,7 +506,7 @@ private:
 	osip_uri_t *uri;
 
 	enum {EXTERNAL, LOCAL, PUBLIC, ROUTED, FORWARDED} destination;
-	enum {CALL, MESSAGE, NONE} authorizing;
+	enum {CALL, MESSAGE, REGISTRAR, NONE} authorizing;
 
 	thread();
 
