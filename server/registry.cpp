@@ -104,7 +104,7 @@ registry::registry() :
 service::callback(0), mapped_reuse<MappedRegistry>()
 {
 	realm = "Local Telephony";
-	digest = "md5";
+	digest = "MD5";
 	prefix = 100;
 	range = 600;
 	expires = 300l;
