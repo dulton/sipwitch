@@ -677,8 +677,11 @@ bool service::load(FILE *fp, keynode *node)
 			cp = ++ep;
 
 			if(!strncmp(bp, "</", 2)) {
-				if(strcmp(bp + 2, node->getId()))
+				if(strcmp(bp + 2, node->getId())) {
+                                    process::errlog(ERRLOG, 
+					    "No matching opening token found for: %s", node->getId());		
 					goto exit;
+                                }
 
 				node = node->getParent();
 				continue;
