@@ -500,10 +500,13 @@ private:
 	stack::session *session;
 	osip_header_t *header;
 	long header_expires;
-	osip_via_t *via_header, *origin_header;
+	osip_via_t *via_header;
 	osip_from_t *from;
 	osip_to_t *to;
 	osip_uri_t *uri;
+	const char *via_host;
+	unsigned via_hops;
+	unsigned via_port;
 
 	enum {EXTERNAL, LOCAL, PUBLIC, ROUTED, FORWARDED} destination;
 	enum {CALL, MESSAGE, REGISTRAR, NONE} authorizing;

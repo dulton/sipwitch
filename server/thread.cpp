@@ -652,7 +652,9 @@ void thread::identify(void)
 	if(!String::ifind(stack::sip.trusted, access->getName(), ",; \t\n"))
 		return;
 
-	rr = registry::address(via_address.getAddr());
+	// trust also only if no intermediary proxies
+	if(via_hops == 1)
+		rr = registry::address(via_address.getAddr());
 	if(!rr)
 		return;
 
@@ -700,7 +702,10 @@ bool thread::unauthenticated(void)
 		return true;
 
 untrusted:
-	debug(2, "challenge request required", 0);
+	if(via_host)
+		debug(2, "challenge required for %s:%u", via_host, via_port);
+	else
+		debug(2, "challenge request required", 0);
 	challenge();
 	return false;
 }
@@ -1104,7 +1109,10 @@ bool thread::authenticate(void)
 
 	if(stack::sip.restricted) {
 		if(!getsource() || !access || !String::ifind(stack::sip.restricted, access->getName(), ",; \t\n")) {
-			process::errlog(NOTICE, "rejecting restricted %s", auth->username);
+			if(via_host)
+				process::errlog(NOTICE, "rejecting restricted %s from %s:%u", auth->username, via_host, via_port);
+			else
+				process::errlog(NOTICE, "rejecting restricted %s", auth->username);
 			error = SIP_FORBIDDEN;
 			goto failed;
 		}
@@ -1226,28 +1234,38 @@ void thread::challenge(void)
 
 bool thread::getsource(void)
 {
+	osip_generic_param_t *param;
 	int vpos = 0;
-	unsigned via_port = 5060;
 
 	if(is(via_address))
 		return true;
 
+	via_host = NULL;
+	via_port = 5060;
 	via_header = NULL;
-	origin_header = NULL;
 	while(sevent->request && osip_list_eol(OSIP2_LIST_PTR sevent->request->vias, vpos) == 0) {
 		via_header = (osip_via_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->vias, vpos++);
-		if(!origin_header)
-			origin_header = via_header;
+		++via_hops;
 	}
 
 	if(!via_header)
 		return false;
 
+	via_host = via_header->host;
 	if(via_header->port)
 		via_port = atoi(via_header->port);
 	if(!via_port)
 		via_port = 5060;
-	via_address.set(via_header->host, via_port);
+	
+	osip_via_param_get_byname(via_header, (char *)"rport", &param);
+	if(param != NULL && param->gvalue != NULL)
+		via_port = atoi(param->gvalue);
+
+    osip_via_param_get_byname(via_header, (char *)"received", &param);
+    if(param != NULL && param->gvalue != NULL)
+        via_host = param->gvalue;
+		
+	via_address.set(via_host, via_port);
 	access = config::getPolicy(via_address.getAddr());
 	return true;
 }
@@ -1494,11 +1512,11 @@ void thread::reregister(const char *contact, time_t interval)
 			count = reginfo->setTarget(via_address, expire, contact);
 	}
 	if(refresh) 
-		debug(2, "refreshing %s for %ld seconds from %s:%s", getIdent(), interval, via_header->host, via_header->port);
+		debug(2, "refreshing %s for %ld seconds from %s:%u", getIdent(), interval, via_host, via_port);
 	else if(count) {
 		time(&reginfo->created);
 		service::activate(reginfo);
-		process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%s", getIdent(), interval, via_header->host, via_header->port);
+		process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%u", getIdent(), interval, via_host, via_port);
 	}
 	else {
 		process::errlog(ERRLOG, "cannot register %s from %s", getIdent(), buffer);
@@ -1643,8 +1661,10 @@ void thread::run(void)
 		if(!shutdown_flag)
 			sevent = eXosip_event_wait(0, stack::sip.timing);
 
+		via_host = NULL;
+		via_port = 0;
+		via_hops = 0;
 		via_header = NULL;
-		origin_header = NULL;
 
 		if(shutdown_flag) {
 			process::errlog(DEBUG1, "stopping thread %d", instance);
