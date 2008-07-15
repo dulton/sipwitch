@@ -722,7 +722,7 @@ bool thread::authorize(void)
 	const char *invited = NULL;
 	char dbuf[MAX_USERID_SIZE];
 	registry::pattern *pp;
-	unsigned from_port = 5060, to_port = 5060, local_port = 5060;
+	unsigned from_port = 5060, to_port = stack::sip.port, local_port = stack::sip.port;
 	const char *sep1 = "", *sep2 = "";
 
 	if(!sevent->request || !sevent->request->to || !sevent->request->from || !sevent->request->req_uri)
@@ -1203,27 +1203,27 @@ void thread::challenge(void)
 			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
 			osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
 			stack::siplog(reply);
-			eXosip_message_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
+			eXosip_message_send_answer(sevent->tid, SIP_UNAUTHORIZED, reply);
 		}
 		break;
 	case MESSAGE:
-		eXosip_message_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
+		eXosip_message_build_answer(sevent->tid, SIP_UNAUTHORIZED, &reply);
 		if(reply != NULL) {
 			osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
 			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
 			osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
 			stack::siplog(reply);
-			eXosip_message_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
+			eXosip_message_send_answer(sevent->tid, SIP_UNAUTHORIZED, reply);
 		}
 		break;
 	case CALL:
-		eXosip_call_build_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, &reply);
+		eXosip_call_build_answer(sevent->tid, SIP_UNAUTHORIZED, &reply);
 		if(reply != NULL) {
 			osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
 			osip_message_set_header(reply, ALLOW_EVENTS, "talk, hold, refer");
 			osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
 			stack::siplog(reply);
-			eXosip_call_send_answer(sevent->tid, SIP_PROXY_AUTHENTICATION_REQUIRED, reply);
+			eXosip_call_send_answer(sevent->tid, SIP_UNAUTHORIZED, reply);
 		}
 		break;
 	case NONE:
