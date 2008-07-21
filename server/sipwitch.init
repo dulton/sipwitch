@@ -1,0 +1,107 @@
+#!/bin/sh
+# Copyright (C) 2008 David Sugar, Tycho Softworks.  
+#
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without
+# modifications, as long as this notice is preserved.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# sipwitch        This shell script takes care of starting and stopping
+#                 a sipwitch server running as a system service.
+#
+# chkconfig: 2345 98 10
+# description: GNU SIP Witch telephony service.
+
+DAEMON="/usr/sbin/sipw"
+NAME="sipwitch"
+DESC="sipwitch"
+FIFO="/var/run/sipwitch/control"
+OPTIONS="-d"
+PRELOAD=""
+PLUGINS=""
+USER=""
+CONCURRENCY=""
+PRIORITY=""
+
+test -x $(DAEMON) || exit 0
+
+set -e
+
+if test -f /etc/sysconfig/sipwitch ; then
+	. /etc/sysconfig/sipwitch
+elif test -f /etc/default/sipwitch ; then
+	. /etc/default/sipwitch
+elif test -f /etc/conf.d/sipwitch ; then
+	. /etc/conf.d/sipwitch
+elif test -f /etc/site-start.d/sipwitch ; then
+	. /etc/site-start.d/sipwitch
+fi
+
+if test ! -z "$PLUGINS" ; then
+	export PLUGINS ; fi
+
+if test ! -z "$USER" ; then
+	export USER ; fi
+
+if test ! -z "$CONCURRENCY" ; then
+	export CONCURRENCY ; fi
+
+if test ! -z "$PRIORITY" ; then
+	export PRIORITY ; fi
+
+case "$1" in
+start)
+	if test ! -z "$PRELOAD" ; then		
+		if test -z "$LD_PRELOAD" ; then
+			LD_PRELOAD="$PRELOAD"
+		else
+			LD_PRELOAD="$LD_PRELOAD:$PRELOAD"
+		fi
+		export LD_PRELOAD
+	fi
+	
+	if test -p $FIFO ; then
+		echo "already started"
+		exit 1
+	fi
+
+	$DAEMON $OPTIONS
+	echo "$NAME."
+	;;
+stop)
+	if test ! -p $FIFO ; then
+		exit 0 ; fi
+
+	echo -n "Stopping $DESC: "
+	echo "down" >$FIFO
+	echo "$NAME."
+	;;
+reload)
+	if test ! -p $FIFO ; then
+		exit 0 ; fi
+	echo -n "Reloading $DESC: "
+	echo "reload" >$FIFO
+	echo "$NAME."
+	;;
+restart|force-reload)
+	echo -n "Restarting $DESC: "
+	start-stop-daemon --stop --quiet --exec $DAEMON
+	sleep 3
+	start-stop-daemon --start --quiet --exec $DAEMON -- $OPTIONS
+	echo "$NAME."
+	;;
+*)
+	N=/etc/init.d/$NAME
+	echo "Usage: $N {start|stop|restart|force-reload}" >&2
+	exit 1
+	;;
+esac
+
+exit 0
+
+
+
+

@@ -1,6 +1,8 @@
 From version 0.2.1 to 0.2.2
 - introduction of cgi control interface.
 - server "state" support and use of state.xml config to set state properties.
+- spec file for building RPM.
+- build support for normal daemon operation.
 
 From version 0.2.0 to 0.2.1
 - integrated debug/memleak detection, used to start gdb or valgrind for

@@ -1,0 +1,90 @@
+%{!?release: %define release 0}
+%{!?epoch:   %define epoch 0}
+%{!?version: %define version @VERSION@}
+
+%{!?uses_stdcpp:  %define uses_avahi 1}
+
+Name: sipwitch
+Summary: "sipwitch" - SIP telephony server for secure phone systems
+Version: %{version}
+Release: %{release}%{?dist}
+Epoch: %{epoch}
+License: GPL v3 or later
+URL: http://www.gnu.org/software/sipwitch
+Group: Networking/Telephony
+Source0: http://www.gnutelephony.org/dist/tarballs/sipwitch-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
+BuildRequires: gcc-c++ ucommon-devel libeXosip2-devel
+Requires: ucommon libeXosip2 
+%if %uses_avahi
+BuildRequires: avahi-devel
+%endif
+
+%package devel
+Requires: ucommon-devel
+Requires: sipwitch = %{epoch}:%{version}-%{release}
+Group: Development/Libraries
+Summary: Headers and static link library
+
+%description
+GNU SIP Witch is a pure SIP-based office telephone call server that supports
+generic phone system features like call forwarding, hunt groups and call
+distribution, call coverage and ring groups, holding, and call transfer, as
+well as offering SIP specific capabilities such as presence and messaging. It
+supports secure telephone extensions for making calls over the Internet, and
+intercept/decrypt-free peer-to-peer audio and video extensions. It is not a SIP
+proxy, a multi-protocol telephone server, or an IP-PBX, and does not try to
+emulate Asterisk, FreeSWITCH, or Yate. 
+
+%description devel
+Static link and header files for building plugins that interface with sipwitch.
+
+%changelog
+
+%prep
+%setup
+%build
+
+%configure CXXFLAGS="$RPM_OPT_FLAGS" 
+%{__make} %{?_smp_mflags} 
+
+%install
+
+%makeinstall
+%{__strip} %{buildroot}/%{_libdir}/libsipwitch-*.so.*.*
+%{__strip} %{buildroot}/%{_libdir}/sipwitch/*
+%{__strip} %{buildroot}/%{_sbindir}/*
+%{__strip} %{buildroot}/%{_bindir}/*
+
+%clean
+%{__rm} -rf %{buildroot}
+
+%files 
+%defattr(-,root,root,-)
+%doc README COPYING INSTALL NEWS FEATURES SUPPORT TODO NOTES AUTHORS ChangeLog
+%{_libdir}/*.so.*
+%{_sbindir}/*
+%{_bindir}/*
+%dir %{_libdir}/sipwitch
+%{_libdir}/sipwitch/*
+%attr(0755,root) /etc/init.d/sipwitch
+%attr(0770,root) %dir /var/sipwitch
+%attr(0770,root) %dir /var/log/sipwitch
+%attr(0770,root) %dir /var/run/sipwitch
+%attr(0660,root) %config /etc/sipwitch.conf
+%attr(0660,root) %config /etc/sysconfig/sipwitch
+%attr(0660,root) %config /var/sipwitch/*.xml
+
+%files devel
+%defattr(-,root,root,-)
+%{_libdir}/*.a
+%{_libdir}/*.so
+%{_libdir}/*.la
+%dir %{_includedir}/sipwitch
+%{_includedir}/sipwitch/*.h
+%{_libdir}/pkgconfig/*.pc
+
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+

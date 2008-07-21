@@ -366,5 +366,5 @@ AC_SUBST(ZEROCONF_LIBS)
 AC_SUBST(BUILD_SUBDIRS)
 AC_SUBST(CXXFLAGS)
 AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile 
-server/Makefile utils/Makefile test/Makefile libsipwitch.pc)
+server/Makefile utils/Makefile test/Makefile libsipwitch.pc sipwitch.spec)
 

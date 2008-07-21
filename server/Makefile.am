@@ -11,10 +11,13 @@
 MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
 LDADD = ../common/libgnusipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ @DAEMON_LIBS@
-EXTRA_DIST = *.xml *.conf
+EXTRA_DIST = *.xml *.conf *.log *.def *.init
 
 sbin_PROGRAMS = sipw
+pkgstatedir=$(localstatedir)/sipwitch
 pkglibdir=$(libdir)/sipwitch
+pkglogdir=$(localstatedir)/log/sipwitch
+logrotatedir=$(sysconfdir)/logrotate.d
 noinst_HEADERS = server.h
 pkglib_LTLIBRARIES = scripting.la zeroconf.la
 
@@ -23,10 +26,25 @@ sipw_SOURCES = server.cpp config.cpp registry.cpp stack.cpp thread.cpp \
 
 sysconf_DATA = sipwitch.conf
 
-localstate_DATA = *.xml 
+pkgstate_DATA = *.xml 
 
 scripting_la_SOURCES = scripting.cpp 
 scripting_la_LDFLAGS = -module -avoid-version
 
 zeroconf_la_SOURCES = zeroconf.cpp 
 zeroconf_la_LDFLAGS = -module -avoid-version @ZEROCONF_LIBS@
+
+install-exec-local:
+	$(mkinstalldirs) $(DESTDIR)/$(localstatedir)/log/sipwitch
+	$(mkinstalldirs) $(DESTDIR)/$(logrotatedir)
+	$(INSTALL_DATA) sipwitch.log $(DESTDIR)/$(logrotatedir)/sipwitch
+	if test -d /etc/sysconfig ; then \
+		$(mkinstalldirs) $(DESTDIR)/$(sysconfdir)/sysconfig ; \
+		$(INSTALL_DATA) sipwitch.def $(DESTDIR)/$(sysconfdir)/sysconfig/sipwitch ; \
+	else \
+		$(mkinstalldirs) $(DESTDIR)/$(sysconfdir)/default ; \
+		$(INSTALL_DATA) sipwitch.def $(DESTDIR)/$(sysconfdir)/default/sipwitch ; \
+	fi
+	$(mkinstalldirs) $(DESTDIR)/$(sysconfdir)/init.d
+	$(INSTALL) -m 0755 sipwitch.init $(DESTDIR)/$(sysconfdir)/init.d/sipwitch
+
