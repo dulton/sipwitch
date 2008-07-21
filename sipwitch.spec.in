@@ -2,7 +2,7 @@
 %{!?epoch:   %define epoch 0}
 %{!?version: %define version @VERSION@}
 
-%{!?uses_stdcpp:  %define uses_avahi 1}
+%{!?uses_avahi:  %define uses_avahi 1}
 
 Name: sipwitch
 Summary: "sipwitch" - SIP telephony server for secure phone systems
