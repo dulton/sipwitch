@@ -51,7 +51,7 @@ Static link and header files for building plugins that interface with sipwitch.
 %install
 
 %makeinstall
-%{__strip} %{buildroot}/%{_libdir}/libsipwitch-*.so.*.*
+%{__strip} %{buildroot}/%{_libdir}/lib*-*.so.*.*
 %{__strip} %{buildroot}/%{_libdir}/sipwitch/*
 %{__strip} %{buildroot}/%{_sbindir}/*
 %{__strip} %{buildroot}/%{_bindir}/*
