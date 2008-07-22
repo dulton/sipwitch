@@ -67,13 +67,13 @@ Static link and header files for building plugins that interface with sipwitch.
 %{_bindir}/*
 %dir %{_libdir}/sipwitch
 %{_libdir}/sipwitch/*
-%attr(0755,root) /etc/init.d/sipwitch
-%attr(0770,root) %dir /var/sipwitch
-%attr(0770,root) %dir /var/log/sipwitch
-%attr(0770,root) %dir /var/run/sipwitch
-%attr(0660,root) %config /etc/sipwitch.conf
-%attr(0660,root) %config /etc/sysconfig/sipwitch
-%attr(0660,root) %config /var/sipwitch/*.xml
+%attr(0755,root,root) /etc/init.d/sipwitch
+%attr(0770,root,root) %dir /var/sipwitch
+%attr(0770,root,root) %dir /var/log/sipwitch
+%attr(0770,root,root) %dir /var/run/sipwitch
+%attr(0660,root,root) %config /etc/sipwitch.conf
+%attr(0660,root,root) %config /etc/sysconfig/sipwitch
+%attr(0660,root,root) %config /var/sipwitch/*.xml
 
 %files devel
 %defattr(-,root,root,-)
