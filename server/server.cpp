@@ -144,28 +144,52 @@ void server::plugins(const char *argv0, const char *list)
 	char *ep;
 	const char *cp;
 	fsys	module;
+	fsys	dir;
+	unsigned el;
 
-	if(!list || !*list)
+	if(!list || !*list || !stricmp(list, "none"))
 		return;
 
-	string::set(buffer, sizeof(buffer), list);
-	while(NULL != (cp = string::token(buffer, &tp, ", ;:\r\n"))) {
+	if(!stricmp(list, "auto")) {
 		string::set(path, sizeof(path), argv0);
 		ep = strstr(path, LIB_PREFIX + 1);
-		if(ep) {
+		if(ep)
 			ep[strlen(LIB_PREFIX)] = 0;
-			string::add(path, sizeof(path), cp);
-			string::add(path, sizeof(path), DLL_SUFFIX);
-			if(fsys::isfile(path)) {
-				process::errlog(INFO, "loading %s" DLL_SUFFIX " locally", cp);
-				goto loader;
-			}
+		else 
+			string::set(path, sizeof(path), DEFAULT_LIBPATH "/sipwitch");
+		el = strlen(path);
+		fsys::open(dir, path, fsys::ACCESS_DIRECTORY);
+		while(is(dir) && fsys::read(dir, buffer, sizeof(buffer)) > 0) {
+			ep = strrchr(buffer, '.');
+			if(!ep || stricmp(ep, DLL_SUFFIX))
+				continue;
+			snprintf(path + el, sizeof(path) - el, "/%s", buffer);
+			process::errlog(INFO, "loading %s", buffer);
+			if(fsys::load(path)) 
+				process::errlog(ERRLOG, "failed loading %s", path);
 		}
-		snprintf(path, sizeof(path), DEFAULT_LIBPATH "/sipwitch/%s" DLL_SUFFIX, cp);
-		process::errlog(INFO, "loading %s", path);
+		fsys::close(dir);
+	}
+	else {
+		string::set(buffer, sizeof(buffer), list);
+		while(NULL != (cp = string::token(buffer, &tp, ", ;:\r\n"))) {
+			string::set(path, sizeof(path), argv0);
+			ep = strstr(path, LIB_PREFIX + 1);
+			if(ep) {
+				ep[strlen(LIB_PREFIX)] = 0;
+				string::add(path, sizeof(path), cp);
+				string::add(path, sizeof(path), DLL_SUFFIX);
+				if(fsys::isfile(path)) {
+					process::errlog(INFO, "loading %s" DLL_SUFFIX " locally", cp);
+					goto loader;
+				}
+			}
+			snprintf(path, sizeof(path), DEFAULT_LIBPATH "/sipwitch/%s" DLL_SUFFIX, cp);
+			process::errlog(INFO, "loading %s", path);
 loader:
-		if(fsys::load(path)) 
-			process::errlog(ERRLOG, "failed loading %s", path);
+			if(fsys::load(path)) 
+				process::errlog(ERRLOG, "failed loading %s", path);
+		}
 	}
 }
 

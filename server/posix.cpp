@@ -616,6 +616,8 @@ extern "C" int main(int argc, char **argv)
 	cp = getenv("PLUGINS");
 	if(cp)
 		plugins = strdup(cp);
+	else
+		plugins = "auto";
 
 	if(!getuid())
 		daemon = true;

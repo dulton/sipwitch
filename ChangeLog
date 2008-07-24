@@ -1,3 +1,7 @@
+From version 0.2.2 to 0.2.3
+- default autoloading of available plugins.
+- spec split to externalize plugins.
+
 From version 0.2.1 to 0.2.2
 - introduction of cgi control interface.
 - server "state" support and use of state.xml config to set state properties.
