@@ -114,10 +114,11 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %dir %{_libdir}/sipwitch
 %config %{_sysconfdir}/logrotate.d/sipwitch
 %attr(0755,root,root) %{_sysconfdir}/init.d/sipwitch
-%attr(0770,root,root) %dir %{_localstatedir}/sipwitch
+%attr(0770,root,root) %dir %{_localstatedir}/lib/sipwitch
 %attr(0660,root,root) %config %{_sysconfdir}/sipwitch.conf
 %attr(0660,root,root) %config %{_sysconfdir}/sysconfig/sipwitch
-%attr(0660,root,root) %config %{_localstatedir}/sipwitch/*.xml
+%attr(0660,root,root) %config %{_localstatedir}/lib/sipwitch/*.xml
+%attr(0770,root,root) %dir %{_localstatedir}/log/sipwitch
 
 %files -n %{_libname}
 %{_libdir}/lib*.so.*
@@ -145,7 +146,6 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 
 %post
 if [ -x /sbin/chkconfig ] ; then /sbin/chkconfig --add sipwitch ; fi
-if [ -d /var/log ] ; then mkdir -m 0770 /var/log/sipwitch ; fi
 
 %preun
 if [ -x /sbin/chkconfig ] ; then /sbin/chkconfig --del sipwitch ; fi

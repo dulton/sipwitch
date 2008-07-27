@@ -158,17 +158,11 @@ bool config::confirm(const char *user)
 	} 
 #else
 	if(user) {
-		if(fsys::isdir("/srv/sipw"))
-			dirpath = "/srv/sipw";
-		else
-			dirpath = DEFAULT_VARPATH "/lib/sipwitch";
-
+		dirpath = DEFAULT_VARPATH "/lib/sipwitch";
 		fsys::open(dir, dirpath, fsys::ACCESS_DIRECTORY);
-		if(!dir) {
-			fsys::create(dir, DEFAULT_CFGPATH "/sipwitch.d", fsys::ACCESS_DIRECTORY, 0770);
+		if(!dir)
 			dirpath = DEFAULT_CFGPATH "/sipwitch.d";
-		}
-	}
+	}		
 	if(!is(dir))
 		fsys::open(dir, dirpath, fsys::ACCESS_DIRECTORY);
 #endif

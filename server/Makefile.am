@@ -14,7 +14,7 @@ LDADD = ../common/libsipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ @DAEMON_LIBS
 EXTRA_DIST = *.xml *.conf *.log *.def *.init
 
 sbin_PROGRAMS = sipw
-pkgstatedir=$(localstatedir)/sipwitch
+pkgstatedir=$(localstatedir)/lib/sipwitch
 pkglibdir=$(libdir)/sipwitch
 logrotatedir=$(sysconfdir)/logrotate.d
 noinst_HEADERS = server.h
@@ -34,6 +34,7 @@ zeroconf_la_SOURCES = zeroconf.cpp
 zeroconf_la_LDFLAGS = -module -avoid-version @ZEROCONF_LIBS@
 
 install-exec-local:
+	$(mkinstalldirs) $(DESTDIR)/$(localstatedir)/log/sipwitch
 	$(mkinstalldirs) $(DESTDIR)/$(logrotatedir)
 	$(INSTALL_DATA) sipwitch.log $(DESTDIR)/$(logrotatedir)/sipwitch
 	if test -d /etc/sysconfig ; then \
