@@ -1,6 +1,7 @@
 From version 0.2.2 to 0.2.3
 - default autoloading of available plugins.
 - spec split to externalize plugins.
+- simplified library abi numbering.
 
 From version 0.2.1 to 0.2.2
 - introduction of cgi control interface.

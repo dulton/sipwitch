@@ -1,39 +1,46 @@
 %{!?release: %define release 0}
-%{!?epoch:   %define epoch 0}
 %{!?version: %define version @VERSION@}
 
 %{!?uses_avahi:  %define uses_avahi 1}
+
+%define %_libname libsipwitch-@LT_MAJOR@
+%define %_devname libsipwitch-devel
 
 Name: sipwitch
 Summary: "sipwitch" - SIP telephony server for secure phone systems
 Version: %{version}
 Release: %{release}%{?dist}
-Epoch: %{epoch}
 License: GPL v3 or later
 URL: http://www.gnu.org/software/sipwitch
 Group: Networking/Telephony
 Source0: http://www.gnutelephony.org/dist/tarballs/sipwitch-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildRequires: gcc-c++ ucommon-devel libeXosip2-devel pkgconfig
-Requires: ucommon libeXosip2 
+BuildRequires: ucommon-devel >= 1.9.5
+BuildRequires: libeXosip2-devel >= 3.0.0
+BuildRequires: gcc-c++ pkgconfig
 %if %uses_avahi
 BuildRequires: avahi-devel
 %endif
 
-%package devel
-Requires: ucommon-devel
-Requires: sipwitch = %{epoch}:%{version}-%{release}
+%package -n %{_libname}
+Group: System/Libraries
+Summary: Runtime library for sipwitch server and plugins
+
+%package -n %{_devname}
+Requires: libucommon-devel >= 1.9.5
+Requires: %{_libname} = %{version}
 Group: Development/Libraries
 Summary: Headers and static link library
+Provides: %{name}-devel = %{version}-%{release}
 
-%package zeroconf
-Requires: sipwitch = %{epoch}:%{version}-%{release}
-Group: Development/Libraries
+%package plugin-zeroconf
+Requires: sipwitch = %{version}
+Group: Networking/Telephony
 Summary: Zeroconf plugin for sipwitch
 
-%package scripting
-Requires: sipwitch = %{epoch}:%{version}-%{release}
-Group: Development/Libraries
+%package plugin-scripting
+Requires: sipwitch = %{version}
+Group: Networking/Telephony
 Summary: Scripting plugin for sipwitch
 
 %description
@@ -46,17 +53,22 @@ intercept/decrypt-free peer-to-peer audio and video extensions. It is not a SIP
 proxy, a multi-protocol telephone server, or an IP-PBX, and does not try to
 emulate Asterisk, FreeSWITCH, or Yate. 
 
-%description devel
-Static link and header files for building plugins that interface with sipwitch.
+%description -n %{_libname}
+Runtime library needed for GNU SIP Witch server and plugins.
 
-%description zeroconf
+%description -n %{_devname}
+Static link and header files for building plugins that interface with sipwitch.
+This might be used for externally creating sipwitch modules, though normally
+modules are found or added to the core distribution directly.  This may also
+be for developing external application services which need to communicate with 
+a running sipwitch daemon instance.
+
+%description plugin-zeroconf
 This plugin activates zeroconf network services for sipwitch and publishes
 sipwitch as a sip server.
 
-%description scripting
+%description plugin-scripting
 This plugin enables shell scripting in connection with specific sipwitch events.
-
-%changelog
 
 %prep
 %setup
@@ -75,13 +87,16 @@ This plugin enables shell scripting in connection with specific sipwitch events.
 %{__rm} -f %{buildroot}/%{_libdir}/sipwitch/*.a
 %{__rm} -f %{buildroot}/%{_libdir}/sipwitch/*.la
 
+# setup for automatic plugin loading.  
+# Plugins selected by packages admin has installed.
+echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
+
 %clean
 %{__rm} -rf %{buildroot}
 
 %files 
 %defattr(-,root,root,-)
 %doc README COPYING INSTALL NEWS FEATURES SUPPORT TODO NOTES AUTHORS ChangeLog
-%{_libdir}/*.so.*
 %{_sbindir}/*
 %{_bindir}/*
 %dir %{_libdir}/sipwitch
@@ -93,15 +108,18 @@ This plugin enables shell scripting in connection with specific sipwitch events.
 %attr(0660,root,root) %config /etc/sysconfig/sipwitch
 %attr(0660,root,root) %config /var/sipwitch/*.xml
 
-%files zeroconf
+%files -n %{_libname}
+%{_libdir}/*.so.*
+
+%files plugin-zeroconf
 %defattr(-,root,root,-)
 %{_libdir}/sipwitch/zeroconf.*
 
-%files scripting
+%files plugin-scripting
 %defattr(-,root,root,-)
 %{_libdir}/sipwitch/scripting.*
 
-%files devel
+%files -n %{_devname}
 %defattr(-,root,root,-)
 %{_libdir}/*.a
 %{_libdir}/*.so
@@ -110,7 +128,15 @@ This plugin enables shell scripting in connection with specific sipwitch events.
 %{_includedir}/sipwitch/*.h
 %{_libdir}/pkgconfig/*.pc
 
-%post -p /sbin/ldconfig
+%post -n %{_libname} -p /sbin/ldconfig
 
-%postun -p /sbin/ldconfig
+%postun -n %{_libname} -p /sbin/ldconfig
+
+%changelog
+* Fri Jul 25 2008 - dyfet@gnutelephony.org
+- spec file updated for plugins and new library naming.
+
+* Mon Jul 21 2008 - dyfet@gnutelephony.org
+- initial spec file distribution.
+
 

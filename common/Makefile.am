@@ -9,12 +9,12 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
-RELEASE = -version-info $(LT_VERSION) -release $(LT_RELEASE)
+RELEASE = -version-info $(LT_VERSION)
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
 
-lib_LTLIBRARIES = libgnusipwitch.la 
+lib_LTLIBRARIES = libsipwitch.la 
 
-libgnusipwitch_la_LDFLAGS = @SIPWITCH_LIBS@ $(RELEASE) 
-libgnusipwitch_la_SOURCES = service.cpp digest.cpp process.cpp
+libsipwitch_la_LDFLAGS = @SIPWITCH_LIBS@ $(RELEASE) 
+libsipwitch_la_SOURCES = service.cpp digest.cpp process.cpp
 
 
