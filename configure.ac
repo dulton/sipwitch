@@ -278,7 +278,7 @@ COMPILER_FLAGS=""
 for flag in $CXXFLAGS ; do
 	case "$flag" in
 	-f*exceptions|-f*rtti|-f*check-new|-f*enforce-eh-specs|-finline|-f*except)
-		if "$UCOMMON_MODEL" = "CXX" ; then
+		if test "$UCOMMON_MODEL" = "CXX" ; then
 			COMPILER_FLAGS="$COMPILER_FLAGS $flag" ; fi
 		;;
 	-fvisibility=*)

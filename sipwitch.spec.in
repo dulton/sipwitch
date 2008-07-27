@@ -2,9 +2,15 @@
 %{!?version: %define version @VERSION@}
 
 %{!?uses_avahi:  %define uses_avahi 1}
+%{!?uses_openssl:  %define uses_openssl 1}
+%{!?uses_gcrypt: %define uses_gcrypt 0}
 
-%define %_libname libsipwitch-@LT_MAJOR@
-%define %_devname libsipwitch-devel
+%if %{uses_gcrypt}
+%define	uses_openssl 0
+%endif
+
+%define _libname libsipwitch@LT_MAJOR@
+%define _devname libsipwitch-devel
 
 Name: sipwitch
 Summary: "sipwitch" - SIP telephony server for secure phone systems
@@ -18,6 +24,12 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: ucommon-devel >= 1.9.5
 BuildRequires: libeXosip2-devel >= 3.0.0
 BuildRequires: gcc-c++ pkgconfig
+%if %uses_openssl
+BuildRequires: openssl-devel
+%endif
+%if %uses_gcrypt
+BuildRequires: libgcrypt-devel
+%endif
 %if %uses_avahi
 BuildRequires: avahi-devel
 %endif
@@ -80,8 +92,8 @@ This plugin enables shell scripting in connection with specific sipwitch events.
 %install
 
 %makeinstall
-%{__strip} %{buildroot}/%{_libdir}/lib*-*.so.*.*
-%{__strip} %{buildroot}/%{_libdir}/sipwitch/*
+%{__strip} %{buildroot}/%{_libdir}/lib*.so.*.*
+%{__strip} %{buildroot}/%{_libdir}/sipwitch/*.so
 %{__strip} %{buildroot}/%{_sbindir}/*
 %{__strip} %{buildroot}/%{_bindir}/*
 %{__rm} -f %{buildroot}/%{_libdir}/sipwitch/*.a
@@ -100,16 +112,15 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %{_sbindir}/*
 %{_bindir}/*
 %dir %{_libdir}/sipwitch
-%config /etc/logrotate.d/sipwitch
-%attr(0755,root,root) /etc/init.d/sipwitch
-%attr(0770,root,root) %dir /var/sipwitch
-%attr(0770,root,root) %dir /var/log/sipwitch
-%attr(0660,root,root) %config /etc/sipwitch.conf
-%attr(0660,root,root) %config /etc/sysconfig/sipwitch
-%attr(0660,root,root) %config /var/sipwitch/*.xml
+%config %{_sysconfdir}/logrotate.d/sipwitch
+%attr(0755,root,root) %{_sysconfdir}/init.d/sipwitch
+%attr(0770,root,root) %dir %{_localstatedir}/sipwitch
+%attr(0660,root,root) %config %{_sysconfdir}/sipwitch.conf
+%attr(0660,root,root) %config %{_sysconfdir}/sysconfig/sipwitch
+%attr(0660,root,root) %config %{_localstatedir}/sipwitch/*.xml
 
 %files -n %{_libname}
-%{_libdir}/*.so.*
+%{_libdir}/lib*.so.*
 
 %files plugin-zeroconf
 %defattr(-,root,root,-)
@@ -121,9 +132,9 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 
 %files -n %{_devname}
 %defattr(-,root,root,-)
-%{_libdir}/*.a
-%{_libdir}/*.so
-%{_libdir}/*.la
+%{_libdir}/lib*.a
+%{_libdir}/lib*.so
+%{_libdir}/lib*.la
 %dir %{_includedir}/sipwitch
 %{_includedir}/sipwitch/*.h
 %{_libdir}/pkgconfig/*.pc
@@ -131,6 +142,13 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %post -n %{_libname} -p /sbin/ldconfig
 
 %postun -n %{_libname} -p /sbin/ldconfig
+
+%post
+if [ -x /sbin/chkconfig ] ; then /sbin/chkconfig --add sipwitch ; fi
+if [ -d /var/log ] ; then mkdir -m 0770 /var/log/sipwitch ; fi
+
+%preun
+if [ -x /sbin/chkconfig ] ; then /sbin/chkconfig --del sipwitch ; fi
 
 %changelog
 * Fri Jul 25 2008 - dyfet@gnutelephony.org

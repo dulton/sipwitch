@@ -16,7 +16,6 @@ EXTRA_DIST = *.xml *.conf *.log *.def *.init
 sbin_PROGRAMS = sipw
 pkgstatedir=$(localstatedir)/sipwitch
 pkglibdir=$(libdir)/sipwitch
-pkglogdir=$(localstatedir)/log/sipwitch
 logrotatedir=$(sysconfdir)/logrotate.d
 noinst_HEADERS = server.h
 pkglib_LTLIBRARIES = scripting.la zeroconf.la
@@ -35,7 +34,6 @@ zeroconf_la_SOURCES = zeroconf.cpp
 zeroconf_la_LDFLAGS = -module -avoid-version @ZEROCONF_LIBS@
 
 install-exec-local:
-	$(mkinstalldirs) $(DESTDIR)/$(localstatedir)/log/sipwitch
 	$(mkinstalldirs) $(DESTDIR)/$(logrotatedir)
 	$(INSTALL_DATA) sipwitch.log $(DESTDIR)/$(logrotatedir)/sipwitch
 	if test -d /etc/sysconfig ; then \

@@ -617,7 +617,7 @@ extern "C" int main(int argc, char **argv)
 	if(cp)
 		plugins = strdup(cp);
 	else
-		plugins = "none";
+		plugins = (char *)"none";
 
 	if(!getuid())
 		daemon = true;

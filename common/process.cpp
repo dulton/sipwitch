@@ -102,6 +102,7 @@ char *process::receive(void)
 	reply(NULL);
 
 retry:
+	buf[0] = 0;
 	fgets(buf, sizeof(buf), fifo);
 	cp = String::strip(buf, " \t\r\n");
 	if(*cp == '/') {
