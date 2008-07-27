@@ -1,8 +1,10 @@
 # rotate sipwitch call log every week...
 
-/var/log/sipwitch/* {
+/var/log/sipwitch.log {
     missingok
+	notifempty
     weekly
     compress
+	rotate 4
 }
 

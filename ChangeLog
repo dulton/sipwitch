@@ -1,3 +1,6 @@
+From version 0.2.4 to 0.2.5
+- fix for proper handling of log files.
+
 From version 0.2.3 to 0.2.4
 - small fixups on path usage in make and spec files.
 - fix in config file path scanning.

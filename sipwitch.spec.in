@@ -86,7 +86,7 @@ This plugin enables shell scripting in connection with specific sipwitch events.
 %setup
 %build
 
-%configure CXXFLAGS="$RPM_OPT_FLAGS" 
+%configure --with-pkg-config CXXFLAGS="$RPM_OPT_FLAGS" 
 %{__make} %{?_smp_mflags} 
 
 %install
@@ -118,7 +118,6 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %attr(0660,root,root) %config %{_sysconfdir}/sipwitch.conf
 %attr(0660,root,root) %config %{_sysconfdir}/sysconfig/sipwitch
 %attr(0660,root,root) %config %{_localstatedir}/lib/sipwitch/*.xml
-%attr(0770,root,root) %dir %{_localstatedir}/log/sipwitch
 
 %files -n %{_libname}
 %{_libdir}/lib*.so.*
