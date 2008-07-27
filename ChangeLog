@@ -1,5 +1,6 @@
 From version 0.2.4 to 0.2.5
-- fix for proper handling of log files.
+- fix for proper handling of log files and cgi extraction of call log with
+  timestamp key.  Together these changes allow cgi polling of call details.
 
 From version 0.2.3 to 0.2.4
 - small fixups on path usage in make and spec files.

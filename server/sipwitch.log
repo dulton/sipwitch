@@ -5,6 +5,7 @@
 	notifempty
     weekly
     compress
-	rotate 4
+	delaycompress
+	rotate 5
 }
 

@@ -283,8 +283,71 @@ static void history(void)
 {
 }
 
-static void logs(void)
+static void callfile(FILE *fp, const char *id)
 {
+	struct stat ino;
+	char buf[256];
+	char *cp = NULL;
+	unsigned long date, line = 0;
+	unsigned long last_date = 0, last_line = 0;
+	struct tm *dt;
+
+	if(!fp)
+		return;
+
+#ifdef	_MSWINDOWS_
+	_fstat(_fileno(fp), &ino));
+#else
+	fstat(fileno(fp), &ino);
+#endif
+
+	dt = localtime(&ino.st_ctime);
+
+	if(dt->tm_year >= 2000)
+		dt->tm_year -= 2000;
+
+	date = dt->tm_hour + (32l * dt->tm_mday) + (1024l * dt->tm_mon) + (16384l * dt->tm_year);  
+
+	if(id) {
+		last_date = atol(id);
+		cp = strchr(id, '/');
+	}
+	if(cp)
+		last_line = atol(++cp);
+
+	if(date < last_date) {
+		fclose(fp);
+		return;
+	}
+
+	while(!feof(fp)) {
+		buf[0] = 0;
+		fgets(buf, sizeof(buf), fp);
+		if(strnicmp(buf, "call ", 5))
+			continue;
+		cp = buf + 5;
+		while(*cp == ' ')
+			++cp;
+		++line;
+		if(date == last_date && line <= last_line)
+			continue;
+		if(id && *id && strnicmp(id, cp, strlen(id) > 0))
+			continue;
+		printf("%07ld/%07ld %s", date, line, cp);
+	}
+	if(fp)
+		fclose(fp);
+}
+
+static void calls(const char *id)
+{
+	printf(
+		"Status: 200 OK\r\n"
+		"Content-Type: text/plain\r\n"
+		"\r\n");
+	callfile(fopen(DEFAULT_VARPATH "/log/sipwitch.log.0", "r"), id);
+	callfile(fopen(DEFAULT_VARPATH "/log/sipwitch.log", "r"), id);
+	exit(0);
 }
 
 static void info(void)
@@ -507,9 +570,15 @@ extern "C" int main(int argc, char **argv)
 
 		if(!stricmp(cgi_query, "registry"))
 			registry(NULL);
+
+		if(!stricmp(cgi_query, "calls"))
+			calls(NULL);
 		
 		if(!strnicmp(cgi_query, "registry=", 9))
 			registry(cgi_query + 9); 
+
+		if(!strnicmp(cgi_query, "calls=", 6))
+			calls(cgi_query + 6); 
 	}
 
 	config();
