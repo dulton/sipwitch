@@ -1,3 +1,6 @@
+From version 0.2.5 to 0.2.6
+- change of linkage handling of server.
+
 From version 0.2.4 to 0.2.5
 - fix for proper handling of log files and cgi extraction of call log with
   timestamp key.  Together these changes allow cgi polling of call details.

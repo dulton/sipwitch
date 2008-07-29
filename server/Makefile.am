@@ -28,10 +28,10 @@ sysconf_DATA = sipwitch.conf
 pkgstate_DATA = *.xml 
 
 scripting_la_SOURCES = scripting.cpp 
-scripting_la_LDFLAGS = -module -avoid-version
+scripting_la_LDFLAGS = -module -avoid-version $(LDADD)
 
 zeroconf_la_SOURCES = zeroconf.cpp 
-zeroconf_la_LDFLAGS = -module -avoid-version @ZEROCONF_LIBS@
+zeroconf_la_LDFLAGS = -module -avoid-version @ZEROCONF_LIBS@ $(LDADD)
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(logrotatedir)

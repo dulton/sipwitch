@@ -33,6 +33,7 @@ BuildRequires: libgcrypt-devel
 %if %uses_avahi
 BuildRequires: avahi-devel
 %endif
+Requires: %{_libname} = %{version}
 
 %package -n %{_libname}
 Group: System/Libraries
