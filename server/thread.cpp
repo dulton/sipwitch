@@ -1807,6 +1807,26 @@ void thread::run(void)
 				}
 			}
 			break;
+		case EXOSIP_CALL_REINVITE:
+			stack::siplog(sevent->request);
+			authorizing = CALL;
+			if(!sevent->request)
+				break;
+			if(sevent->cid < 1 && sevent->did < 1) {
+				send_reply(SIP_NOT_FOUND);
+				break;
+			}
+			expiration();
+			session = stack::access(sevent->cid);
+			if(!session) {
+				send_reply(SIP_NOT_FOUND);
+				break;
+			};
+			if(!authorize())
+				break;
+
+			session->parent->reinvite(this, session);
+			break;
 		case EXOSIP_CALL_INVITE:
 			stack::siplog(sevent->request);
 			authorizing = CALL;
@@ -1820,11 +1840,28 @@ void thread::run(void)
 				invite();
 			break;
 		case EXOSIP_CALL_MESSAGE_ANSWERED:
-			// probably got here as result of sending BYE to UA...
-		case EXOSIP_MESSAGE_ANSWERED:
-			// we already acknowledged SMS message when posting, so we
-			// throw this response away....
 			stack::siplog(sevent->response);
+			authorizing = CALL;
+			if(!sevent->response)
+				break;
+			if(sevent->cid < 1)
+				break;
+			session = stack::access(sevent->cid);
+			if(session)
+				session->parent->call_reply(this, session);
+			break;
+		case EXOSIP_MESSAGE_ANSWERED:
+			stack::siplog(sevent->response);
+			authorizing = MESSAGE;
+			if(!sevent->response)
+				break;
+			if(sevent->cid < 1)
+				break;
+			session = stack::access(sevent->cid);
+			if(session)
+				session->parent->message_reply(this, session);
+			else
+				send_reply(SIP_NOT_FOUND);
 			break;
 		case EXOSIP_CALL_MESSAGE_NEW:
 			stack::siplog(sevent->request);
@@ -1834,8 +1871,10 @@ void thread::run(void)
 					session = stack::access(sevent->cid);
 				if(session) {
 					send_reply(SIP_OK);
-					session->parent->bye(session);
+					session->parent->bye(this, session);
 				}
+				else
+					send_reply(SIP_NOT_FOUND);
 			}
 			break;
 		case EXOSIP_MESSAGE_NEW:

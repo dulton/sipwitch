@@ -154,10 +154,13 @@ void stack::call::reply_source(int error)
 	eXosip_unlock();
 }
 
-void stack::call::bye(session *s)
+void stack::call::bye(thread *thread, session *s)
 {
 	bool closing = false;
+
 	Mutex::protect(this);
+	s->tid = 0;	// cleared already....
+
 	switch(state) {
 	case JOINED:
 	case ANSWERED:
@@ -261,6 +264,88 @@ void stack::call::failed(thread *thread, session *s)
 	stack::close(s);
 }
 
+void stack::call::reinvite(thread *thread, session *s)
+{
+	osip_message_t *reply = NULL;
+	osip_body_t *body = NULL;
+	session *target;
+	int did;
+
+	assert(thread != NULL);
+	assert(s != NULL);
+
+	Mutex::protect(this);
+	s->did = thread->sevent->did;
+	if(s == source)
+		did = target->did;
+	else
+		did = source->did;
+
+	s->tid = thread->sevent->tid;
+	body = NULL;
+	osip_message_get_body(thread->sevent->request, 0, &body);
+	if(body && body->body)
+		String::set(s->sdp, sizeof(s->sdp), body->body);
+
+	switch(state) {
+	case RINGING:
+	case RINGBACK:
+	case TRYING:
+	case ANSWERED:
+		if(s == source) {
+			mutex::release(this);
+			return;
+		}
+		if(state != ANSWERED && state != RINGBACK) {
+			joinLocked(s);
+			if(state != ANSWERED)
+				state = RINGBACK;
+		}
+		time(&expires);
+		expires += thread->header_expires;
+		arm((timeout_t)(thread->header_expires * 1000l));
+		mutex::release(this);
+		eXosip_lock();
+		eXosip_call_build_answer(source->tid, 200, &reply);
+		if(reply != NULL) {
+			osip_message_set_require(reply, "100rel");
+			osip_message_set_header(reply, "RSeq", "1");
+			if(body && body->body) {
+				osip_message_set_body(reply, body->body, strlen(body->body));
+				osip_message_set_content_type(reply, "application/sdp");
+			}
+			stack::siplog(reply);
+			eXosip_call_send_answer(source->tid, 200, reply);
+		}
+		eXosip_unlock();
+		return;
+	case HOLDING:
+	case JOINED:
+		state = JOINED;
+		time(&expires);
+		expires += thread->header_expires;
+		arm((timeout_t)(thread->header_expires * 1000l));
+		mutex::release(this);
+		eXosip_lock();
+		eXosip_call_build_request(did, "INVITE", &reply);
+		if(reply != NULL) {
+			osip_message_set_supported(reply, "100rel,replaces");
+			if(body && body->body) {
+				osip_message_set_body(reply, body->body, strlen(body->body));
+				osip_message_set_content_type(reply, "application/sdp");
+			}
+			stack::siplog(reply);
+			eXosip_call_send_request(did, reply);
+		}
+		eXosip_unlock();
+		return;
+	}
+	mutex::release(this);
+	debug(2, "reinvite failed for call %08x:%u",
+			source->sequence, source->cid);
+		failed(thread, s);
+}
+		
 void stack::call::answer(thread *thread, session *s)
 {
 	osip_message_t *reply = NULL;
@@ -324,6 +409,56 @@ void stack::call::answer(thread *thread, session *s)
 			source->sequence, source->cid);
 		failed(thread, source);
 	}
+}
+
+void stack::call::message_reply(thread *thread, session *s)
+{
+	assert(thread != NULL);
+	assert(s != NULL);
+
+	int tid;
+	osip_message_t *reply = NULL;
+
+	Mutex::protect(this);
+	tid = s->tid;
+	Mutex::release(this);
+
+	if(tid < 1)
+		return;
+
+	eXosip_lock();
+	eXosip_call_send_answer(tid, thread->sevent->response->status_code, NULL);
+	eXosip_unlock();
+}
+
+
+void stack::call::call_reply(thread *thread, session *s)
+{
+	assert(thread != NULL);
+	assert(s != NULL);
+
+	int tid;
+	osip_body_t *body = NULL;
+	osip_message_t *reply = NULL;
+
+	Mutex::protect(this);
+	tid = s->tid;
+	Mutex::release(this);
+	if(tid < 1)
+		return;
+
+	eXosip_lock();
+	eXosip_call_build_answer(tid, thread->sevent->response->status_code, &reply);
+	if(reply) {
+		osip_message_set_require(reply, "100rel");
+		osip_message_set_header(reply, "RSeq", "1");
+		if(body && body->body) {
+			osip_message_set_body(reply, body->body, strlen(body->body));
+			osip_message_set_content_type(reply, "application/sdp");
+		}
+		eXosip_call_send_answer(tid, thread->sevent->response->status_code, reply);
+	}
+	eXosip_unlock();
 }
 
 void stack::call::confirm(thread *thread, session *s)

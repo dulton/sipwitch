@@ -296,6 +296,9 @@ private:
 		void busy(thread *thread, session *s = NULL);
 		void failed(thread *thread, session *s);
 		void answer(thread *thread, session *s);
+		void call_reply(thread *thread, session *s);
+		void message_reply(thread *thread, session *s);
+		void reinvite(thread *thread, session *s);
 		void trying(thread *thread);
 		void confirm(thread *thread, session *s);
 		void expired(void);
@@ -304,7 +307,7 @@ private:
 		void disconnectLocked(void);
 		void joinLocked(session *s);
 		void log(void);
-		void bye(session *s);
+		void bye(thread *thread, session *s);
 
 		OrderedIndex segments;
 		const char *reason;
