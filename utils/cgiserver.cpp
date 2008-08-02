@@ -285,7 +285,11 @@ static void history(void)
 
 static void callfile(FILE *fp, const char *id)
 {
+#ifdef	_MSWINDOWS_
+	struct _stat ino;
+#else
 	struct stat ino;
+#endif
 	char buf[256];
 	char *cp = NULL;
 	unsigned long date, line = 0;
@@ -296,7 +300,7 @@ static void callfile(FILE *fp, const char *id)
 		return;
 
 #ifdef	_MSWINDOWS_
-	_fstat(_fileno(fp), &ino));
+	_fstat(_fileno(fp), &ino);
 #else
 	fstat(fileno(fp), &ino);
 #endif

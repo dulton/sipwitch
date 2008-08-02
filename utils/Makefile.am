@@ -16,7 +16,7 @@ bin_PROGRAMS = sipquery
 sbin_PROGRAMS = sipwitch.cgi
 
 sipquery_SOURCES = sipquery.cpp
-sipquery_LDADD = @SIPWITCH_EXOSIP2@
+sipquery_LDADD = @SIPWITCH_EXOSIP2@ $(LDADD)
 
 sipwitch_cgi_SOURCES = cgiserver.cpp
 
