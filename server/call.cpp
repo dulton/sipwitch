@@ -293,7 +293,7 @@ void stack::call::reinvite(thread *thread, session *s)
 	case TRYING:
 	case ANSWERED:
 		if(s == source) {
-			mutex::release(this);
+			Mutex::release(this);
 			return;
 		}
 		if(state != ANSWERED && state != RINGBACK) {
@@ -304,7 +304,7 @@ void stack::call::reinvite(thread *thread, session *s)
 		time(&expires);
 		expires += thread->header_expires;
 		arm((timeout_t)(thread->header_expires * 1000l));
-		mutex::release(this);
+		Mutex::release(this);
 		eXosip_lock();
 		eXosip_call_build_answer(source->tid, 200, &reply);
 		if(reply != NULL) {
@@ -325,7 +325,7 @@ void stack::call::reinvite(thread *thread, session *s)
 		time(&expires);
 		expires += thread->header_expires;
 		arm((timeout_t)(thread->header_expires * 1000l));
-		mutex::release(this);
+		Mutex::release(this);
 		eXosip_lock();
 		eXosip_call_build_request(did, "INVITE", &reply);
 		if(reply != NULL) {
@@ -340,7 +340,7 @@ void stack::call::reinvite(thread *thread, session *s)
 		eXosip_unlock();
 		return;
 	}
-	mutex::release(this);
+	Mutex::release(this);
 	debug(2, "reinvite failed for call %08x:%u",
 			source->sequence, source->cid);
 		failed(thread, s);
