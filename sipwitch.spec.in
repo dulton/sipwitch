@@ -121,6 +121,7 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %attr(0660,root,root) %config %{_localstatedir}/lib/sipwitch/*.xml
 
 %files -n %{_libname}
+%defattr(-,root,root,-)
 %{_libdir}/lib*.so.*
 
 %files plugin-zeroconf
