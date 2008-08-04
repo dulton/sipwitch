@@ -12,13 +12,20 @@ MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
 LDADD = ../common/libsipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ @DAEMON_LIBS@
 EXTRA_DIST = *.xml *.conf *.log *.def *.init
+EXTRA_LTLIBRARIES =
 
 sbin_PROGRAMS = sipw
 pkgstatedir=$(localstatedir)/lib/sipwitch
 pkglibdir=$(libdir)/sipwitch
 logrotatedir=$(sysconfdir)/logrotate.d
 noinst_HEADERS = server.h
-pkglib_LTLIBRARIES = scripting.la zeroconf.la
+pkglib_LTLIBRARIES = scripting.la
+
+if ZEROCONF
+pkglib_LTLIBRARIES += zeroconf.la
+else
+EXTRA_LTLIBRARIES += zeroconf.la
+endif
 
 sipw_SOURCES = server.cpp config.cpp registry.cpp stack.cpp thread.cpp \
 	call.cpp messages.cpp posix.cpp mswindows.cpp

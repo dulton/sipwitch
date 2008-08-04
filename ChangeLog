@@ -1,3 +1,6 @@
+From version 0.2.7 to 0.2.8
+- variant build of zeroconf plugin based on support.
+
 From version 0.2.6 to 0.2.7
 - basic re-invite processing added.
 - transaction completion on relay of far end response.

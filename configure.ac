@@ -336,6 +336,8 @@ if test -z "$zeroconf" ; then
     ],[zeroconf="$zeroconf"])
 fi
 
+AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
+
 AH_BOTTOM([
 #ifndef	HAVE_LOCALTIME_R
 #define	localtime_r(x, y)	localtime(x)

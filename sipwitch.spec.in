@@ -5,12 +5,17 @@
 %{!?uses_openssl:  %define uses_openssl 1}
 %{!?uses_gcrypt: %define uses_gcrypt 0}
 
+%define _libname libsipwitch@LT_MAJOR@
+%define _devname libsipwitch-devel
+
 %if %{uses_gcrypt}
 %define	uses_openssl 0
 %endif
 
-%define _libname libsipwitch@LT_MAJOR@
-%define _devname libsipwitch-devel
+%define mod_zeroconf 0
+%if %{uses_avahi}
+%define	mod_zeroconf 1
+%endif
 
 Name: sipwitch
 Summary: "sipwitch" - SIP telephony server for secure phone systems
@@ -46,10 +51,12 @@ Group: Development/Libraries
 Summary: Headers and static link library
 Provides: %{name}-devel = %{version}-%{release}
 
+%if %{mod_zeroconf}
 %package plugin-zeroconf
 Requires: sipwitch = %{version}
 Group: Networking/Telephony
 Summary: Zeroconf plugin for sipwitch
+%endif
 
 %package plugin-scripting
 Requires: sipwitch = %{version}
@@ -76,9 +83,11 @@ modules are found or added to the core distribution directly.  This may also
 be for developing external application services which need to communicate with 
 a running sipwitch daemon instance.
 
+%if %{mod_zeroconf}
 %description plugin-zeroconf
 This plugin activates zeroconf network services for sipwitch and publishes
 sipwitch as a sip server.
+%endif
 
 %description plugin-scripting
 This plugin enables shell scripting in connection with specific sipwitch events.
@@ -124,9 +133,11 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %defattr(-,root,root,-)
 %{_libdir}/lib*.so.*
 
+%if %{mod_zeroconf}
 %files plugin-zeroconf
 %defattr(-,root,root,-)
 %{_libdir}/sipwitch/zeroconf.*
+%endif
 
 %files plugin-scripting
 %defattr(-,root,root,-)
