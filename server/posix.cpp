@@ -830,6 +830,19 @@ extern "C" int main(int argc, char **argv)
 		if(!stricmp(*argv, "registry")) 
 			server::regdump();
 
+		if(!stricmp(*argv, "address")) {
+			if(!argv[1]) {
+				fprintf(stderr, "*** sipw: address: missing\n");
+				exit(-1);
+			}
+			if(argv[2]) {
+				fprintf(stderr, "*** sip: address: only one address\n");
+				exit(-1);
+			}
+			command(user, *argv, 30);
+		}
+
+
 		if(!stricmp(*argv, "state")) {
 			if(!argv[1]) {
 				fprintf(stderr, "*** sipw: state: selection missing\n");

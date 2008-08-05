@@ -32,10 +32,11 @@ private:
 
 public:
 	char sdp[1024];
+	volatile bool has_remote, has_local, both_remote;
 
 	static void startup(unsigned count, unsigned short port = 9000, int family = AF_INET, const char *iface = NULL);
 	static void shutdown(void);
-	static rtpproxy *create(unsigned count);
+	static rtpproxy *create(unsigned count, bool remote = false);
 	static void slice(timeout_t timeout);
 	static void publish(const char *published);
 

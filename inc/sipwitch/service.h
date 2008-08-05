@@ -152,6 +152,7 @@ public:
 			{return active_flag;};
 
 		virtual bool check(void);
+		virtual bool publishingAddress(const char *address);
 		virtual void activating(MappedRegistry *rr);
 		virtual void expiring(MappedRegistry *rr);
 		virtual void snapshot(FILE *fp);
@@ -211,6 +212,7 @@ public:
 	virtual bool confirm(const char *user);
 	bool commit(const char *user);
 
+	static bool publishAddress(const char *address);
 	static void activate(MappedRegistry *rr);
 	static void expire(MappedRegistry *rr);
 	static bool check(void);

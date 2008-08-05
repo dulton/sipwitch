@@ -177,6 +177,11 @@ service::callback::~callback()
 	LinkedObject::delist(&runlevels[runlevel]);
 }
 
+bool service::callback::publishingAddress(const char *address)
+{
+	return true;
+}
+
 void service::callback::activating(MappedRegistry *rr)
 {
 }
@@ -944,6 +949,23 @@ void service::dumpfile(const char *uid)
 		cfg->service::dump(fp);
 	locking.release();
 	fclose(fp);
+}
+
+bool service::publishAddress(const char *address)
+{
+	unsigned rl = 0;
+	linked_pointer<callback> cb;
+	bool rtn = true;
+
+	while(rl < RUNLEVELS) {
+		cb = callback::runlevels[rl++];
+		while(cb && rtn) {
+			if(!cb->publishingAddress(address))
+				rtn = false;
+			cb.next();
+		}
+	}
+	return rtn;
 }
 
 void service::activate(MappedRegistry *rr)

@@ -32,7 +32,8 @@ public:
 	int so;
 	unsigned short port;
 	rtpproxy *proxy;
-	struct sockaddr_storage peer;
+	volatile bool has_remote, has_local;
+	struct sockaddr_storage peer, from;
 
 	rtpsocket(bool reuse);
 
@@ -71,6 +72,7 @@ LinkedObject()
 	if(so != INVALID_SOCKET)
 		map[so] = this;	
 	proxy = NULL;
+	has_remote = false;
 }
 
 void rtpsocket::release(void)
@@ -86,6 +88,7 @@ LinkedObject()
 
 void rtpproxy::slice(timeout_t timeout)
 {
+	struct sockaddr_storage addr;
 	struct timeval ts;
 	int count;
 	socket_t so = 0;
@@ -111,11 +114,29 @@ void rtpproxy::slice(timeout_t timeout)
 		return;
 
 	while(so < count) {
+		len = 0;
 		if(FD_ISSET(so, &result)) {
 			rtp = map[so];
-			len = Socket::recvfrom(rtp->so, buffer, sizeof(buffer));
-			if(len > 0)
+			len = Socket::recvfrom(rtp->so, buffer, sizeof(buffer), MSG_DONTWAIT, &addr);
+			// initialize local side if bi-directional proxy
+			if(rtp->proxy->both_remote && !rtp->has_local && !rtp->has_remote) {
+				memcpy(&rtp->peer, &addr, Socket::getlen((struct sockaddr *)&addr));
+				rtp->has_local = rtp->proxy->has_local;
+				len = 0;
+			}	
+		}
+		if(len > 0) {
+			if(!Socket::equal((struct sockaddr *)&(rtp->peer), (struct sockaddr *)&addr)) { 
+				if(!rtp->has_remote) {
+					rtp->has_remote = rtp->proxy->has_remote = true;
+					memcpy(&rtp->from, &addr, Socket::getlen((struct sockaddr *)&addr)); 
+				}
 				Socket::sendto(rtp->so, buffer, (size_t)len, 0, (struct sockaddr *)&rtp->peer);
+			}
+			else if(rtp->has_remote) {
+				rtp->has_local = rtp->proxy->has_local = true;
+				Socket::sendto(rtp->so, buffer, (size_t)len, 0, (struct sockaddr *)&rtp->from);
+			}
 		}
 		++so;
 	}
@@ -186,7 +207,7 @@ void rtpproxy::release(void)
 	locking.commit();
 }
 
-rtpproxy *rtpproxy::create(unsigned count)
+rtpproxy *rtpproxy::create(unsigned count, bool remote)
 {
 	rtpsocket *sp;
 	rtpproxy *proxy;
@@ -228,6 +249,7 @@ rtpproxy *rtpproxy::create(unsigned count)
 		sp->enlist(&proxy->sockets);
 		sp->proxy = proxy;
 	}	
+	proxy->both_remote = remote;
 	locking.commit();
 	return proxy;
 }	

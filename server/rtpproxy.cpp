@@ -24,6 +24,7 @@ public:
 	rtpservice();
 
 private:
+	bool publishingAddress(const char *address);
 	bool reload(service *cfg);
 	void start(service *cfg);
 	void stop(service *cfg);
@@ -41,8 +42,8 @@ private:
 
 static bool rtp_running = false;
 static volatile timeout_t interval = 50;
-static time_t volatile refresh = 60;
-static time_t updated = 0;
+static volatile time_t refresh = 60;
+static volatile time_t updated = 0;
 static rtpservice rtp;
 static rtpthread *thr = NULL;
 static int priority = 0;
@@ -109,6 +110,12 @@ void rtpservice::snapshot(FILE *fp)
 	fprintf(fp, "RTP PROXY:\n"); 
 } 
 
+bool rtpservice::publishingAddress(const char *address)
+{
+	rtpproxy::publish(address);
+	return true;
+}
+
 bool rtpservice::reload(service *cfg)
 {
 	assert(cfg != NULL);	
@@ -117,7 +124,8 @@ bool rtpservice::reload(service *cfg)
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("rtpproxy");
 	int val;
-	
+
+	updated = 0l;
 	while(sp) {
 		key = sp->getId();
 		value = sp->getPointer();

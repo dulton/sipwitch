@@ -342,6 +342,16 @@ invalid:
 			continue;
 		}
 
+		if(!stricmp(argv[0], "address")) {
+			if(argc != 2)
+				goto invalid;
+			state = String::unquote(argv[1], "\"\"\'\'()[]{}");
+			if(!service::publishAddress(state))
+				process::reply("invalid address");
+			process::errlog(NOTICE, "published address is %s", state);
+			continue;
+		}
+
 		if(!stricmp(argv[0], "state")) {
 			if(argc != 2)
 				goto invalid;
@@ -461,6 +471,7 @@ void server::usage(void)
 #endif
 #ifdef	USES_COMMANDS
 		"  restart               Restart server\n"
+		"  address               Set published address\n"
 		"  check                 Test for thread deadlocks\n"
 		"  snapshot              Create snapshot file\n"
 		"  dump                  Dump in-memory config tables\n"
