@@ -336,8 +336,6 @@ if test -z "$zeroconf" ; then
     ],[zeroconf="$zeroconf"])
 fi
 
-AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
-
 AH_BOTTOM([
 #ifndef	HAVE_LOCALTIME_R
 #define	localtime_r(x, y)	localtime(x)
@@ -348,6 +346,19 @@ DAEMON_LIBS=""
 AC_CHECK_LIB(msvcrt, fopen, [
 	DAEMON_LIBS="-ladvapi32"
 ])
+
+AM_CONDITIONAL(STATIC_MODULES, test "$enable_shared" = "no")
+if test "$enable_shared" = "no" ; then
+	MODFLAGS="-static"
+	DLOPEN="-dlopen scripting.la"
+	if test ! -z "$zeroconf" ; then
+		DLOPEN="$DLOPEN -dlopen zeroconf.la" ; fi
+else
+	MODFLAGS="-shared -avoid-version"
+	DLOPEN=""
+fi
+
+AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
 
 AC_SUBST(plugindir)
 AC_SUBST(UCOMMON_REQUIRES)
@@ -361,6 +372,8 @@ AC_SUBST(SIPWITCH_EXOSIP2)
 AC_SUBST(ZEROCONF_LIBS)
 AC_SUBST(BUILD_SUBDIRS)
 AC_SUBST(CXXFLAGS)
+AC_SUBST(MODFLAGS)
+AC_SUBST(DLOPEN)
 AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile 
 server/Makefile utils/Makefile test/Makefile libsipwitch.pc sipwitch.spec)
 

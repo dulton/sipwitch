@@ -29,16 +29,17 @@ endif
 
 sipw_SOURCES = server.cpp config.cpp registry.cpp stack.cpp thread.cpp \
 	call.cpp messages.cpp posix.cpp mswindows.cpp
+sipw_LDADD = $(LDADD) $(DLOPEN)
 
 sysconf_DATA = sipwitch.conf
 
 pkgstate_DATA = *.xml 
 
 scripting_la_SOURCES = scripting.cpp 
-scripting_la_LDFLAGS = -module -avoid-version $(LDADD)
+scripting_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)
 
 zeroconf_la_SOURCES = zeroconf.cpp 
-zeroconf_la_LDFLAGS = -module -avoid-version @ZEROCONF_LIBS@ $(LDADD)
+zeroconf_la_LDFLAGS = -module $(MODFLAGS) @ZEROCONF_LIBS@ $(LDADD)
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(logrotatedir)
