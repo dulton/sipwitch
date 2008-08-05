@@ -31,6 +31,7 @@
 #include <sipwitch/service.h>
 #include <sipwitch/process.h>
 #include <sipwitch/digest.h>
+#include <sipwitch/rtpproxy.h>
 
 /**
  * @short SIP Witch common library and API services.

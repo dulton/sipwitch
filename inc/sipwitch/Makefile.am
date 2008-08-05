@@ -12,5 +12,5 @@ MAINTAINERCLEANFILES = Makefile.in Makefile
 
 pkgincludedir = $(includedir)/sipwitch
 pkginclude_HEADERS = service.h process.h digest.h sipwitch.h namespace.h \
-	mapped.h
+	mapped.h rtpproxy.h
 

@@ -338,8 +338,6 @@ private:
 	void update(void);
 	void modify(void);
 
-	static stack sip;
-
 	unsigned threading, priority;
 	size_t stacksize;
 
@@ -357,11 +355,14 @@ private:
 	short port;
 	bool incoming, outgoing, dumping;
 	int send101;
-	int family, tlsmode, protocol;
 	timeout_t ring_timer, cfna_timer, reset_timer;
 	unsigned invite_expires;
 
 public:
+	int family, tlsmode, protocol;
+
+	static stack sip;
+
 	stack();
 
 	__EXPORT static const char *getScheme(void);
