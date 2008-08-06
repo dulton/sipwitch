@@ -179,27 +179,28 @@ public:
 		{return reg.routes;};
 
 
-	__EXPORT static unsigned getEntries(void);
-	__EXPORT static unsigned getIndex(mapped *rr);
-	__EXPORT static bool isExtension(const char *id);
-	__EXPORT static bool isUserid(const char *id);
-	__EXPORT static mapped *address(struct sockaddr *addr);
-	__EXPORT static mapped *contact(const char *uri);
-	__EXPORT static mapped *contact(struct sockaddr *addr, const char *uid);
-	__EXPORT static mapped *getExtension(const char *id);
-	__EXPORT static mapped *create(const char *id);
-	__EXPORT static mapped *access(const char *id);
-	__EXPORT static mapped *invite(const char *id);
-	__EXPORT static bool exists(const char *id);
-	__EXPORT static pattern *getRouting(unsigned trs, const char *id);
-	__EXPORT static void detach(mapped *m);
-	__EXPORT static bool remove(const char *id);
-	__EXPORT static void cleanup(time_t period); 
+	static unsigned getEntries(void);
+	static unsigned getIndex(mapped *rr);
+	static bool isExtension(const char *id);
+	static bool isUserid(const char *id);
+	static mapped *address(struct sockaddr *addr);
+	static mapped *contact(const char *uri);
+	static mapped *contact(struct sockaddr *addr, const char *uid);
+	static mapped *getExtension(const char *id);
+	static mapped *create(const char *id);
+	static mapped *access(const char *id);
+	static mapped *invite(const char *id);
+	static bool exists(const char *id);
+	static pattern *getRouting(unsigned trs, const char *id);
+	static void detach(mapped *m);
+	static bool remove(const char *id);
+	static void cleanup(time_t period); 
 };
 
 class __LOCAL stack : private service::callback, private mapped_reuse<MappedCall>, public TimerQueue
 {
 private:
+	friend class proxy;
 	friend class thread;
 	friend class messages;
 
@@ -358,36 +359,36 @@ private:
 	timeout_t ring_timer, cfna_timer, reset_timer;
 	unsigned invite_expires;
 
-public:
 	int family, tlsmode, protocol;
 
 	static stack sip;
 
+public:
 	stack();
 
-	__EXPORT static const char *getScheme(void);
-	__EXPORT static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
-	__EXPORT static session *create(int cid, int did, int tid);
-	__EXPORT static session *create(call *cr, int cid);
-	__EXPORT static void destroy(session *s);
-	__EXPORT static void destroy(call *cr);
-	__EXPORT static void disjoin(call *cr);
-	__EXPORT static void detach(session *s);
-	__EXPORT static void clear(session *s);
-	__EXPORT static void close(session *s);
-	__EXPORT static session *access(int cid);
-	__EXPORT static char *sipHostid(const char *uri, char *buf, size_t size);
-	__EXPORT static char *sipUserid(const char *uri, char *buf, size_t size);
-	__EXPORT static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
-	__EXPORT static char *sipPublish(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
-	__EXPORT static char *sipIdentity(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_IDENT_SIZE);
-	__EXPORT static char *sipContact(struct sockaddr_internet *addr, char *buf, const char *user = NULL, const char *display = NULL, size_t size = MAX_URI_SIZE);
-	__EXPORT static Socket::address *getAddress(const char *uri, Socket::address *addr = NULL);
-	__EXPORT static void siplog(osip_message_t *msg);
-	__EXPORT static void enableDumping(void);
-	__EXPORT static void infomsg(session *session, eXosip_event_t *sevent);
-	__EXPORT static void setDialog(session *session, int did);
-	__EXPORT static int getDialog(session *session);
+	static const char *getScheme(void);
+	static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
+	static session *create(int cid, int did, int tid);
+	static session *create(call *cr, int cid);
+	static void destroy(session *s);
+	static void destroy(call *cr);
+	static void disjoin(call *cr);
+	static void detach(session *s);
+	static void clear(session *s);
+	static void close(session *s);
+	static session *access(int cid);
+	static char *sipHostid(const char *uri, char *buf, size_t size);
+	static char *sipUserid(const char *uri, char *buf, size_t size);
+	static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
+	static char *sipPublish(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
+	static char *sipIdentity(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_IDENT_SIZE);
+	static char *sipContact(struct sockaddr_internet *addr, char *buf, const char *user = NULL, const char *display = NULL, size_t size = MAX_URI_SIZE);
+	static Socket::address *getAddress(const char *uri, Socket::address *addr = NULL);
+	static void siplog(osip_message_t *msg);
+	static void enableDumping(void);
+	static void infomsg(session *session, eXosip_event_t *sevent);
+	static void setDialog(session *session, int did);
+	static int getDialog(session *session);
 
 	inline static timeout_t ringTimeout(void)
 		{return stack::sip.ring_timer;};
@@ -429,20 +430,20 @@ private:
 public:
 	config(const char *id);
 
-	__EXPORT static bool check(void);
-	__EXPORT static profile_t *getProfile(const char *id); 
-	__EXPORT static keynode *getRouting(const char *id);
-	__EXPORT static keynode *getProvision(const char *id);
-	__EXPORT static keynode *getExtension(const char *id);
-	__EXPORT static unsigned getForwarding(const char *id);
-	__EXPORT static cidr *getPolicy(struct sockaddr *addr);
-	__EXPORT static bool isLocal(struct sockaddr *addr);
-	__EXPORT static void release(cidr *access);
-	__EXPORT static void release(keynode *node);
-	__EXPORT static void reload(const char *uid);
-	__EXPORT static void utils(const char *uid);
-	__EXPORT static Socket::address *getContact(const char *id);
-	__EXPORT static unsigned forwarding(keynode *node);
+	static bool check(void);
+	static profile_t *getProfile(const char *id); 
+	static keynode *getRouting(const char *id);
+	static keynode *getProvision(const char *id);
+	static keynode *getExtension(const char *id);
+	static unsigned getForwarding(const char *id);
+	static cidr *getPolicy(struct sockaddr *addr);
+	static bool isLocal(struct sockaddr *addr);
+	static void release(cidr *access);
+	static void release(keynode *node);
+	static void reload(const char *uid);
+	static void utils(const char *uid);
+	static Socket::address *getContact(const char *id);
+	static unsigned forwarding(keynode *node);
 };
 
 class __LOCAL messages : public service::callback
@@ -541,10 +542,42 @@ private:
 	const char *getIdent(void);
 
 public:
-	__EXPORT static void shutdown(void);
+	static void shutdown(void);
 };
 
-class __EXPORT server
+class __LOCAL proxy : private service::callback
+{
+private:
+	unsigned short port;
+	unsigned count;
+	volatile char *published;
+
+	static proxy rtp;
+
+	class __LOCAL listener : public JoinableThread
+	{
+	public:
+		listener();
+
+	private:
+		void run(void);
+	};
+
+	listener *thr;
+
+	friend class proxy::listener;
+
+public:
+	proxy();
+
+	bool publishingAddress(const char *address);
+	bool reload(service *cfg);
+	void start(service *cfg);
+	void stop(service *cfg);
+	void snapshot(FILE *fp);
+};
+
+class __LOCAL server
 {
 public:
 	static void plugins(const char *argv0, const char *names);

@@ -34,6 +34,7 @@ public:
 	rtpproxy *proxy;
 	volatile bool has_remote, has_local;
 	struct sockaddr_storage peer, from;
+	time_t lastio;
 
 	rtpsocket(bool reuse);
 
@@ -120,12 +121,14 @@ void rtpproxy::slice(timeout_t timeout)
 			len = Socket::recvfrom(rtp->so, buffer, sizeof(buffer), MSG_DONTWAIT, &addr);
 			// initialize local side if bi-directional proxy
 			if(rtp->proxy->both_remote && !rtp->has_local && !rtp->has_remote) {
+				time(&rtp->lastio);
 				memcpy(&rtp->peer, &addr, Socket::getlen((struct sockaddr *)&addr));
 				rtp->has_local = rtp->proxy->has_local;
 				len = 0;
 			}	
 		}
 		if(len > 0) {
+			time(&rtp->lastio);
 			if(!Socket::equal((struct sockaddr *)&(rtp->peer), (struct sockaddr *)&addr)) { 
 				if(!rtp->has_remote) {
 					rtp->has_remote = rtp->proxy->has_remote = true;
@@ -143,6 +146,27 @@ void rtpproxy::slice(timeout_t timeout)
 	Thread::yield();
 }
 
+void rtpproxy::pinhole(void)
+{
+	socket_t so = 0;
+	rtpsocket *rtp;
+	time_t now;
+	
+	time(&now);
+
+	while(so < hiwater) {
+		rtp = map[so++];
+		if(!rtp || !rtp->proxy || !rtp->proxy->quality)
+			continue;
+		if(now < rtp->lastio + rtp->proxy->quality)
+			continue;	
+//		if(rtp->has_local && rtp->proxy->both_remote)
+//			time(&rtp->lastio);
+//		if(rtp->has_remote)	
+//			time(&rtp->lastio);
+	}
+}
+
 void rtpproxy::startup(unsigned count, unsigned short port, int family, const char *iface)
 {
 	proxy_family = family;
@@ -152,6 +176,7 @@ void rtpproxy::startup(unsigned count, unsigned short port, int family, const ch
 	if(proxy_sockets) {
 		running = true;
 		map = new rtpsocket*[sizeof(fd_set)];
+		memset(map, 0, sizeof(fd_set) * sizeof(rtpsocket*));
 	}
 
 	publish(iface);
@@ -207,7 +232,7 @@ void rtpproxy::release(void)
 	locking.commit();
 }
 
-rtpproxy *rtpproxy::create(unsigned count, bool remote)
+rtpproxy *rtpproxy::create(unsigned count, bool remote, unsigned qval)
 {
 	rtpsocket *sp;
 	rtpproxy *proxy;
@@ -250,6 +275,7 @@ rtpproxy *rtpproxy::create(unsigned count, bool remote)
 		sp->proxy = proxy;
 	}	
 	proxy->both_remote = remote;
+	proxy->quality = qval;
 	locking.commit();
 	return proxy;
 }	

@@ -33,12 +33,14 @@ private:
 public:
 	char sdp[1024];
 	volatile bool has_remote, has_local, both_remote;
+	unsigned quality;
 
 	static void startup(unsigned count, unsigned short port = 9000, int family = AF_INET, const char *iface = NULL);
 	static void shutdown(void);
-	static rtpproxy *create(unsigned count, bool remote = false);
+	static rtpproxy *create(unsigned count, bool remote = false, unsigned quality = 0);
 	static void slice(timeout_t timeout);
 	static void publish(const char *published);
+	static void pinhole(void);
 
 	void release(void);
 	void rewrite(const char *body, struct sockaddr *iface = NULL);

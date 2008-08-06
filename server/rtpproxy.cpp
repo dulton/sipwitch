@@ -18,46 +18,21 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-class __LOCAL rtpservice : private service::callback
-{
-public:
-	rtpservice();
-
-private:
-	bool publishingAddress(const char *address);
-	bool reload(service *cfg);
-	void start(service *cfg);
-	void stop(service *cfg);
-	void snapshot(FILE *fp);
-};
-
-class __LOCAL rtpthread : public JoinableThread
-{
-public:
-	rtpthread();
-
-private:
-	void run(void);
-};
-
 static bool rtp_running = false;
 static volatile timeout_t interval = 50;
 static volatile time_t refresh = 60;
 static volatile time_t updated = 0;
-static rtpservice rtp;
-static rtpthread *thr = NULL;
 static int priority = 0;
 static const char *iface = NULL;
-static volatile char *published = NULL;
-static unsigned short port;
-static unsigned count;
 
-rtpthread::rtpthread() :
+proxy proxy::rtp;
+
+proxy::listener::listener() :
 JoinableThread(priority)
 {
 }
 
-void rtpthread::run(void)
+void proxy::listener::run(void)
 {
 	time_t now;
 
@@ -67,31 +42,35 @@ void rtpthread::run(void)
 		time(&now);
 		if(now > updated) {
 			updated = now + refresh;
-			rtpproxy::publish((const char *)published);
+			rtpproxy::publish((const char *)proxy::rtp.published);
 		}
 	}
 	process::errlog(DEBUG1, "stopping rtpproxy thread");
 	JoinableThread::exit();
 }
 
-rtpservice::rtpservice() :
+proxy::proxy() :
 service::callback(-1)
-{	
+{
+	port = 9000;
+	count = 0; 	
+	published = NULL;
+	thr = NULL;
 }
 
-void rtpservice::start(service *cfg) 
+void proxy::start(service *cfg) 
 {
 	assert(cfg != NULL);
 
 	if(count) {
 		rtpproxy::startup(count, port, stack::sip.family, iface);
 		process::errlog(INFO, "rtp proxy started for %d ports", count);
-		thr = new rtpthread();
+		thr = new proxy::listener();
 		thr->start();
 	} 
 }
 
-void rtpservice::stop(service *cfg)
+void proxy::stop(service *cfg)
 {
 	assert(cfg != NULL);
 
@@ -103,20 +82,20 @@ void rtpservice::stop(service *cfg)
 	}
 }
 
-void rtpservice::snapshot(FILE *fp) 
+void proxy::snapshot(FILE *fp) 
 { 
 	assert(fp != NULL);
 
 	fprintf(fp, "RTP PROXY:\n"); 
 } 
 
-bool rtpservice::publishingAddress(const char *address)
+bool proxy::publishingAddress(const char *address)
 {
 	rtpproxy::publish(address);
 	return true;
 }
 
-bool rtpservice::reload(service *cfg)
+bool proxy::reload(service *cfg)
 {
 	assert(cfg != NULL);	
 
