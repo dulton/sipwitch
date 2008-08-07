@@ -151,8 +151,8 @@ private:
 
 	volatile time_t expires;
 
-	const char *digest;
-	const char *realm;
+	String digest;
+	String realm;
 	unsigned prefix;
 	unsigned range;
 	unsigned routes;
@@ -351,9 +351,9 @@ private:
 	const char *volatile published;
 	const char *volatile proxy;
 	const char *iface;
-	const char *agent;
-	const char *system;
-	const char *anon;
+	String agent;
+	String system;
+	String anon;
 	short port;
 	bool incoming, outgoing, dumping;
 	int send101;

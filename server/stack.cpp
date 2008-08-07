@@ -655,8 +655,6 @@ bool stack::reload(service *cfg)
 	linked_pointer<service::keynode> tp = cfg->getList("timers");
 	int val;
 	const char *localhosts = "localhost, localhost.localdomain";
-	const char *system_id = "sipwitch";
-	const char *anon_id = "anonymous";
 
 	unsigned cfna_value = 0;
 	unsigned ring_value = 0;
@@ -708,15 +706,15 @@ bool stack::reload(service *cfg)
 			else if(!stricmp(key, "trusted"))
 				trusted = cfg->dup(value);
 			else if(!stricmp(key, "system"))
-				system_id = cfg->dup(value);
+				system = value;
 			else if(!stricmp(key, "anon"))
-				anon_id = cfg->dup(value);
+				anon = value;
 			else if(!stricmp(key, "published") || !stricmp(key, "public"))
 				published = cfg->dup(value);
 			else if(!stricmp(key, "proxy") || !stricmp(key, "outbound"))
 				new_proxy = cfg->dup(value);
 			else if(!stricmp(key, "agent") && !isConfigured())
-				agent = strdup(value);
+				agent = value;
 			else if(!stricmp(key, "port") && !isConfigured())
 				port = atoi(value);
 			else if(!stricmp(key, "mapped") && !isConfigured())
@@ -747,8 +745,6 @@ bool stack::reload(service *cfg)
 		tp.next();
 	}
 
-	system = system_id;
-	anon = anon_id;
 	localnames = localhosts;
 	proxy = new_proxy;
 

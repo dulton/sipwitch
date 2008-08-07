@@ -32,7 +32,6 @@ stack::call::call() : TimerQueue::event(Timer::reset), segments()
 	enlist(&stack::sip);
 	starting = ending = 0l;
 	reason = joined = NULL;
-	proxying = PROXY_UNDEFINED;
 	rtp = NULL;
 }
 

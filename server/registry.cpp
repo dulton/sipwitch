@@ -386,11 +386,11 @@ bool registry::reload(service *cfg)
 			if(!stricmp(key, "mapped") && !isConfigured()) 
 				mapped_entries = atoi(value);
 			else if(!stricmp(key, "digest") && !isConfigured()) {
-				digest = strdup(value);
-				String::upper((char *)digest);
+				digest = value;
+				digest.upper();
 			}
 			else if(!stricmp(key, "realm") && !isConfigured())
-				realm = strdup(value);
+				realm = value;
 			else if(!stricmp(key, "prefix") && !isConfigured())
 				prefix = atoi(value);
 			else if(!stricmp(key, "range") && !isConfigured())
@@ -422,7 +422,7 @@ bool registry::reload(service *cfg)
 	memset(contacts, 0, sizeof(LinkedObject *) * keysize);
 	memset(publishing, 0, sizeof(LinkedObject *) * keysize);
 	memset(addresses, 0, sizeof(LinkedObject *) * keysize);
-	process::errlog(INFO, "realm %s", realm);
+	process::errlog(INFO, "realm %s", realm.c_str());
 	return true;
 }
 
