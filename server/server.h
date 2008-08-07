@@ -290,6 +290,7 @@ private:
 		char dialed[MAX_IDENT_SIZE];	// user or ip address...
 		char subject[MAX_URI_SIZE];		// call subject
 		char refer[MAX_IDENT_SIZE];		// used in forward management
+		rtpproxy *rtp;
 
 		void reply_source(int error);
 		void decline(thread *thread);

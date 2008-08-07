@@ -32,12 +32,15 @@ private:
 
 public:
 	char sdp[1024];
-	volatile bool has_remote, has_local, both_remote;
+	volatile bool has_remote, has_local;
 	unsigned quality;
+
+	typedef	enum {UNKNOWN, INCOMING, OUTGOING, BOTHWAY} mode_t;
+	mode_t mode;
 
 	static void startup(unsigned count, unsigned short port = 9000, int family = AF_INET, const char *iface = NULL);
 	static void shutdown(void);
-	static rtpproxy *create(unsigned count, bool remote = false, unsigned quality = 0);
+	static rtpproxy *create(unsigned count, mode_t = rtpproxy::UNKNOWN, unsigned quality = 0);
 	static void slice(timeout_t timeout);
 	static void publish(const char *published);
 	static void pinhole(void);

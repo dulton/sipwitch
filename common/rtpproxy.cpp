@@ -120,7 +120,7 @@ void rtpproxy::slice(timeout_t timeout)
 			rtp = map[so];
 			len = Socket::recvfrom(rtp->so, buffer, sizeof(buffer), MSG_DONTWAIT, &addr);
 			// initialize local side if bi-directional proxy
-			if(rtp->proxy->both_remote && !rtp->has_local && !rtp->has_remote) {
+			if(rtp->proxy->mode == BOTHWAY && !rtp->has_local && !rtp->has_remote) {
 				time(&rtp->lastio);
 				memcpy(&rtp->peer, &addr, Socket::getlen((struct sockaddr *)&addr));
 				rtp->has_local = rtp->proxy->has_local;
@@ -160,7 +160,7 @@ void rtpproxy::pinhole(void)
 			continue;
 		if(now < rtp->lastio + rtp->proxy->quality)
 			continue;	
-//		if(rtp->has_local && rtp->proxy->both_remote)
+//		if(rtp->has_local && rtp->proxy->mode == BOTHWAY)
 //			time(&rtp->lastio);
 //		if(rtp->has_remote)	
 //			time(&rtp->lastio);
@@ -232,7 +232,7 @@ void rtpproxy::release(void)
 	locking.commit();
 }
 
-rtpproxy *rtpproxy::create(unsigned count, bool remote, unsigned qval)
+rtpproxy *rtpproxy::create(unsigned count, mode_t mode, unsigned qval)
 {
 	rtpsocket *sp;
 	rtpproxy *proxy;
@@ -274,7 +274,7 @@ rtpproxy *rtpproxy::create(unsigned count, bool remote, unsigned qval)
 		sp->enlist(&proxy->sockets);
 		sp->proxy = proxy;
 	}	
-	proxy->both_remote = remote;
+	proxy->mode = mode;
 	proxy->quality = qval;
 	locking.commit();
 	return proxy;

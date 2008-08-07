@@ -451,6 +451,7 @@ void stack::destroy(call *cr)
 	assert(cr != NULL);
 
 	linked_pointer<segment> sp;
+	rtpproxy *rtp = NULL;
 
 	cr->log();
 
@@ -476,11 +477,14 @@ void stack::destroy(call *cr)
 		delete *sp;
 		sp = next;
 	}
+	rtp = cr->rtp;
 	if(cr->map)
 		cr->map->enlist(&freemaps);
 	cr->delist();
 	delete cr;
 	locking.share();
+	if(rtp)
+		rtp->release();	
 }
 
 void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
