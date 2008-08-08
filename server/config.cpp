@@ -338,6 +338,17 @@ profile_t *config::getProfile(const char *pro)
 	return ppd;
 }
 
+service::keynode *config::getConfig(void)
+{
+	locking.access();
+	if(!cfg) {
+		locking.release();
+		return NULL;
+	}
+
+	return (keynode *)cfg;
+}
+
 service::keynode *config::getExtension(const char *id)
 {
 	assert(id != NULL && *id != 0);

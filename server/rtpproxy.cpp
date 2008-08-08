@@ -56,6 +56,7 @@ service::callback(-1)
 	count = 0; 	
 	published = NULL;
 	thr = NULL;
+	nets = NULL;
 }
 
 void proxy::start(service *cfg) 
@@ -99,13 +100,15 @@ bool proxy::reload(service *cfg)
 {
 	assert(cfg != NULL);	
 
+	caddr_t mp;
 	volatile char *vp;
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("rtpproxy");
 	int val;
 
 	updated = 0l;
-	while(sp) {
+
+	while(is(sp)) {
 		key = sp->getId();
 		value = sp->getPointer();
 		if(key && value) {
@@ -130,7 +133,133 @@ bool proxy::reload(service *cfg)
 		}
 		sp.next();
 	}
+
+	sp = cfg->getList("rtpproxy.networks");
+	nets = NULL;
+
+	while(is(sp)) {
+		key = sp->getId();
+		value = sp->getPointer();
+		if(key && value) {
+			mp = (caddr_t)cfg->alloc_locked(sizeof(cidr));
+			new(mp) cidr(&nets, value, key);
+		}
+		sp.next();
+	}
 	return true;
+}
+
+bool proxy::isProxied(stack::session *src, struct sockaddr *addr)
+{
+	bool rtn = true;
+	struct sockaddr_internet iface;
+
+	if(!addr)
+		return true;
+
+	if(!stricmp(src->network, "-"))
+		return true;
+
+	service::keynode *cfg = config::getConfig();
+
+	if(!cfg)
+		return false;
+
+	linked_pointer<cidr> np = proxy::rtp.nets;
+
+	if(!is(np)) {
+		config::release(cfg);
+		if(!addr)
+			return true;
+		if(!server::flags_gateway)
+			return false;
+		stack::getInterface((struct sockaddr *)(&src->iface), addr);
+		if(!Socket::equal((struct sockaddr*)&src->iface, (struct sockaddr*)&src->parent->source->iface))
+			return true;
+		return false;
+	}
+
+	cidr *member = NULL;
+	unsigned top = 0;
+		
+	while(np && addr) {
+		if(np->isMember(addr)) {
+			if(np->getMask() > top) {
+				top = np->getMask();
+				member = *np;
+			}
+		}
+		np.next();	
+	}
+	
+	if(member && !stricmp(member->getName(), src->network))
+		rtn = false;
+
+	config::release(cfg);
+	return rtn;
+}
+
+void proxy::classify(stack::session *sid, struct sockaddr *addr)
+{
+	service::keynode *cfg = config::getConfig();
+	stack::session *src = sid->parent->source;
+
+	if(!cfg)
+		return;
+
+	linked_pointer<cidr> np = proxy::rtp.nets;
+
+	if(!is(np)) {
+		config::release(cfg);
+		if(!server::flags_gateway)
+			return;
+
+		if(!addr)
+			addr = rtpproxy::getPublished();
+		stack::getInterface((struct sockaddr *)(&sid->iface), addr);
+		if(sid != src) {
+			if(!Socket::equal((struct sockaddr *)(&sid->iface), (struct sockaddr *)(&src->iface))) {
+				sid->proxying = stack::session::GATEWAY_PROXY;
+				String::set(sid->network, sizeof(sid->network), "-");
+			}
+		}
+		return;
+	}
+
+	cidr *member = NULL;
+	unsigned top = 0;
+		
+	while(np && addr) {
+		if(np->isMember(addr)) {
+			if(np->getMask() > top) {
+				top = np->getMask();
+				member = *np;
+			}
+		}
+		np.next();	
+	}
+
+	if(member)
+		String::set(sid->network, sizeof(sid->network), member->getName());
+	else
+		String::set(sid->network, sizeof(sid->network), "-");
+
+	config::release(cfg);
+
+	if(src != sid) {
+		if(!stricmp(src->network, "-") && stricmp(sid->network, "-"))
+			sid->proxying = stack::session::REMOTE_PROXY;
+		else if(stricmp(src->network, "-") && !stricmp(sid->network, "-"))
+			sid->proxying = stack::session::LOCAL_PROXY;
+		else if(!stricmp(src->network, "-") && !stricmp(sid->network, "-"))
+			sid->proxying = stack::session::BRIDGE_PROXY;
+		else if(stricmp(src->network, sid->network)) {
+			stack::getInterface((struct sockaddr *)(&sid->iface), addr);
+			sid->proxying = stack::session::SUBNET_PROXY;
+		}
+	}
+	else if(addr)
+		stack::getInterface((struct sockaddr *)(&sid->iface), addr);		
 }
 
 END_NAMESPACE

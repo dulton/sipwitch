@@ -338,6 +338,7 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 
 		invited = stack::create(call, cid);
 
+		proxy::classify(session, (struct sockaddr *)&tp->address);
 		if(rr->ext) 
 			snprintf(invited->sysident, sizeof(invited->sysident), "%u", rr->ext);
 		else
@@ -453,6 +454,17 @@ void thread::invite(void)
 	unsigned toext = 0;
 	osip_header_t *msgheader = NULL;
 	char fromext[32];
+
+	proxy::classify(session, via_address.getAddr());
+
+	if(!stricmp(session->network, "-")) {
+		call->rtp = rtpproxy::create(4);
+		if(!call->rtp) {
+			send_reply(SIP_SERVICE_UNAVAILABLE);
+			call->failed(this, session);
+			return;
+		}
+	}
 
 	if(extension)
 		snprintf(fromext, sizeof(fromext), "%u", extension);

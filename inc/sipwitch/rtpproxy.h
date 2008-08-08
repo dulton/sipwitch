@@ -44,7 +44,7 @@ public:
 	static void slice(timeout_t timeout);
 	static void publish(const char *published);
 	static void pinhole(void);
-
+	static struct sockaddr *getPublished(void);
 	void release(void);
 	void rewrite(const char *body, struct sockaddr *iface = NULL);
 };

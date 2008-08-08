@@ -22,6 +22,8 @@ using namespace UCOMMON_NAMESPACE;
 static mempager mempool(PAGING_SIZE);
 static bool running = true;
 
+bool server::flags_gateway = false;
+
 #ifdef	USES_COMMANDS
 static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 {

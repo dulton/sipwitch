@@ -87,6 +87,11 @@ LinkedObject()
 {
 }
 
+struct sockaddr *rtpproxy::getPublished(void)
+{
+	return (struct sockaddr *)&proxy_published;
+}
+
 void rtpproxy::slice(timeout_t timeout)
 {
 	struct sockaddr_storage addr;

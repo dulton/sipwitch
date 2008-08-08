@@ -236,14 +236,16 @@ private:
 		time_t activates;
 		uint32_t sequence;
 		call *parent;
-		struct sockaddr_internet address;
 		struct sockaddr_internet iface;
 		time_t expires;					// session/invite expires...
 		time_t ringing;					// ring no-answer timer...
 
 		enum {OPEN, CLOSED, RING, BUSY, REORDER} state;
 
+		enum {NO_PROXY, LOCAL_PROXY, REMOTE_PROXY, SUBNET_PROXY, BRIDGE_PROXY, GATEWAY_PROXY} proxying;
+
 		char sdp[1024];					// sdp body to use in exchange
+		char network[16];				// network segment used
 		char identity[MAX_URI_SIZE];	// our effective contact/to point...
 		char sysident[MAX_IDENT_SIZE];	// ident of this session
 		char display[MAX_DISPLAY_SIZE];	// callerid reference field
@@ -436,6 +438,7 @@ public:
 	static keynode *getRouting(const char *id);
 	static keynode *getProvision(const char *id);
 	static keynode *getExtension(const char *id);
+	static keynode *getConfig(void);
 	static unsigned getForwarding(const char *id);
 	static cidr *getPolicy(struct sockaddr *addr);
 	static bool isLocal(struct sockaddr *addr);
@@ -552,6 +555,7 @@ private:
 	unsigned short port;
 	unsigned count;
 	volatile char *published;
+	cidr::policy *nets;
 
 	static proxy rtp;
 
@@ -571,6 +575,9 @@ private:
 public:
 	proxy();
 
+	static void classify(stack::session *session, struct sockaddr *addr);
+	static bool isProxied(stack::session *source, struct sockaddr *addr);
+
 	bool publishingAddress(const char *address);
 	bool reload(service *cfg);
 	void start(service *cfg);
@@ -581,6 +588,7 @@ public:
 class __LOCAL server
 {
 public:
+	static bool flags_gateway;
 	static void plugins(const char *argv0, const char *names);
 	static void usage(void);
 	static void version(void);
@@ -588,7 +596,7 @@ public:
 	static void stop(void);
 	static caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
 	static unsigned allocate(void);
-	static void regdump(void);
+	static void regdump(void);	
 };
 
 END_NAMESPACE
