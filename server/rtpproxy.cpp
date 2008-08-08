@@ -149,54 +149,11 @@ bool proxy::reload(service *cfg)
 	return true;
 }
 
-bool proxy::isProxied(stack::session *src, struct sockaddr *addr)
+void proxy::copy(stack::session *target, stack::session *source)
 {
-	bool rtn = true;
-	struct sockaddr_internet iface;
-
-	if(server::flags_gateway) {
-		stack::getInterface((struct sockaddr *)(&iface), addr);
-		if(!Socket::equal((struct sockaddr*)&iface, (struct sockaddr*)&src->iface))
-			return true;
-		return false;
-	}
-
-	if(!addr)
-		return true;
-
-	if(!stricmp(src->network, "-"))
-		return true;
-
-	service::keynode *cfg = config::getConfig();
-
-	if(!cfg)
-		return false;
-
-	linked_pointer<cidr> np = proxy::rtp.nets;
-
-	if(!is(np)) {
-		config::release(cfg);
-		return false;
-	}
-
-	cidr *member = NULL;
-	unsigned top = 0;
-		
-	while(np && addr) {
-		if(np->isMember(addr)) {
-			if(np->getMask() > top) {
-				top = np->getMask();
-				member = *np;
-			}
-		}
-		np.next();	
-	}
-	
-	if(member && !stricmp(member->getName(), src->network))
-		rtn = false;
-
-	config::release(cfg);
-	return rtn;
+	target->proxying = source->proxying;
+	String::set(target->network, sizeof(target->network), source->network);
+	memcpy(&target->iface, &source->iface, sizeof(target->iface));
 }
 
 void proxy::classify(stack::session *sid, struct sockaddr *addr)

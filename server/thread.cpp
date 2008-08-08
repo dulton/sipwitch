@@ -70,6 +70,7 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 	char seqid[64];
 	int cid;
 	unsigned count = 0;
+	stack::session dummy;
 
 	// make sure we do not re-invite an existing active member again
 	while(is(sp)) {
@@ -78,6 +79,8 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 		sp.next();
 	}
 	
+	proxy::classify(&dummy, NULL);
+
 	snprintf(touri, sizeof(touri), "<%s>", uri_target);
 	invite = NULL;
 	eXosip_lock();
@@ -143,7 +146,8 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 		
 	eXosip_unlock();
 	invited = stack::create(call, cid);
-	proxy::classify(invited, NULL);
+	proxy::copy(invited, &dummy);
+
 	stack::sipUserid(uri_target, username, sizeof(username));
 	stack::sipHostid(uri_target, route, sizeof(route));
 	String::set(invited->identity, sizeof(invited->identity), uri_target);
@@ -172,6 +176,7 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 
 	linked_pointer<registry::target> tp = rr->targets;
 	stack::session *invited;
+	stack::session dummy;
 	stack::call *call = s->parent;
 	linked_pointer<stack::segment> sp = call->segments.begin();
 
@@ -246,13 +251,14 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 			goto next;
 		}
 
-		if(proxy::isProxied(call->source, (struct sockaddr *)&tp->address) && !call->rtp) {
+		invite = NULL;
+		proxy::classify(&dummy, (struct sockaddr *)&tp->address);
+		if(!call->rtp && dummy.proxying != stack::session::NO_PROXY) {
 			call->rtp = rtpproxy::create(4);
 			if(!call->rtp)
 				goto next;
 		}
 
-		invite = NULL;
 		eXosip_lock();
 
 		if(destination == ROUTED) {
@@ -344,8 +350,8 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 		eXosip_unlock();
 
 		invited = stack::create(call, cid);
+		proxy::copy(invited, &dummy);
 
-		proxy::classify(session, (struct sockaddr *)&tp->address);
 		if(rr->ext) 
 			snprintf(invited->sysident, sizeof(invited->sysident), "%u", rr->ext);
 		else

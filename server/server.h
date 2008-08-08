@@ -576,7 +576,7 @@ public:
 	proxy();
 
 	static void classify(stack::session *session, struct sockaddr *addr);
-	static bool isProxied(stack::session *source, struct sockaddr *addr);
+	static void copy(stack::session *target, stack::session *source);
 
 	bool publishingAddress(const char *address);
 	bool reload(service *cfg);
