@@ -155,8 +155,8 @@ bool proxy::isProxied(stack::session *src, struct sockaddr *addr)
 	struct sockaddr_internet iface;
 
 	if(server::flags_gateway) {
-		stack::getInterface((struct sockaddr *)(&src->iface), addr);
-		if(!Socket::equal((struct sockaddr*)&src->iface, (struct sockaddr*)&src->parent->source->iface))
+		stack::getInterface((struct sockaddr *)(&iface), addr);
+		if(!Socket::equal((struct sockaddr*)&iface, (struct sockaddr*)&src->iface))
 			return true;
 		return false;
 	}

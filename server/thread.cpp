@@ -143,6 +143,7 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 		
 	eXosip_unlock();
 	invited = stack::create(call, cid);
+	proxy::classify(invited, NULL);
 	stack::sipUserid(uri_target, username, sizeof(username));
 	stack::sipHostid(uri_target, route, sizeof(route));
 	String::set(invited->identity, sizeof(invited->identity), uri_target);
@@ -243,6 +244,12 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 			goto next;
 		default:
 			goto next;
+		}
+
+		if(proxy::isProxied(call->source, (struct sockaddr *)&tp->address) && !call->rtp) {
+			call->rtp = rtpproxy::create(4);
+			if(!call->rtp)
+				goto next;
 		}
 
 		invite = NULL;
@@ -457,7 +464,7 @@ void thread::invite(void)
 
 	proxy::classify(session, via_address.getAddr());
 
-	if(!stricmp(session->network, "-")) {
+	if(!stricmp(session->network, "-") || destination == EXTERNAL) {
 		call->rtp = rtpproxy::create(4);
 		if(!call->rtp) {
 			send_reply(SIP_SERVICE_UNAVAILABLE);
