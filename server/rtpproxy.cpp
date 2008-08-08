@@ -154,6 +154,13 @@ bool proxy::isProxied(stack::session *src, struct sockaddr *addr)
 	bool rtn = true;
 	struct sockaddr_internet iface;
 
+	if(server::flags_gateway) {
+		stack::getInterface((struct sockaddr *)(&src->iface), addr);
+		if(!Socket::equal((struct sockaddr*)&src->iface, (struct sockaddr*)&src->parent->source->iface))
+			return true;
+		return false;
+	}
+
 	if(!addr)
 		return true;
 
@@ -169,13 +176,6 @@ bool proxy::isProxied(stack::session *src, struct sockaddr *addr)
 
 	if(!is(np)) {
 		config::release(cfg);
-		if(!addr)
-			return true;
-		if(!server::flags_gateway)
-			return false;
-		stack::getInterface((struct sockaddr *)(&src->iface), addr);
-		if(!Socket::equal((struct sockaddr*)&src->iface, (struct sockaddr*)&src->parent->source->iface))
-			return true;
 		return false;
 	}
 
@@ -201,8 +201,23 @@ bool proxy::isProxied(stack::session *src, struct sockaddr *addr)
 
 void proxy::classify(stack::session *sid, struct sockaddr *addr)
 {
-	service::keynode *cfg = config::getConfig();
 	stack::session *src = sid->parent->source;
+
+	if(server::flags_gateway) {
+		if(!addr)
+			addr = rtpproxy::getPublished();
+
+		stack::getInterface((struct sockaddr *)(&sid->iface), addr);
+		if(sid != src) {
+			if(!Socket::equal((struct sockaddr *)(&sid->iface), (struct sockaddr *)(&src->iface))) {
+				sid->proxying = stack::session::GATEWAY_PROXY;
+				String::set(sid->network, sizeof(sid->network), "-");
+			}
+		}
+		return;
+	}
+
+	service::keynode *cfg = config::getConfig();
 
 	if(!cfg)
 		return;
@@ -211,18 +226,6 @@ void proxy::classify(stack::session *sid, struct sockaddr *addr)
 
 	if(!is(np)) {
 		config::release(cfg);
-		if(!server::flags_gateway)
-			return;
-
-		if(!addr)
-			addr = rtpproxy::getPublished();
-		stack::getInterface((struct sockaddr *)(&sid->iface), addr);
-		if(sid != src) {
-			if(!Socket::equal((struct sockaddr *)(&sid->iface), (struct sockaddr *)(&src->iface))) {
-				sid->proxying = stack::session::GATEWAY_PROXY;
-				String::set(sid->network, sizeof(sid->network), "-");
-			}
-		}
 		return;
 	}
 

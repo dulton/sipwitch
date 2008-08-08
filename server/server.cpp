@@ -447,6 +447,7 @@ void server::usage(void)
 		"  --help                Display this information\n"
 		"  -foreground           Run server in foreground\n"
 		"  -background           Run server as daemon\n"
+		"  -gateway              Run as gateway proxy\n"
 #ifdef	_MSWINDOWS_
 #else
 		"  -restartable			 Run server as restartable daemon\n"
