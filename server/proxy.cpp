@@ -156,14 +156,22 @@ void proxy::copy(stack::session *target, stack::session *source)
 	memcpy(&target->iface, &source->iface, sizeof(target->iface));
 }
 
-bool proxy::isActive(void)
+bool proxy::isRequired(void)
 {
+	// we can still enable gateway mode, even in ipv6...
 	if(server::flags_gateway)
 		return true;
 
+#ifdef	AF_INET6
+	// we otherwise do not require just proxy for generic "external" access if 
+	// we are ipv6...
+	if(stack::sip.family == AF_INET6)
+		return false;
+#endif
+
 	if(proxy::rtp.count)
 		return true;
-
+	
 	return false;
 }
 
@@ -220,13 +228,22 @@ void proxy::classify(stack::session *sid, struct sockaddr *addr)
 
 	config::release(cfg);
 
+	// we only do external-to-internal proxy for ipv4.  We can still need rtp
+	// proxying if joining two different subnets (private & public), however.
+
 	if(src != sid) {
-		if(!stricmp(src->network, "-") && stricmp(sid->network, "-"))
-			sid->proxying = stack::session::REMOTE_PROXY;
-		else if(stricmp(src->network, "-") && !stricmp(sid->network, "-"))
-			sid->proxying = stack::session::LOCAL_PROXY;
-		else if(!stricmp(src->network, "-") && !stricmp(sid->network, "-"))
-			sid->proxying = stack::session::BRIDGE_PROXY;
+		if(!stricmp(src->network, "-") && stricmp(sid->network, "-")) {
+			if(stack::sip.family == AF_INET)
+				sid->proxying = stack::session::REMOTE_PROXY;
+		}
+		else if(stricmp(src->network, "-") && !stricmp(sid->network, "-")) {
+			if(stack::sip.family == AF_INET)
+				sid->proxying = stack::session::LOCAL_PROXY;
+		}
+		else if(!stricmp(src->network, "-") && !stricmp(sid->network, "-")) {
+			if(stack::sip.family == AF_INET)
+				sid->proxying = stack::session::BRIDGE_PROXY;
+		}
 		else if(stricmp(src->network, sid->network)) {
 			stack::getInterface((struct sockaddr *)(&sid->iface), addr);
 			sid->proxying = stack::session::SUBNET_PROXY;

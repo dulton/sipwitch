@@ -472,7 +472,7 @@ void thread::invite(void)
 
 	if(!stricmp(session->network, "-") || destination == EXTERNAL) {
 		call->rtp = rtpproxy::create(4);
-		if(!call->rtp && proxy::isActive()) {
+		if(!call->rtp && proxy::isRequired()) {
 			send_reply(SIP_SERVICE_UNAVAILABLE);
 			call->failed(this, session);
 			return;
