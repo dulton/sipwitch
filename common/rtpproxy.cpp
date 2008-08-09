@@ -248,7 +248,7 @@ rtpproxy *rtpproxy::create(unsigned count, mode_t mode, unsigned qval)
 
 	locking.modify();
 	if(active_sockets + count > proxy_sockets) {
-		locking.release();
+		locking.commit();
 		return NULL;
 	}
 

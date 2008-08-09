@@ -70,7 +70,6 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 	char seqid[64];
 	int cid;
 	unsigned count = 0;
-	stack::session dummy;
 
 	// make sure we do not re-invite an existing active member again
 	while(is(sp)) {
@@ -79,10 +78,13 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 		sp.next();
 	}
 	
-	proxy::classify(&dummy, NULL);
-
 	snprintf(touri, sizeof(touri), "<%s>", uri_target);
+
+	proxyinfo.proxying = stack::session::NO_PROXY;
+	proxyinfo.parent = call;
+	proxy::classify(&proxyinfo, NULL);
 	invite = NULL;
+
 	eXosip_lock();
 	if(eXosip_call_build_initial_invite(&invite, touri, s->from, NULL, call->subject)) {
 		process::errlog(ERRLOG, "cannot invite %s; build failed", uri_target);
@@ -146,8 +148,7 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 		
 	eXosip_unlock();
 	invited = stack::create(call, cid);
-	proxy::copy(invited, &dummy);
-
+	proxy::copy(invited, &proxyinfo);
 	stack::sipUserid(uri_target, username, sizeof(username));
 	stack::sipHostid(uri_target, route, sizeof(route));
 	String::set(invited->identity, sizeof(invited->identity), uri_target);
@@ -168,7 +169,6 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 	}
 }
 
-
 void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 {
 	assert(s != NULL && s->parent != NULL);
@@ -176,7 +176,6 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 
 	linked_pointer<registry::target> tp = rr->targets;
 	stack::session *invited;
-	stack::session dummy;
 	stack::call *call = s->parent;
 	linked_pointer<stack::segment> sp = call->segments.begin();
 
@@ -251,14 +250,12 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 			goto next;
 		}
 
-		invite = NULL;
-		proxy::classify(&dummy, (struct sockaddr *)&tp->address);
-		if(!call->rtp && dummy.proxying != stack::session::NO_PROXY) {
-			call->rtp = rtpproxy::create(4);
-			if(!call->rtp)
-				goto next;
-		}
+		proxyinfo.proxying = stack::session::NO_PROXY;
+		proxyinfo.parent = call;
+		if(!proxy::classify(&proxyinfo, (struct sockaddr *)&tp->address))
+			goto next;
 
+		invite = NULL;
 		eXosip_lock();
 
 		if(destination == ROUTED) {
@@ -350,8 +347,8 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 		eXosip_unlock();
 
 		invited = stack::create(call, cid);
-		proxy::copy(invited, &dummy);
-
+		proxy::copy(invited, &proxyinfo);
+		
 		if(rr->ext) 
 			snprintf(invited->sysident, sizeof(invited->sysident), "%u", rr->ext);
 		else
@@ -468,17 +465,17 @@ void thread::invite(void)
 	osip_header_t *msgheader = NULL;
 	char fromext[32];
 
-	proxy::classify(session, via_address.getAddr());
+	// FIXME: we should get proxy count extimate from sdp into global thread object...
 
-	if(!stricmp(session->network, "-") || destination == EXTERNAL) {
-		call->rtp = rtpproxy::create(4);
-		if(!call->rtp && proxy::isRequired()) {
-			send_reply(SIP_SERVICE_UNAVAILABLE);
-			call->failed(this, session);
-			return;
-		}
+	if(!proxy::classify(session, via_address.getAddr())) {
+noproxy:
+		send_reply(SIP_SERVICE_UNAVAILABLE);
+		call->failed(this, session);
+		return;
 	}
-
+	else if(destination == EXTERNAL && proxy::isRequired() && !proxy::assign(call))
+			goto noproxy;
+		
 	if(extension)
 		snprintf(fromext, sizeof(fromext), "%u", extension);
 

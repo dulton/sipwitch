@@ -516,6 +516,7 @@ private:
 	const char *via_host;
 	unsigned via_hops;
 	unsigned via_port;
+	stack::session proxyinfo;
 
 	enum {EXTERNAL, LOCAL, PUBLIC, ROUTED, FORWARDED} destination;
 	enum {CALL, MESSAGE, REGISTRAR, NONE} authorizing;
@@ -575,9 +576,10 @@ private:
 public:
 	proxy();
 
-	static void classify(stack::session *session, struct sockaddr *addr);
+	static bool classify(stack::session *session, struct sockaddr *addr, unsigned count = 4);
 	static void copy(stack::session *target, stack::session *source);
 	static bool isRequired(void);
+	static bool assign(stack::call *cr, unsigned count = 4);
 
 	bool publishingAddress(const char *address);
 	bool reload(service *cfg);
