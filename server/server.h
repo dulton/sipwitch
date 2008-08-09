@@ -577,6 +577,7 @@ public:
 
 	static void classify(stack::session *session, struct sockaddr *addr);
 	static void copy(stack::session *target, stack::session *source);
+	static bool isActive(void);
 
 	bool publishingAddress(const char *address);
 	bool reload(service *cfg);

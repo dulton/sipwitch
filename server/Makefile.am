@@ -28,7 +28,7 @@ EXTRA_LTLIBRARIES += zeroconf.la
 endif
 
 sipw_SOURCES = server.cpp config.cpp registry.cpp stack.cpp thread.cpp \
-	call.cpp messages.cpp posix.cpp mswindows.cpp rtpproxy.cpp
+	call.cpp messages.cpp posix.cpp mswindows.cpp proxy.cpp
 sipw_LDADD = $(LDADD) $(DLOPEN)
 
 sysconf_DATA = sipwitch.conf

@@ -156,6 +156,17 @@ void proxy::copy(stack::session *target, stack::session *source)
 	memcpy(&target->iface, &source->iface, sizeof(target->iface));
 }
 
+bool proxy::isActive(void)
+{
+	if(server::flags_gateway)
+		return true;
+
+	if(proxy::rtp.count)
+		return true;
+
+	return false;
+}
+
 void proxy::classify(stack::session *sid, struct sockaddr *addr)
 {
 	stack::session *src = sid->parent->source;
@@ -173,6 +184,9 @@ void proxy::classify(stack::session *sid, struct sockaddr *addr)
 		}
 		return;
 	}
+
+	if(!proxy::rtp.count)
+		return;
 
 	service::keynode *cfg = config::getConfig();
 
