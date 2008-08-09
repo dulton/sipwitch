@@ -176,7 +176,7 @@ void stack::call::bye(thread *thread, session *s)
 	case RINGBACK:
 		if(s == source) {
 			s->state = session::CLOSED;
-			terminateLocked();
+			disconnectLocked();
 		}
 		else
 			closing = true;
