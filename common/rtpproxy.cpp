@@ -123,7 +123,13 @@ void rtpproxy::slice(timeout_t timeout)
 		len = 0;
 		if(FD_ISSET(so, &result)) {
 			rtp = map[so];
+#ifdef	MSG_DONTWAIT
 			len = Socket::recvfrom(rtp->so, buffer, sizeof(buffer), MSG_DONTWAIT, &addr);
+#else
+			len = Socket::recvfrom(rtp->so, buffer, 1, MSG_PEEK, NULL);
+			if(len > 0)
+				len = Socket::recvfrom(rtp->so, buffer, sizeof(buffer), 0, &addr);
+#endif
 			// initialize local side if bi-directional proxy
 			if(rtp->proxy->mode == BOTHWAY && !rtp->has_local && !rtp->has_remote) {
 				time(&rtp->lastio);
