@@ -269,7 +269,7 @@ void stack::call::reinvite(thread *thread, session *s)
 {
 	osip_message_t *reply = NULL;
 	osip_body_t *body = NULL;
-	session *target;
+	session *remote;
 	int did;
 
 	assert(thread != NULL);
@@ -278,7 +278,7 @@ void stack::call::reinvite(thread *thread, session *s)
 	Mutex::protect(this);
 	s->did = thread->sevent->did;
 	if(s == source)
-		did = target->did;
+		did = remote->did;
 	else
 		did = source->did;
 
