@@ -24,6 +24,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <sys/time.h>
+#include <sys/resource.h>
 #include <limits.h>
 #include <errno.h>
 
