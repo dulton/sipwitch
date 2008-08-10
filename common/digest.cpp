@@ -76,7 +76,7 @@
 #define	SHA1_MISSING
 #define	RMD160_MISSING
 
-typedef struct MD5_CTX {
+struct MD5_CTX {
 	uint32_t buf[4];
 	uint32_t bits[2];
 	unsigned char in[64];

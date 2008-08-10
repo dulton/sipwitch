@@ -119,8 +119,7 @@ void zeroconf::setGroup(AvahiEntryGroupState state)
 void zeroconf::setClient(AvahiClientState state)
 {
     int ret;
-    unsigned count = 0;
-    AvahiProtocol family = AVAHI_PROTO_UNSPEC;
+    AvahiProtocol avifamily = AVAHI_PROTO_UNSPEC;
 
 	switch(state) {
 	case AVAHI_CLIENT_S_RUNNING:
@@ -146,7 +145,7 @@ add:
 
 	process::errlog(INFO, "zeroconf adding sip on port %d", port);
 	ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC,
-		family, (AvahiPublishFlags)0, name, protocol, NULL, NULL, port, NULL);
+		avifamily, (AvahiPublishFlags)0, name, protocol, NULL, NULL, port, NULL);
 
 	if(ret < 0)
 		process::errlog(ERRLOG, "zeroconf %s failed; error=%s", 

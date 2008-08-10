@@ -959,7 +959,7 @@ bool service::publishAddress(const char *address)
 
 	while(rl < RUNLEVELS) {
 		cb = callback::runlevels[rl++];
-		while(cb && rtn) {
+		while(is(cb) && rtn) {
 			if(!cb->publishingAddress(address))
 				rtn = false;
 			cb.next();
@@ -975,7 +975,7 @@ void service::activate(MappedRegistry *rr)
 
 	while(rl < RUNLEVELS) {
 		cb = callback::runlevels[rl++];
-		while(cb) {
+		while(is(cb)) {
 			cb->activating(rr);
 			cb.next();
 		}

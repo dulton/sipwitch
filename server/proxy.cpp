@@ -214,7 +214,7 @@ bool proxy::classify(stack::session *sid, struct sockaddr *addr, unsigned count)
 	cidr *member = NULL;
 	unsigned top = 0;
 		
-	while(np && addr) {
+	while(is(np) && addr) {
 		if(np->isMember(addr)) {
 			if(np->getMask() > top) {
 				top = np->getMask();
