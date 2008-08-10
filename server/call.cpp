@@ -269,7 +269,6 @@ void stack::call::reinvite(thread *thread, session *s)
 {
 	osip_message_t *reply = NULL;
 	osip_body_t *body = NULL;
-	session *remote;
 	int did;
 
 	assert(thread != NULL);
@@ -277,8 +276,12 @@ void stack::call::reinvite(thread *thread, session *s)
 
 	Mutex::protect(this);
 	s->did = thread->sevent->did;
-	if(s == source)
-		did = remote->did;
+	if(s == source) {
+		if(target)
+			did = target->did;
+		else
+			goto unconnected;
+	}
 	else
 		did = source->did;
 
@@ -294,7 +297,16 @@ void stack::call::reinvite(thread *thread, session *s)
 	case TRYING:
 	case ANSWERED:
 		if(s == source) {
+unconnected:
 			Mutex::release(this);
+			eXosip_lock();
+			eXosip_call_build_answer(source->tid, 500, &reply);
+			if(reply != NULL) {
+				osip_message_set_header(reply, "Reply-After", "8");
+				stack::siplog(reply);
+				eXosip_call_send_answer(source->tid, 500, reply);
+			}
+			eXosip_unlock();
 			return;
 		}
 		if(state != ANSWERED && state != RINGBACK) {
