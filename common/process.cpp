@@ -417,7 +417,7 @@ bool process::system(const char *fmt, ...)
 	int fd = ::open("/dev/null", O_RDWR);
 	dup2(fd, 0);
 	dup2(fd, 2);
-	dup2(::fileno(fifo), 1);
+	dup2(fileno(fifo), 1);
 	for(fd = 3; fd < max; ++fd)
 		::close(fd);
 	pid = fork();
