@@ -240,7 +240,7 @@ private:
 		time_t expires;					// session/invite expires...
 		time_t ringing;					// ring no-answer timer...
 
-		enum {OPEN, CLOSED, RING, BUSY, REORDER} state;
+		enum {OPEN, CLOSED, RING, BUSY, REORDER, REFER} state;
 
 		enum {NO_PROXY, LOCAL_PROXY, REMOTE_PROXY, SUBNET_PROXY, BRIDGE_PROXY, GATEWAY_PROXY} proxying;
 
@@ -283,7 +283,7 @@ private:
 
 		enum {LOCAL, INCOMING, OUTGOING, REFER} type;
 
-		enum {INITIAL, TRYING, RINGING, RINGBACK, REORDER, HOLDING, ANSWERED, JOINED, BUSY, TERMINATE, FAILED, FINAL} state;
+		enum {INITIAL, TRYING, RINGING, RINGBACK, REORDER, HOLDING, ANSWERED, JOINED, TRANSFER, REDIRECT, BUSY, TERMINATE, FAILED, FINAL} state;
 
 		call();
 

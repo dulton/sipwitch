@@ -61,7 +61,9 @@ void stack::call::joinLocked(session *join)
 				s->reg->decUse();
 				s->reg = NULL;
 			}
-			if(s->cid > 0 && s->state != session::CLOSED) {
+			if(s->state == session::REFER)
+				s->state = session::CLOSED;
+			else if(s->cid > 0 && s->state != session::CLOSED) {
 				s->state = session::CLOSED;
 				eXosip_lock();
 				eXosip_call_terminate(s->cid, s->did);
@@ -102,6 +104,12 @@ void stack::call::disconnectLocked(void)
 	case TERMINATE:
 		reason = "terminated";
 		break;
+	case TRANSFER:
+		reason = "transfer";
+		break;
+	case REDIRECT:
+		reason = "redirect";
+		break;
 	case INITIAL:
 	case FINAL:
 		break;
@@ -113,7 +121,9 @@ void stack::call::disconnectLocked(void)
 			sp->sid.reg->decUse();
 			sp->sid.reg = NULL;
 		}
-		if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
+		if(sp->sid.state == session::REFER)
+			sp->sid.state = session::CLOSED;
+		else if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
 			sp->sid.state = session::CLOSED;
 			eXosip_lock();
 			eXosip_call_terminate(sp->sid.cid, sp->sid.did);
@@ -236,6 +246,8 @@ void stack::call::failed(thread *thread, session *s)
 		--ringing;
 	else if(s->state == session::BUSY)
 		--ringbusy;
+	else if(s->state == session::REFER)
+		s->state = session::CLOSED;
 	if(s->state != session::CLOSED)
 		s->state = session::OPEN;
 
@@ -600,6 +612,7 @@ void stack::call::expired(void)
 
 	Mutex::protect(this);
 	switch(state) {
+	case TRANSFER:
 	case HOLDING:	// hold-recall timer expired...
 
 	case RINGING:	// re-generate ring event to origination...
@@ -608,6 +621,8 @@ void stack::call::expired(void)
 			reply_source(SIP_RINGING);
 			return;
 			
+	case REDIRECT:	// FIXME: add refer select of next segment if list....
+	
 	case RINGBACK:
 	case BUSY:		// invite expired
 	case JOINED:	// active call session expired without re-invite
@@ -659,6 +674,5 @@ void stack::call::log(void)
 	
 	starting = 0l;
 }
-
 
 END_NAMESPACE

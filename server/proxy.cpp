@@ -103,7 +103,7 @@ bool proxy::reload(service *cfg)
 	caddr_t mp;
 	volatile char *vp;
 	const char *key = NULL, *value;
-	linked_pointer<service::keynode> sp = cfg->getList("rtpproxy");
+	linked_pointer<service::keynode> sp = cfg->getList("proxy");
 	int val;
 
 	updated = 0l;
