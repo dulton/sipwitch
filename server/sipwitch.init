@@ -26,6 +26,7 @@ USER=""
 CONCURRENCY=""
 PRIORITY=""
 DEFAULT="/etc/default/sipwitch"
+START="1"
 
 test -x $(DAEMON) || exit 0
 
@@ -45,7 +46,7 @@ fi
 if [ ! -z "$PLUGINS" ] ; then
 	export PLUGINS
 else
-	PLUGINS="none"
+	START="0"
 fi
 
 if [ ! -z "$USER" ] ; then
@@ -59,7 +60,7 @@ if [ ! -z "$PRIORITY" ] ; then
 
 case "$1" in
 start)
-	if [ "$PLUGINS" = "none" ] ; then
+	if [ "$START" = "0" ] ; then
 		echo "You have to define PLUGINS in $CONFIG before running sipwitch"
 		exit 0
 	fi
