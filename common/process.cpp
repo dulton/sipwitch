@@ -68,9 +68,8 @@ size_t process::attach(const char *uid)
 	return 0;
 }
 
-static void logfile(fsys_t &fs, const char *uid)
+static void logfile(fsys_t &fs)
 {
-	assert(uid != NULL && *uid != 0);
 	char buf[128];
 	fd_t fd;
 
@@ -79,7 +78,7 @@ static void logfile(fsys_t &fs, const char *uid)
 	if(is(fs))
 		return;
 
-	snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/logfile", uid);
+	snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/logfile", process::identity());
 	fsys::create(fs, buf, fsys::ACCESS_APPEND, 0660); 
 }
 
@@ -191,7 +190,7 @@ static HANDLE hLoopback = INVALID_HANDLE_VALUE;
 static HANDLE hEvent = INVALID_HANDLE_VALUE;
 static OVERLAPPED ovFifo;
 
-static void logfile(fsys_t& fd, const char *uid)
+static void logfile(fsys_t& fd)
 {
 	assert(uid != NULL && *uid != 0);
 
@@ -322,14 +321,11 @@ void process::printlog(const char *fmt, ...)
 	va_list args;
 	char buf[1024];
 	int len;
-	service::keynode *env = service::getEnviron();
 	char *cp;
 
 	va_start(args, fmt);
 
-	uid = service::getValue(env, "USER");
-	logfile(log, uid);
-	service::release(env);
+	logfile(log);
 
 	vsnprintf(buf, sizeof(buf) - 1, fmt, args);
 	len = strlen(buf);
