@@ -38,6 +38,7 @@ static const char *replytarget = NULL;
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <limits.h>
+#include <pwd.h>
 
 static FILE *fifo = NULL;
 static char fifopath[128] = "";
@@ -435,6 +436,28 @@ bool process::system(const char *fmt, ...)
 	return true;
 }
 
+const char *process::identity(void)
+{
+	static const char *userid = NULL;
+
+#ifdef	_MSWINDOWS_
+	return "telephony";
+#else
+	if(!userid)
+		userid = getenv("USER");
+	if(userid)
+		return userid;
+
+	struct passwd *pwd = getpwuid(getuid());
+	if(pwd)
+		userid = strdup(pwd->pw_name);
+	else 
+		userid = "nobody";
+	endpwent();
+	return userid;
+#endif
+}
+
 bool process::control(const char *uid, const char *fmt, ...)
 {
 	assert(uid == NULL || *uid != 0);
@@ -445,19 +468,17 @@ bool process::control(const char *uid, const char *fmt, ...)
 	int len;
 	bool rtn = true;
 	va_list args;
-	service::keynode *env = service::getEnviron();
 
 	va_start(args, fmt);
 #ifdef	_MSWINDOWS_
 	snprintf(buf, sizeof(buf), "\\\\.\\mailslot\\sipwitch_ctrl");
 	fd = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	service::release(env);
 	if(fd == INVALID_HANDLE_VALUE)
 		return false;
 
 #else
 	if(!uid)
-		uid = service::getValue(env, "USER");
+		uid = identity();
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch/control");
 	fd = ::open(buf, O_WRONLY | O_NONBLOCK);
@@ -465,7 +486,6 @@ bool process::control(const char *uid, const char *fmt, ...)
 		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/control", uid);
 		fd = ::open(buf, O_WRONLY | O_NONBLOCK);
 	}
-	service::release(env);
 	if(fd < 0)
 		return false;
 #endif
