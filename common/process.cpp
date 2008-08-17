@@ -175,7 +175,6 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 				fprintf(stderr, "sipw: %s\n", buf);
 		}
 		service::snmptrap(loglevel + 10, buf);
-		service::publish(NULL, "- errlog %d %s", loglevel, buf); 
 		::syslog(level, "%s", buf);
 	}
 	
@@ -291,7 +290,6 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 		else
 			fprintf(stderr, "%s: %s\n", getenv("IDENT"), buf);
 		service::snmptrap(loglevel + 10, buf);
-		service::publish(NULL, "- errlog %d %s", loglevel, buf); 
 	}
 	
 	if(loglevel == FAILURE)
@@ -345,8 +343,6 @@ void process::printlog(const char *fmt, ...)
 	if(cp)
 		*cp = 0;
 
-	service::publish(NULL, "- logfile %s", buf); 
-
 	debug(2, "logfile: %s", buf);
 	va_end(args);
 }
@@ -357,6 +353,8 @@ void process::reply(const char *msg)
 
 	pid_t pid;
 	char *sid;
+	fsys fd;
+	char buffer[256];
 
 	if(msg)
 		errlog(ERRLOG, "control failed; %s", msg);
@@ -377,10 +375,18 @@ void process::reply(const char *msg)
 		sid = (char *)strchr(replytarget, ';');
 		if(sid)
 			*(sid++) = 0;
-		if(msg)
-			service::publish(replytarget, "%s msg %s", sid, msg);
+
 		else
-			service::publish(replytarget, "%s ok", sid);
+			sid = (char *)"-";
+		if(msg)
+			snprintf(buffer, sizeof(buffer), "%s msg %s\n", sid, msg);
+		else
+			snprintf(buffer, sizeof(buffer), "%s ok\n", sid);
+		fd.open(replytarget, fsys::ACCESS_WRONLY);
+		if(is(fd)) {
+			fd.write(buffer, strlen(buffer));
+			fd.close();
+		}
 	}
 	replytarget = NULL;
 }

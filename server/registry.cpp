@@ -636,8 +636,6 @@ registry::mapped *registry::create(const char *id)
 			process::errlog(INFO, "releasing %s from extension %d", prior->userid, ext);
 			prior->ext = 0;
 		}
-		if(ext && extmap[ext - reg.prefix] != rr)
-			service::publish(NULL, "- map %d %d", ext, getIndex(rr));
 		extmap[ext - reg.prefix] = rr;
 		rr->ext = ext;
 		process::errlog(INFO, "activating %s; extension=%d", rr->userid, ext);

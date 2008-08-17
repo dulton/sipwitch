@@ -384,20 +384,6 @@ invalid:
 			continue;
 		}
 
-		if(!stricmp(argv[0], "subscribe")) {
-			if(argc < 2 || argc > 3)
-				goto invalid;
-			service::subscribe(argv[1], argv[2]);
-			continue;
-		}
-
-		if(!stricmp(argv[0], "unsubscribe")) {
-			if(argc != 2)
-				goto invalid;
-			service::unsubscribe(argv[1]);
-			continue;
-		}
-
 		if(!stricmp(argv[0], "activate")) {
 			if(!activate(argc, argv))
 				process::reply("cannot activate");

@@ -105,25 +105,6 @@ public:
 			{return service::cfg;};
 	};
 
-	class __EXPORT subscriber : public LinkedObject
-	{
-	protected:
-		friend class service;
-
-		static rwlock_t locking;
-		static LinkedObject *list;
-
-		subscriber(const char *p, const char *listen, size_t size);
-		void reopen(const char *listen);
-		void write(char *str);
-		void close(void);
-
-		mutex_t mutex;
-		fsys_t fs;
-		char listen[80];
-		char path[1];
-	};
-
 	class __EXPORT callback : public OrderedObject
     {
 	protected:
@@ -188,9 +169,6 @@ public:
 	static void dump(FILE *fp, keynode *node, unsigned level);
 	static void snapshot(const char *uid);
 	static void dumpfile(const char *uid);
-	static void unsubscribe(const char *path);
-	static void subscribe(const char *path, const char *cmds = NULL);
-	static void publish(const char *path, const char *fmt, ...) __PRINTF(2, 3);
 	static void result(const char *value);
 	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
 	static bool state(const char *value);

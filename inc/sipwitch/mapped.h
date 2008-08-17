@@ -32,7 +32,7 @@
  * This covers the published interfaces to the sipwitch server itself.  These
  * are mostly classes that are mapped into shared memory blocks, and for
  * defining highly sipwitch specific plugin interfaces.
- * @file sipwitch/sipwitch.h
+ * @file sipwitch/mapped.h
  */
 
 #define	USER_PROFILE_DIALABLE		0x0001	// user may be dialed

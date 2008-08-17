@@ -29,8 +29,6 @@
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
-LinkedObject *service::subscriber::list = NULL;
-rwlock_t service::subscriber::locking;
 LinkedObject *service::callback::runlevels[4] = {NULL, NULL, NULL, NULL};
 unsigned service::callback::count = 0;
 condlock_t service::locking;
@@ -108,54 +106,6 @@ void service::pointer::operator=(keynode *p)
 	service::release(node);
 	node = p;
 }	
-
-service::subscriber::subscriber(const char *name, const char *cmds, size_t size) :
-LinkedObject(&list)
-{
-	assert(name != NULL && *name != 0);
-	assert(cmds != NULL && *cmds != 0);
-
-	String::set(path, size, name);
-	fsys::open(fs, path, fsys::ACCESS_RDONLY);
-	if(!cmds)
-		cmds = "";
-	String::set(listen, sizeof(listen), cmds);
-	write(header);
-}
-
-void service::subscriber::close(void)
-{
-	fsys::close(fs);
-}
-
-void service::subscriber::reopen(const char *cmds)
-{
-	assert(cmds != NULL && *cmds != 0);
-
-	close();
-	fsys::open(fs, path, fsys::ACCESS_RDONLY);
-	write(header);
-
-	if(!cmds)
-		cmds = "";
-	String::set(listen, sizeof(listen), cmds);
-}
-
-void service::subscriber::write(char *str)
-{
-	assert(str != NULL && *str != 0);
-
-	exclusive_access(mutex);
-
-	size_t len = strlen(str);
-
-	if(str[len - 1] != '\n')
-		str[len++] = '\n';
-
-	if(is(fs))
-		if(fsys::write(fs, str, len) < len)
-			fsys::close(fs);
-}
 
 service::callback::callback(int rl, const char *name) :
 OrderedObject()
@@ -731,115 +681,6 @@ exit:
 	return rtn;
 }
 
-void service::unsubscribe(const char *path)
-{
-	assert(path != NULL && *path != 0);
-
-	exclusive_access(subscriber::locking);
-	linked_pointer<subscriber> sb;
-
-	crit(cfg != NULL, "unsubscribe without config");
-
-	sb = subscriber::list;
-	while(sb) {
-		if(!stricmp(sb->path, path))
-			break;
-		sb.next();
-	}
-	if(sb) 
-		sb->close();
-}
-
-void service::publish(const char *path, const char *fmt, ...)
-{
-	assert(path == NULL || *path != 0);
-	assert(fmt != NULL && *fmt != 0);
-	
-	linked_pointer<subscriber> sb;
-	char buf[512];
-	char cmdbuf[16];
-	va_list args;
-	int fd;
-	unsigned len;
-	const char *cp;
-
-	va_start(args, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, args);
-	va_end(args);
-
-#ifndef	_MSWINDOWS_
-	if(path) {
-		cp = strrchr(path, '/');
-		if(cp && !stricmp(cp, "/control"))
-			goto control;
-		len = strlen(buf);
-		fd = ::open(path, O_WRONLY | O_NONBLOCK);
-		if(fd > -1) {
-			if(buf[len - 1] != '\n')
-				buf[len++] = '\n';
-			::write(fd, buf, len);
-			::close(fd);
-		}
-		return;
-	}
-#endif
-
-control:
-	protected_access(subscriber::locking);
-
-	cmdbuf[0] = 0;
-	if(!path && (*fmt == '-' || *fmt == '-') && isspace(fmt[1])) {
-		cp = fmt + 1;
-		while(isspace(*cp))
-			++cp;
-		len = 0;
-		while(len < sizeof(cmdbuf) - 1 && isalnum(*cp)) {
-			cmdbuf[len++] = tolower(*cp);
-			++cp;
-		}
-		cmdbuf[len] = 0;
-	}
-
-	sb = subscriber::list;
-	while(sb) {
-		if(path) {
-			if(stricmp(sb->path, path))
-				sb->write(buf);
-		}
-		else if(!cmdbuf[0] || String::ifind(sb->listen, cmdbuf, " ,;: \t\n"))
-			sb->write(buf);
-		sb.next();
-	}
-}
-
-void service::subscribe(const char *path, const char *listen)
-{
-	assert(path != NULL && *path != 0);
-
-	exclusive_access(subscriber::locking);
-	linked_pointer<subscriber> sb;
-	caddr_t mp;
-
-	crit(cfg != NULL, "subscribe without subscribe");
-
-	if(!listen || !stricmp(listen, "*") || !stricmp(listen, "all"))
-		listen = "";
-
-	sb = subscriber::list;
-	while(sb) {
-		if(!stricmp(sb->path, path))
-			break;
-		sb.next();
-	}
-	if(sb) {
-		sb->reopen(listen);
-		return;
-	}
-	size_t len = strlen(path);
-	mp = (caddr_t)cfg->alloc(sizeof(subscriber) + len);
-	new(mp) subscriber(path, listen, ++len);
-}
-
 void service::startup(void)
 {
 	linked_pointer<callback> sp;
@@ -859,8 +700,6 @@ void service::shutdown(void)
 {
 	linked_pointer<callback> sp;
 	unsigned level = RUNLEVELS;
-
-	publish(NULL, "- shutdown");
 
 	while(level--) {
 		sp = callback::runlevels[level];
