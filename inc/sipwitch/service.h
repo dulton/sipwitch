@@ -120,13 +120,13 @@ public:
         callback(int level = 0, const char *id = NULL);
         virtual ~callback();
 
-		inline void *alloc(service *cfgp, size_t size)
+		inline static void *alloc(service *cfgp, size_t size)
 			{return cfgp->alloc_locked(size);};
 
-		inline char *dup(service *cfgp, const char *s)
+		inline static char *dup(service *cfgp, const char *s)
 			{return cfgp->dup_locked(s);};
 
-		inline bool isConfigured(void)
+		inline static bool isConfigured(void)
 			{return service::cfg != NULL;};
 
 		inline bool isActive(void)
