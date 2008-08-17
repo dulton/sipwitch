@@ -25,37 +25,47 @@ PLUGINS=""
 USER=""
 CONCURRENCY=""
 PRIORITY=""
+DEFAULT="/etc/default/sipwitch"
 
 test -x $(DAEMON) || exit 0
 
 set -e
 
-if test -f /etc/sysconfig/sipwitch ; then
+if [ -f /etc/sysconfig/sipwitch ] ; then
+	DEFAULT="/etc/sysconfig/sipwitch"
 	. /etc/sysconfig/sipwitch
-elif test -f /etc/default/sipwitch ; then
+elif [ -f /etc/default/sipwitch ] ; then
 	. /etc/default/sipwitch
-elif test -f /etc/conf.d/sipwitch ; then
+elif [ -f /etc/conf.d/sipwitch ] ; then
 	. /etc/conf.d/sipwitch
-elif test -f /etc/site-start.d/sipwitch ; then
+elif [ -f /etc/site-start.d/sipwitch ] ; then
 	. /etc/site-start.d/sipwitch
 fi
 
-if test ! -z "$PLUGINS" ; then
-	export PLUGINS ; fi
+if [ ! -z "$PLUGINS" ] ; then
+	export PLUGINS
+else
+	PLUGINS="none"
+fi
 
-if test ! -z "$USER" ; then
+if [ ! -z "$USER" ] ; then
 	export USER ; fi
 
-if test ! -z "$CONCURRENCY" ; then
+if [ ! -z "$CONCURRENCY" ] ; then
 	export CONCURRENCY ; fi
 
-if test ! -z "$PRIORITY" ; then
+if [ ! -z "$PRIORITY" ] ; then
 	export PRIORITY ; fi
 
 case "$1" in
 start)
-	if test ! -z "$PRELOAD" ; then		
-		if test -z "$LD_PRELOAD" ; then
+	if [ "$PLUGINS" = "none" ] ; then
+		echo "You have to define PLUGINS in $CONFIG before running sipwitch"
+		exit 0
+	fi
+
+	if [ ! -z "$PRELOAD" ] ; then		
+		if [ -z "$LD_PRELOAD" ] ; then
 			LD_PRELOAD="$PRELOAD"
 		else
 			LD_PRELOAD="$LD_PRELOAD:$PRELOAD"
@@ -63,7 +73,7 @@ start)
 		export LD_PRELOAD
 	fi
 	
-	if test -p $FIFO ; then
+	if [ -p $FIFO ] ; then
 		echo "already started"
 		exit 1
 	fi
@@ -72,7 +82,7 @@ start)
 	echo "$NAME."
 	;;
 stop)
-	if test ! -p $FIFO ; then
+	if [ ! -p $FIFO ] ; then
 		exit 0 ; fi
 
 	echo -n "Stopping $DESC: "
@@ -80,7 +90,7 @@ stop)
 	echo "$NAME."
 	;;
 reload)
-	if test ! -p $FIFO ; then
+	if [ ! -p $FIFO ] ; then
 		exit 0 ; fi
 	echo -n "Reloading $DESC: "
 	echo "reload" >$FIFO
