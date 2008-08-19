@@ -156,6 +156,18 @@ void proxy::copy(stack::session *target, stack::session *source)
 	memcpy(&target->iface, &source->iface, sizeof(target->iface));
 }
 
+bool proxy::assign(stack::call *cr, unsigned count)
+{
+	if(cr->rtp)
+		return true;
+
+	cr->rtp = rtpproxy::create(count);
+	if(cr->rtp)
+		return true;
+
+	return false;
+}
+
 bool proxy::isRequired(void)
 {
 	// we can still enable gateway mode, even in ipv6...
@@ -175,7 +187,7 @@ bool proxy::isRequired(void)
 	return false;
 }
 
-bool proxy::classify(stack::session *sid, struct sockaddr *addr, unsigned count)
+bool proxy::classify(stack::session *sid, struct sockaddr *addr)
 {
 	service::keynode *cfg;
 	stack::session *src = sid->parent->source;
