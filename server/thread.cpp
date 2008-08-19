@@ -82,7 +82,7 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 
 	proxyinfo.proxying = rtpproxy::NO_PROXY;
 	proxyinfo.parent = call;
-	proxy::classify(&proxyinfo, NULL);
+	proxy::classify(&proxyinfo, call->source, NULL);
 	invite = NULL;
 
 	eXosip_lock();
@@ -255,7 +255,7 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 
 		// if proxy required, but not available, then we must skip this
 		// invite...
-		if(proxy::classify(&proxyinfo, (struct sockaddr *)&tp->address) && !proxy::assign(call, 4))
+		if(proxy::classify(&proxyinfo, call->source, (struct sockaddr *)&tp->address) && !proxy::assign(call, 4))
 			goto next;
 
 		invite = NULL;
@@ -472,7 +472,7 @@ void thread::invite(void)
 
 	// assign initial proxy if required to accept call...
 	// if no proxy available, then return 503...
-	if(proxy::classify(session, via_address.getAddr())) {
+	if(proxy::classify(session, call->source, via_address.getAddr())) {
 		if(!proxy::assign(call, 4)) {
 noproxy:
 			send_reply(SIP_SERVICE_UNAVAILABLE);

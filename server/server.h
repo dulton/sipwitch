@@ -587,7 +587,7 @@ public:
 	proxy();
 
 	static bool assign(stack::call *cr, unsigned count);
-	static bool classify(stack::session *session, struct sockaddr *addr);
+	static bool classify(stack::session *session, stack::session *source, struct sockaddr *addr);
 	static void copy(stack::session *target, stack::session *source);
 	static bool isRequired(void);
 

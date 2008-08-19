@@ -187,10 +187,9 @@ bool proxy::isRequired(void)
 	return false;
 }
 
-bool proxy::classify(stack::session *sid, struct sockaddr *addr)
+bool proxy::classify(stack::session *sid, stack::session *src, struct sockaddr *addr)
 {
 	service::keynode *cfg;
-	stack::session *src = sid->parent->source;
 
 	sid->proxying = rtpproxy::NO_PROXY;
 
