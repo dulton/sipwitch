@@ -63,6 +63,16 @@ Requires: sipwitch = %{version}
 Group: Networking/Telephony
 Summary: Scripting plugin for sipwitch
 
+%package plugin-rtpproxy
+Requires: sipwitch = %{version}
+Group: Networking/Telephony
+Summary: Generic rtp proxy plugin for sipwitch
+
+%package plugin-subscriber
+Requires: sipwitch = %{version}
+Group: Networking/Telephony
+Summary: Subscriber gateway plugin for sipwitch
+
 %description
 GNU SIP Witch is a pure SIP-based office telephone call server that supports
 generic phone system features like call forwarding, hunt groups and call
@@ -91,6 +101,25 @@ sipwitch as a sip server.
 
 %description plugin-scripting
 This plugin enables shell scripting in connection with specific sipwitch events.
+
+%description plugin-rtpproxy
+Generic assignment of RTP proxy for packet forwarding when local and
+remote caller is not directly routable.  This can include briding when
+both source and destination are offsite or on different subnets.  This
+will enable calls between local users and remote users when either or
+both parties are behind NAT.  It is assumed a block of rtp ports (and 
+the sip port) will be "port forwarded" to sipwitch.  All proxying is 
+transparent and hence directly usable for secure calling with ZRTP.
+
+%description plugin-subscriber
+This module is meant to eventually offer generic support for premise 
+routers when used by providers to offer sip/voip service to a subscriber.
+It offers rtp proxying and routing based on the assumption that all calls
+will be handed off to an external voip provider and automatic rtp
+proxy bridging between a subscribers local subnet and an isp.  In theory
+this would be deployed in an isp supplied premise router to enable a 
+local user to subscribe a series of local softphone/sip devices with a 
+remote voip service provider.
 
 %prep
 %setup
@@ -142,6 +171,14 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %files plugin-scripting
 %defattr(-,root,root,-)
 %{_libdir}/sipwitch/scripting.*
+
+%files plugin-rtpproxy
+%defattr(-,root,root,-)
+%{_libdir}/sipwitch/rtpproxy.*
+
+%files plugin-subscriber
+%defattr(-,root,root,-)
+%{_libdir}/sipwitch/subscriber.*
 
 %files -n %{_devname}
 %defattr(-,root,root,-)

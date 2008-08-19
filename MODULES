@@ -39,7 +39,7 @@ providers
 	Will be used to register sipwitch with multiple sip service providers
 	and manage provider routing rulesets.
 
-ranges
+routing
 	Will be used to generate inter-nodal refers when multiple sipwitch
 	locations are used with each location having a "block" of users &
 	extension numbers.
@@ -52,4 +52,12 @@ telecenter
 	Support of hotelling of user id's and telecenter routing with remote 
 	provider.  To be used in conjunction with handoff to remote bayonne
 	server for completing calling card operations and audio prompts.
+	Telecenter NAT/RTP proxying behavior is similar to subscriber.
+
+forward
+	For using sipwitch as a front-end "secure" telephone switch with a
+	backend insecure B2BUA style IP-PBX.  All secure stations register
+	with sipwitch and sipwitch then forwards (re-registers) with the IP-PBX.
+	All destinations not reachable in the secure domain are referred to
+	(forwarded to) the insecure IP-PBX to handle.
 
