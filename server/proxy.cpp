@@ -149,25 +149,6 @@ bool proxy::reload(service *cfg)
 	return true;
 }
 
-void proxy::copy(stack::session *target, stack::session *source)
-{
-	target->proxying = source->proxying;
-	String::set(target->network, sizeof(target->network), source->network);
-	memcpy(&target->iface, &source->iface, sizeof(target->iface));
-}
-
-bool proxy::assign(stack::call *cr, unsigned count)
-{
-	if(cr->rtp)
-		return true;
-
-	cr->rtp = rtpproxy::create(count);
-	if(cr->rtp)
-		return true;
-
-	return false;
-}
-
 bool proxy::isRequired(void)
 {
 	// we can still enable gateway mode, even in ipv6...
@@ -187,11 +168,11 @@ bool proxy::isRequired(void)
 	return false;
 }
 
-bool proxy::classify(stack::session *sid, stack::session *src, struct sockaddr *addr)
+bool proxy::classify(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
 {
 	service::keynode *cfg;
 
-	sid->proxying = rtpproxy::NO_PROXY;
+	sid->type = rtpproxy::NO_PROXY;
 
 	if(server::flags_gateway) {
 		if(!addr)
@@ -200,7 +181,7 @@ bool proxy::classify(stack::session *sid, stack::session *src, struct sockaddr *
 		stack::getInterface((struct sockaddr *)(&sid->iface), addr);
 		if(sid != src) {
 			if(!Socket::equal((struct sockaddr *)(&sid->iface), (struct sockaddr *)(&src->iface))) {
-				sid->proxying = rtpproxy::GATEWAY_PROXY;
+				sid->type = rtpproxy::GATEWAY_PROXY;
 				String::set(sid->network, sizeof(sid->network), "-");
 				return true;
 			}
@@ -248,25 +229,25 @@ bool proxy::classify(stack::session *sid, stack::session *src, struct sockaddr *
 	if(src != sid) {
 		if(!stricmp(src->network, "-") && stricmp(sid->network, "-")) {
 			if(stack::sip.family == AF_INET)
-				sid->proxying = rtpproxy::REMOTE_PROXY;
+				sid->type = rtpproxy::REMOTE_PROXY;
 		}
 		else if(stricmp(src->network, "-") && !stricmp(sid->network, "-")) {
 			if(stack::sip.family == AF_INET)
-				sid->proxying = rtpproxy::LOCAL_PROXY;
+				sid->type = rtpproxy::LOCAL_PROXY;
 		}
 		else if(!stricmp(src->network, "-") && !stricmp(sid->network, "-")) {
 			if(stack::sip.family == AF_INET)
-				sid->proxying = rtpproxy::BRIDGE_PROXY;
+				sid->type = rtpproxy::BRIDGE_PROXY;
 		}
 		else if(stricmp(src->network, sid->network)) {
 			stack::getInterface((struct sockaddr *)(&sid->iface), addr);
-			sid->proxying = rtpproxy::SUBNET_PROXY;
+			sid->type = rtpproxy::SUBNET_PROXY;
 		}
 	}
 	else if(addr)
 		stack::getInterface((struct sockaddr *)(&sid->iface), addr);	
 
-	if(sid->proxying != rtpproxy::NO_PROXY)
+	if(sid->type != rtpproxy::NO_PROXY)
 		return true;
 	
 	return false;		

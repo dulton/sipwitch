@@ -149,6 +149,10 @@ bool service::callback::check(void)
 	return true;
 }
 
+bool service::callback::classifier(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
+{
+	return false;
+}
 
 bool service::callback::reload(service *keys)
 {
@@ -924,6 +928,25 @@ bool service::check(void)
 		}
 	}
 	return rtn;
+}
+
+bool service::classify(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
+{
+	linked_pointer<callback> cb;
+	unsigned rl = 0;
+	bool rtn = false;
+
+	while(rtn && rl < RUNLEVELS) {
+		cb = callback::runlevels[rl++];
+		while(!rtn && is(cb)) {
+			rtn = cb->classifier(sid, src, addr);
+			cb.next();
+		}
+	}
+	if(rtn && sid->type != rtpproxy::NO_PROXY)
+		return true;
+
+	return false;
 }
 
 bool service::commit(const char *user)

@@ -53,6 +53,10 @@
 #include <sipwitch/mapped.h>
 #endif
 
+#ifndef	_SIPWITCH_RTPPROXY_H
+#include <sipwitch/rtpproxy.h>
+#endif
+
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
@@ -140,6 +144,7 @@ public:
 		virtual void start(service *cfg);
 		virtual void stop(service *cfg);
 		virtual bool reload(service *cfg);
+		virtual bool classifier(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr); 
     };
     
 	service(const char *name, size_t s = 0);
@@ -190,11 +195,15 @@ public:
 	virtual bool confirm(const char *user);
 	bool commit(const char *user);
 
+	static bool classify(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
 	static bool publishAddress(const char *address);
 	static void activate(MappedRegistry *rr);
 	static void expire(MappedRegistry *rr);
 	static bool check(void);
 	static void release(keynode *node);
+
+	static inline bool isProxied(void)
+		{return classify(NULL, NULL, NULL);};
 
 protected:
 	friend class instance;

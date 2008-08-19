@@ -34,6 +34,16 @@ public:
 	typedef enum {NO_PROXY, LOCAL_PROXY, REMOTE_PROXY, SUBNET_PROXY, BRIDGE_PROXY, GATEWAY_PROXY} type_t;
 	typedef	enum {UNKNOWN, INCOMING, OUTGOING, BOTHWAY} mode_t;
 
+	class __EXPORT session {
+	public:
+		rtpproxy::type_t type;
+		char network[16];
+		struct sockaddr_internet iface;
+
+		session();
+		void clear(void);
+	};
+
 	char sdp[1024];
 	volatile bool has_remote, has_local;
 	unsigned quality;
@@ -47,6 +57,8 @@ public:
 	static void publish(const char *published);
 	static void pinhole(void);
 	static struct sockaddr *getPublished(void);
+	static void copy(session *target, session *source);
+
 	void release(void);
 	void rewrite(const char *body, struct sockaddr *iface = NULL);
 };

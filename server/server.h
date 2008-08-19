@@ -236,15 +236,12 @@ private:
 		time_t activates;
 		uint32_t sequence;
 		call *parent;
-		struct sockaddr_internet iface;
 		time_t expires;					// session/invite expires...
 		time_t ringing;					// ring no-answer timer...
 
 		enum {OPEN, CLOSED, RING, BUSY, REORDER, REFER} state;
 
-		// proxy info...
-		rtpproxy::type_t proxying;
-		char network[16];				// network segment used
+		rtpproxy::session proxy;
 
 		char sdp[1024];					// sdp body to use in exchange
 		char identity[MAX_URI_SIZE];	// our effective contact/to point...
@@ -526,7 +523,7 @@ private:
 	const char *via_host;
 	unsigned via_hops;
 	unsigned via_port;
-	stack::session proxyinfo;
+	rtpproxy::session proxyinfo;
 
 	enum {EXTERNAL, LOCAL, PUBLIC, ROUTED, FORWARDED} destination;
 	enum {CALL, MESSAGE, REGISTRAR, NONE} authorizing;
@@ -558,6 +555,7 @@ private:
 
 public:
 	static void shutdown(void);
+	static bool assign(stack::call *cr, unsigned count);
 };
 
 class __LOCAL proxy : private service::callback
@@ -586,9 +584,7 @@ private:
 public:
 	proxy();
 
-	static bool assign(stack::call *cr, unsigned count);
-	static bool classify(stack::session *session, stack::session *source, struct sockaddr *addr);
-	static void copy(stack::session *target, stack::session *source);
+	static bool classify(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
 	static bool isRequired(void);
 
 	bool publishingAddress(const char *address);

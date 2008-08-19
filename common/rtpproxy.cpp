@@ -92,6 +92,18 @@ struct sockaddr *rtpproxy::getPublished(void)
 	return (struct sockaddr *)&proxy_published;
 }
 
+rtpproxy::session::session()
+{
+	clear();
+}
+
+void rtpproxy::session::clear(void)
+{
+	memset(&iface, 0, sizeof(iface));
+	type = rtpproxy::NO_PROXY;
+	String::set(network, sizeof(network), "*");
+}
+
 void rtpproxy::slice(timeout_t timeout)
 {
 	struct sockaddr_storage addr;
@@ -291,3 +303,7 @@ rtpproxy *rtpproxy::create(unsigned count, mode_t mode, unsigned qval)
 	return proxy;
 }	
 
+void rtpproxy::copy(session *target, session *source)
+{
+	memcpy(target, source, sizeof(session));
+}
