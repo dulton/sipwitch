@@ -25,14 +25,47 @@ static volatile time_t updated = 0;
 static int priority = 0;
 static const char *iface = NULL;
 
-proxy proxy::rtp;
+class __LOCAL rtp : private service::callback
+{
+private:
+	unsigned short port;
+	unsigned count;
+	volatile char *published;
+	cidr::policy *nets;
 
-proxy::listener::listener() :
+	static rtp proxy;
+
+	class __LOCAL listener : public JoinableThread
+	{
+	public:
+		listener();
+
+	private:
+		void run(void);
+	};
+
+	listener *thr;
+
+	friend class rtp::listener;
+
+public:
+	rtp();
+
+	bool classifier(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
+	bool reload(service *cfg);
+	void start(service *cfg);
+	void stop(service *cfg);
+	void snapshot(FILE *fp);
+};
+
+rtp rtp::proxy;
+
+rtp::listener::listener() :
 JoinableThread(priority)
 {
 }
 
-void proxy::listener::run(void)
+void rtp::listener::run(void)
 {
 	time_t now;
 
@@ -42,14 +75,14 @@ void proxy::listener::run(void)
 		time(&now);
 		if(now > updated) {
 			updated = now + refresh;
-			rtpproxy::publish((const char *)proxy::rtp.published);
+			rtpproxy::publish((const char *)rtp::proxy.published);
 		}
 	}
 	process::errlog(DEBUG1, "stopping rtpproxy thread");
 	JoinableThread::exit();
 }
 
-proxy::proxy() :
+rtp::rtp() :
 service::callback(-1)
 {
 	port = 9000;
@@ -59,19 +92,19 @@ service::callback(-1)
 	nets = NULL;
 }
 
-void proxy::start(service *cfg) 
+void rtp::start(service *cfg) 
 {
 	assert(cfg != NULL);
 
 	if(count) {
-		rtpproxy::startup(count, port, stack::sip.family, iface);
+		rtpproxy::startup(count, port, iface);
 		process::errlog(INFO, "rtp proxy started for %d ports", count);
-		thr = new proxy::listener();
+		thr = new rtp::listener();
 		thr->start();
 	} 
 }
 
-void proxy::stop(service *cfg)
+void rtp::stop(service *cfg)
 {
 	assert(cfg != NULL);
 
@@ -83,27 +116,21 @@ void proxy::stop(service *cfg)
 	}
 }
 
-void proxy::snapshot(FILE *fp) 
+void rtp::snapshot(FILE *fp) 
 { 
 	assert(fp != NULL);
 
 	fprintf(fp, "RTP PROXY:\n"); 
 } 
 
-bool proxy::publishingAddress(const char *address)
-{
-	rtpproxy::publish(address);
-	return true;
-}
-
-bool proxy::reload(service *cfg)
+bool rtp::reload(service *cfg)
 {
 	assert(cfg != NULL);	
 
 	caddr_t mp;
 	volatile char *vp;
 	const char *key = NULL, *value;
-	linked_pointer<service::keynode> sp = cfg->getList("proxy");
+	linked_pointer<service::keynode> sp = cfg->getList("rtpproxy");
 	int val;
 
 	updated = 0l;
@@ -149,57 +176,30 @@ bool proxy::reload(service *cfg)
 	return true;
 }
 
-bool proxy::isRequired(void)
-{
-	// we can still enable gateway mode, even in ipv6...
-	if(server::flags_gateway)
-		return true;
-
-#ifdef	AF_INET6
-	// we otherwise do not require just proxy for generic "external" access if 
-	// we are ipv6...
-	if(stack::sip.family == AF_INET6)
-		return false;
-#endif
-
-	if(proxy::rtp.count)
-		return true;
-	
-	return false;
-}
-
-bool proxy::classify(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
+bool rtp::classifier(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
 {
 	service::keynode *cfg;
 
-	sid->type = rtpproxy::NO_PROXY;
+	if(!sid) {
+		if(!rtp::proxy.count || rtpproxy::isIPV6())
+			return false;
 
-	if(server::flags_gateway) {
-		if(!addr)
-			addr = rtpproxy::getPublished();
-
-		stack::getInterface((struct sockaddr *)(&sid->iface), addr);
-		if(sid != src) {
-			if(!Socket::equal((struct sockaddr *)(&sid->iface), (struct sockaddr *)(&src->iface))) {
-				sid->type = rtpproxy::GATEWAY_PROXY;
-				String::set(sid->network, sizeof(sid->network), "-");
-				return true;
-			}
-		}
-		return false;
+		return true;
 	}
 
-	if(!proxy::rtp.count)
+	sid->type = rtpproxy::NO_PROXY;
+
+	if(!rtp::proxy.count)
 		return false;
 
-	cfg = server::getConfig();
+	cfg = service::get();
 	if(!cfg)
 		return false;
 
-	linked_pointer<cidr> np = proxy::rtp.nets;
+	linked_pointer<cidr> np = rtp::proxy.nets;
 
 	if(!is(np)) {
-		server::release(cfg);
+		service::release(cfg);
 		return false;
 	}
 
@@ -221,31 +221,31 @@ bool proxy::classify(rtpproxy::session *sid, rtpproxy::session *src, struct sock
 	else
 		String::set(sid->network, sizeof(sid->network), "-");
 
-	server::release(cfg);
+	service::release(cfg);
 
 	// we only do external-to-internal proxy for ipv4.  We can still need rtp
 	// proxying if joining two different subnets (private & public), however.
 
 	if(src != sid) {
 		if(!stricmp(src->network, "-") && stricmp(sid->network, "-")) {
-			if(stack::sip.family == AF_INET)
+			if(!rtpproxy::isIPV6())
 				sid->type = rtpproxy::REMOTE_PROXY;
 		}
 		else if(stricmp(src->network, "-") && !stricmp(sid->network, "-")) {
-			if(stack::sip.family == AF_INET)
+			if(!rtpproxy::isIPV6())
 				sid->type = rtpproxy::LOCAL_PROXY;
 		}
 		else if(!stricmp(src->network, "-") && !stricmp(sid->network, "-")) {
-			if(stack::sip.family == AF_INET)
+			if(!rtpproxy::isIPV6())
 				sid->type = rtpproxy::BRIDGE_PROXY;
 		}
 		else if(stricmp(src->network, sid->network)) {
-			stack::getInterface((struct sockaddr *)(&sid->iface), addr);
+			Socket::getinterface((struct sockaddr *)(&sid->iface), addr);
 			sid->type = rtpproxy::SUBNET_PROXY;
 		}
 	}
 	else if(addr)
-		stack::getInterface((struct sockaddr *)(&sid->iface), addr);	
+		Socket::getinterface((struct sockaddr *)(&sid->iface), addr);	
 
 	if(sid->type != rtpproxy::NO_PROXY)
 		return true;

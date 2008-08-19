@@ -19,7 +19,7 @@ pkgstatedir=$(localstatedir)/lib/sipwitch
 pkglibdir=$(libdir)/sipwitch
 logrotatedir=$(sysconfdir)/logrotate.d
 noinst_HEADERS = server.h
-pkglib_LTLIBRARIES = scripting.la
+pkglib_LTLIBRARIES = scripting.la rtpproxy.la subscriber.la
 
 if ZEROCONF
 pkglib_LTLIBRARIES += zeroconf.la
@@ -28,7 +28,7 @@ EXTRA_LTLIBRARIES += zeroconf.la
 endif
 
 sipw_SOURCES = server.cpp registry.cpp stack.cpp thread.cpp \
-	call.cpp messages.cpp posix.cpp mswindows.cpp proxy.cpp
+	call.cpp messages.cpp posix.cpp mswindows.cpp 
 sipw_LDADD = $(LDADD) $(DLOPEN)
 
 sysconf_DATA = sipwitch.conf
@@ -37,6 +37,12 @@ pkgstate_DATA = *.xml
 
 scripting_la_SOURCES = scripting.cpp 
 scripting_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)
+
+rtpproxy_la_SOURCES = rtpproxy.cpp 
+rtpproxy_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)
+
+subscriber_la_SOURCES = subscriber.cpp 
+subscriber_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)
 
 zeroconf_la_SOURCES = zeroconf.cpp 
 zeroconf_la_LDFLAGS = -module $(MODFLAGS) @ZEROCONF_LIBS@ $(LDADD)

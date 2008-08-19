@@ -2,6 +2,8 @@ From version 0.2.7 to 0.3.0
 - variant build of zeroconf plugin based on support.
 - new rtpproxy engine code in api and server.
 - elimination of unused fifo subscribe/publish mechanisms...
+- introduction of generic rtp proxying as plugin module
+- introduction of subscriber module for "voip provider" premise gateways
 
 From version 0.2.6 to 0.2.7
 - basic re-invite processing added.

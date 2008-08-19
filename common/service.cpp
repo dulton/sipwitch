@@ -127,11 +127,6 @@ service::callback::~callback()
 	LinkedObject::delist(&runlevels[runlevel]);
 }
 
-bool service::callback::publishingAddress(const char *address)
-{
-	return true;
-}
-
 void service::callback::activating(MappedRegistry *rr)
 {
 }
@@ -385,6 +380,13 @@ service::keynode *service::getList(const char *path)
 		return NULL;
 
 	return base->getFirst();
+}
+
+service::keynode *service::get(void)
+{
+	if(cfg)
+		locking.access();
+	return &cfg->root;
 }
 
 void service::release(keynode *node)
@@ -794,23 +796,6 @@ void service::dumpfile(const char *uid)
 	fclose(fp);
 }
 
-bool service::publishAddress(const char *address)
-{
-	unsigned rl = 0;
-	linked_pointer<callback> cb;
-	bool rtn = true;
-
-	while(rl < RUNLEVELS) {
-		cb = callback::runlevels[rl++];
-		while(is(cb) && rtn) {
-			if(!cb->publishingAddress(address))
-				rtn = false;
-			cb.next();
-		}
-	}
-	return rtn;
-}
-
 void service::activate(MappedRegistry *rr)
 {
 	unsigned rl = 0;
@@ -936,17 +921,14 @@ bool service::classify(rtpproxy::session *sid, rtpproxy::session *src, struct so
 	unsigned rl = 0;
 	bool rtn = false;
 
-	while(rtn && rl < RUNLEVELS) {
+	while(!rtn && rl < RUNLEVELS) {
 		cb = callback::runlevels[rl++];
 		while(!rtn && is(cb)) {
 			rtn = cb->classifier(sid, src, addr);
 			cb.next();
 		}
 	}
-	if(rtn && sid->type != rtpproxy::NO_PROXY)
-		return true;
-
-	return false;
+	return rtn;
 }
 
 bool service::commit(const char *user)

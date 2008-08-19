@@ -157,11 +157,6 @@ extern "C" int main(int argc, char **argv)
 			continue;
 		}
 
-		if(!strcmp(*argv, "-g") || !stricmp(*argv, "-gateway")) {
-			server::flags_gateway = true;
-			continue;
-		}
-
 		if(!strcmp(*argv, "-d") || !stricmp(*argv, "-background")) {
 			daemon = true;
 			continue;
@@ -238,9 +233,6 @@ extern "C" int main(int argc, char **argv)
 					verbose = INFO;
 				else
 					++verbose;
-				break;
-			case 'g':
-				server::flags_gateway = true;
 				break;
 			case 'f':
 				daemon = false;

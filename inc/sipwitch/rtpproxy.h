@@ -50,7 +50,9 @@ public:
 	
 	mode_t mode;
 
-	static void startup(unsigned count, unsigned short port = 9000, int family = AF_INET, const char *iface = NULL);
+	static bool isIPV6(void);
+	static void enableIPV6(void);
+	static void startup(unsigned count, unsigned short port = 9000, const char *iface = NULL);
 	static void shutdown(void);
 	static rtpproxy *create(unsigned count, mode_t = rtpproxy::UNKNOWN, unsigned quality = 0);
 	static void slice(timeout_t timeout);

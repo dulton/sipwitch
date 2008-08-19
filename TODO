@@ -7,8 +7,14 @@ headers in invites are coded, it is not acted upon in any way.  In theory, we
 will forward to registry entries, and other types of references to call groups
 and/or external entries will be done by refer.
 
+Subscriber module with actual registration to tethered service provider and
+rewrite rules support to set "identity" in outgoing provider calls, and
+rewrite callback for when authentication pushback happens
+
 Hunt groups, Call Coverage and distribution models, day/night/state mode
 processing.
+
+actual sdp rewrite support in rtp proxying, only classification implemented
 
 authentication handling for b2b outside dialing of arbitrary sip uri's.
 

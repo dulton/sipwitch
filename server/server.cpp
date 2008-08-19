@@ -22,8 +22,6 @@ using namespace UCOMMON_NAMESPACE;
 static mempager mempool(PAGING_SIZE);
 static bool running = true;
 
-bool server::flags_gateway = false;
-
 #ifdef	USES_COMMANDS
 static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 {
@@ -929,8 +927,7 @@ invalid:
 			if(argc != 2)
 				goto invalid;
 			state = String::unquote(argv[1], "\"\"\'\'()[]{}");
-			if(!service::publishAddress(state))
-				process::reply("invalid address");
+			rtpproxy::publish(state);
 			process::errlog(NOTICE, "published address is %s", state);
 			continue;
 		}
@@ -1014,7 +1011,6 @@ void server::usage(void)
 		"  --help                Display this information\n"
 		"  -foreground           Run server in foreground\n"
 		"  -background           Run server as daemon\n"
-		"  -gateway              Run as gateway proxy\n"
 #ifdef	_MSWINDOWS_
 #else
 		"  -restartable			 Run server as restartable daemon\n"

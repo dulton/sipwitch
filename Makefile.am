@@ -10,7 +10,7 @@
 
 AUTOMAKE_OPTIONS = no-dependencies dist-shar dist-zip
 EXTRA_DIST = autogen.sh README *.pc.in FEATURES  TODO Doxyfile \
-	SUPPORT NOTES cmodel.sh sipwitch.spec.in sipwitch.spec
+	SUPPORT NOTES MODULES cmodel.sh sipwitch.spec.in sipwitch.spec
 #  *.pc.in *.spec.in *.spec
 
 SUBDIRS = @BUILD_SUBDIRS@ utils inc test

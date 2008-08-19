@@ -431,7 +431,6 @@ private:
 public:
 	server(const char *id);
 
-	static bool flags_gateway;
 	static bool check(void);
 	static profile_t *getProfile(const char *id); 
 	static keynode *getRouting(const char *id);
@@ -556,42 +555,6 @@ private:
 public:
 	static void shutdown(void);
 	static bool assign(stack::call *cr, unsigned count);
-};
-
-class __LOCAL proxy : private service::callback
-{
-private:
-	unsigned short port;
-	unsigned count;
-	volatile char *published;
-	cidr::policy *nets;
-
-	static proxy rtp;
-
-	class __LOCAL listener : public JoinableThread
-	{
-	public:
-		listener();
-
-	private:
-		void run(void);
-	};
-
-	listener *thr;
-
-	friend class proxy::listener;
-
-public:
-	proxy();
-
-	static bool classify(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
-	static bool isRequired(void);
-
-	bool publishingAddress(const char *address);
-	bool reload(service *cfg);
-	void start(service *cfg);
-	void stop(service *cfg);
-	void snapshot(FILE *fp);
 };
 
 END_NAMESPACE

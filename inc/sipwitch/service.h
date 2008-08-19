@@ -137,7 +137,6 @@ public:
 			{return active_flag;};
 
 		virtual bool check(void);
-		virtual bool publishingAddress(const char *address);
 		virtual void activating(MappedRegistry *rr);
 		virtual void expiring(MappedRegistry *rr);
 		virtual void snapshot(FILE *fp);
@@ -182,6 +181,7 @@ public:
 	static void snmptrap(unsigned id, const char *descr);
 	static long uptime(void);
 	static bool match(const char *digits, const char *pattern, bool partial);
+	static keynode *get(void);
 
 	static callback *getComponent(const char *id);
 	static keynode *getProtected(const char *path);
@@ -196,7 +196,6 @@ public:
 	bool commit(const char *user);
 
 	static bool classify(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
-	static bool publishAddress(const char *address);
 	static void activate(MappedRegistry *rr);
 	static void expire(MappedRegistry *rr);
 	static bool check(void);

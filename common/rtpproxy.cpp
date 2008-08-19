@@ -87,6 +87,21 @@ LinkedObject()
 {
 }
 
+void rtpproxy::enableIPV6(void)
+{
+#ifdef	AF_INET6
+	proxy_family = AF_INET6;
+#endif
+}
+
+bool rtpproxy::isIPV6(void)
+{
+	if(proxy_family == AF_INET)
+		return false;
+
+	return true;
+}
+
 struct sockaddr *rtpproxy::getPublished(void)
 {
 	return (struct sockaddr *)&proxy_published;
@@ -190,9 +205,8 @@ void rtpproxy::pinhole(void)
 	}
 }
 
-void rtpproxy::startup(unsigned count, unsigned short port, int family, const char *iface)
+void rtpproxy::startup(unsigned count, unsigned short port, const char *iface)
 {
-	proxy_family = family;
 	proxy_iface = iface;
 	proxy_port = port;
 	proxy_sockets = count;

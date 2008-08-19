@@ -1,0 +1,55 @@
+The following modules are in development:
+
+rtpproxy
+	Generic assignment of RTP proxy for packet forwarding when local and
+	remote caller is not directly routable.  This can include briding when
+	both source and destination are offsite or on different subnets.  This
+	will enable calls between local users and remote users when either or
+	both parties are behind NAT.  It is assumed a block of rtp ports (and 
+	the sip port) will be "port forwarded" to sipwitch.  All proxying is 
+	transparent and hence directly usable for secure calling with ZRTP.
+
+subscriber
+	This module is meant to eventually offer generic support for premise 
+	routers when used by providers to offer sip/voip service to a subscriber.
+	It offers rtp proxying and routing based on the assumption that all calls
+	will be handed off to an external voip provider and automatic rtp
+	proxy bridging between a subscribers local subnet and an isp.  In theory
+	this would be deployed in an isp supplied premise router to enable a 
+    local user to subscribe a series of local softphone/sip devices with a 
+    remote voip service provider.
+
+scripting
+	Allows for shell scripts to be executed when things happen in sipwitch,
+	such as registration/deregistration of sip users.
+
+zeroconf
+	Publishes sipwitch as a zeroconf sip service.  Can only be built with
+	avahi only so far.
+
+The following additional modules are currently planned:
+
+stun
+	Stun server plugin module that uses sipwitch registration database for
+	authentication.  For when sipwitch is deployed in public hosting
+	scenarios.  May include an rtp proxy mode to facilate calls between
+	users who may be behind NAT and also were unable to "stun"...
+
+providers
+	Will be used to register sipwitch with multiple sip service providers
+	and manage provider routing rulesets.
+
+ranges
+	Will be used to generate inter-nodal refers when multiple sipwitch
+	locations are used with each location having a "block" of users &
+	extension numbers.
+
+gateways
+	Will be used for future gateway handling and destination routing, rather 
+	than originally planned internal one.
+
+telecenter
+	Support of hotelling of user id's and telecenter routing with remote 
+	provider.  To be used in conjunction with handoff to remote bayonne
+	server for completing calling card operations and audio prompts.
+

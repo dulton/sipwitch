@@ -748,6 +748,9 @@ bool stack::reload(service *cfg)
 	localnames = localhosts;
 	proxy = new_proxy;
 
+	if(family != AF_INET)
+		rtpproxy::enableIPV6();
+
 	if(ring_value && ring_value < 100)
 		ring_timer = ring_value * 1000l;
 	else if(ring_value >= 100)
