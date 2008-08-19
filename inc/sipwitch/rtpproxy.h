@@ -31,11 +31,13 @@ private:
 	LinkedObject *sockets;
 
 public:
+	typedef enum {NO_PROXY, LOCAL_PROXY, REMOTE_PROXY, SUBNET_PROXY, BRIDGE_PROXY, GATEWAY_PROXY} type_t;
+	typedef	enum {UNKNOWN, INCOMING, OUTGOING, BOTHWAY} mode_t;
+
 	char sdp[1024];
 	volatile bool has_remote, has_local;
 	unsigned quality;
-
-	typedef	enum {UNKNOWN, INCOMING, OUTGOING, BOTHWAY} mode_t;
+	
 	mode_t mode;
 
 	static void startup(unsigned count, unsigned short port = 9000, int family = AF_INET, const char *iface = NULL);

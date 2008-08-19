@@ -80,7 +80,7 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 	
 	snprintf(touri, sizeof(touri), "<%s>", uri_target);
 
-	proxyinfo.proxying = stack::session::NO_PROXY;
+	proxyinfo.proxying = rtpproxy::NO_PROXY;
 	proxyinfo.parent = call;
 	proxy::classify(&proxyinfo, NULL);
 	invite = NULL;
@@ -250,7 +250,7 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 			goto next;
 		}
 
-		proxyinfo.proxying = stack::session::NO_PROXY;
+		proxyinfo.proxying = rtpproxy::NO_PROXY;
 		proxyinfo.parent = call;
 
 		// if proxy required, but not available, then we must skip this

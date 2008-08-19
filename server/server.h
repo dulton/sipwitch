@@ -242,10 +242,11 @@ private:
 
 		enum {OPEN, CLOSED, RING, BUSY, REORDER, REFER} state;
 
-		enum {NO_PROXY, LOCAL_PROXY, REMOTE_PROXY, SUBNET_PROXY, BRIDGE_PROXY, GATEWAY_PROXY} proxying;
+		// proxy info...
+		rtpproxy::type_t proxying;
+		char network[16];				// network segment used
 
 		char sdp[1024];					// sdp body to use in exchange
-		char network[16];				// network segment used
 		char identity[MAX_URI_SIZE];	// our effective contact/to point...
 		char sysident[MAX_IDENT_SIZE];	// ident of this session
 		char display[MAX_DISPLAY_SIZE];	// callerid reference field

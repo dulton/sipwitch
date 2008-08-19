@@ -68,7 +68,7 @@ stack::segment::segment(call *cr, int cid, int did, int tid) : OrderedObject()
 	sid.did = did;
 	sid.tid = tid;
 	sid.parent = cr;
-	sid.proxying = session::NO_PROXY;
+	sid.proxying = rtpproxy::NO_PROXY;
 	sid.state = session::OPEN;
 	sid.sdp[0] = 0;
 	strcpy(sid.network, "*");
