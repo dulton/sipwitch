@@ -588,7 +588,6 @@ public:
 	static bool classify(stack::session *session, struct sockaddr *addr, unsigned count = 4);
 	static void copy(stack::session *target, stack::session *source);
 	static bool isRequired(void);
-	static bool assign(stack::call *cr, unsigned count = 4);
 
 	bool publishingAddress(const char *address);
 	bool reload(service *cfg);

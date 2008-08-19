@@ -252,8 +252,15 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 
 		proxyinfo.proxying = stack::session::NO_PROXY;
 		proxyinfo.parent = call;
-		if(!proxy::classify(&proxyinfo, (struct sockaddr *)&tp->address))
-			goto next;
+
+		// if proxy required, but not available, then we must skip this
+		// invite...
+		if(proxy::classify(&proxyinfo, (struct sockaddr *)&tp->address)) {
+			if(!call->rtp)
+				call->rtp = rtpproxy::create(4);
+			if(!call->rtp)
+				goto next;
+		}
 
 		invite = NULL;
 		eXosip_lock();
@@ -467,14 +474,22 @@ void thread::invite(void)
 
 	// FIXME: we should get proxy count extimate from sdp into global thread object...
 
-	if(!proxy::classify(session, via_address.getAddr())) {
+	// assign initial proxy if required to accept call...
+	// if no proxy available, then return 503...
+	if(proxy::classify(session, via_address.getAddr())) {
+		call->rtp = rtpproxy::create(4);
+		if(!call->rtp) {
 noproxy:
-		send_reply(SIP_SERVICE_UNAVAILABLE);
-		call->failed(this, session);
-		return;
+			send_reply(SIP_SERVICE_UNAVAILABLE);
+			call->failed(this, session);
+			return;
+		}
 	}
-	else if(destination == EXTERNAL && proxy::isRequired() && !proxy::assign(call))
-			goto noproxy;
+	else if(destination == EXTERNAL && proxy::isRequired()) {
+			call->rtp = rtpproxy::create(4);
+			if(!call->rtp)
+				goto noproxy;
+	}
 		
 	if(extension)
 		snprintf(fromext, sizeof(fromext), "%u", extension);

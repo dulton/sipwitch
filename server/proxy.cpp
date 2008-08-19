@@ -191,24 +191,24 @@ bool proxy::classify(stack::session *sid, struct sockaddr *addr, unsigned count)
 			if(!Socket::equal((struct sockaddr *)(&sid->iface), (struct sockaddr *)(&src->iface))) {
 				sid->proxying = stack::session::GATEWAY_PROXY;
 				String::set(sid->network, sizeof(sid->network), "-");
-				return assign(sid->parent, count);
+				return true;
 			}
 		}
-		return true;
+		return false;
 	}
 
 	if(!proxy::rtp.count)
-		return true;
+		return false;
 
 	cfg = server::getConfig();
 	if(!cfg)
-		return true;
+		return false;
 
 	linked_pointer<cidr> np = proxy::rtp.nets;
 
 	if(!is(np)) {
 		server::release(cfg);
-		return true;
+		return false;
 	}
 
 	cidr *member = NULL;
@@ -256,18 +256,9 @@ bool proxy::classify(stack::session *sid, struct sockaddr *addr, unsigned count)
 		stack::getInterface((struct sockaddr *)(&sid->iface), addr);	
 
 	if(sid->proxying != stack::session::NO_PROXY)
-		return assign(sid->parent, count);
-	
-	return true;		
-}
-
-bool proxy::assign(stack::call *cr, unsigned count)
-{
-	if(!cr->rtp)
-		cr->rtp = rtpproxy::create(count);
-	if(cr->rtp)
 		return true;
-	return false;
+	
+	return false;		
 }
 
 END_NAMESPACE
