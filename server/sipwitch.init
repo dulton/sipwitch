@@ -12,7 +12,7 @@
 # sipwitch        This shell script takes care of starting and stopping
 #                 a sipwitch server running as a system service.
 #
-# chkconfig: 2345 98 10
+# chkconfig: 2345 95 15
 # description: GNU SIP Witch telephony service.
 
 DAEMON="/usr/sbin/sipw"

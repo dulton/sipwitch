@@ -513,7 +513,7 @@ noproxy:
 	else if(reginfo) {
 		target = reginfo->userid;
 		toext = reginfo->ext;
-		call->fwdmask = config::getForwarding(reginfo->userid);
+		call->fwdmask = server::getForwarding(reginfo->userid);
 		String::set(call->refer, sizeof(call->refer), reginfo->userid);
 	}
 
@@ -641,7 +641,7 @@ noproxy:
 	if(reginfo) {
 		// get rid of config ref if we are calling registry target
 		if(dialed) {
-			config::release(dialed);
+			server::release(dialed);
 			dialed = NULL;
 		}
 
@@ -683,7 +683,7 @@ void thread::identify(void)
 	String::set(display, sizeof(display), rr->display);
 	extension = rr->ext;
 	String::set(identity, sizeof(identity), rr->userid);
-	authorized = config::getProvision(identity);
+	authorized = server::getProvision(identity);
 	registry::detach(rr);
 }
 
@@ -718,7 +718,7 @@ bool thread::unauthenticated(void)
 	extension = rr->ext;
 	String::set(display, sizeof(display), rr->display);
 	String::set(identity, sizeof(identity), rr->userid);
-	authorized = config::getProvision(identity);
+	authorized = server::getProvision(identity);
 	registry::detach(rr);
 	if(authorized)
 		return true;
@@ -855,7 +855,7 @@ rewrite:
 	}
 
 	reginfo = registry::access(target);
-	dialed = config::getProvision(target);
+	dialed = server::getProvision(target);
 
 	debug(4, "rewrite process; registry=%p, dialed=%p\n", reginfo, dialed);
 
@@ -948,7 +948,7 @@ routing:
 		cp = service::getValue(authorized, "profile");
 		if(!cp)
 			cp = "*";
-		pro = config::getProfile(cp);
+		pro = server::getProfile(cp);
 		level = pro->level;
 	}
 	else
@@ -982,7 +982,7 @@ routing:
 	return true;
 
 static_routing:
-	dialed = config::getRouting(target);
+	dialed = server::getRouting(target);
 	if(!dialed)
 		goto invalid;
 
@@ -1015,7 +1015,7 @@ static_routing:
 	if(!stricmp(dialed->getId(), "rewrite")) {
 		String::set(dbuf, sizeof(dbuf), dialing);
 		target = dbuf;
-		config::release(dialed);
+		server::release(dialed);
 		if(reginfo)
 			registry::detach(reginfo);
 		dialed = NULL;
@@ -1140,7 +1140,7 @@ bool thread::authenticate(void)
 		}
 	}
 
-	node = config::getProvision(auth->username);
+	node = server::getProvision(auth->username);
 	if(!node) {
 		process::errlog(NOTICE, "rejecting unknown %s", auth->username);
 		error = SIP_NOT_FOUND;
@@ -1199,7 +1199,7 @@ bool thread::authenticate(void)
 	return true;
 
 failed:
-	config::release(node);
+	server::release(node);
 	send_reply(error);
 	return false;
 }
@@ -1288,7 +1288,7 @@ bool thread::getsource(void)
         via_host = param->gvalue;
 		
 	via_address.set(via_host, via_port);
-	access = config::getPolicy(via_address.getAddr());
+	access = server::getPolicy(via_address.getAddr());
 	return true;
 }
 
@@ -1312,7 +1312,7 @@ void thread::validate(void)
 	remove_quotes(auth->nonce);
 	remove_quotes(auth->response);
 
-	node = config::getProvision(auth->username);
+	node = server::getProvision(auth->username);
 	if(!node) {
 		error = SIP_NOT_FOUND;
 		goto reply;
@@ -1360,7 +1360,7 @@ reply:
 	else
 		debug(2, "rejecting %s; error=%d", auth->username, error);
 
-	config::release(node);
+	server::release(node);
 	eXosip_lock();
 	eXosip_message_build_answer(sevent->tid, error, &reply);
 	if(reply != NULL) {
@@ -1591,7 +1591,7 @@ void thread::getDevice(registry::mapped *rr)
 {
 	assert(rr != NULL);
 
-	linked_pointer<service::keynode> device = config::list("devices");
+	linked_pointer<service::keynode> device = server::list("devices");
 
 	while(device) {
 		linked_pointer<service::keynode> node = device->getFirst();
@@ -1965,17 +1965,17 @@ void thread::run(void)
 		// release config access lock(s)...
 
 		if(access) {
-			config::release(access);
+			server::release(access);
 			access = NULL;
 		}
 
 		if(dialed) {
-			config::release(dialed);
+			server::release(dialed);
 			dialed = NULL;
 		}
 
 		if(authorized) {
-			config::release(authorized);
+			server::release(authorized);
 			authorized = NULL;
 		}
 

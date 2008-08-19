@@ -406,7 +406,7 @@ public:
 		{return stack::sip.invite_expires;};
 };
 
-class __LOCAL config : public service
+class __LOCAL server : public service
 {
 private:
 	typedef	linked_value<profile_t, LinkedObject> profile;
@@ -431,8 +431,9 @@ private:
 	void dump(FILE *fp);
 
 public:
-	config(const char *id);
+	server(const char *id);
 
+	static bool flags_gateway;
 	static bool check(void);
 	static profile_t *getProfile(const char *id); 
 	static keynode *getRouting(const char *id);
@@ -448,6 +449,14 @@ public:
 	static void utils(const char *uid);
 	static Socket::address *getContact(const char *id);
 	static unsigned forwarding(keynode *node);
+	static void plugins(const char *argv0, const char *names);
+	static void usage(void);
+	static void version(void);
+	static void run(const char *user);
+	static void stop(void);
+	static caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
+	static unsigned allocate(void);
+	static void regdump(void);	
 };
 
 class __LOCAL messages : public service::callback
@@ -586,20 +595,6 @@ public:
 	void start(service *cfg);
 	void stop(service *cfg);
 	void snapshot(FILE *fp);
-};
-
-class __LOCAL server
-{
-public:
-	static bool flags_gateway;
-	static void plugins(const char *argv0, const char *names);
-	static void usage(void);
-	static void version(void);
-	static void run(const char *user);
-	static void stop(void);
-	static caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
-	static unsigned allocate(void);
-	static void regdump(void);	
 };
 
 END_NAMESPACE

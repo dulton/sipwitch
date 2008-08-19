@@ -502,7 +502,7 @@ registry::mapped *registry::create(const char *id)
 		return NULL;
 	}
 
-	node = config::getProvision(id);
+	node = server::getProvision(id);
 	cp = "none";
 	rr->type = MappedRegistry::EXPIRED;
 	rr->expires = 0;
@@ -526,7 +526,7 @@ registry::mapped *registry::create(const char *id)
 	else if(!stricmp(cp, "service"))
 		rr->type = MappedRegistry::SERVICE;
 	if(!node || rr->type == MappedRegistry::EXPIRED) {
-		config::release(node);
+		server::release(node);
 		if(listed && rr->inuse)
 			rr->type = MappedRegistry::TEMPORARY;
 		else if(listed) {
@@ -614,14 +614,14 @@ registry::mapped *registry::create(const char *id)
 		pro = NULL;
 		leaf = node->leaf("profile");
 		if(leaf)
-			pro = config::getProfile(leaf->getPointer());
+			pro = server::getProfile(leaf->getPointer());
 		if(!pro)
-			pro = config::getProfile("*");
+			pro = server::getProfile("*");
 		if(pro)
 			memcpy(&rr->profile, pro, sizeof(rr->profile));
 	}
 
-	config::release(node);
+	server::release(node);
 	rr->ext = 0;
 	rr->status = MappedRegistry::IDLE;
 

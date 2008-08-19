@@ -200,14 +200,14 @@ bool proxy::classify(stack::session *sid, struct sockaddr *addr, unsigned count)
 	if(!proxy::rtp.count)
 		return true;
 
-	cfg = config::getConfig();
+	cfg = server::getConfig();
 	if(!cfg)
 		return true;
 
 	linked_pointer<cidr> np = proxy::rtp.nets;
 
 	if(!is(np)) {
-		config::release(cfg);
+		server::release(cfg);
 		return true;
 	}
 
@@ -229,7 +229,7 @@ bool proxy::classify(stack::session *sid, struct sockaddr *addr, unsigned count)
 	else
 		String::set(sid->network, sizeof(sid->network), "-");
 
-	config::release(cfg);
+	server::release(cfg);
 
 	// we only do external-to-internal proxy for ipv4.  We can still need rtp
 	// proxying if joining two different subnets (private & public), however.

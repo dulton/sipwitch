@@ -502,7 +502,7 @@ static void command(const char *uid, const char *cmd, unsigned timeout)
 	sigaddset(&sigs, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &sigs, NULL);
 
-	config::utils(uid);
+	server::utils(uid);
 
 	if(!process::control(uid, "%d %s", getpid(), cmd)) {
 		fprintf(stderr, "*** sipw: %s; server not responding\n", cmd);
@@ -779,7 +779,7 @@ extern "C" int main(int argc, char **argv)
 		openlog("sipw", 0, LOG_USER);
 
 		if(!stricmp(*argv, "stop") || !stricmp(*argv, "reload") || !stricmp(*argv, "abort") || !stricmp(*argv, "restart")) {
-			config::utils(user);
+			server::utils(user);
 			if(!process::control(user, *argv)) {
 				fprintf(stderr, "*** sipw: %s; server not responding\n", *argv);
 				exit(2);
@@ -788,7 +788,7 @@ extern "C" int main(int argc, char **argv)
 		}
 
 		if(!stricmp(*argv, "check")) {
-			config::utils(user);
+			server::utils(user);
 			if(!process::control(user, *argv)) {
 				fprintf(stderr, "*** sipw: %s; server cannot be checked\n", *argv);
 				exit(2);
@@ -818,7 +818,7 @@ extern "C" int main(int argc, char **argv)
 				exit(-1);
 			}
 
-			config::utils(user);
+			server::utils(user);
 			printf("<!-- provision template example for realm %s -->\n", registry::getRealm());
 			printf("<provision>\n");
 			printf("  <user><id>%s</id>\n", userid);
@@ -926,12 +926,12 @@ extern "C" int main(int argc, char **argv)
 	else
 		foreground(user, cfgfile, priority);
 
-	config::reload(user);
+	server::reload(user);
 
 	if(restartable) 
 		restart();
 
-	config::startup();
+	server::startup();
 
 	if(dumping)
 		stack::enableDumping();

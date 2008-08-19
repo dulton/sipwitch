@@ -68,8 +68,8 @@ static void dispatch()
 	GetEnvironmentVariable("ComSpec", buf, sizeof(buf));
 	SetEnvironmentVariable("SHELL", buf);
 
-	config::reload(user);
-	config::startup();
+	server::reload(user);
+	server::startup();
 
 	server::run(user);
 	service::shutdown();
