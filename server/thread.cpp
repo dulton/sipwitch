@@ -130,6 +130,8 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 			snprintf(touri, sizeof(touri), "<%s>;reason=away", route);
 			osip_message_set_header(invite, "Diversion", touri);
 			break;
+		default:
+			break;
 		}
 
 	osip_message_set_header(invite, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
@@ -329,6 +331,8 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
                 snprintf(touri, sizeof(touri), "<%s>;reason=away", route);
                 osip_message_set_header(invite, "Diversion", touri);
                 break;
+			default:
+				break;
 			}
 		}
 
@@ -653,6 +657,8 @@ noproxy:
 		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
 			session->sequence, session->cid, target, getIdent(), dialing);
 		break;  	
+	default:
+		break;
 	}
 
 	if(reginfo) {
@@ -758,7 +764,6 @@ bool thread::authorize(void)
 	unsigned level;
 	profile_t *pro;
 	const char *target;
-	const char *invited = NULL;
 	char dbuf[MAX_USERID_SIZE];
 	registry::pattern *pp;
 	unsigned from_port = 5060, to_port = stack::sip.port, local_port = stack::sip.port;
@@ -1373,7 +1378,7 @@ void thread::validate(void)
 
 reply:
 	if(error == SIP_OK)
-		debug(2, "validating %s; expires=%d", auth->username, registry::getExpires());
+		debug(2, "validating %s; expires=%lu", auth->username, registry::getExpires());
 	else
 		debug(2, "rejecting %s; error=%d", auth->username, error);
 
@@ -1382,9 +1387,9 @@ reply:
 	eXosip_message_build_answer(sevent->tid, error, &reply);
 	if(reply != NULL) {
 		if(error == SIP_OK) {
-			snprintf(temp, sizeof(temp), ";expires=%u", registry::getExpires());
+			snprintf(temp, sizeof(temp), ";expires=%lu", registry::getExpires());
 			osip_message_set_contact(reply, temp);
-			snprintf(temp, sizeof(temp), "%u", registry::getExpires());
+			snprintf(temp, sizeof(temp), "%lu", registry::getExpires());
 			osip_message_set_expires(reply, temp);
 		}
 		osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");

@@ -543,7 +543,7 @@ extern "C" int main(int argc, char **argv)
 	const char *userid;
 	const char *secret;
 	const char *text;
-	char *cp, *tokens;
+	char *cp;
 	char *args[65];
 	char tbuf[512];
 	const char *argv0 = argv[0];

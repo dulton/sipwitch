@@ -71,7 +71,6 @@ size_t process::attach(const char *uid)
 static void logfile(fsys_t &fs)
 {
 	char buf[128];
-	fd_t fd;
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/sipwitch.log");
 	fsys::create(fs, buf, fsys::ACCESS_APPEND, 0660);
@@ -317,7 +316,6 @@ void process::printlog(const char *fmt, ...)
 	assert(fmt != NULL && *fmt != 0);
 
 	fsys_t log;
-	const char *uid;
 	va_list args;
 	char buf[1024];
 	int len;

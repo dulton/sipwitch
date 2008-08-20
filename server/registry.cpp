@@ -873,7 +873,6 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 	linked_pointer<target> tp;
 	socklen_t len;
 	bool creating = false;
-	char user[65];
 
 	ai = target_addr.getAddr();
 	if(!ai)
@@ -1052,7 +1051,6 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 	target *expired = NULL;
 	time_t now;
 	socklen_t len;
-	char user[65];
 
 	ai = target_addr.getAddr();
 	if(!ai)

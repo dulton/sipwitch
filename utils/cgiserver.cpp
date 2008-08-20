@@ -37,7 +37,7 @@ static void error(unsigned err, const char *text)
 		"Status: %d %s\r\n"
 		"Content-Type: text/plain\r\n"
 		"\r\n"
-		"%s\r\n");
+		"%s\r\n", err, text);
 	exit(0);
 }
 
@@ -102,7 +102,6 @@ static void cgilock(void)
 {
 	unsigned count = 90;
 	pid_t opid;
-	struct stat ino;
 	fd_t fd;
 	char buf[65];
 
@@ -246,7 +245,6 @@ static void post(void)
 {
 	FILE *fp;
 	char buf[257];
-	char *cp;
 	long len;
 
 	if(!cgi_length)
@@ -277,10 +275,6 @@ static void post(void)
 	cgiunlock();
 	request("reload");
 	error(200, "ok");
-}
-
-static void history(void)
-{
 }
 
 static void callfile(FILE *fp, const char *id)
@@ -403,7 +397,7 @@ static void registry(const char *id)
 {
 	mapped_view<MappedRegistry> reg("sipwitch.regmap");
 	unsigned count = reg.getCount();
-	unsigned found = 0, index = 0;
+	unsigned index = 0;
 	volatile const MappedRegistry *member;
 	MappedRegistry buffer;
 	time_t now;
@@ -435,7 +429,7 @@ static void registry(const char *id)
 		time(&now);
 		if(buffer.expires && buffer.expires < now)
 			continue;
-		if(id && buffer.ext && atoi(id) == buffer.ext)
+		if(id && buffer.ext && (unsigned)atoi(id) == buffer.ext)
 			goto use;
 		if(id && stricmp(id, buffer.userid))
 			continue;

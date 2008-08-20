@@ -131,11 +131,9 @@ bool subscriber::reload(service *cfg)
 	assert(cfg != NULL);	
 
 	char *temp;
-	caddr_t mp;
 	volatile char *vp;
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("subscriber");
-	int val;
 
 	updated = 0l;
 

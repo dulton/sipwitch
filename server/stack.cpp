@@ -161,7 +161,7 @@ void stack::background::run(void)
 			// release lock in case expire calls update timer methods...
 			Conditional::unlock();
 			if(!timeout)
-				debug(4, "background timer expired\n", 0);
+				debug(4, "background timer %d expired\n", interval);
 			// expire() must be in the shared session lock, and may be made
 			// exclusive when an expired call is destroyed.  This cannot
 			// be in the conditional::lock because the event dispatch may
@@ -213,7 +213,7 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 void stack::enableDumping(void)
 {
 	char buf[128];
-	const char *uid;
+	const char *uid = NULL;
 	service::keynode *env = service::getEnviron();
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/sipdump.log");
@@ -233,9 +233,7 @@ void stack::siplog(osip_message_t *msg)
 {
     fsys_t log;
     const char *uid;
-    int len;
     service::keynode *env = service::getEnviron();
-    char *cp;
 	char buf[128];
 	char *text = NULL;
 	size_t tlen;
@@ -282,7 +280,6 @@ void stack::close(session *s)
 	assert(s != NULL);
 
 	call *cr;
-	const char *reason = NULL;
 
 	if(!s)
 		return;

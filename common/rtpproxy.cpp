@@ -47,7 +47,6 @@ static LinkedObject *free_sockets = NULL;
 static rtpsocket **map = NULL;
 static mempager heap;
 static bool running = true;
-static unsigned priority = 0;
 static unsigned alloc_proxy = 0, alloc_sockets = 0;
 static unsigned active_proxy = 0, active_sockets = 0;
 static unsigned proxy_sockets = 0;
@@ -56,7 +55,7 @@ static struct sockaddr_storage proxy_published;
 static unsigned short proxy_port = 9000;
 static int proxy_family = AF_INET;
 static fd_set active, result;
-static volatile unsigned hiwater = 0;
+static volatile socket_t hiwater = 0;
 
 rtpsocket::rtpsocket(bool reuse) :
 LinkedObject()
@@ -125,7 +124,7 @@ void rtpproxy::slice(timeout_t timeout)
 	struct timeval ts;
 	int count;
 	socket_t so = 0;
-	rtpsocket *rtp, *target;
+	rtpsocket *rtp;
 	char buffer[1024];
 	ssize_t len;
 

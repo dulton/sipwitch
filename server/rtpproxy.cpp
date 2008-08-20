@@ -131,7 +131,6 @@ bool rtp::reload(service *cfg)
 	volatile char *vp;
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("rtpproxy");
-	int val;
 
 	updated = 0l;
 

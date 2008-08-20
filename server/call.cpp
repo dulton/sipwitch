@@ -374,7 +374,6 @@ unconnected:
 void stack::call::answer(thread *thread, session *s)
 {
 	osip_message_t *reply = NULL;
-	osip_body_t *body = NULL;
 	int did, tid;
 
 	assert(thread != NULL);
@@ -442,7 +441,6 @@ void stack::call::message_reply(thread *thread, session *s)
 	assert(s != NULL);
 
 	int tid;
-	osip_message_t *reply = NULL;
 
 	Mutex::protect(this);
 	tid = s->tid;
@@ -608,7 +606,6 @@ void stack::call::trying(thread *thread)
 void stack::call::expired(void)
 {
 	linked_pointer<segment> sp;
-	osip_message_t *reply = NULL;
 
 	Mutex::protect(this);
 	switch(state) {
@@ -647,7 +644,6 @@ void stack::call::expired(void)
 void stack::call::log(void)
 {
 	struct tm *dt;
-	call *cr;
 
 	if(!reason)
 		return;

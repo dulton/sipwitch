@@ -215,7 +215,6 @@ bool messages::deliver(message *msg)
 
 	linked_pointer<registry::target> tp;
 	registry::mapped *rr = registry::access(msg->user);
-	unsigned path = NamedObject::keyindex(msg->user, keysize);
 	osip_message_t *im;
 	time_t now;
 	unsigned msgcount = 0;
