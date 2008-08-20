@@ -271,26 +271,32 @@ void rtpproxy::release(void)
 
 unsigned rtpproxy::count(rtpproxy *rtp)
 {
+	unsigned used;
 	if(!rtp)
 		return 0;
 
-	return LinkedObject::count(rtp->sockets);
+	locking.access();
+	used = LinkedObject::count(rtp->sockets);
+	locking.release();
+	return used;
 }
 
-rtpproxy *rtpproxy::assign(rtpproxy *proxy, unsigned members)
+rtpproxy *rtpproxy::assign(rtpproxy *proxy, unsigned request)
 {
 	caddr_t mem;
 	bool reuse = true;
 	rtpsocket *sp;
+	unsigned used;
 
 	if(proxy == NULL)
-		return create(members);
+		return create(request);
 
-	if(members <= count(proxy))
+	used = count(proxy);
+	if(used >= request)
 		return proxy;
 
 	locking.modify();
-	while(count(proxy) < members && active_sockets < proxy_sockets) {
+	while(used++ < request && active_sockets < proxy_sockets) {
 		if(free_sockets) {
 			mem = (caddr_t)free_sockets;
 			free_sockets = free_sockets->getNext();
