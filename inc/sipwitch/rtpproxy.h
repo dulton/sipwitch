@@ -60,6 +60,8 @@ public:
 	static void pinhole(void);
 	static struct sockaddr *getPublished(void);
 	static void copy(session *target, session *source);
+	static unsigned count(rtpproxy *rtp);
+	static rtpproxy *assign(rtpproxy *proxy, unsigned count);
 
 	void release(void);
 	void rewrite(const char *body, struct sockaddr *iface = NULL);

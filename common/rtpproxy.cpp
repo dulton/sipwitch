@@ -269,6 +269,44 @@ void rtpproxy::release(void)
 	locking.commit();
 }
 
+unsigned rtpproxy::count(rtpproxy *rtp)
+{
+	if(!rtp)
+		return 0;
+
+	return LinkedObject::count(rtp->sockets);
+}
+
+rtpproxy *rtpproxy::assign(rtpproxy *proxy, unsigned members)
+{
+	caddr_t mem;
+	bool reuse = true;
+	rtpsocket *sp;
+
+	if(proxy == NULL)
+		return create(members);
+
+	if(members <= count(proxy))
+		return proxy;
+
+	locking.modify();
+	while(count(proxy) < members && active_sockets < proxy_sockets) {
+		if(free_sockets) {
+			mem = (caddr_t)free_sockets;
+			free_sockets = free_sockets->getNext();
+		}
+		else {
+			++alloc_sockets;
+			mem = (caddr_t)heap.alloc(sizeof(rtpsocket));
+		}
+		sp = new(mem) rtpsocket(reuse);
+		sp->enlist(&proxy->sockets);
+		sp->proxy = proxy;
+	}	
+	locking.commit();
+	return proxy;
+}
+	
 rtpproxy *rtpproxy::create(unsigned count, mode_t mode, unsigned qval)
 {
 	rtpsocket *sp;

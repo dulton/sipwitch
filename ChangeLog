@@ -1,3 +1,8 @@
+From version 0.3.0 to 0.3.1
+- expansion of rtpproxy runtime api for expanding assignment and counting
+  (might be used to add additional rtp proxy sockets in a re-invite when 
+  video is added, for example...)
+
 From version 0.2.7 to 0.3.0
 - variant build of zeroconf plugin based on support.
 - new rtpproxy engine code in api and server.
