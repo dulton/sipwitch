@@ -208,11 +208,12 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 
 	// make sure we do not re-invite an existing active member again
 	while(is(sp)) {
-		if(sp->sid.reg == rr && sp->sid.state == stack::session::OPEN)
+		if(sp->sid.reg == rr && sp->sid.state == stack::session::OPEN) {
 			return;
+		}
 		sp.next();
 	}
-	
+
 	switch(rr->status) {
 	case MappedRegistry::IDLE:
 		break;
@@ -231,7 +232,7 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 	default:
 		return;
 	}
-		
+	
 	while(is(tp)) {
 		invited = NULL;
 		if(tp->expires && tp->expires < now + 1)

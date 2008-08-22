@@ -367,6 +367,8 @@ void registry::cleanup(time_t period)
 			service::expire(rr);
 			expire(rr);
 		}
+		else if(!rr->inuse && rr->type == MappedRegistry::EXPIRED && !rr->status == MappedRegistry::OFFLINE)
+			service::expire(rr);
 		locking.commit();
 		Thread::yield();
 	}
@@ -485,7 +487,7 @@ registry::mapped *registry::create(const char *id)
 
 	locking.modify();
 	rr = find(id);
-	if(rr && rr->type != MappedRegistry::TEMPORARY) {
+	if(rr && rr->type != MappedRegistry::TEMPORARY && rr->type != MappedRegistry::EXPIRED) {
 		locking.share();
 		return rr;
 	}
@@ -1001,7 +1003,6 @@ bool registry::mapped::expire(Socket::address& saddr)
 	}
 	if(!active_count) {
 		Mutex::protect(this);
-		status = MappedRegistry::OFFLINE;
 		type = MappedRegistry::EXPIRED;
 		expires = 0;
 		Mutex::release(this);

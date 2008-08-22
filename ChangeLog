@@ -2,6 +2,8 @@ From version 0.3.0 to 0.3.1
 - expansion of rtpproxy runtime api for expanding assignment and counting
   (might be used to add additional rtp proxy sockets in a re-invite when 
   video is added, for example...)
+- fix registration clearing & reuse when map becomes "offline"...
+- correct integration with offline/online registry status & clearing
 
 From version 0.2.7 to 0.3.0
 - variant build of zeroconf plugin based on support.
