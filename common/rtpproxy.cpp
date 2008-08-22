@@ -195,7 +195,7 @@ void rtpproxy::pinhole(void)
 		rtp = map[so++];
 		if(!rtp || !rtp->proxy || !rtp->proxy->quality)
 			continue;
-		if(now < rtp->lastio + rtp->proxy->quality)
+		if(now < (time_t)(rtp->lastio + (time_t)rtp->proxy->quality))
 			continue;	
 //		if(rtp->has_local && rtp->proxy->mode == BOTHWAY)
 //			time(&rtp->lastio);

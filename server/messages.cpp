@@ -147,7 +147,6 @@ void messages::update(const char *uid)
 bool messages::publish(const char *to, const char *reply, const char *from, caddr_t text, size_t len, const char *msgtype)
 {
 	message *msg;
-	char *ep;
 
 	if(!msgtype)
 		msgtype = "text/plain";

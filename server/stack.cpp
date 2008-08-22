@@ -161,7 +161,7 @@ void stack::background::run(void)
 			// release lock in case expire calls update timer methods...
 			Conditional::unlock();
 			if(!timeout)
-				debug(4, "background timer %d expired\n", interval);
+				debug(4, "background timer %ld expired\n", interval);
 			// expire() must be in the shared session lock, and may be made
 			// exclusive when an expired call is destroyed.  This cannot
 			// be in the conditional::lock because the event dispatch may
