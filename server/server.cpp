@@ -268,11 +268,12 @@ bool server::confirm(const char *user)
 			++fn;
 		else
 			fn = buf;
-		if(fp)
+		if(fp) {
 			if(!load(fp, provision))
 				process::errlog(ERRLOG, "cannot load %s", fn);		
 			else
 				process::errlog(DEBUG1, "loaded %s", fn);
+		}
 	}
 
 	fsys::close(dir);
