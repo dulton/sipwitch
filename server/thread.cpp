@@ -47,8 +47,7 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	to = NULL;
 	from = NULL;
 	access = NULL;
-	dialed = NULL;
-	authorized = NULL;
+	routed = NULL;
 	reginfo = NULL;
 	session = NULL;
 }
@@ -420,7 +419,7 @@ void thread::message(void)
 	char *msglen = NULL;
 	const char *id;
 
-	if(!dialed || destination != LOCAL) {
+	if(!dialed.keys || destination != LOCAL) {
 		debug(3, "cannot send message for %s", dialing);
 		send_reply(SIP_DECLINE);
 		return;
@@ -457,9 +456,9 @@ void thread::message(void)
 			"<%s>", address);
 
 
-	id = service::getValue(dialed, "extension");
+	id = service::getValue(dialed.keys, "extension");
 	if(!id)
-		id = service::getValue(dialed, "id");
+		id = service::getValue(dialed.keys, "id");
 
 	debug(3, "sending message from %s to %s\n", sysid, id);
 	osip_content_length_to_str(sevent->request->content_length, &msglen);
@@ -526,11 +525,11 @@ noproxy:
 	if(body && body->body)
 		String::set(session->sdp, sizeof(session->sdp), body->body);
 
-	if(dialed) {
-		target = service::getValue(dialed, "extension");
+	if(dialed.keys) {
+		target = service::getValue(dialed.keys, "extension");
 		if(target)
 			toext = atoi(target);
-		target = service::getValue(dialed, "id");
+		target = service::getValue(dialed.keys, "id");
 	}
 	else if(reginfo) {
 		target = reginfo->userid;
@@ -664,17 +663,14 @@ noproxy:
 
 	if(reginfo) {
 		// get rid of config ref if we are calling registry target
-		if(dialed) {
-			server::release(dialed);
-			dialed = NULL;
-		}
+		server::release(dialed);
 
 		String::set(session->parent->forward, MAX_USERID_SIZE, reginfo->userid);
 		session->parent->forwarding = stack::call::FWD_NA;
 		inviteLocal(session, reginfo);
 	}
 
-	if(dialed) {
+	if(dialed.keys) {
 		// PROCESS DIALED HERE IF EXISTS...
 	}
 
@@ -707,7 +703,7 @@ void thread::identify(void)
 	String::set(display, sizeof(display), rr->display);
 	extension = rr->ext;
 	String::set(identity, sizeof(identity), rr->userid);
-	authorized = server::getProvision(identity);
+	server::getProvision(identity, authorized);
 	registry::detach(rr);
 }
 
@@ -742,9 +738,9 @@ bool thread::unauthenticated(void)
 	extension = rr->ext;
 	String::set(display, sizeof(display), rr->display);
 	String::set(identity, sizeof(identity), rr->userid);
-	authorized = server::getProvision(identity);
+	server::getProvision(identity, authorized);
 	registry::detach(rr);
-	if(authorized)
+	if(authorized.keys)
 		return true;
 
 untrusted:
@@ -878,30 +874,30 @@ rewrite:
 	}
 
 	reginfo = registry::access(target);
-	dialed = server::getProvision(target);
+	server::getProvision(target, dialed);
 
-	debug(4, "rewrite process; registry=%p, dialed=%p\n", reginfo, dialed);
+	debug(4, "rewrite process; registry=%p, dialed=%p\n", reginfo, dialed.keys);
 
-	if(!reginfo && !dialed)
+	if(!reginfo && !dialed.keys)
 		goto routing;
 
 	// reject nodes with defined errors
-	if(dialed && !stricmp(dialed->getId(), "reject")) {
-		cp = service::getValue(dialed, "error");
+	if(dialed.keys && !stricmp(dialed.keys->getId(), "reject")) {
+		cp = service::getValue(dialed.keys, "error");
 		if(cp)
 			error = atoi(cp);
 		goto invalid;
 	}
 
-	if(!reginfo && dialed) {
-		if(!stricmp(dialed->getId(), "group"))
+	if(!reginfo && dialed.keys) {
+		if(!stricmp(dialed.keys->getId(), "group"))
 			return authenticate();
-		if(!stricmp(dialed->getId(), "refer"))
+		if(!stricmp(dialed.keys->getId(), "refer"))
 			return authenticate();
-		if(!stricmp(dialed->getId(), "test")) {
+		if(!stricmp(dialed.keys->getId(), "test")) {
 			if(session && authenticate()) {
 				session->reg = registry::invite(identity);
-				cp = service::getValue(dialed, "error");
+				cp = service::getValue(dialed.keys, "error");
 				if(cp) {
 					error = atoi(cp);
 					goto invalid;
@@ -910,15 +906,15 @@ rewrite:
 			}
 			return false;
 		}
-		if(!stricmp(dialed->getId(), "queue"))
+		if(!stricmp(dialed.keys->getId(), "queue"))
 			goto anonymous;
-		if(!stricmp(dialed->getId(), "user")) {
+		if(!stricmp(dialed.keys->getId(), "user")) {
 			if(MSG_IS_MESSAGE(sevent->request))
 				goto trying;
 			process::errlog(NOTIFY, "unregistered destination %s", target);
 		}
 		else
-			process::errlog(ERRLOG, "invalid destination %s, type=%s\n", target, dialed->getId());
+			process::errlog(ERRLOG, "invalid destination %s, type=%s\n", target, dialed.keys->getId());
 		error = SIP_GONE;	
 		goto invalid;
 	}
@@ -938,7 +934,7 @@ rewrite:
 			goto invalid;
 		}
 	}
-	else if(reginfo && !dialed) {
+	else if(reginfo && !dialed.keys) {
 		error = SIP_NOT_FOUND;
 		goto invalid;
 	}
@@ -964,11 +960,11 @@ routing:
 		goto invalid;
 
 	destination = ROUTED;
-	if(!authenticate() || !authorized)
+	if(!authenticate() || !authorized.keys)
 		return false;
 
-	if(!stricmp(authorized->getId(), "user")) {
-		cp = service::getValue(authorized, "profile");
+	if(!stricmp(authorized.keys->getId(), "user")) {
+		cp = service::getValue(authorized.keys, "profile");
 		if(!cp)
 			cp = "*";
 		pro = server::getProfile(cp);
@@ -976,7 +972,7 @@ routing:
 	}
 	else
 		level = registry::getRoutes();
-	cp = service::getValue(authorized, "trs");
+	cp = service::getValue(authorized.keys, "trs");
 	if(cp)
 		level = atoi(cp);
 
@@ -1005,12 +1001,12 @@ routing:
 	return true;
 
 static_routing:
-	dialed = server::getRouting(target);
-	if(!dialed)
+	routed = server::getRouting(target);
+	if(!routed)
 		goto invalid;
 
-	if(!stricmp(dialed->getId(), "refuse")) {
-		cp = service::getValue(dialed, "error");
+	if(!stricmp(routed->getId(), "refuse")) {
+		cp = service::getValue(routed, "error");
 		if(cp)
 			error = atoi(cp);
 		goto invalid;
@@ -1018,7 +1014,7 @@ static_routing:
 
 	// adjust dialing & processing based on routing properties
 	dialing[0] = 0;
-	cp = service::getValue(dialed, "prefix");
+	cp = service::getValue(routed, "prefix");
 	if(cp && *cp == '-') {
 		--cp;
 		if(!strnicmp(target, cp, strlen(cp)))
@@ -1028,20 +1024,20 @@ static_routing:
 			String::set(dialing, sizeof(dialing), cp);
 	}
 	String::add(dialing, sizeof(dialing), target);
-	cp = service::getValue(dialed, "suffix");
+	cp = service::getValue(routed, "suffix");
 	if(cp && *cp == '-') {
 		--cp;
 		if(strlen(dialing) >= strlen(cp) && !stricmp(dialing + strlen(dialing) - strlen(cp), cp))	
 			dialing[strlen(dialing) - strlen(cp)] = 0;
 	} else if(cp)
 		String::add(dialing, sizeof(dialing), cp);
-	if(!stricmp(dialed->getId(), "rewrite")) {
+	if(!stricmp(routed->getId(), "rewrite")) {
 		String::set(dbuf, sizeof(dbuf), dialing);
 		target = dbuf;
-		server::release(dialed);
+		server::release(routed);
 		if(reginfo)
 			registry::detach(reginfo);
-		dialed = NULL;
+		routed = NULL;
 		reginfo = NULL;
 		destination = LOCAL;
 		goto rewrite;
@@ -1083,7 +1079,7 @@ remote:
 	return true;
 
 invalid:
-	if(authorized)
+	if(authorized.keys)
 		debug(1, "rejecting invite from %s; error=%d\n", getIdent(), error);
 	else if(from->url && from->url->host && from->url->username)
 		debug(1, "rejecting invite from %s@%s; error=%d\n", from->url->username, from->url->host, error);
@@ -1135,7 +1131,7 @@ bool thread::authenticate(void)
 	int error = SIP_PROXY_AUTHENTICATION_REQUIRED;
 	const char *cp;
 
-	if(authorized != NULL)
+	if(authorized.keys != NULL)
 		return true;
 
 	display[0] = 0;
@@ -1163,7 +1159,8 @@ bool thread::authenticate(void)
 		}
 	}
 
-	node = server::getProvision(auth->username);
+	server::getProvision(auth->username, authorized);
+	node = authorized.keys;
 	if(!node) {
 		process::errlog(NOTICE, "rejecting unknown %s", auth->username);
 		error = SIP_NOT_FOUND;
@@ -1217,12 +1214,11 @@ bool thread::authenticate(void)
 		process::errlog(NOTICE, "rejecting unauthorized %s", auth->username);
 		goto failed;
 	}
-	authorized = node;
 	String::set(identity, sizeof(identity), auth->username);
 	return true;
 
 failed:
-	server::release(node);
+	server::release(authorized);
 	send_reply(error);
 	return false;
 }
@@ -1324,6 +1320,7 @@ void thread::validate(void)
 	const char *cp;
 	char temp[64];
 	osip_message_t *reply = NULL;
+	server::usernode user;
 
 	if(!sevent->request || osip_message_get_authorization(sevent->request, 0, &auth) != 0 || !auth || !auth->username || !auth->response) {
 		challenge();
@@ -1335,7 +1332,8 @@ void thread::validate(void)
 	remove_quotes(auth->nonce);
 	remove_quotes(auth->response);
 
-	node = server::getProvision(auth->username);
+	server::getProvision(auth->username, user);
+	node = user.keys;
 	if(!node) {
 		error = SIP_NOT_FOUND;
 		goto reply;
@@ -1383,7 +1381,7 @@ reply:
 	else
 		debug(2, "rejecting %s; error=%d", auth->username, error);
 
-	server::release(node);
+	server::release(user);
 	eXosip_lock();
 	eXosip_message_build_answer(sevent->tid, error, &reply);
 	if(reply != NULL) {
@@ -1695,8 +1693,9 @@ void thread::run(void)
 	for(;;) {
 		assert(instance > 0);
 		assert(reginfo == NULL);
-		assert(dialed == NULL);
-		assert(authorized == NULL);
+		assert(dialed.keys == NULL);
+		assert(routed == NULL);
+		assert(authorized.keys == NULL);
 		assert(access == NULL);
 
 		display[0] = 0;
@@ -1992,15 +1991,13 @@ void thread::run(void)
 			access = NULL;
 		}
 
-		if(dialed) {
-			server::release(dialed);
-			dialed = NULL;
+		if(routed) {
+			server::release(routed);
+			routed = NULL;
 		}
 
-		if(authorized) {
-			server::release(authorized);
-			authorized = NULL;
-		}
+		server::release(authorized);
+		server::release(dialed);
 
 		eXosip_event_free(sevent);
 		--active_count;

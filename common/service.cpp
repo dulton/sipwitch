@@ -201,6 +201,9 @@ mempager(s), root()
 
 service::~service()
 {
+	// we must zap the xml tree root node, lest it try to delete it's "id"
+	// or child nodes, since all was allocated from the "pager" heap.
+	memset(&root, 0, sizeof(root));
 	mempager::purge();
 }
 
@@ -949,6 +952,8 @@ bool service::commit(const char *user)
 		return false;
 
 	locking.modify();
+	if(cfg)
+		delete cfg;
 	cfg = this;
 	locking.commit();
 	return true;

@@ -37,7 +37,7 @@ static void error(unsigned err, const char *text)
 		"Status: %d %s\r\n"
 		"Content-Type: text/plain\r\n"
 		"\r\n"
-		"\r\n", err, text);
+		"%s\r\n", err, text, text);
 	exit(0);
 }
 

@@ -106,6 +106,12 @@ static bool activating(int argc, char **args)
 	return rtn;
 }
 
+server::usernode::usernode()
+{
+	keys = NULL;
+	heap = NULL;
+}
+
 server::server(const char *id) :
 service(id, PAGING_SIZE)
 {
@@ -360,6 +366,17 @@ void server::release(keynode *node)
 		locking.release();
 }
 
+void server::release(usernode& user)
+{
+	if(user.heap)
+		delete user.heap;
+	else
+		service::release(user.keys);
+
+	user.keys = NULL;
+	user.heap = NULL;
+}
+
 void server::release(cidr *access)
 {
 	if(access)
@@ -438,7 +455,7 @@ service::keynode *server::getConfig(void)
 	return (keynode *)cfg;
 }
 
-service::keynode *server::getExtension(const char *id)
+void server::getExtension(const char *id, usernode& user)
 {
 	assert(id != NULL && *id != 0);
 	assert(cfg != NULL);
@@ -450,11 +467,13 @@ service::keynode *server::getExtension(const char *id)
 	keynode *node = NULL;
 	const char *cp;
 
+	server::release(user);
+
 	locking.access();
 	cfgp = static_cast<server *>(cfg);
 	if(!cfgp) {
 		locking.release();
-		return NULL;
+		return;
 	}
 
 	if(range && ext >= prefix && ext < prefix + range)
@@ -469,7 +488,7 @@ service::keynode *server::getExtension(const char *id)
 	}
 	if(!node)
 		locking.release();
-	return node;
+	user.keys = node;
 }
 
 Socket::address *server::getContact(const char *uid)
@@ -477,16 +496,18 @@ Socket::address *server::getContact(const char *uid)
 	assert(uid != NULL && *uid != 0);
 	assert(cfg != NULL);
 
-	keynode *node = getProvision(uid);
+	usernode user;
+
+	getProvision(uid, user);
 	Socket::address *addr = NULL;
 
-	if(!node)
+	if(!user.keys)
 		return NULL;
 
-	node = node->leaf("contact");
+	service::keynode *node = user.keys->leaf("contact");
 	if(node)
 		addr = stack::getAddress(node->getPointer());
-	locking.release();
+	server::release(user);
 	return addr;
 }
 
@@ -530,16 +551,15 @@ unsigned server::getForwarding(const char *uid)
 {
 	assert(uid != NULL);
 
-	keynode *node = getProvision(uid);
-	unsigned mask = forwarding(node);
+	usernode user;
+	getProvision(uid, user);
+	unsigned mask = forwarding(user.keys);
 	
-	if(node)
-		release(node);
-
+	server::release(user);
 	return mask;
 }
 
-service::keynode *server::getProvision(const char *uid)
+void server::getProvision(const char *uid, usernode& user)
 {
 	assert(uid != NULL && *uid != 0);
 	assert(cfg != NULL);
@@ -550,18 +570,20 @@ service::keynode *server::getProvision(const char *uid)
 	unsigned prefix = registry::getPrefix();
 	unsigned ext = atoi(uid);
 
+	server::release(user);
+
 	locking.access();
 	cfgp = static_cast<server*>(cfg);
 	if(!cfgp) {
 		locking.release();
-		return NULL;
+		return;
 	}
 	node = cfgp->find(uid);
 	if(!node && range && ext >= prefix && ext < prefix + range)
 		node = cfgp->extmap[ext - prefix];
 	if(!node)
 		locking.release();
-	return node;
+	user.keys = node;
 }
 
 void server::utils(const char *uid)

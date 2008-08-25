@@ -484,6 +484,7 @@ registry::mapped *registry::create(const char *id)
 	const char *cp = "none";
 	profile_t *pro = NULL;
 	bool listed = false;
+	server::usernode user;
 
 	locking.modify();
 	rr = find(id);
@@ -504,7 +505,8 @@ registry::mapped *registry::create(const char *id)
 		return NULL;
 	}
 
-	node = server::getProvision(id);
+	server::getProvision(id, user);
+	node = user.keys;
 	cp = "none";
 	rr->type = MappedRegistry::EXPIRED;
 	rr->expires = 0;
@@ -528,7 +530,7 @@ registry::mapped *registry::create(const char *id)
 	else if(!stricmp(cp, "service"))
 		rr->type = MappedRegistry::SERVICE;
 	if(!node || rr->type == MappedRegistry::EXPIRED) {
-		server::release(node);
+		server::release(user);
 		if(listed && rr->inuse)
 			rr->type = MappedRegistry::TEMPORARY;
 		else if(listed) {
@@ -623,7 +625,7 @@ registry::mapped *registry::create(const char *id)
 			memcpy(&rr->profile, pro, sizeof(rr->profile));
 	}
 
-	server::release(node);
+	server::release(user);
 	rr->ext = 0;
 	rr->status = MappedRegistry::IDLE;
 

@@ -429,19 +429,28 @@ private:
 	void dump(FILE *fp);
 
 public:
+	class __LOCAL usernode
+	{
+	public:
+		service::keynode *keys;
+		service *heap;
+		usernode();
+	};
+
 	server(const char *id);
 
 	static bool check(void);
 	static profile_t *getProfile(const char *id); 
 	static keynode *getRouting(const char *id);
-	static keynode *getProvision(const char *id);
-	static keynode *getExtension(const char *id);
+	static void getProvision(const char *id, usernode& user);
+	static void getExtension(const char *id, usernode& user);
 	static keynode *getConfig(void);
 	static unsigned getForwarding(const char *id);
 	static cidr *getPolicy(struct sockaddr *addr);
 	static bool isLocal(struct sockaddr *addr);
 	static void release(cidr *access);
 	static void release(keynode *node);
+	static void release(usernode& user);
 	static void reload(const char *uid);
 	static void utils(const char *uid);
 	static Socket::address *getContact(const char *id);
@@ -500,8 +509,9 @@ private:
 	unsigned instance;
 	unsigned extension;
 	cidr *access;
-	service::keynode *authorized;
-	service::keynode *dialed;
+	server::usernode authorized;
+	server::usernode dialed;
+	service::keynode *routed;
 	registry::mapped *reginfo;
 	eXosip_event_t *sevent;
 	char buffer[MAX_URI_SIZE];	

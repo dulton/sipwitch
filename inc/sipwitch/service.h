@@ -214,6 +214,7 @@ protected:
 	stringbuf<1024> buffer;
 
 	void setHeader(const char *header);
+	void clearId(void);
 
 private:
 	void __LOCAL addAttributes(keynode *node, char *astr);
