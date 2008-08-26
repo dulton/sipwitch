@@ -429,14 +429,6 @@ private:
 	void dump(FILE *fp);
 
 public:
-	class __LOCAL usernode
-	{
-	public:
-		service::keynode *keys;
-		service *heap;
-		usernode();
-	};
-
 	server(const char *id);
 
 	static bool check(void);
@@ -509,8 +501,8 @@ private:
 	unsigned instance;
 	unsigned extension;
 	cidr *access;
-	server::usernode authorized;
-	server::usernode dialed;
+	service::usernode authorized;
+	service::usernode dialed;
 	service::keynode *routed;
 	registry::mapped *reginfo;
 	eXosip_event_t *sevent;

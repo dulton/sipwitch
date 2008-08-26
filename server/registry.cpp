@@ -484,7 +484,7 @@ registry::mapped *registry::create(const char *id)
 	const char *cp = "none";
 	profile_t *pro = NULL;
 	bool listed = false;
-	server::usernode user;
+	service::usernode user;
 
 	locking.modify();
 	rr = find(id);

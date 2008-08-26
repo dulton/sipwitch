@@ -1320,7 +1320,7 @@ void thread::validate(void)
 	const char *cp;
 	char temp[64];
 	osip_message_t *reply = NULL;
-	server::usernode user;
+	service::usernode user;
 
 	if(!sevent->request || osip_message_get_authorization(sevent->request, 0, &auth) != 0 || !auth || !auth->username || !auth->response) {
 		challenge();

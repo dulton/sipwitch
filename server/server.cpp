@@ -106,12 +106,6 @@ static bool activating(int argc, char **args)
 	return rtn;
 }
 
-server::usernode::usernode()
-{
-	keys = NULL;
-	heap = NULL;
-}
-
 server::server(const char *id) :
 service(id, PAGING_SIZE)
 {

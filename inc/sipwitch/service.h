@@ -64,13 +64,21 @@ class __EXPORT service : public mempager
 {
 public:
 	typedef treemap<char *>keynode;
-	
+
 	typedef struct {
 		const char *key;
 		const char *value;
 	} define;
 
-	class pointer 
+	class __EXPORT usernode
+	{
+	public:
+		service::keynode *keys;
+		service *heap;
+		usernode();
+	};
+
+	class __EXPORT pointer 
 	{
 	private:
 		keynode *node;

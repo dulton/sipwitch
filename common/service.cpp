@@ -77,6 +77,12 @@ static size_t xmldecode(char *out, size_t limit, const char *src)
 	return out - ret;
 }
 
+service::usernode::usernode()
+{
+	keys = NULL;
+	heap = NULL;
+}
+
 service::pointer::pointer()
 {
 	node = NULL;
