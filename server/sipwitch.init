@@ -22,7 +22,7 @@ FIFO="/var/run/sipwitch/control"
 OPTIONS="-d"
 PRELOAD=""
 PLUGINS=""
-USER=""
+GROUP=""
 CONCURRENCY=""
 PRIORITY=""
 DEFAULT="/etc/default/sipwitch"
@@ -49,8 +49,8 @@ else
 	START="0"
 fi
 
-if [ ! -z "$USER" ] ; then
-	export USER ; fi
+if [ ! -z "$GROUP" ] ; then
+	export GROUP ; fi
 
 if [ ! -z "$CONCURRENCY" ] ; then
 	export CONCURRENCY ; fi

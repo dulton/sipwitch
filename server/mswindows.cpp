@@ -134,6 +134,10 @@ extern "C" int main(int argc, char **argv)
 
 	// for deaemon env usually loaded from /etc/defaults or /etc/sysconfig
 
+	cp = getenv("GROUP");
+	if(cp)
+		user = strdup(cp);
+
 	cp = getenv("PRIORITY");
 	if(cp)
 		priority = atoi(cp);
