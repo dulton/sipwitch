@@ -10,6 +10,6 @@
 # can be used to adjust pthread concurrency...
 #CONCURRENCY=??
 
-# can be used to specify running effective user for the server
-#USER="sipw"
+# can be used to specify running effective user/group id for the server
+#GROUP="sipwitch"
 

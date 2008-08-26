@@ -596,6 +596,10 @@ extern "C" int main(int argc, char **argv)
 
 	// for deaemon env usually loaded from /etc/defaults or /etc/sysconfig
 
+	cp = getenv("GROUP");
+	if(cp)
+		user = strdup(cp);
+
 	cp = getenv("CONCURRENCY");
 	if(cp)
 		concurrency = atoi(cp);
@@ -704,7 +708,7 @@ extern "C" int main(int argc, char **argv)
 		if(!stricmp(*argv, "-version")) 
 			server::version();
 
-		if(!strcmp(*argv, "-u") || !stricmp(*argv, "-user")) {
+		if(!strcmp(*argv, "-u") || !stricmp(*argv, "-user") || !strcmp(*argv, "-g") || !stricmp(*argv, "-group")) {
 			user = *(++argv);
 			if(!user) {
 				fprintf(stderr, "*** sipw: user option missing\n");
@@ -715,6 +719,11 @@ extern "C" int main(int argc, char **argv)
 
 		if(!strnicmp(*argv, "-user=", 6)) {
 			user = *argv + 6;
+			continue;
+		} 
+
+		if(!strnicmp(*argv, "-group=", 7)) {
+			user = *argv + 7;
 			continue;
 		} 
 

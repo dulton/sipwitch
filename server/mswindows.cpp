@@ -194,7 +194,7 @@ extern "C" int main(int argc, char **argv)
 		if(!stricmp(*argv, "-version"))
 			server::version();
 
-		if(!strcmp(*argv, "-u") || !stricmp(*argv, "-user")) {
+		if(!strcmp(*argv, "-u") || !stricmp(*argv, "-user") || !stricmp(*argv, "-group") || !stricmp(*argv, "-g")) {
 			user = *(++argv);
 			if(!user) {
 				fprintf(stderr, "*** sipw: user option missing\n");
@@ -202,6 +202,11 @@ extern "C" int main(int argc, char **argv)
 			}
 			continue;
 		}
+
+		if(!strnicmp(*argv, "-group=", 7)) {
+			user = *argv + 7;
+			continue;
+		} 
 
 		if(!strnicmp(*argv, "-user=", 6)) {
 			user = *argv + 6;
