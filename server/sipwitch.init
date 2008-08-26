@@ -28,7 +28,7 @@ PRIORITY=""
 DEFAULT="/etc/default/sipwitch"
 START="1"
 
-test -x $(DAEMON) || exit 0
+test -x "$DAEMON" || exit 0
 
 set -e
 
@@ -61,7 +61,10 @@ if [ ! -z "$PRIORITY" ] ; then
 case "$1" in
 start)
 	if [ "$START" = "0" ] ; then
-		echo "You have to define PLUGINS in $CONFIG before running sipwitch"
+		if test -z "$PLUGINS" ; then
+			echo "You have to define PLUGINS in $DEFAULT before running sipwitch"
+		else
+			echo "You have to modify config and START in $DEFAULT before running"
 		exit 0
 	fi
 
