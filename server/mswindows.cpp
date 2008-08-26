@@ -135,21 +135,21 @@ extern "C" int main(int argc, char **argv)
 	// for deaemon env usually loaded from /etc/defaults or /etc/sysconfig
 
 	cp = getenv("GROUP");
-	if(cp)
+	if(cp && *cp)
 		user = strdup(cp);
 
 	cp = getenv("PRIORITY");
-	if(cp)
+	if(cp && *cp)
 		priority = atoi(cp);
 
 	cp = getenv("VERBOSE");
-	if(cp) {
+	if(cp && *cp) {
 		warned = true;
 		verbose = atoi(cp);
 	}
 
 	cp = getenv("CFGFILE");
-	if(cp)
+	if(cp && *cp)
 		cfgfile = strdup(cp);
 
 	while(NULL != *(++argv)) {
