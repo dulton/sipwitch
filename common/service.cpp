@@ -179,7 +179,7 @@ service::instance::~instance()
 }
 
 service::service(const char *name, size_t s) :
-mempager(s), root()
+memalloc(s), root()
 {
 	assert(name != NULL && *name != 0);
 
@@ -210,7 +210,7 @@ service::~service()
 	// we must zap the xml tree root node, lest it try to delete it's "id"
 	// or child nodes, since all was allocated from the "pager" heap.
 	memset(&root, 0, sizeof(root));
-	mempager::purge();
+	memalloc::purge();
 }
 
 void service::setHeader(const char *h)
@@ -440,7 +440,7 @@ service::keynode *service::addNode(keynode *base, const char *id, const char *va
 	keynode *node;
 	char *cp;
 
-	mp = (caddr_t)mempager::alloc(sizeof(keynode));
+	mp = (caddr_t)memalloc::alloc(sizeof(keynode));
 	cp = dup(id);
 	node = new(mp) keynode(base, cp);
 	if(value)
@@ -562,7 +562,7 @@ void service::addAttributes(keynode *node, char *attr)
 
 		*(ep++) = 0;
 		len = strlen(attr);
-		qt = (char *)mempager::alloc(len + 1);
+		qt = (char *)memalloc::alloc(len + 1);
 		xmldecode(qt, len + 1, attr);
 		addNode(node, id, qt);
 		attr = ep;
@@ -630,7 +630,7 @@ bool service::load(FILE *fp, keynode *node)
 				*bp = 0;
 				cp = String::chop(cp, " \r\n\t");
 				len = strlen(cp);
-				ep = (char *)mempager::alloc(len + 1);
+				ep = (char *)memalloc::alloc(len + 1);
 				xmldecode(ep, len + 1, cp);
 				node->setPointer(ep);
 				*bp = '<';

@@ -3,6 +3,7 @@ From version 0.3.1 to 0.3.2
   and externalized.
 - minor fix for init script.
 - use of GROUP to set effective server group id.
+- uses memalloc instead of mempager, now requires ucommon 1.9.8...
 
 From version 0.3.0 to 0.3.1
 - expansion of rtpproxy runtime api for expanding assignment and counting

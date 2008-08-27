@@ -165,7 +165,7 @@ bool server::create(const char *id, keynode *node)
 	assert(id != NULL && *id != 0);
 	assert(node != NULL);
 
-	keymap *map = (keymap *)alloc_locked(sizeof(keymap));
+	keymap *map = (keymap *)alloc(sizeof(keymap));
 	unsigned path = NamedObject::keyindex(id, CONFIG_KEY_SIZE);
 	
 	if(find(id))
@@ -215,13 +215,13 @@ bool server::confirm(const char *user)
 		memset(extmap, 0, sizeof(keynode *) * range);
 	}
 	profiles = NULL;
-	mp = (caddr_t)alloc_locked(sizeof(profile));
+	mp = (caddr_t)alloc(sizeof(profile));
 	ppd = new(mp) profile(&profiles);
 	String::set(ppd->value.id, sizeof(ppd->value.id), "*");
 	ppd->value.level = 1;
 	ppd->value.features = USER_PROFILE_DEFAULT;
 	
-	mp = (caddr_t)alloc_locked(sizeof(profile));
+	mp = (caddr_t)alloc(sizeof(profile));
 	pp = new(mp) profile(&profiles);
 	memcpy(&pp->value, &ppd->value, sizeof(profile_t));
 	String::set(pp->value.id, sizeof(pp->value.id), "restricted");
@@ -278,17 +278,17 @@ bool server::confirm(const char *user)
 
 	fsys::close(dir);
 
-	mp = (caddr_t)alloc_locked(sizeof(cidr));
+	mp = (caddr_t)alloc(sizeof(cidr));
 	new(mp) cidr(&acl, "127.0.0.0/8", "loopback");
 
-	mp = (caddr_t)alloc_locked(sizeof(cidr));
+	mp = (caddr_t)alloc(sizeof(cidr));
 	new(mp) cidr(&acl, "::1", "loopback");
 
 	node = access->getFirst();
 	while(node) {
 		id = node->getId();
 		if(id && node->getPointer()) {
-			mp = (caddr_t)alloc_locked(sizeof(cidr));
+			mp = (caddr_t)alloc(sizeof(cidr));
 			new(mp) cidr(&acl, node->getPointer(), id);
 		}
 		node.next();
@@ -306,7 +306,7 @@ bool server::confirm(const char *user)
 			id = NULL;
 
 		if(leaf && id && !strcmp(node->getId(), "profile")) {
-			mp = (caddr_t)alloc_locked(sizeof(profile));
+			mp = (caddr_t)alloc(sizeof(profile));
 			pp = new(mp) profile(&profiles);
 			memcpy(&pp->value, &ppd->value, sizeof(profile_t));
 			String::set(pp->value.id, sizeof(pp->value.id), id);
@@ -338,9 +338,9 @@ bool server::confirm(const char *user)
 				else
 					digest::md5(digest);
 				if(digest[0]) {
-					mp = (caddr_t)alloc_locked(sizeof(keynode));
+					mp = (caddr_t)alloc(sizeof(keynode));
 					leaf = new(mp) keynode(node, (char *)"digest");
-					leaf->setPointer(dup_locked(*digest));
+					leaf->setPointer(dup(*digest));
 				}
 			}
 			leaf = node->leaf("extension");

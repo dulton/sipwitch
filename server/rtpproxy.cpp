@@ -167,7 +167,7 @@ bool rtp::reload(service *cfg)
 		key = sp->getId();
 		value = sp->getPointer();
 		if(key && value) {
-			mp = (caddr_t)cfg->alloc_locked(sizeof(cidr));
+			mp = (caddr_t)cfg->alloc(sizeof(cidr));
 			new(mp) cidr(&nets, value, key);
 		}
 		sp.next();

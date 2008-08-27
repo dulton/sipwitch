@@ -60,7 +60,7 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-class __EXPORT service : public mempager
+class __EXPORT service : public memalloc
 {
 public:
 	typedef treemap<char *>keynode;
@@ -133,10 +133,10 @@ public:
         virtual ~callback();
 
 		inline static void *alloc(service *cfgp, size_t size)
-			{return cfgp->alloc_locked(size);};
+			{return cfgp->alloc(size);};
 
 		inline static char *dup(service *cfgp, const char *s)
-			{return cfgp->dup_locked(s);};
+			{return cfgp->dup(s);};
 
 		inline static bool isConfigured(void)
 			{return service::cfg != NULL;};
