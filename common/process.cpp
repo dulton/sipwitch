@@ -191,8 +191,6 @@ static OVERLAPPED ovFifo;
 
 static void logfile(fsys_t& fd)
 {
-	assert(uid != NULL && *uid != 0);
-
 	char buf[256];
 	unsigned len;
 
