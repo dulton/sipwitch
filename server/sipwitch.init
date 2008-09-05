@@ -65,6 +65,7 @@ start)
 			echo "You have to define PLUGINS in $DEFAULT before running sipwitch"
 		else
 			echo "You have to modify config and START in $DEFAULT before running"
+		fi
 		exit 0
 	fi
 
