@@ -749,12 +749,12 @@ void server::plugins(const char *argv0, const char *list)
 		return;
 
 	if(!stricmp(list, "auto")) {
-		string::set(path, sizeof(path), argv0);
+		String::set(path, sizeof(path), argv0);
 		ep = strstr(path, LIB_PREFIX + 1);
 		if(ep)
 			ep[strlen(LIB_PREFIX)] = 0;
 		else 
-			string::set(path, sizeof(path), DEFAULT_LIBPATH "/sipwitch");
+			String::set(path, sizeof(path), DEFAULT_LIBPATH "/sipwitch");
 		el = strlen(path);
 		fsys::open(dir, path, fsys::ACCESS_DIRECTORY);
 		while(is(dir) && fsys::read(dir, buffer, sizeof(buffer)) > 0) {
@@ -769,14 +769,14 @@ void server::plugins(const char *argv0, const char *list)
 		fsys::close(dir);
 	}
 	else {
-		string::set(buffer, sizeof(buffer), list);
-		while(NULL != (cp = string::token(buffer, &tp, ", ;:\r\n"))) {
-			string::set(path, sizeof(path), argv0);
+		String::set(buffer, sizeof(buffer), list);
+		while(NULL != (cp = String::token(buffer, &tp, ", ;:\r\n"))) {
+			String::set(path, sizeof(path), argv0);
 			ep = strstr(path, LIB_PREFIX + 1);
 			if(ep) {
 				ep[strlen(LIB_PREFIX)] = 0;
-				string::add(path, sizeof(path), cp);
-				string::add(path, sizeof(path), DLL_SUFFIX);
+				String::add(path, sizeof(path), cp);
+				String::add(path, sizeof(path), DLL_SUFFIX);
 				if(fsys::isfile(path)) {
 					process::errlog(INFO, "loading %s" DLL_SUFFIX " locally", cp);
 					goto loader;
