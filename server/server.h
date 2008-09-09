@@ -84,16 +84,16 @@ public:
 		
 		void operator=(mapped *ptr);
 		
-		inline operator bool()
+		inline operator bool() const
 			{return entry != NULL;};
 
-		inline bool operator!()
+		inline bool operator!() const
 			{return entry == NULL;};
 
-		inline mapped *operator->()
+		inline mapped *operator->() const
 			{return entry;};
 
-		inline mapped *operator*()
+		inline mapped *operator*() const
 			{return entry;};
 	};
 
@@ -178,7 +178,6 @@ public:
 	inline static unsigned getRoutes(void)
 		{return reg.routes;};
 
-
 	static unsigned getEntries(void);
 	static unsigned getIndex(mapped *rr);
 	static bool isExtension(const char *id);
@@ -253,10 +252,10 @@ private:
 		char secret[MAX_USERID_SIZE];
 		enum {NONE, DIGEST}	authtype;
 
-		inline bool isSource(void)
+		inline bool isSource(void) const
 			{return (this == parent->source);};
 
-		inline bool isTarget(void)
+		inline bool isTarget(void) const
 			{return (this == parent->target);};
 	};
 

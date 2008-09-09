@@ -89,18 +89,18 @@ public:
 		pointer(pointer const&);
 		~pointer();
 		
-		inline operator bool()
+		inline operator bool() const
 			{return node != NULL;};
 
-		inline bool operator!()
+		inline bool operator!() const
 			{return node == NULL;};
 
 		void operator=(keynode *node);
 
-		inline keynode *operator*()
+		inline keynode *operator*() const
 			{return node;};
 
-		inline keynode *operator->()
+		inline keynode *operator->() const
 			{return node;};
 	};
 
@@ -113,7 +113,7 @@ public:
 		instance();
 		~instance();
 		
-		inline const service *operator->()
+		inline const service *operator->() const
 			{return service::cfg;};
 	};
 
@@ -138,10 +138,10 @@ public:
 		inline static char *dup(service *cfgp, const char *s)
 			{return cfgp->dup(s);};
 
-		inline static bool isConfigured(void)
+		inline static bool isConfigured(void) 
 			{return service::cfg != NULL;};
 
-		inline bool isActive(void)
+		inline bool isActive(void) const
 			{return active_flag;};
 
 		virtual bool check(void);
@@ -165,7 +165,7 @@ public:
 	keynode *getNode(keynode *base, const char *grp, const char *attr, const char *value);
 	keynode *getList(const char *path);
 
-	inline static bool isLinked(keynode *node)
+	inline static bool isLinked(keynode *node) 
 		{return node->isLeaf();};
 
 	inline static bool isValue(keynode *node)
