@@ -153,7 +153,7 @@ void stack::background::run(void)
 		if(!signalled && timeout) {
 			if(timeout > interval) 
 				timeout = interval;
-			Conditional::wait(interval);
+			Conditional::wait(timeout);
 		}
 		timeout = expires.get();
 		if(signalled || !timeout) {

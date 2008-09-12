@@ -927,11 +927,10 @@ extern "C" int main(int argc, char **argv)
 	else
 		foreground(user, cfgfile, priority);
 
-	server::reload(user);
-
 	if(restartable) 
 		restart();
 
+	server::reload(user);
 	server::startup();
 
 	if(dumping)
