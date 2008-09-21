@@ -285,7 +285,7 @@ static void callfile(FILE *fp, const char *id)
 	struct stat ino;
 #endif
 	char buf[256];
-	char *cp = NULL;
+	const char *cp = NULL;
 	unsigned long date, line = 0;
 	unsigned long last_date = 0, last_line = 0;
 	struct tm *dt;
