@@ -349,6 +349,7 @@ void registry::expire(mapped *rr)
 	rr->ext = 0;
 	rr->status = MappedRegistry::OFFLINE;
 	rr->type = MappedRegistry::EXPIRED;
+	rr->rid = -1;
 	rp->delist(&keys[path]);
 	reg.removeLocked(rr);
 }
@@ -462,6 +463,7 @@ registry::mapped *registry::invite(const char *id)
 	rr->created = 0;
 	rr->display[0] = 0;
 	rr->inuse = 1;
+	rr->rid = -1;
 
 	String::set(rr->userid, sizeof(rr->userid), id);
 	rr->ext = 0;
@@ -508,6 +510,7 @@ registry::mapped *registry::create(const char *id)
 	server::getProvision(id, user);
 	node = user.keys;
 	cp = "none";
+	rr->rid = -1;
 	rr->type = MappedRegistry::EXPIRED;
 	rr->expires = 0;
 	rr->created = 0;
