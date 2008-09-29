@@ -42,18 +42,21 @@ static const char *replytarget = NULL;
 
 static FILE *fifo = NULL;
 static char fifopath[128] = "";
+static const char *ident = "sipwitch";
 
-size_t process::attach(const char *uid)
+size_t process::attach(const char *id, const char *uid)
 {
+	assert(id != NULL && *id != 0);
 	assert(uid != NULL && *uid != 0);
 
 	struct stat ino;
 
-	snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/sipwitch");
+	ident = id;
+	snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/%s", ident);
 	if(!stat(fifopath, &ino) && S_ISDIR(ino.st_mode) && !access(fifopath, W_OK)) 
-		snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/sipwitch/control");
+		snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/%s/control", ident);
 	else
-		snprintf(fifopath, sizeof(fifopath), "/tmp/sipwitch-%s/control", uid);
+		snprintf(fifopath, sizeof(fifopath), "/tmp/%s-%s/control", ident, uid);
 
 	remove(fifopath);
 	if(mkfifo(fifopath, 0660)) {
@@ -72,12 +75,12 @@ static void logfile(fsys_t &fs)
 {
 	char buf[128];
 
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/sipwitch.log");
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/%s.log", ident);
 	fsys::create(fs, buf, fsys::ACCESS_APPEND, 0660);
 	if(is(fs))
 		return;
 
-	snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/logfile", process::identity());
+	snprintf(buf, sizeof(buf), "/tmp/%s-%s/logfile", ident, process::identity());
 	fsys::create(fs, buf, fsys::ACCESS_APPEND, 0660); 
 }
 
@@ -196,16 +199,17 @@ static void logfile(fsys_t& fd)
 
 	GetEnvironmentVariable("APPDATA", buf, 192);
 	len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\service.log");
+	snprintf(buf + len, sizeof(buf) - len, "\\%s\\service.log", ident);
 	
 	fsys::create(fd, buf, fsys::ACCESS_APPEND, 0660);
 }
 
-size_t process::attach(const char *uid)
+size_t process::attach(const char *id, const char *uid)
 {
 	char buf[64];
 
-	snprintf(buf, sizeof(buf), "\\\\.\\mailslot\\sipwitch_ctrl");
+	ident = id;
+	snprintf(buf, sizeof(buf), "\\\\.\\mailslot\\%s_ctrl", ident);
 	hFifo = CreateMailslot(buf, 0, MAILSLOT_WAIT_FOREVER, NULL);
 	if(hFifo == INVALID_HANDLE_VALUE)
 		return 0;
@@ -463,7 +467,7 @@ bool process::control(const char *uid, const char *fmt, ...)
 
 	va_start(args, fmt);
 #ifdef	_MSWINDOWS_
-	snprintf(buf, sizeof(buf), "\\\\.\\mailslot\\sipwitch_ctrl");
+	snprintf(buf, sizeof(buf), "\\\\.\\mailslot\\%s_ctrl", ident);
 	fd = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if(fd == INVALID_HANDLE_VALUE)
 		return false;
@@ -472,10 +476,10 @@ bool process::control(const char *uid, const char *fmt, ...)
 	if(!uid)
 		uid = identity();
 
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch/control");
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/control", ident);
 	fd = ::open(buf, O_WRONLY | O_NONBLOCK);
 	if(fd < 0) {
-		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/control", uid);
+		snprintf(buf, sizeof(buf), "/tmp/%s-%s/control", ident, uid);
 		fd = ::open(buf, O_WRONLY | O_NONBLOCK);
 	}
 	if(fd < 0)
@@ -499,4 +503,77 @@ bool process::control(const char *uid, const char *fmt, ...)
 #endif
 	return rtn;
 }
+
+bool process::state(const char *state)
+{
+	char buf[256], buf1[256];
+
+#ifdef	_MSWINDOWS_
+	return false;
+#else
+	snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s/%s.xml", ident, state);
+	if(!fsys::isfile(buf))
+		return false;
+	snprintf(buf1, sizeof(buf1), DEFAULT_VARPATH "/run/%s/state.xml", ident);
+	remove(buf1);
+	if(!stricmp(state, "up") || !stricmp(state, "none"))
+		return true;
+#ifdef	HAVE_SYMLINK
+	snprintf(buf1, sizeof(buf1), DEFAULT_VARPATH "/run/%s/state.xml");
+	if(symlink(buf, buf1))
+		return false;
+#else
+	snprintf(buf1, sizeof(buf1), DEFAULT_VARPATH "/run/%s/state.xml");
+	if(link(buf, buf1))
+		return false;
+#endif
+	return true;
+#endif
+}
+
+FILE *process::dumpfile(const char *uid)
+{
+	FILE *fp;
+	char buf[256];
+
+#ifdef	_MSWINDOWS_
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	unsigned len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\%s\\dumpfile.log", ident);	 
+#else
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/dumpfile", ident);
+#endif
+	fp = fopen(buf, "w");
+#ifndef	_MSWINDOWS_
+	if(!fp) {
+		snprintf(buf, sizeof(buf), "/tmp/%s-%s/dumpfile", ident, uid);
+		fp = fopen(buf, "w");
+	}
+#endif
+	return fp;
+}
+
+FILE *process::snapshot(const char *uid)
+{
+	FILE *fp;
+	char buf[256];
+
+#ifdef	_MSWINDOWS_
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	unsigned len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\%s\\snapshot.log", ident);	 
+#else
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/snapshot", ident);
+#endif
+	fp = fopen(buf, "w");
+#ifndef	_MSWINDOWS_
+	if(!fp) {
+		snprintf(buf, sizeof(buf), "/tmp/%s-%s/snapshot", ident, uid);
+		fp = fopen(buf, "w");
+	}
+#endif
+	return fp;
+}
+
+
 

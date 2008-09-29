@@ -332,7 +332,7 @@ static void foreground(const char *uid, const char *cfgpath, unsigned priority)
 		exit(-1);
 	}
 
-	if(!process::attach(pwd->pw_name)) {
+	if(!process::attach("sipwitch", pwd->pw_name)) {
 		fprintf(stderr, "*** sipw: no control file; exiting\n");
 		exit(-1);
 	}
@@ -352,7 +352,7 @@ static void background(const char *uid, const char *cfgpath, unsigned priority)
 	struct passwd *pwd = getuserenv(uid, cfgpath);
 	pid_t pid;
 
-	if(!process::attach(pwd->pw_name)) {
+	if(!process::attach("sipwitch", pwd->pw_name)) {
 		fprintf(stderr, "*** sipw: no control file; exiting\n");
 		exit(-1);
 	}

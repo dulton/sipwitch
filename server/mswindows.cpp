@@ -36,7 +36,7 @@ static void dispatch()
 
 	process::setVerbose((errlevel_t)(verbose));
 
-	if(!process::attach(user)) {
+	if(!process::attach("sipwitch", user)) {
 		fprintf(stderr, "*** sipw: no control file; exiting\n");
 		exit(-1);
 	}

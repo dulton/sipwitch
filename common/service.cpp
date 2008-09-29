@@ -767,28 +767,13 @@ void service::dumpfile(const char *uid)
 {
 	assert(uid == NULL || *uid != 0);
 
-	FILE *fp;
-	char buf[256];
 	linked_pointer<callback> cb;
 	keynode *env = getEnviron();
 
 	if(!uid)
 		uid = getValue(env, "USER");
 
-#ifdef	_MSWINDOWS_
-	GetEnvironmentVariable("APPDATA", buf, 192);
-	unsigned len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\dumpfile.log");	 
-#else
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch/dumpfile");
-#endif
-	fp = fopen(buf, "w");
-#ifndef	_MSWINDOWS_
-	if(!fp) {
-		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/dumpfile", uid);
-		fp = fopen(buf, "w");
-	}
-#endif
+	FILE *fp = process::dumpfile(uid);
 
 	release(env);
 
@@ -837,8 +822,6 @@ void service::snapshot(const char *uid)
 {
 	assert(uid == NULL || *uid != 0);
 
-	FILE *fp;
-	char buf[256];
 	linked_pointer<callback> cb;
 	unsigned rl = 0;
 	keynode *env = getEnviron();
@@ -846,21 +829,7 @@ void service::snapshot(const char *uid)
 	if(!uid)
 		uid = getValue(env, "USER");
 
-#ifdef	_MSWINDOWS_
-	GetEnvironmentVariable("APPDATA", buf, 192);
-	unsigned len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\snapshot.log");	 
-#else
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch/snapshot");
-#endif
-	fp = fopen(buf, "w");
-#ifndef _MSWINDOWS_
-	if(!fp) {
-		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/snapshot", uid);
-		fp = fopen(buf, "w");
-	}
-#endif
-
+	FILE *fp = process::snapshot(uid);
 	release(env);
 
 	if(!fp) {
@@ -965,29 +934,6 @@ bool service::commit(const char *user)
 	return true;
 }
 
-bool service::state(const char *state)
-{
-	char buf[256];
-
-#ifdef	_MSWINDOWS_
-	return false;
-#else
-	snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/sipwitch/%s.xml", state);
-	if(!fsys::isfile(buf))
-		return false;
-	remove(DEFAULT_VARPATH "/run/sipwitch/state.xml");
-	if(!stricmp(state, "up") || !stricmp(state, "none"))
-		return true;
-#ifdef	HAVE_SYMLINK
-	if(symlink(buf, DEFAULT_VARPATH "/run/sipwitch/state.xml"))
-		return false;
-#else
-	if(link(buf, DEFAULT_VARPATH "/run/sipwitch/state.xml"))
-		return false;
-#endif
-	return true;
-#endif
-}
 
 FILE *service::open(const char *uid, const char *cfgfile)
 {

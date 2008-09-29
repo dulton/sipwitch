@@ -74,9 +74,12 @@ public:
 	static void result(const char *value);
 	static char *receive(void);
 	static void reply(const char *err = NULL);
-	static size_t attach(const char *user);
+	static size_t attach(const char *ident, const char *user);
 	static void release(void);
+	static bool state(const char *value);
 	static bool system(const char *fmt, ...) __PRINTF(1, 2);
+	static FILE *dumpfile(const char *uid);
+	static FILE *snapshot(const char *uid);
 //	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
 };
 

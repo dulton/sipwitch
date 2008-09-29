@@ -953,7 +953,7 @@ invalid:
 			if(argc != 2)
 				goto invalid;
 			state = String::unquote(argv[1], "\"\"\'\'()[]{}");
-			if(!service::state(state))
+			if(!process::state(state))
 				process::reply("invalid state");
 			fp = fopen(DEFAULT_VARPATH "/run/sipwitch/state.def", "w");
 			if(fp) {
