@@ -122,14 +122,13 @@ public:
 	protected:
 		friend class service;
 
-		const char *id;
 		unsigned runlevel;
 		bool active_flag;
 
 		static LinkedObject *runlevels[4];
 		static unsigned count;
 
-        callback(int level = 0, const char *id = NULL);
+        callback(int level = 0);
         virtual ~callback();
 
 		inline static void *alloc(service *cfgp, size_t size)
@@ -190,7 +189,6 @@ public:
 	static bool match(const char *digits, const char *pattern, bool partial);
 	static keynode *get(void);
 
-	static callback *getComponent(const char *id);
 	static keynode *getProtected(const char *path);
 	static keynode *path(const char *p);
 	static keynode *list(const char *p);

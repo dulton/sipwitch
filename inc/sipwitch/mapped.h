@@ -75,7 +75,7 @@ public:
 	char	userid[MAX_USERID_SIZE];
 	char	display[MAX_DISPLAY_SIZE];
 	enum {OFFLINE = 0, IDLE, BUSY, AWAY, DND} status;
-	enum {EXPIRED = 0, USER, GATEWAY, SERVICE, REJECT, REFER, TEMPORARY} type;
+	enum {EXPIRED = 0, USER, GATEWAY, SERVICE, REJECT, REFER, TEMPORARY, REGISTRATION} type;
 	bool hidden;
 	unsigned ext;				// 0 or extnum
 	unsigned count;				// active regs count

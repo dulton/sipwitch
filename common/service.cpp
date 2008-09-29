@@ -113,7 +113,7 @@ void service::pointer::operator=(keynode *p)
 	node = p;
 }	
 
-service::callback::callback(int rl, const char *name) :
+service::callback::callback(int rl) :
 OrderedObject()
 {
 	crit(rl < (int)RUNLEVELS, "service runlevel invalid");
@@ -122,7 +122,6 @@ OrderedObject()
 		crit(rl > 0, "service runlevel invalid");
 	}
 	LinkedObject::enlist(&runlevels[rl]);
-	id = name;
 	active_flag = false;
 	runlevel = rl;
 	++count;
@@ -857,24 +856,6 @@ void service::snapshot(const char *uid)
 bool service::confirm(const char *user)
 {
 	return true;
-}
-
-service::callback *service::getComponent(const char *id)
-{
-	assert(id != NULL && *id != 0);
-
-	linked_pointer<callback> cb;
-	unsigned rl = 0;
-
-	while(rl < RUNLEVELS) {
-		cb = callback::runlevels[rl++];
-		while(cb) {
-			if(cb->isActive() && cb->id && !stricmp(cb->id, id))
-				return *cb;
-			cb.next();
-		}
-	}
-	return NULL;
 }
 
 bool service::check(void)
