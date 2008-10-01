@@ -864,10 +864,6 @@ FILE *service::open(const char *uid, const char *cfgfile)
 	assert(cfgfile == NULL || *cfgfile != 0);
 	assert(uid == NULL || *uid != 0);
 
-	char buf[256];
-	struct stat ino;
-	FILE *fp;
-
 	if(!cfgfile)
 		cfgfile = getenv("CFG");
 
@@ -876,36 +872,7 @@ FILE *service::open(const char *uid, const char *cfgfile)
 		return fopen(cfgfile, "r");
 	}
 
-#ifdef _MSWINDOWS_
-	GetEnvironmentVariable("APPDATA", buf, 192);
-	unsigned len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\sipwitch\\config.xml");
-	fp = fopen(buf, "r");
-	if(fp) {
-			process::errlog(DEBUG1, "loading config from %s", buf);
-			return fp;
-	}
-	GetEnvironmentVariable("USERPROFILE", buf, 192);
-	len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony\\sipwitch.xml");
-#else
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch");
-	if(uid && !stat(buf, &ino) && S_ISDIR(ino.st_mode)) {
-		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch/config.xml");
-		fp = fopen(buf, "r");
-		if(fp) {
-			process::errlog(DEBUG1, "loading config from %s", buf);
-			return fp;
-		}
-	}
-
-	if(uid)
-		snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/sipwitch.conf");
-	else
-		snprintf(buf, sizeof(buf), "%s/.sipwitchrc", getenv("HOME")); 
-#endif
-	process::errlog(DEBUG1, "loading config from %s", buf);
-	return fopen(buf, "r");
+	return process::config(uid);
 }
 
 bool service::match(const char *digits, const char *match, bool partial)

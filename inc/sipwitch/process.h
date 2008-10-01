@@ -75,12 +75,13 @@ public:
 	static char *receive(void);
 	static void reply(const char *err = NULL);
 	static size_t attach(const char *ident, const char *user);
+	static void util(const char *ident);
 	static void release(void);
 	static bool state(const char *value);
 	static bool system(const char *fmt, ...) __PRINTF(1, 2);
 	static FILE *dumpfile(const char *uid);
 	static FILE *snapshot(const char *uid);
-//	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
+	static FILE *config(const char *uid = NULL);
 };
 
 #if defined(DEBUG) || defined(OLD_STDCPP) || defined(NEW_STDCPP)

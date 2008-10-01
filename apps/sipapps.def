@@ -1,0 +1,15 @@
+# Default values for daemon operation.  This should be edited and is invoked
+# by init script.
+
+# install plugins
+#PLUGINS="zeroconf scripting"
+
+# runtime priority, recommended realtime for high capacity
+#PRIORITY="1"
+
+# can be used to adjust pthread concurrency...
+#CONCURRENCY=??
+
+# can be used to specify running effective user/group id for the server
+#GROUP="sipwitch"
+

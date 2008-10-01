@@ -51,6 +51,8 @@ size_t process::attach(const char *id, const char *uid)
 
 	struct stat ino;
 
+	if(!uid)
+		uid = process::identity();
 	ident = id;
 	snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/%s", ident);
 	if(!stat(fifopath, &ino) && S_ISDIR(ino.st_mode) && !access(fifopath, W_OK)) 
@@ -497,6 +499,7 @@ bool process::control(const char *uid, const char *fmt, ...)
 	if(fd != hLoopback)
 		CloseHandle(fd);
 #else
+	buf[len] = 0;
 	if(::write(fd, buf, len) < len)
 		rtn = false;
 	::close(fd);
@@ -575,5 +578,47 @@ FILE *process::snapshot(const char *uid)
 	return fp;
 }
 
+FILE *process::config(const char *uid)
+{
+	FILE *fp = NULL;
+	char buf[256];
 
+#ifdef _MSWINDOWS_
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	unsigned len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\%s\\config.xml", ident);
+	fp = fopen(buf, "r");
+	if(fp) {
+			process::errlog(DEBUG1, "loading config from %s", buf);
+			return fp;
+	}
+	GetEnvironmentVariable("USERPROFILE", buf, 192);
+	len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony\\%s.xml", ident);
+#else
+	struct stat ino;
+
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", ident);
+	if(uid && !stat(buf, &ino) && S_ISDIR(ino.st_mode)) {
+		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/config.xml", ident);
+		fp = fopen(buf, "r");
+		if(fp) {
+			process::errlog(DEBUG1, "loading config from %s", buf);
+			return fp;
+		}
+	}
+
+	if(uid)
+		snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s.conf", ident);
+	else
+		snprintf(buf, sizeof(buf), "%s/.%src", getenv("HOME"), ident); 
+#endif
+	process::errlog(DEBUG1, "loading config from %s", buf);
+	return fopen(buf, "r");
+}
+
+void process::util(const char *id)
+{
+	ident = id;
+}
 

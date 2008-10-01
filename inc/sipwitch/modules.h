@@ -51,6 +51,12 @@ public:
 	protected:
 		sipapps();
 	};
+
+	class __EXPORT gateway : public service::callback
+	{
+	protected:
+		gateway();
+	};
 };
 
 END_NAMESPACE

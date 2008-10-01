@@ -36,6 +36,11 @@ service::callback(MODULE_RUNLEVEL)
 {
 }
 
+modules::gateway::gateway() :
+service::callback(MODULE_RUNLEVEL)
+{
+}
+
 void modules::sipwitch::activating(MappedRegistry *rr)
 {
 }

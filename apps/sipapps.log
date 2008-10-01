@@ -1,0 +1,11 @@
+# rotate sipwitch apps server call log every week...
+
+/var/log/sipapps.log {
+    missingok
+	notifempty
+    weekly
+    compress
+	delaycompress
+	rotate 5
+}
+

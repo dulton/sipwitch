@@ -10,10 +10,11 @@
 
 AC_INIT(autogen.sh)
 
-VERSION="0.3.2"
-LT_VERSION="0:6:0"
+VERSION="0.4.0"
+LT_VERSION="0:10:0"
 
 UCOMMON_REQUIRES="2.0.0"
+CCSCRIPT_REQUIRES="4.0.0"
 
 AC_CONFIG_AUX_DIR(autoconf)
 AC_CANONICAL_SYSTEM
@@ -82,6 +83,11 @@ AC_DEFUN([AC_SUBST_DIR], [
 ])
 
 # make list that is parsed...
+
+AC_ARG_ENABLE(sipwitch-apps,  
+	AC_HELP_STRING([--disable-sipwitch-apps],[compile library only]))
+if test -z "$enable_sipwitch_apps" ; then
+	enable_sipwitch_apps="yes" ; fi
 
 AC_ARG_ENABLE(sipwitch-server,  
 	AC_HELP_STRING([--disable-sipwitch-server],[compile library only]))
@@ -158,8 +164,59 @@ if test "$ac_with_crypto" = "none" ; then
 	AC_DEFINE(HAVE_NO_CRYPTO, [1], [use local])
 fi
 	
+AC_ARG_ENABLE(debug, 
+	AC_HELP_STRING([--enable-debug],[compile for debugging]))
+if test -z "$enable_debug" ; then
+	enable_debug="no"
+elif test $enable_debug = "yes" ; then
+	CXXFLAGS="${CXXFLAGS} -g -DDEBUG"
+fi
+
+AC_ARG_WITH(pkg-config,
+	AC_HELP_STRING([--with-pkg-config],[enable support for pkg-config]),[
+	PKG_CHECK_MODULES(UCOMMON, ucommon >= $UCOMMON_REQUIRES)
+	UCOMMON_CLINK=`pkg-config --variable=clink ucommon`
+	UCOMMON_MODEL=`pkg-config --variable=model ucommon`
+	if test "$enable_sipwitch_apps" = "yes" ; then
+		PKG_CHECK_MODULES(CCSCRIPT, ccscript >= $CCSCRIPT_REQUIRES,,
+			[enable_sipwitch_apps="no"])
+	fi
+],[
+	AC_PATH_PROG([UCOMMON],[ucommon-config],[none])
+	if test $UCOMMON = "none" ; then
+		AC_ERROR("required ucommon library missing")
+	fi
+	UCOMMON_CLINK=`$UCOMMON --clink`
+	UCOMMON_MODEL=`$UCOMMON --model`
+	UCOMMON_CFLAGS=`$UCOMMON --cflags`
+	UCOMMON_LIBS=`$UCOMMON --libs`
+	if test "$enable_sipwitch_apps" = "yes" ; then
+		AC_PATH_PROG([CCSRIPT],[ccscript-config],[none])
+		if test "$CCSCRIPT" = "none" ; then
+			enable_sipwitch_apps="no"
+			AC_ERROR("required ccscript library missing")
+		else
+			CCSCRIPT_CFLAGS=`$CCSCRIPT --cflags`
+			CCSCRIPT_LIBS=`$CCSCRIPT --libs`
+			CCSCRIPT_LIBS="$CCSCRIPT_LIBS $UCOMMON_LIBS"
+			CCSCRIPT_CFLAGS="$CCSCRIPT_CFLAGS $UCOMMON_CFLAGS"	
+		fi
+	fi
+])
+
+enable_sipwitch_stack="no"
 if test "$enable_sipwitch_server" = "yes" ; then
 	BUILD_SUBDIRS="$BUILD_SUBDIRS server"
+	enable_sipwitch_stack="yes"
+fi
+
+if test "$enable_sipwitch_apps" = "yes" ; then
+	enable_sipwitch_stack="yes" 
+#	DISBLE FOR NOW!
+#	BUILD_SUBDIRS="$BUILD_SUBDIRS apps"
+fi
+
+if test "$enable_sipwitch_stack" = "yes" ; then
 	AC_ARG_WITH(malloc,
 		AC_HELP_STRING([--with-malloc=xxx],[specify malloc library]),[
 		with_malloc=`echo $with_malloc | sed -e "s/,/ /g"`
@@ -174,6 +231,7 @@ if test "$enable_sipwitch_server" = "yes" ; then
 	AC_ARG_WITH(libeXosip2,
 		AC_HELP_STRING([--with-libeXosip2=xxx],[specify eXosip2 library]),
 			[SIPWITCH_EXOSIP2="$with_libeXosip2"],[SIPWITCH_EXOSIP2="-leXosip2"])
+
 	AC_ARG_ENABLE(commands, 
 		AC_HELP_STRING([--disable-commands],[disable command options]))
 	if test -z "$enable_commands" ; then
@@ -181,17 +239,7 @@ if test "$enable_sipwitch_server" = "yes" ; then
 	if test "$enable_commands" = "yes" ; then
 		AC_DEFINE(USES_COMMANDS, [1], [command options])
 	fi
-fi
 
-AC_ARG_ENABLE(debug, 
-	AC_HELP_STRING([--enable-debug],[compile for debugging]))
-if test -z "$enable_debug" ; then
-	enable_debug="no"
-elif test $enable_debug = "yes" ; then
-	CXXFLAGS="${CXXFLAGS} -g -DDEBUG"
-fi
-
-if test "$enable_sipwitch_server" = "yes" ; then
 	AC_CHECK_HEADER(eXosip2/eXosip.h,,[
 		AC_ERROR("libeXosip2 must be installed or build --disable-sipwitch-server")
 	])
@@ -223,23 +271,6 @@ if test "$enable_sipwitch_server" = "yes" ; then
 		AC_DEFINE(HAVE_SIGWAIT2, [1], [2 argument form])
 	fi
 fi
-
-AC_ARG_WITH(pkg-config,
-	AC_HELP_STRING([--with-pkg-config],[enable support for pkg-config]),[
-	PKG_CHECK_MODULES(UCOMMON, ucommon >= $UCOMMON_REQUIRES)
-	UCOMMON_CLINK=`pkg-config --variable=clink ucommon`
-	UCOMMON_MODEL=`pkg-config --variable=model ucommon`
-],[
-	AC_PATH_PROG([UCOMMON],[ucommon-config],[none])
-	if test $UCOMMON = "none" ; then
-		AC_ERROR("required ucommon library missing")
-	fi
-	UCOMMON_CLINK=`$UCOMMON --clink`
-	UCOMMON_MODEL=`$UCOMMON --model`
-	UCOMMON_CFLAGS=`$UCOMMON --cflags`
-	UCOMMON_LIBS=`$UCOMMON --libs`
-
-])
 
 if test "$UCOMMON_MODEL" = "CC" ; then
 	LIBTOOL='$(SHELL) $(top_srcdir)/cmodel.sh'" ${LIBTOOL}" ; fi
@@ -293,6 +324,8 @@ export CXXFLAGS="$COMPILER_FLAGS"
 
 SIPWITCH_FLAGS="$EXPORT_FLAGS $UCOMMON_CFLAGS"
 SIPWITCH_LIBS="$EXPORT_LIBS $UCOMMON_LIBS $ac_with_malloc $UCOMMON_CLINK"
+SIPAPPS_LIBS="$EXPORT_LIBS $CCSCRIPT_LIBS"
+SIPAPPS_FLAGS="$EXPORT_FLAGS $CCSCRIPT_CFLAGS"
 
 if test "$localstatedir" == '${prefix}/var' ; then
 	localstatedir="/var" ; fi
@@ -367,6 +400,8 @@ AC_SUBST(UCOMMON_MODEL)
 AC_SUBST(DAEMON_LIBS)
 AC_SUBST(EXPORT_FLAGS)
 AC_SUBST(EXPORT_LIBS)
+AC_SUBST(SIPAPPS_FLAGS)
+AC_SUBST(SIPAPPS_LIBS)
 AC_SUBST(SIPWITCH_FLAGS)
 AC_SUBST(SIPWITCH_LIBS)
 AC_SUBST(SIPWITCH_EXOSIP2)
@@ -376,5 +411,6 @@ AC_SUBST(CXXFLAGS)
 AC_SUBST(MODFLAGS)
 AC_SUBST(DLOPEN)
 AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile 
-server/Makefile utils/Makefile test/Makefile libsipwitch.pc sipwitch.spec)
+apps/Makefile server/Makefile utils/Makefile test/Makefile 
+libsipwitch.pc sipwitch.spec)
 
