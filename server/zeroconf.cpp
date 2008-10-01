@@ -80,7 +80,7 @@ static void group_callback(AvahiEntryGroup *g,
 };
 
 zeroconf::zeroconf() :
-service::callback(-1)
+service::callback(-2)
 {
 	family = AF_INET;
 	protocol = "_sip._udp";
@@ -236,7 +236,7 @@ public:
 };
 
 zeroconf::zeroconf() :
-service::callback(-1)
+service::callback(-2)
 {
 	process::errlog(ERRLOG, "zeroconf plugin could not be built");
 }

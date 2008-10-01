@@ -454,6 +454,13 @@ public:
 	static caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
 	static unsigned allocate(void);
 	static void regdump(void);	
+
+	static bool classify(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
+	static void activate(MappedRegistry *rr);
+	static void expire(MappedRegistry *rr);
+
+	static inline bool isProxied(void)
+		{return classify(NULL, NULL, NULL);};
 };
 
 class __LOCAL messages : public service::callback

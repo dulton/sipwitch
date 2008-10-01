@@ -365,11 +365,11 @@ void registry::cleanup(time_t period)
 		rr = static_cast<mapped*>(reg.pos(regcount++));
 		locking.modify();
 		if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires + period < now && !rr->inuse) {
-			service::expire(rr);
+			server::expire(rr);
 			expire(rr);
 		}
 		else if(!rr->inuse && rr->type == MappedRegistry::EXPIRED && !rr->status == MappedRegistry::OFFLINE)
-			service::expire(rr);
+			server::expire(rr);
 		locking.commit();
 		Thread::yield();
 	}

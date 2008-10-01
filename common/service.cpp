@@ -132,14 +132,6 @@ service::callback::~callback()
 	LinkedObject::delist(&runlevels[runlevel]);
 }
 
-void service::callback::activating(MappedRegistry *rr)
-{
-}
-
-void service::callback::expiring(MappedRegistry *rr)
-{
-}
-
 void service::callback::snapshot(FILE *fp)
 {
 }
@@ -147,11 +139,6 @@ void service::callback::snapshot(FILE *fp)
 bool service::callback::check(void)
 {
 	return true;
-}
-
-bool service::callback::classifier(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
-{
-	return false;
 }
 
 bool service::callback::reload(service *keys)
@@ -789,34 +776,6 @@ void service::dumpfile(const char *uid)
 	fclose(fp);
 }
 
-void service::activate(MappedRegistry *rr)
-{
-	unsigned rl = 0;
-	linked_pointer<callback> cb;
-
-	while(rl < RUNLEVELS) {
-		cb = callback::runlevels[rl++];
-		while(is(cb)) {
-			cb->activating(rr);
-			cb.next();
-		}
-	}
-}
-
-void service::expire(MappedRegistry *rr)
-{
-	unsigned rl = 0;
-	linked_pointer<callback> cb;
-
-	while(rl < RUNLEVELS) {
-		cb = callback::runlevels[rl++];
-		while(cb) {
-			cb->expiring(rr);
-			cb.next();
-		}
-	}
-}
-
 void service::snapshot(const char *uid)
 {
 	assert(uid == NULL || *uid != 0);
@@ -868,22 +827,6 @@ bool service::check(void)
 		cb = callback::runlevels[rl++];
 		while(rtn && is(cb)) {
 			rtn = cb->check();
-			cb.next();
-		}
-	}
-	return rtn;
-}
-
-bool service::classify(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
-{
-	linked_pointer<callback> cb;
-	unsigned rl = 0;
-	bool rtn = false;
-
-	while(!rtn && rl < RUNLEVELS) {
-		cb = callback::runlevels[rl++];
-		while(!rtn && is(cb)) {
-			rtn = cb->classifier(sid, src, addr);
 			cb.next();
 		}
 	}

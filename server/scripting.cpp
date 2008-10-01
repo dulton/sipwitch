@@ -21,7 +21,7 @@ using namespace UCOMMON_NAMESPACE;
 
 static const char *dirpath = NULL;
 
-class __LOCAL scripting : public service::callback
+class __LOCAL scripting : public modules::sipwitch
 {
 public:
 	scripting();
@@ -36,7 +36,7 @@ private:
 static scripting scripting_plugin;
 
 scripting::scripting() :
-service::callback(0)
+modules::sipwitch()
 {
 	process::errlog(INFO, "scripting plugin loaded");
 }

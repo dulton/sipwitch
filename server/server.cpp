@@ -101,7 +101,7 @@ static bool activating(int argc, char **args)
 	if(!reg->setTargets(*addr))
 		rtn = false;
 	registry::detach(reg);
-	service::activate(reg);
+	server::activate(reg);
 	delete addr;
 	return rtn;
 }
@@ -113,6 +113,38 @@ service(id, PAGING_SIZE)
 
 	memset(keys, 0, sizeof(keys));
 	acl = NULL;
+}
+
+void server::activate(MappedRegistry *rr)
+{
+	linked_pointer<modules::sipwitch> cb = getModules();
+
+	while(is(cb)) {
+		cb->activating(rr);
+		cb.next();
+	}
+}
+
+void server::expire(MappedRegistry *rr)
+{
+	linked_pointer<modules::sipwitch> cb = getModules();
+
+	while(is(cb)) {
+		cb->expiring(rr);
+		cb.next();
+	}
+}
+
+bool server::classify(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
+{
+	linked_pointer<modules::sipwitch> cb = getModules();
+	bool rtn = false;
+
+	while(!rtn && is(cb)) {
+		rtn = cb->classifier(sid, src, addr);
+		cb.next();
+	}
+	return rtn;
 }
 
 unsigned server::forwarding(keynode *leaf)

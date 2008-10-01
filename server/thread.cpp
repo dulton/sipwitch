@@ -92,7 +92,7 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 	snprintf(touri, sizeof(touri), "<%s>", uri_target);
 
 	proxyinfo.clear();
-	service::classify(&proxyinfo, &call->source->proxy, NULL);
+	server::classify(&proxyinfo, &call->source->proxy, NULL);
 	invite = NULL;
 
 	eXosip_lock();
@@ -267,7 +267,7 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 
 		// if proxy required, but not available, then we must skip this
 		// invite...
-		if(service::classify(&proxyinfo, &call->source->proxy, (struct sockaddr *)&tp->address) && !assign(call, 4))
+		if(server::classify(&proxyinfo, &call->source->proxy, (struct sockaddr *)&tp->address) && !assign(call, 4))
 			goto next;
 
 		invite = NULL;
@@ -486,7 +486,7 @@ void thread::invite(void)
 
 	// assign initial proxy if required to accept call...
 	// if no proxy available, then return 503...
-	if(service::classify(&session->proxy, &call->source->proxy, via_address.getAddr())) {
+	if(server::classify(&session->proxy, &call->source->proxy, via_address.getAddr())) {
 		if(!assign(call, 4)) {
 noproxy:
 			send_reply(SIP_SERVICE_UNAVAILABLE);
@@ -494,7 +494,7 @@ noproxy:
 			return;
 		}
 	}
-	else if(destination == EXTERNAL && service::isProxied() && !assign(call, 4))
+	else if(destination == EXTERNAL && server::isProxied() && !assign(call, 4))
 		goto noproxy;
 		
 	if(extension)
@@ -1558,7 +1558,7 @@ void thread::reregister(const char *contact, time_t interval)
 		debug(2, "refreshing %s for %ld seconds from %s:%u", getIdent(), interval, via_host, via_port);
 	else if(count) {
 		time(&reginfo->created);
-		service::activate(reginfo);
+		server::activate(reginfo);
 		process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%u", getIdent(), interval, via_host, via_port);
 	}
 	else {
@@ -1601,7 +1601,7 @@ void thread::deregister()
 	if(rr) {
 		unreg = rr->expire(via_address);
 		if(unreg)
-			service::expire(rr);
+			server::expire(rr);
 		registry::detach(rr);
 	}
 	if(unreg)

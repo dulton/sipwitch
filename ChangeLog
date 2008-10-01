@@ -1,3 +1,7 @@
+From version 0.3.2 to 0.3.3
+- reorganized api for additional servers to be built and use core library.
+- runlevel slot 3 dedicated to derived per server specific plugins.
+
 From version 0.3.1 to 0.3.2
 - use of new "user context" objects, allows account lookup to be dynamic
   and externalized.

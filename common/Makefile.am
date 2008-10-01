@@ -15,6 +15,7 @@ AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
 lib_LTLIBRARIES = libsipwitch.la 
 
 libsipwitch_la_LDFLAGS = @SIPWITCH_LIBS@ $(RELEASE) 
-libsipwitch_la_SOURCES = service.cpp digest.cpp process.cpp rtpproxy.cpp
+libsipwitch_la_SOURCES = service.cpp digest.cpp process.cpp rtpproxy.cpp \
+	modules.cpp
 
 

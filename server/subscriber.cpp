@@ -30,7 +30,7 @@ static char *userid = NULL;
 static char *secret = NULL;
 static char *identity = NULL;
 
-class __LOCAL subscriber : private service::callback
+class __LOCAL subscriber : private modules::sipwitch
 {
 private:
 	unsigned short port;
@@ -87,7 +87,7 @@ void subscriber::listener::run(void)
 }
 
 subscriber::subscriber() :
-service::callback(-1)
+modules::sipwitch()
 {
 	port = 9000;
 	count = 0; 	

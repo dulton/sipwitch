@@ -29,6 +29,7 @@
 #include <sipwitch/namespace.h>
 #include <sipwitch/mapped.h>
 #include <sipwitch/service.h>
+#include <sipwitch/modules.h>
 #include <sipwitch/process.h>
 #include <sipwitch/digest.h>
 #include <sipwitch/rtpproxy.h>

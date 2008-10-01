@@ -25,7 +25,7 @@ static volatile time_t updated = 0;
 static int priority = 0;
 static const char *iface = NULL;
 
-class __LOCAL rtp : private service::callback
+class __LOCAL rtp : private modules::sipwitch
 {
 private:
 	unsigned short port;
@@ -83,7 +83,7 @@ void rtp::listener::run(void)
 }
 
 rtp::rtp() :
-service::callback(-1)
+modules::sipwitch()
 {
 	port = 9000;
 	count = 0; 	

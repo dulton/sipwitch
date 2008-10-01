@@ -144,13 +144,10 @@ public:
 			{return active_flag;};
 
 		virtual bool check(void);
-		virtual void activating(MappedRegistry *rr);
-		virtual void expiring(MappedRegistry *rr);
 		virtual void snapshot(FILE *fp);
 		virtual void start(service *cfg);
 		virtual void stop(service *cfg);
 		virtual bool reload(service *cfg);
-		virtual bool classifier(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr); 
     };
     
 	service(const char *name, size_t s = 0);
@@ -163,6 +160,9 @@ public:
 	keynode *addNode(keynode *base, const char *id, const char *value);
 	keynode *getNode(keynode *base, const char *grp, const char *attr, const char *value);
 	keynode *getList(const char *path);
+
+	inline static LinkedObject *getModules(void)
+		{return service::callback::runlevels[3];};
 
 	inline static bool isLinked(keynode *node) 
 		{return node->isLeaf();};
@@ -200,14 +200,8 @@ public:
 	virtual bool confirm(const char *user);
 	bool commit(const char *user);
 
-	static bool classify(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
-	static void activate(MappedRegistry *rr);
-	static void expire(MappedRegistry *rr);
 	static bool check(void);
 	static void release(keynode *node);
-
-	static inline bool isProxied(void)
-		{return classify(NULL, NULL, NULL);};
 
 protected:
 	friend class instance;
@@ -235,6 +229,7 @@ private:
 };
 
 #define	RUNLEVELS	(sizeof(callback::runlevels) / sizeof(LinkedObject *))
+#define	MODULE_RUNLEVEL	(RUNLEVELS - 1)
 
 
 END_NAMESPACE
