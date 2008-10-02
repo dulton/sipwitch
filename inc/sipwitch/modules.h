@@ -46,16 +46,10 @@ public:
 		virtual void expiring(MappedRegistry *rr);
 	};
 
-	class __EXPORT sipapps : public service::callback
+	class __EXPORT generic : public service::callback
 	{
 	protected:
-		sipapps();
-	};
-
-	class __EXPORT gateway : public service::callback
-	{
-	protected:
-		gateway();
+		generic();
 	};
 };
 

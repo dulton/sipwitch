@@ -31,13 +31,8 @@ service::callback(MODULE_RUNLEVEL)
 {
 }
 
-modules::sipapps::sipapps() :
-service::callback(MODULE_RUNLEVEL)
-{
-}
-
-modules::gateway::gateway() :
-service::callback(MODULE_RUNLEVEL)
+modules::generic::generic() :
+service::callback(GENERIC_RUNLEVEL)
 {
 }
 

@@ -230,6 +230,7 @@ private:
 
 #define	RUNLEVELS	(sizeof(callback::runlevels) / sizeof(LinkedObject *))
 #define	MODULE_RUNLEVEL	(RUNLEVELS - 1)
+#define	GENERIC_RUNLEVEL (RUNLEVELS - 2)
 
 
 END_NAMESPACE

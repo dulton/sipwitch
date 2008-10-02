@@ -31,7 +31,7 @@ extern "C" {
 #include <avahi-common/timeval.h>
 };
 
-class __LOCAL zeroconf : public service::callback
+class __LOCAL zeroconf : public modules::generic
 {
 public:
 	zeroconf();
@@ -80,7 +80,7 @@ static void group_callback(AvahiEntryGroup *g,
 };
 
 zeroconf::zeroconf() :
-service::callback(-2)
+modules::generic()
 {
 	family = AF_INET;
 	protocol = "_sip._udp";
@@ -227,7 +227,7 @@ bool zeroconf::reload(service *cfg)
 
 #else
 
-class __LOCAL zeroconf : public service::callback
+class __LOCAL zeroconf : modules::generic
 {
 public:
 	static zeroconf plugin;
@@ -236,7 +236,7 @@ public:
 };
 
 zeroconf::zeroconf() :
-service::callback(-2)
+modules::generic()
 {
 	process::errlog(ERRLOG, "zeroconf plugin could not be built");
 }

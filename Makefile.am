@@ -14,7 +14,7 @@ EXTRA_DIST = autogen.sh README *.pc.in FEATURES  TODO Doxyfile \
 #  *.pc.in *.spec.in *.spec
 
 SUBDIRS = @BUILD_SUBDIRS@ utils inc test
-DIST_SUBDIRS = common server utils inc test apps
+DIST_SUBDIRS = common server utils inc test
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsipwitch.pc
