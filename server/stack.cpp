@@ -1032,7 +1032,7 @@ set:
 
 	if(ap && !ap->getList()) {
 		delete ap;
-		addr = NULL;
+		ap = NULL;
 	}
 	return ap;
 }
