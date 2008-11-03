@@ -65,6 +65,10 @@ bool forward::reload(service *cfg)
 		}
 		fp.next();
 	}
+	if(enable && !enabled)
+		process::errlog(INFO, "server forward plugin activated");
+	else if(!enable && enabled)
+		process::errlog(INFO, "server forward plugin disabled");
 	enabled = enable;
 	return true;
 }
