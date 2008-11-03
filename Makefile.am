@@ -13,7 +13,7 @@ EXTRA_DIST = autogen.sh README *.pc.in FEATURES  TODO Doxyfile \
 	SUPPORT NOTES MODULES cmodel.sh sipwitch.spec.in sipwitch.spec
 #  *.pc.in *.spec.in *.spec
 
-SUBDIRS = @BUILD_SUBDIRS@ utils inc test
+SUBDIRS = common server utils inc test
 DIST_SUBDIRS = common server utils inc test
 
 pkgconfigdir = $(libdir)/pkgconfig

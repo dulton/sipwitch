@@ -59,7 +59,6 @@ SIPWITCH_LIBS=""
 SIPWITCH_FLAGS=""
 SERVER_FLAGS=""
 SERVER_LIBS=""
-BUILD_SUBDIRS="common"
 
 test -z "$ac_with_malloc" && ac_with_malloc=""
 test -z "$ac_with_crypto" && ac_with_crypto="auto"
@@ -82,11 +81,6 @@ AC_DEFUN([AC_SUBST_DIR], [
 ])
 
 # make list that is parsed...
-
-AC_ARG_ENABLE(sipwitch-server,  
-	AC_HELP_STRING([--disable-sipwitch-server],[compile library only]))
-if test -z "$enable_sipwitch_server" ; then
-	enable_sipwitch_server="yes" ; fi
 
 AC_ARG_WITH(crypto, 
 	AC_HELP_STRING([--with-crypto=lib],[specify crypto library]),[
@@ -182,60 +176,58 @@ AC_ARG_WITH(pkg-config,
 	UCOMMON_LIBS=`$UCOMMON --libs`
 ])
 
-if test "$enable_sipwitch_server" = "yes" ; then
-	AC_ARG_WITH(malloc,
-		AC_HELP_STRING([--with-malloc=xxx],[specify malloc library]),[
-		with_malloc=`echo $with_malloc | sed -e "s/,/ /g"`
-		for malloc in $with_malloc ; do
-			AC_CHECK_LIB($malloc, malloc, 
-				[ac_with_malloc="-l$malloc"])
-			if test ! -z "$ac_with_malloc" ; then
-				break ; fi
-		done
-	])
+AC_ARG_WITH(malloc,
+	AC_HELP_STRING([--with-malloc=xxx],[specify malloc library]),[
+	with_malloc=`echo $with_malloc | sed -e "s/,/ /g"`
+	for malloc in $with_malloc ; do
+		AC_CHECK_LIB($malloc, malloc, 
+			[ac_with_malloc="-l$malloc"])
+		if test ! -z "$ac_with_malloc" ; then
+			break ; fi
+	done
+])
 
-	AC_ARG_WITH(libeXosip2,
-		AC_HELP_STRING([--with-libeXosip2=xxx],[specify eXosip2 library]),
-			[SIPWITCH_EXOSIP2="$with_libeXosip2"],[SIPWITCH_EXOSIP2="-leXosip2"])
+AC_ARG_WITH(libeXosip2,
+	AC_HELP_STRING([--with-libeXosip2=xxx],[specify eXosip2 library]),
+		[SIPWITCH_EXOSIP2="$with_libeXosip2"],[SIPWITCH_EXOSIP2="-leXosip2"])
 
-	AC_ARG_ENABLE(commands, 
-		AC_HELP_STRING([--disable-commands],[disable command options]))
-	if test -z "$enable_commands" ; then
-		enable_commands="yes" ; fi
-	if test "$enable_commands" = "yes" ; then
-		AC_DEFINE(USES_COMMANDS, [1], [command options])
-	fi
+AC_ARG_ENABLE(commands, 
+	AC_HELP_STRING([--disable-commands],[disable command options]))
+if test -z "$enable_commands" ; then
+	enable_commands="yes" ; fi
+if test "$enable_commands" = "yes" ; then
+	AC_DEFINE(USES_COMMANDS, [1], [command options])
+fi
 
-	AC_CHECK_HEADER(eXosip2/eXosip.h,,[
-		AC_ERROR("libeXosip2 must be installed or build --disable-sipwitch-server")
-	])
-	AC_EGREP_HEADER(EXOSIP_OPT_DONT_SEND_101, eXosip2/eX_setup.h,[
-		AC_DEFINE(EXOSIP2_OPTION_SEND_101, 1, [new option])
-	])
-	PKG_CHECK_MODULES(LIBOSIP2, libosip2 >= 3.0.0)
-	AC_DEFINE(OSIP2_LIST_PTR, [&], [define pointer mode])
-	SIPWITCH_EXOSIP2="$SIPWITCH_EXOSIP2 $LIBOSIP2_LIBS"
+AC_CHECK_HEADER(eXosip2/eXosip.h,,[
+	AC_ERROR("libeXosip2 must be installed or build --disable-sipwitch-server")
+])
+AC_EGREP_HEADER(EXOSIP_OPT_DONT_SEND_101, eXosip2/eX_setup.h,[
+	AC_DEFINE(EXOSIP2_OPTION_SEND_101, 1, [new option])
+])
+PKG_CHECK_MODULES(LIBOSIP2, libosip2 >= 3.0.0)
+AC_DEFINE(OSIP2_LIST_PTR, [&], [define pointer mode])
+SIPWITCH_EXOSIP2="$SIPWITCH_EXOSIP2 $LIBOSIP2_LIBS"
 
-	case "$target" in
-	*mingw*)
-		SIPWITCH_EXOSIP2="$SIPWITCH_EXOSIP2 -liphlpapi -ldnsapi"
-		;;
-	esac
+case "$target" in
+*mingw*)
+	SIPWITCH_EXOSIP2="$SIPWITCH_EXOSIP2 -liphlpapi -ldnsapi"
+	;;
+esac
 
-	AC_CACHE_CHECK(whether sigwait has 2 arguments,
-		ac_cv_libc_sigwait2,
-		AC_TRY_COMPILE([
-			#define _POSIX_PTHREAD_SEMANTICS
-			#include <stdio.h>
-			#include <signal.h>],
-			[sigwait(NULL, NULL);],
-			ac_cv_libc_sigwait2=yes,
-			ac_cv_libc_sigwait2=no
-		)	
-	)
-	if test "$ac_cv_libc_sigwait2" = "yes" ; then
-		AC_DEFINE(HAVE_SIGWAIT2, [1], [2 argument form])
-	fi
+AC_CACHE_CHECK(whether sigwait has 2 arguments,
+	ac_cv_libc_sigwait2,
+	AC_TRY_COMPILE([
+		#define _POSIX_PTHREAD_SEMANTICS
+		#include <stdio.h>
+		#include <signal.h>],
+		[sigwait(NULL, NULL);],
+		ac_cv_libc_sigwait2=yes,
+		ac_cv_libc_sigwait2=no
+	)	
+)
+if test "$ac_cv_libc_sigwait2" = "yes" ; then
+	AC_DEFINE(HAVE_SIGWAIT2, [1], [2 argument form])
 fi
 
 if test "$UCOMMON_MODEL" = "CC" ; then
@@ -368,7 +360,6 @@ AC_SUBST(SIPWITCH_FLAGS)
 AC_SUBST(SIPWITCH_LIBS)
 AC_SUBST(SIPWITCH_EXOSIP2)
 AC_SUBST(ZEROCONF_LIBS)
-AC_SUBST(BUILD_SUBDIRS)
 AC_SUBST(CXXFLAGS)
 AC_SUBST(MODFLAGS)
 AC_SUBST(DLOPEN)

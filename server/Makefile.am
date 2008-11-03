@@ -19,7 +19,7 @@ pkgstatedir=$(localstatedir)/lib/sipwitch
 pkglibdir=$(libdir)/sipwitch
 logrotatedir=$(sysconfdir)/logrotate.d
 noinst_HEADERS = server.h
-pkglib_LTLIBRARIES = scripting.la rtpproxy.la subscriber.la
+pkglib_LTLIBRARIES = forward.la scripting.la rtpproxy.la subscriber.la
 
 if ZEROCONF
 pkglib_LTLIBRARIES += zeroconf.la
@@ -34,6 +34,9 @@ sipw_LDADD = $(LDADD) $(DLOPEN)
 sysconf_DATA = sipwitch.conf
 
 pkgstate_DATA = *.xml 
+
+forward_la_SOURCES = forward.cpp 
+forward_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)
 
 scripting_la_SOURCES = scripting.cpp 
 scripting_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)

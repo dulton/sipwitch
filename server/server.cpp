@@ -327,7 +327,7 @@ bool server::confirm(const char *user)
 	}
 
 	node = provision->getFirst();
-	while(node) {
+	while(is(node)) {
 		number = 0;
 		leaf = node->leaf("id");
 		id = NULL;
@@ -667,7 +667,7 @@ void server::dump(FILE *fp)
 	fprintf(fp, "Server:\n");
 	fprintf(fp, "  allocated pages: %d\n", server::allocate());
 	fprintf(fp, "  configure pages: %d\n", cfg->getPages());
-	fprintf(fp, "  memory paging:   %d\n", PAGING_SIZE);
+	fprintf(fp, "  memory paging:   %ld\n", PAGING_SIZE);
 	keynode *reg = getPath("registry");
 	if(reg && reg->getFirst()) {
 		fprintf(fp, "  registry keys:\n");

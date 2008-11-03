@@ -89,6 +89,9 @@ void scripting::activating(MappedRegistry *rr)
 
 void scripting::expiring(MappedRegistry *rr)
 {
+	if(!dirpath)
+		return;
+
 	process::system("%s/sipdown %s %d", dirpath, rr->userid, rr->ext);
 }
 
