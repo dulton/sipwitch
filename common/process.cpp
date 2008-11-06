@@ -522,11 +522,11 @@ bool process::state(const char *state)
 	if(!stricmp(state, "up") || !stricmp(state, "none"))
 		return true;
 #ifdef	HAVE_SYMLINK
-	snprintf(buf1, sizeof(buf1), DEFAULT_VARPATH "/run/%s/state.xml");
+	snprintf(buf1, sizeof(buf1), DEFAULT_VARPATH "/run/%s/state.xml", ident);
 	if(symlink(buf, buf1))
 		return false;
 #else
-	snprintf(buf1, sizeof(buf1), DEFAULT_VARPATH "/run/%s/state.xml");
+	snprintf(buf1, sizeof(buf1), DEFAULT_VARPATH "/run/%s/state.xml", ident);
 	if(link(buf, buf1))
 		return false;
 #endif

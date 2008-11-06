@@ -831,8 +831,9 @@ bool service::check(void)
 	return rtn;
 }
 
-bool service::commit(const char *user)
+void service::commit(const char *user)
 {
+	service *orig;
 	linked_pointer<callback> cb;
 	unsigned rl = 0;
 
@@ -846,17 +847,17 @@ bool service::commit(const char *user)
 
 	confirm(user);
 
-	if(cfg)
-		Thread::sleep(1000);
-
 	locking.modify();
-	if(cfg)
-		delete cfg;
+	orig = cfg;
 	cfg = this;
 	locking.commit();
-	return true;
-}
 
+	// let short-term volatile references settle before we delete it...
+	if(orig) {
+		Thread::sleep(1000);
+		delete orig;
+	}
+}
 
 FILE *service::open(const char *uid, const char *cfgfile)
 {

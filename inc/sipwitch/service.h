@@ -198,7 +198,7 @@ public:
 
 	virtual void dump(FILE *fp);
 	virtual void confirm(const char *user);
-	bool commit(const char *user);
+	void commit(const char *user);
 
 	static bool check(void);
 	static void release(keynode *node);

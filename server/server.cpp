@@ -697,8 +697,6 @@ void server::reload(const char *uid)
 #endif
 
 	server *cfgp = new server("sipwitch");
-
-	static server *reclaim = NULL;
 	
 	crit(cfgp != NULL, "reload without config");
 
@@ -716,22 +714,10 @@ void server::reload(const char *uid)
 			return;
 		}
 
-	if(!cfgp->commit(uid)) {
-		process::errlog(ERRLOG, "config rejected");
-		if(reclaim) {
-			locking.modify();
-			delete reclaim;
-			locking.commit();
-		}
-		reclaim = cfgp;
-	}
+	cfgp->commit(uid);
 	if(!cfg) {
 		process::errlog(FAILURE, "no configuration");
 		exit(2);
-	}
-	if(reclaim) {
-		delete reclaim;
-		reclaim = NULL;
 	}
 }
 
