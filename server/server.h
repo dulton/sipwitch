@@ -139,7 +139,7 @@ private:
 	};
 
 	bool check(void);
-	bool reload(service *cfg);
+	void reload(service *cfg);
 	void start(service *cfg);
 	void stop(service *cfg);
 	void snapshot(FILE *fp);
@@ -151,8 +151,8 @@ private:
 
 	volatile time_t expires;
 
-	String digest;
-	String realm;
+	volatile char *digest;
+	volatile char *realm;
 	unsigned prefix;
 	unsigned range;
 	unsigned routes;
@@ -161,10 +161,10 @@ public:
 	registry();
 
 	inline static const char *getRealm(void)
-		{return reg.realm;};
+		{return (const char *)reg.realm;};
 
 	inline static const char *getDigest(void)
-		{return reg.digest;};
+		{return (const char *)reg.digest;};
 
 	inline static time_t getExpires(void)
 		{return reg.expires;};
@@ -331,7 +331,7 @@ private:
 		static void operator delete(void *obj);
 	};
 
-	bool reload(service *cfg);
+	void reload(service *cfg);
 	void start(service *cfg);
 	void stop(service *cfg);
 	void snapshot(FILE *fp);
@@ -424,7 +424,7 @@ private:
 	bool create(const char *id, keynode *node);
 	keynode *find(const char *id);
 
-	bool confirm(const char *user);
+	void confirm(const char *user);
 	void dump(FILE *fp);
 
 public:
@@ -482,7 +482,7 @@ private:
 	static messages manager;
 
 	bool check(void);
-	bool reload(service *cfg);
+	void reload(service *cfg);
 	void cleanup(void);
 	void snapshot(FILE *fp);
 

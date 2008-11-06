@@ -642,7 +642,7 @@ void stack::snapshot(FILE *fp)
 	locking.release();
 } 
 
-bool stack::reload(service *cfg)
+void stack::reload(service *cfg)
 {
 	assert(cfg != NULL);	
 
@@ -769,7 +769,6 @@ bool stack::reload(service *cfg)
 		hash = new LinkedObject*[keysize];
 		memset(hash, 0, sizeof(LinkedObject *) * keysize);
 	}
-	return true;
 }
 
 const char *stack::getScheme(void)

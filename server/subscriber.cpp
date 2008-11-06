@@ -56,7 +56,7 @@ public:
 	subscriber();
 
 	bool classifier(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
-	bool reload(service *cfg);
+	void reload(service *cfg);
 	void start(service *cfg);
 	void stop(service *cfg);
 	void snapshot(FILE *fp);
@@ -126,7 +126,7 @@ void subscriber::snapshot(FILE *fp)
 	fprintf(fp, "subscriber:\n"); 
 } 
 
-bool subscriber::reload(service *cfg)
+void subscriber::reload(service *cfg)
 {
 	assert(cfg != NULL);	
 
@@ -192,7 +192,6 @@ bool subscriber::reload(service *cfg)
 		}
 		sp.next();
 	}
-	return true;
 }
 
 bool subscriber::classifier(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)

@@ -209,7 +209,7 @@ bool server::create(const char *id, keynode *node)
 	return false;
 }
 
-bool server::confirm(const char *user)
+void server::confirm(const char *user)
 {
 	assert(user == NULL || *user != 0);
 
@@ -383,7 +383,6 @@ bool server::confirm(const char *user)
 		}
 		node.next();	
 	}
-	return true;
 }
 
 void server::release(keynode *node)

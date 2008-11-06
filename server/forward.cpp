@@ -22,7 +22,7 @@ using namespace UCOMMON_NAMESPACE;
 class __LOCAL forward : public modules::sipwitch
 {
 public:
-	String server;
+	volatile char *server;
 	time_t	expires;
 	bool enabled;
 
@@ -30,7 +30,7 @@ public:
 
 private:
 	void start(service *cfg);
-	bool reload(service *cfg);
+	void reload(service *cfg);
 	void activating(MappedRegistry *rr);
 	void expiring(MappedRegistry *rr);
 };
@@ -44,7 +44,7 @@ modules::sipwitch()
 	enabled = false;
 }
 
-bool forward::reload(service *cfg)
+void forward::reload(service *cfg)
 {
 	assert(cfg != NULL);
 
@@ -58,7 +58,7 @@ bool forward::reload(service *cfg)
 		if(key && value) {
 			if(String::equal(key, "server")) {
 				enable = true;
-				server = value;
+				server = cfg->dup(value);
 			}
 			else if(String::equal(key, "expires"))
 				expires = atoi(value);
@@ -70,7 +70,6 @@ bool forward::reload(service *cfg)
 	else if(!enable && enabled)
 		process::errlog(INFO, "server forward plugin disabled");
 	enabled = enable;
-	return true;
 }
 
 void forward::start(service *cfg)

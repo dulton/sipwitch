@@ -141,9 +141,8 @@ bool service::callback::check(void)
 	return true;
 }
 
-bool service::callback::reload(service *keys)
+void service::callback::reload(service *keys)
 {
-	return true;
 }
 
 void service::callback::start(service *keys)
@@ -812,9 +811,8 @@ void service::snapshot(const char *uid)
 	process::errlog(DEBUG1, "snapshot completed");
 }
 
-bool service::confirm(const char *user)
+void service::confirm(const char *user)
 {
-	return true;
 }
 
 bool service::check(void)
@@ -837,18 +835,19 @@ bool service::commit(const char *user)
 {
 	linked_pointer<callback> cb;
 	unsigned rl = 0;
-	bool rtn = true;
 
-	while(rtn && rl < RUNLEVELS) {
+	while(rl < RUNLEVELS) {
 		cb = callback::runlevels[rl++];
-		while(rtn && is(cb)) {
-			rtn = cb->reload(this);
+		while(is(cb)) {
+			cb->reload(this);
 			cb.next();
 		}
 	}
 
-	if(!rtn || !confirm(user))
-		return false;
+	confirm(user);
+
+	if(cfg)
+		Thread::sleep(1000);
 
 	locking.modify();
 	if(cfg)

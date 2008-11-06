@@ -79,7 +79,7 @@ void messages::cleanup(void)
 	}
 }
 
-bool messages::reload(service *cfg)
+void messages::reload(service *cfg)
 {
 	assert(cfg != NULL);
 
@@ -99,11 +99,10 @@ bool messages::reload(service *cfg)
 	}
 
 	if(isConfigured())
-		return true;
+		return;
 
 	msgs = new LinkedObject*[keysize];
 	memset(msgs, 0, sizeof(LinkedObject *) * keysize);
-	return true;
 }
 
 void messages::snapshot(FILE *fp) 

@@ -28,7 +28,7 @@ public:
 
 private:
 	void start(service *cfg);
-	bool reload(service *cfg);
+	void reload(service *cfg);
 	void activating(MappedRegistry *rr);
 	void expiring(MappedRegistry *rr);
 };
@@ -41,14 +41,12 @@ modules::sipwitch()
 	process::errlog(INFO, "scripting plugin loaded");
 }
 
-bool scripting::reload(service *cfg)
+void scripting::reload(service *cfg)
 {
 	assert(cfg != NULL);
 
 	if(dirpath == NULL)
 		start(cfg);
-	
-	return true;
 }
 
 void scripting::start(service *cfg)

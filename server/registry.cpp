@@ -103,8 +103,8 @@ void registry::route::operator delete(void *obj)
 registry::registry() :
 service::callback(0), mapped_reuse<MappedRegistry>()
 {
-	realm = "Local Telephony";
-	digest = "MD5";
+	realm = (volatile char *)"Local Telephony";
+	digest = (volatile char *)"MD5";
 	prefix = 100;
 	range = 600;
 	expires = 300l;
@@ -375,7 +375,7 @@ void registry::cleanup(time_t period)
 	}
 }
 
-bool registry::reload(service *cfg)
+void registry::reload(service *cfg)
 {
 	assert(cfg != NULL);
 
@@ -389,11 +389,11 @@ bool registry::reload(service *cfg)
 			if(!stricmp(key, "mapped") && !isConfigured()) 
 				mapped_entries = atoi(value);
 			else if(!stricmp(key, "digest") && !isConfigured()) {
-				digest = value;
-				digest.upper();
+				digest = cfg->dup(value);
+				String::upper((char *)digest);
 			}
 			else if(!stricmp(key, "realm") && !isConfigured())
-				realm = value;
+				realm = cfg->dup(value);
 			else if(!stricmp(key, "prefix") && !isConfigured())
 				prefix = atoi(value);
 			else if(!stricmp(key, "range") && !isConfigured())
@@ -409,7 +409,7 @@ bool registry::reload(service *cfg)
 	}
 
 	if(isConfigured())
-		return true;
+		return;
 
 	if(range) {
 		extmap = new mapped *[range];
@@ -425,8 +425,7 @@ bool registry::reload(service *cfg)
 	memset(contacts, 0, sizeof(LinkedObject *) * keysize);
 	memset(publishing, 0, sizeof(LinkedObject *) * keysize);
 	memset(addresses, 0, sizeof(LinkedObject *) * keysize);
-	process::errlog(INFO, "realm %s", realm.c_str());
-	return true;
+	process::errlog(INFO, "realm %s", realm);
 }
 
 unsigned registry::getEntries(void)

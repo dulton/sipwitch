@@ -47,7 +47,7 @@ public:
 private:
 	void start(service *cfg);
 	void stop(service *cfg);
-	bool reload(service *cfg);
+	void reload(service *cfg);
 
     AvahiThreadedPoll *poller;
     AvahiClient *client;
@@ -190,7 +190,7 @@ void zeroconf::start(service *cfg)
     avahi_threaded_poll_start(poller);
 }
 
-bool zeroconf::reload(service *cfg)
+void zeroconf::reload(service *cfg)
 {
 	assert(cfg != NULL);
 
@@ -199,7 +199,7 @@ bool zeroconf::reload(service *cfg)
 	static bool started = false;
 
 	if(started)
-		return true;
+		return;
 
 	started = true;
 
@@ -222,7 +222,6 @@ bool zeroconf::reload(service *cfg)
 		}
 		sp.next();
 	}
-	return true;
 }
 
 #else

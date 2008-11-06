@@ -147,7 +147,7 @@ public:
 		virtual void snapshot(FILE *fp);
 		virtual void start(service *cfg);
 		virtual void stop(service *cfg);
-		virtual bool reload(service *cfg);
+		virtual void reload(service *cfg);
     };
     
 	service(const char *name, size_t s = 0);
@@ -197,7 +197,7 @@ public:
 		{return getProtected("environ");};
 
 	virtual void dump(FILE *fp);
-	virtual bool confirm(const char *user);
+	virtual void confirm(const char *user);
 	bool commit(const char *user);
 
 	static bool check(void);
