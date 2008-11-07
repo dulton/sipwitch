@@ -124,7 +124,7 @@ void forward::activating(MappedRegistry *rr)
 	if(!enabled || rr->rid != -1)
 		return;
 
-	node = service::getProtected(rr->userid);
+	node = service::getUser(rr->userid);
 	if(node) {
 		leaf = node->leaf("secret");
 		if(leaf)
@@ -135,6 +135,9 @@ void forward::activating(MappedRegistry *rr)
 		snprintf(contact, sizeof(contact), "sip:%s@", rr->remote);
 		len = strlen(contact);
 		Socket::getaddress((struct sockaddr *)&rr->contact, contact + len, sizeof(contact) - len);
+		len = strlen(contact);
+		snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::getservice((struct sockaddr *)&rr->contact));
+		debug(3, "registering %s with %s", contact, server);
 		eXosip_lock();
 		eXosip_register_build_initial_register(uri, (char *)server, contact, expires / 1000, &msg);
 		if(msg) {

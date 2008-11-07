@@ -57,6 +57,8 @@
 #include <sipwitch/rtpproxy.h>
 #endif
 
+#define	CONFIG_KEY_SIZE 177
+
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
@@ -190,6 +192,7 @@ public:
 	static keynode *get(void);
 
 	static keynode *getProtected(const char *path);
+	static keynode *getUser(const char *uid);
 	static keynode *path(const char *p);
 	static keynode *list(const char *p);
 
@@ -206,11 +209,19 @@ public:
 protected:
 	friend class instance;
 
-	static service *cfg;
-	static condlock_t locking;
+	class __LOCAL keymap : public LinkedObject
+	{
+	public:
+		service::keynode *node;
+		const char *id;
+	};
 	
 	keynode root;
 	stringbuf<1024> buffer;
+	LinkedObject *keys[CONFIG_KEY_SIZE];
+
+	static service *cfg;
+	static condlock_t locking;
 
 	void setHeader(const char *header);
 	void clearId(void);

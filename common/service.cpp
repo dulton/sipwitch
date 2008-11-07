@@ -348,6 +348,30 @@ service::keynode *service::list(const char *id)
 	return NULL;
 }
 
+service::keynode *service::getUser(const char *id)
+{
+	assert(id != NULL && *id != 0);
+	unsigned path;
+	linked_pointer<keymap> map;
+
+	if(!cfg)
+		goto bail;
+
+	locking.access();
+
+	path = NamedObject::keyindex(id, CONFIG_KEY_SIZE);
+	map = cfg->keys[path];
+	
+	while(map) {
+		if(!stricmp(map->id, id))
+			return map->node;
+		map.next();
+	}
+
+bail:
+	locking.release();
+	return NULL;
+}
 
 service::keynode *service::getProtected(const char *id)
 {

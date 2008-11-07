@@ -37,7 +37,6 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-#define	CONFIG_KEY_SIZE 177
 #define	PAGING_SIZE	(2048 * sizeof(void *))
 
 #define	ENABLE_ALLOW_INVITE		0x0001
@@ -408,14 +407,6 @@ class __LOCAL server : public service
 private:
 	typedef	linked_value<profile_t, LinkedObject> profile;
 
-	class __LOCAL keymap : public LinkedObject
-	{
-	public:
-		service::keynode *node;
-		const char *id;
-	};
-
-	LinkedObject *keys[CONFIG_KEY_SIZE];
 	cidr::policy *acl;
 	keynode **extmap;
 	keynode *provision;
