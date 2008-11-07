@@ -382,7 +382,7 @@ void registry::reload(service *cfg)
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("registry");
 
-	while(sp) {
+	while(is(sp)) {
 		key = sp->getId();
 		value = sp->getPointer();
 		if(key && value) {
@@ -918,6 +918,7 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 			oi = ai;
 		memcpy(&tp->address, ai, len);
 		memcpy(&contact, oi, len);
+		stack::sipUserid(target_contact, remote, sizeof(remote));
 		if(creating) {
 			tp->index.registry = this;
 			tp->index.address = (struct sockaddr *)(&tp->address);
@@ -1101,6 +1102,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 		expired->enlist(&targets);
 		expired->status = registry::target::READY;
 		memcpy(&contact, oi, len);
+		stack::sipUserid(target_contact, remote, sizeof(remote));
 		if(origin)
 			delete origin;
 		++count;
@@ -1147,6 +1149,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
 		tp = new target;
 		memcpy(&tp->address, al->ai_addr, len);
 		memcpy(&contact, &tp->address, len);
+		remote[0] = 0;
 		stack::getInterface((struct sockaddr *)(&tp->iface), (struct sockaddr *)(&tp->address));
 		stack::sipAddress(&tp->address, tp->contact, userid);
 		tp->expires = 0l;
