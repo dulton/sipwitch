@@ -396,11 +396,14 @@ bool process::system(const char *fmt, ...)
 
 	va_list args;
 	char buf[256];
-	
+
 	va_start(args, fmt);
 	if(fmt)
 		vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
+
+	debug(5, "executing %s", buf);
+
 #ifdef	_MSWINDOWS_
 #else
 	int max = sizeof(fd_set) * 8;

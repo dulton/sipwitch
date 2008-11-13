@@ -35,6 +35,8 @@ using namespace UCOMMON_NAMESPACE;
 class __EXPORT modules
 {
 public:
+	typedef enum {REG_FAILED, REG_SUCCESS, REG_AUTHORIZE, REG_TERMINATED} regmode_t;
+	
 	class __EXPORT sipwitch : public service::callback
 	{
 	protected:
@@ -44,6 +46,7 @@ public:
 		virtual bool classifier(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr); 
 		virtual void activating(MappedRegistry *rr);
 		virtual void expiring(MappedRegistry *rr);
+		virtual void registration(int id, regmode_t reg);
 	};
 
 	class __EXPORT generic : public service::callback

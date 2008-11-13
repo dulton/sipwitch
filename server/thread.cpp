@@ -1725,6 +1725,22 @@ void thread::run(void)
 			sevent->type, sevent->cid, sevent->did, instance);
 
 		switch(sevent->type) {
+		case EXOSIP_REGISTRATION_FAILURE:
+			stack::siplog(sevent->response);
+			if(sevent->response && sevent->response->status_code == 401)
+				server::registration(sevent->rid, modules::REG_AUTHORIZE);
+			else
+				server::registration(sevent->rid, modules::REG_FAILED);
+			break;
+		case EXOSIP_REGISTRATION_TERMINATED:
+			stack::siplog(sevent->response);
+			server::registration(sevent->rid, modules::REG_TERMINATED);
+			break;
+		case EXOSIP_REGISTRATION_SUCCESS:
+		case EXOSIP_REGISTRATION_REFRESHED:
+			stack::siplog(sevent->response);
+			server::registration(sevent->rid, modules::REG_SUCCESS);
+			break;
 		case EXOSIP_CALL_PROCEEDING:
 			stack::siplog(sevent->response);
 			session = stack::access(sevent->cid);

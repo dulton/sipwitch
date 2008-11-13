@@ -20,23 +20,43 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+#define	INDEX_SIZE	177
+
 class __LOCAL forward : public modules::sipwitch
 {
 public:
+	class __LOCAL regmap : public LinkedObject
+	{
+	public:
+		friend class forward;
+		MappedRegistry *entry;
+	};
+
 	volatile char *proxy;
 	volatile char *realm;
 	volatile char *digest;
 	volatile char *server;
 	time_t	expires;
 	bool enabled;
+	condlock_t locking;
+	unsigned allocated, active;
+	regmap *freelist;
+	regmap *index[INDEX_SIZE];	
+	memalloc pager;
 
 	forward();
+
+	void remove(int id);
+	void add(MappedRegistry *rr);
+	MappedRegistry *find(int id);
+	void release(MappedRegistry *rr);
 
 private:
 	void start(service *cfg);
 	void reload(service *cfg);
 	void activating(MappedRegistry *rr);
 	void expiring(MappedRegistry *rr);
+	void registration(int id, modules::regmode_t mode);
 };
 
 static forward forward_plugin;
@@ -49,6 +69,77 @@ modules::sipwitch()
 	digest = (volatile char *)"MD5";
 	realm = (volatile char *)"GNU Telephony";
 	proxy = NULL;
+	freelist = NULL;
+	memset(index, sizeof(index), 0);
+	allocated = active = 0;
+}
+
+void forward::release(MappedRegistry *rr)
+{
+	if(rr)
+		locking.release();
+}
+
+MappedRegistry *forward::find(int id)
+{
+	linked_pointer<regmap> mp;
+	int path = id % INDEX_SIZE;
+	locking.access();
+	mp = index[path];
+	while(is(mp)) {
+		if(mp->entry->rid == id)
+			return mp->entry;
+		mp.next();
+	}
+	locking.release();
+	return NULL;
+}
+
+void forward::remove(int id)
+{
+	regmap *prior = NULL;
+	linked_pointer<regmap> mp;
+	int path = id % INDEX_SIZE;
+	locking.modify();
+	mp = index[path];
+	while(is(mp)) {
+		if(mp->entry->rid == id) {
+			if(prior)
+				prior->next = mp->next;
+			else
+				index[path] = (regmap *)mp->next;
+			mp->next = freelist;
+			freelist = *mp;
+			debug(3, "forward unmap %s from %d", mp->entry->userid, id);
+			--active;
+			locking.commit();
+			mp->entry->rid = -1;
+			return;
+		}
+		mp.next();
+	}
+	debug(3, "forward map %d not found", id);
+	locking.commit();
+}
+
+void forward::add(MappedRegistry *rr)
+{
+	regmap *map;	
+	int path = rr->rid % INDEX_SIZE;
+	locking.modify();
+	map = freelist;
+	if(map)
+		freelist = (regmap *)map->next;
+	else {
+		++allocated;
+		map = (regmap *)pager.alloc(sizeof(regmap));
+	}
+	map->entry = rr;
+	map->next = index[path];
+	index[path] = map;
+	locking.commit();
+	debug(3, "forward mapped %s as %d", rr->userid, rr->rid);
+	++active;
 }
 
 void forward::reload(service *cfg)
@@ -119,6 +210,7 @@ void forward::activating(MappedRegistry *rr)
 	osip_message_t *msg = NULL;
 	char contact[MAX_URI_SIZE];
 	char uri[MAX_URI_SIZE];
+	char reg[MAX_URI_SIZE];
 	unsigned len;
 
 	if(!enabled || rr->rid != -1)
@@ -132,6 +224,7 @@ void forward::activating(MappedRegistry *rr)
 	}
 	if(secret && *secret && realm && *realm && rr->remote[0]) {
 		snprintf(uri, sizeof(uri), "sip:%s@%s", rr->userid, server);
+		snprintf(reg, sizeof(reg), "sip:%s", server);
 		snprintf(contact, sizeof(contact), "sip:%s@", rr->remote);
 		len = strlen(contact);
 		Socket::getaddress((struct sockaddr *)&rr->contact, contact + len, sizeof(contact) - len);
@@ -139,11 +232,12 @@ void forward::activating(MappedRegistry *rr)
 		snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::getservice((struct sockaddr *)&rr->contact));
 		debug(3, "registering %s with %s", contact, server);
 		eXosip_lock();
-		eXosip_register_build_initial_register(uri, (char *)server, contact, expires / 1000, &msg);
+		rr->rid = eXosip_register_build_initial_register(uri, reg, contact, expires / 1000, &msg);
 		if(msg) {
 			osip_message_set_header(msg, "Event", "Registration");
 			osip_message_set_header(msg, "Allow-Events", "presence");
 			eXosip_register_send_register(rr->rid, msg);
+			add(rr);
 		}
 		else
 			rr->rid = -1;
@@ -155,16 +249,27 @@ void forward::activating(MappedRegistry *rr)
 void forward::expiring(MappedRegistry *rr)
 {
 	osip_message_t *msg = NULL;
+	int id = rr->rid;
 
-	if(!enabled || rr->rid == -1)
+	if(!enabled || id == -1)
 		return;
 
+	remove(rr->rid);
 	eXosip_lock();
-	eXosip_register_build_register(rr->rid, 0, &msg);
+	eXosip_register_build_register(id, 0, &msg);
 	if(msg)
-		eXosip_register_send_register(rr->rid, msg);
+		eXosip_register_send_register(id, msg);
 	eXosip_unlock();
-	rr->rid = -1;
+}
+
+void forward::registration(int id, modules::regmode_t mode)
+{
+	switch(mode) {
+	case modules::REG_TERMINATED:
+	case modules::REG_FAILED:
+		remove(id);
+		break;
+	}
 }
 
 END_NAMESPACE

@@ -115,6 +115,16 @@ service(id, PAGING_SIZE)
 	acl = NULL;
 }
 
+void server::registration(int id, modules::regmode_t mode)
+{
+	linked_pointer<modules::sipwitch> cb = getModules();
+
+	while(is(cb)) {
+		cb->registration(id, mode);
+		cb.next();
+	}
+}
+
 void server::activate(MappedRegistry *rr)
 {
 	linked_pointer<modules::sipwitch> cb = getModules();

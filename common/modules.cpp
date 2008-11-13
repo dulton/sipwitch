@@ -49,4 +49,8 @@ bool modules::sipwitch::classifier(rtpproxy::session *sid, rtpproxy::session *sr
 	return false;
 }
 
+void modules::sipwitch::registration(int id, regmode_t mode)
+{
+}
+
 

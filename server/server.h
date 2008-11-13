@@ -449,6 +449,7 @@ public:
 	static bool classify(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
 	static void activate(MappedRegistry *rr);
 	static void expire(MappedRegistry *rr);
+	static void registration(int id, modules::regmode_t mode);
 
 	static inline bool isProxied(void)
 		{return classify(NULL, NULL, NULL);};
