@@ -450,6 +450,7 @@ public:
 	static void activate(MappedRegistry *rr);
 	static void expire(MappedRegistry *rr);
 	static void registration(int id, modules::regmode_t mode);
+	static void authenticate(int id, const char *realm);
 
 	static inline bool isProxied(void)
 		{return classify(NULL, NULL, NULL);};

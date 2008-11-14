@@ -57,6 +57,7 @@ private:
 	void activating(MappedRegistry *rr);
 	void expiring(MappedRegistry *rr);
 	void registration(int id, modules::regmode_t mode);
+	void authenticate(int id, const char *remote_realm);
 };
 
 static forward forward_plugin;
@@ -72,6 +73,7 @@ modules::sipwitch()
 	freelist = NULL;
 	memset(index, sizeof(index), 0);
 	allocated = active = 0;
+	expires = 120;
 }
 
 void forward::release(MappedRegistry *rr)
@@ -205,8 +207,6 @@ void forward::start(service *cfg)
 
 void forward::activating(MappedRegistry *rr)
 {
-	service::keynode *node, *leaf;
-	const char *secret = NULL;
 	osip_message_t *msg = NULL;
 	char contact[MAX_URI_SIZE];
 	char uri[MAX_URI_SIZE];
@@ -216,13 +216,7 @@ void forward::activating(MappedRegistry *rr)
 	if(!enabled || rr->rid != -1)
 		return;
 
-	node = service::getUser(rr->userid);
-	if(node) {
-		leaf = node->leaf("secret");
-		if(leaf)
-			secret = leaf->getPointer();
-	}
-	if(secret && *secret && realm && *realm && rr->remote[0]) {
+	if(rr->remote[0]) {
 		snprintf(uri, sizeof(uri), "sip:%s@%s", rr->userid, server);
 		snprintf(reg, sizeof(reg), "sip:%s", server);
 		snprintf(contact, sizeof(contact), "sip:%s@", rr->remote);
@@ -232,7 +226,7 @@ void forward::activating(MappedRegistry *rr)
 		snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::getservice((struct sockaddr *)&rr->contact));
 		debug(3, "registering %s with %s", contact, server);
 		eXosip_lock();
-		rr->rid = eXosip_register_build_initial_register(uri, reg, contact, expires / 1000, &msg);
+		rr->rid = eXosip_register_build_initial_register(uri, reg, contact, expires, &msg);
 		if(msg) {
 			osip_message_set_header(msg, "Event", "Registration");
 			osip_message_set_header(msg, "Allow-Events", "presence");
@@ -243,7 +237,6 @@ void forward::activating(MappedRegistry *rr)
 			rr->rid = -1;
 		eXosip_unlock();
 	}
-	service::release(node);
 }
 
 void forward::expiring(MappedRegistry *rr)
@@ -262,14 +255,80 @@ void forward::expiring(MappedRegistry *rr)
 	eXosip_unlock();
 }
 
+void forward::authenticate(int id, const char *remote_realm)
+{
+	MappedRegistry *rr;
+	service::keynode *node, *leaf;
+	const char *secret = NULL;
+	
+	rr = find(id);
+	if(!rr)
+		return;
+
+	node = service::getUser(rr->userid);
+	if(node) {
+		leaf = node->leaf("secret");
+		if(leaf)
+			secret = leaf->getPointer();
+	}
+
+	if(secret && *secret)
+		debug(3, "authorizing %s for %s", rr->userid, remote_realm);
+	else {
+		debug(3, "cannot authorize %s for %s", rr->userid, remote_realm);
+		service::release(node);
+		release(rr);
+		remove(id);
+		return;
+	}
+	eXosip_lock();
+	eXosip_add_authentication_info(rr->userid, rr->userid, secret, NULL, remote_realm);
+	eXosip_automatic_action();
+	eXosip_unlock();
+	service::release(node);
+	release(rr);
+}
+
+
 void forward::registration(int id, modules::regmode_t mode)
 {
+	MappedRegistry *rr;
+	service::keynode *node, *leaf;
+	const char *secret = NULL;
+
+
 	switch(mode) {
 	case modules::REG_TERMINATED:
 	case modules::REG_FAILED:
 		remove(id);
-		break;
+		return;
+	case modules::REG_SUCCESS:
+		return;
 	}
+
+	rr = find(id);
+	if(!rr)
+		return;
+
+	node = service::getUser(rr->userid);
+	if(node) {
+		leaf = node->leaf("secret");
+		if(leaf)
+			secret = leaf->getPointer();
+	}
+
+	if(secret && *secret)
+		debug(3, "authorizing %s", rr->userid);
+	else {
+		debug(3, "cannot authorize %s", rr->userid);
+		service::release(node);
+		release(rr);
+		remove(id);
+		return;
+	}
+
+	service::release(node);
+	release(rr);
 }
 
 END_NAMESPACE

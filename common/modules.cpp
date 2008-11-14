@@ -53,4 +53,7 @@ void modules::sipwitch::registration(int id, regmode_t mode)
 {
 }
 
+void modules::sipwitch::authenticate(int id, const char *realm)
+{
+}
 

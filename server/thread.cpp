@@ -1727,8 +1727,17 @@ void thread::run(void)
 		switch(sevent->type) {
 		case EXOSIP_REGISTRATION_FAILURE:
 			stack::siplog(sevent->response);
-			if(sevent->response && sevent->response->status_code == 401)
-				server::registration(sevent->rid, modules::REG_AUTHORIZE);
+			if(sevent->response && sevent->response->status_code == 401) {
+				char *sip_realm = NULL;
+				osip_proxy_authenticate_t *prx_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->proxy_authenticates, 0);
+				osip_www_authenticate_t *www_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->www_authenticates,0);
+				if(prx_auth)
+					sip_realm = osip_proxy_authenticate_get_realm(prx_auth);
+				else if(www_auth)
+					sip_realm = osip_www_authenticate_get_realm(www_auth);
+				sip_realm = String::unquote(sip_realm, "\"\"");
+				server::authenticate(sevent->rid, sip_realm);
+			}
 			else
 				server::registration(sevent->rid, modules::REG_FAILED);
 			break;

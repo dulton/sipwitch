@@ -115,6 +115,16 @@ service(id, PAGING_SIZE)
 	acl = NULL;
 }
 
+void server::authenticate(int id, const char *realm)
+{
+	linked_pointer<modules::sipwitch> cb = getModules();
+
+	while(is(cb)) {
+		cb->authenticate(id, realm);
+		cb.next();
+	}
+}
+
 void server::registration(int id, modules::regmode_t mode)
 {
 	linked_pointer<modules::sipwitch> cb = getModules();

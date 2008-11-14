@@ -781,7 +781,7 @@ extern "C" int main(int argc, char **argv)
 
 		if(!stricmp(*argv, "stop") || !stricmp(*argv, "reload") || !stricmp(*argv, "abort") || !stricmp(*argv, "restart")) {
 			server::utils(user);
-			if(!process::control(user, *argv)) {
+			if(!process::control(user, "%s", *argv)) {
 				fprintf(stderr, "*** sipw: %s; server not responding\n", *argv);
 				exit(2);
 			}
@@ -790,7 +790,7 @@ extern "C" int main(int argc, char **argv)
 
 		if(!stricmp(*argv, "check")) {
 			server::utils(user);
-			if(!process::control(user, *argv)) {
+			if(!process::control(user, "%s", *argv)) {
 				fprintf(stderr, "*** sipw: %s; server cannot be checked\n", *argv);
 				exit(2);
 			}
