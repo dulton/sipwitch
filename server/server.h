@@ -188,6 +188,7 @@ public:
 	static mapped *create(const char *id);
 	static mapped *access(const char *id);
 	static mapped *invite(const char *id);
+	static mapped *dialing(const char *id);
 	static bool exists(const char *id);
 	static pattern *getRouting(unsigned trs, const char *id);
 	static void detach(mapped *m);
@@ -425,7 +426,7 @@ public:
 	static profile_t *getProfile(const char *id); 
 	static keynode *getRouting(const char *id);
 	static void getProvision(const char *id, usernode& user);
-	static void getExtension(const char *id, usernode& user);
+	static void getDialing(const char *id, usernode& user);
 	static keynode *getConfig(void);
 	static unsigned getForwarding(const char *id);
 	static cidr *getPolicy(struct sockaddr *addr);

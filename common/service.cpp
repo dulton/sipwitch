@@ -33,6 +33,7 @@ LinkedObject *service::callback::runlevels[4] = {NULL, NULL, NULL, NULL};
 unsigned service::callback::count = 0;
 condlock_t service::locking;
 service *service::cfg = NULL;
+volatile service::dialmode_t service::dialmode = service::ALL_DIALING;
 
 static char header[80] = "- welcome";
 static socket_t trap4 = INVALID_SOCKET;

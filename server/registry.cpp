@@ -842,6 +842,32 @@ bool registry::exists(const char *id)
 	return rtn;
 }
 
+registry::mapped *registry::dialing(const char *id)
+{
+	assert(id != NULL && *id != 0);
+
+	mapped *rr;
+	unsigned ext = 0;
+
+	if(isExtension(id))
+		ext = atoi(id);
+
+	locking.access();
+	rr = find(id);
+
+	// if extension dialing, and we find by id but have ext #, then ignore
+	if(rr && service::dialmode == service::EXT_DIALING && rr->ext != 0)
+		rr = NULL;
+
+	// assuming not user id exclusive dialing, then we can try ext...
+	if(!rr && service::dialmode != service::USER_DIALING && reg.range && ext >= reg.prefix && ext < reg.prefix + reg.range)
+		rr = extmap[ext - reg.prefix];
+	if(!rr)
+		locking.release();
+	return rr;
+}
+
+
 registry::mapped *registry::access(const char *id)
 {
 	assert(id != NULL && *id != 0);

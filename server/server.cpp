@@ -500,42 +500,6 @@ service::keynode *server::getConfig(void)
 	return (keynode *)cfg;
 }
 
-void server::getExtension(const char *id, usernode& user)
-{
-	assert(id != NULL && *id != 0);
-	assert(cfg != NULL);
-
-	unsigned ext = atoi(id);
-	unsigned range = registry::getRange();
-	unsigned prefix = registry::getPrefix();
-	server *cfgp;
-	keynode *node = NULL;
-	const char *cp;
-
-	server::release(user);
-
-	locking.access();
-	cfgp = static_cast<server *>(cfg);
-	if(!cfgp) {
-		locking.release();
-		return;
-	}
-
-	if(range && ext >= prefix && ext < prefix + range)
-		node = cfgp->extmap[ext - range];
-	if(!node) {
-		node = cfgp->find(id);
-		cp = NULL;
-		if(node)
-			cp = node->getPointer();
-		if(!cp || !stricmp(cp, "route") || !stricmp(cp, "gateway"))
-			node = NULL;
-	}
-	if(!node)
-		locking.release();
-	user.keys = node;
-}
-
 Socket::address *server::getContact(const char *uid)
 {
 	assert(uid != NULL && *uid != 0);
@@ -602,6 +566,40 @@ unsigned server::getForwarding(const char *uid)
 	
 	server::release(user);
 	return mask;
+}
+
+void server::getDialing(const char *uid, usernode& user)
+{
+	assert(uid != NULL && *uid != 0);
+	assert(cfg != NULL);
+
+	keynode *leaf = NULL;
+	keynode *node;
+	server *cfgp;
+	unsigned range = registry::getRange();
+	unsigned prefix = registry::getPrefix();
+	unsigned ext = atoi(uid);
+
+	server::release(user);
+
+	locking.access();
+	cfgp = static_cast<server*>(cfg);
+	if(!cfgp) {
+		locking.release();
+		return;
+	}
+	node = cfgp->find(uid);
+	if(node)
+		leaf = node->leaf("extension");
+	if(node && leaf && service::dialmode == service::EXT_DIALING)
+		node = NULL;
+
+	if(!node && service::dialmode != service::USER_DIALING && range && ext >= prefix && ext < prefix + range)
+		node = cfgp->extmap[ext - prefix];
+
+	if(!node)
+		locking.release();
+	user.keys = node;
 }
 
 void server::getProvision(const char *uid, usernode& user)

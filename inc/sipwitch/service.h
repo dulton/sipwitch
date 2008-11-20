@@ -66,6 +66,7 @@ class __EXPORT service : public memalloc
 {
 public:
 	typedef treemap<char *>keynode;
+	typedef	enum {EXT_DIALING, USER_DIALING, ALL_DIALING} dialmode_t;
 
 	typedef struct {
 		const char *key;
@@ -155,6 +156,8 @@ public:
 	service(const char *name, size_t s = 0);
 	virtual ~service();
 
+	static volatile dialmode_t dialmode;
+
 	bool load(FILE *fp, keynode *node = NULL);
 	keynode *getPath(const char *path);
 	keynode *getNode(keynode *base, const char *id, const char *value);	
@@ -177,7 +180,7 @@ public:
 
 	inline static bool isNode(keynode *node)
 		{return isLinked(node) && isValue(node);};
-
+	
 	static const char *getValue(keynode *base, const char *id);
 	static void dump(FILE *fp, keynode *node, unsigned level);
 	static void snapshot(const char *uid);

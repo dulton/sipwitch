@@ -873,8 +873,8 @@ rewrite:
 		goto invalid;
 	}
 
-	reginfo = registry::access(target);
-	server::getProvision(target, dialed);
+	reginfo = registry::dialing(target);
+	server::getDialing(target, dialed);
 
 	debug(4, "rewrite process; registry=%p, dialed=%p\n", reginfo, dialed.keys);
 

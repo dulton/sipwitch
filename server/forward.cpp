@@ -176,8 +176,10 @@ void forward::reload(service *cfg)
 				else if(String::equal(value, "sips:", 5))
 					value += 5;
 				server = cfg->dup(value);
-				if(server && *server)
+				if(server && *server) {
 					enable = true;
+					service::dialmode = service::EXT_DIALING;
+				}
 			}
 			else if(String::equal(key, "expires"))
 				expires = atoi(value);
