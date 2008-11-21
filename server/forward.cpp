@@ -261,7 +261,8 @@ void forward::activating(MappedRegistry *rr)
 	if(!enabled || rr->rid != -1)
 		return;
 
-	if(rr->remote[0]) {
+	// must also have extension to forward...
+	if(rr->remote[0] && rr->ext && rr->type == MappedRegistry::USER) {
 		snprintf(uri, sizeof(uri), "sip:%s@%s", rr->userid, server);
 		snprintf(reg, sizeof(reg), "sip:%s", server);
 		snprintf(contact, sizeof(contact), "sip:%s@", rr->remote);
@@ -289,10 +290,14 @@ void forward::expiring(MappedRegistry *rr)
 	osip_message_t *msg = NULL;
 	int id = rr->rid;
 
-	if(!enabled || id == -1)
+	if(!id == -1)
 		return;
 
 	remove(rr->rid);
+	
+	if(!enabled)
+		return;
+
 	eXosip_lock();
 	eXosip_register_build_register(id, 0, &msg);
 	if(msg)
