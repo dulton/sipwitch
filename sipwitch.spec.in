@@ -1,4 +1,4 @@
-%{!?release: %define release 0}
+{!?release: %define release 0}
 %{!?version: %define version @VERSION@}
 
 %{!?uses_avahi:  %define uses_avahi 1}
@@ -63,6 +63,11 @@ Requires: sipwitch = %{version}
 Group: Networking/Telephony
 Summary: Scripting plugin for sipwitch
 
+%package plugin-forward
+Requires: sipwitch = %{version}
+Group: Networking/Telephony
+Summary: Forward registration and routing plugin
+
 %package plugin-rtpproxy
 Requires: sipwitch = %{version}
 Group: Networking/Telephony
@@ -101,6 +106,11 @@ sipwitch as a sip server.
 
 %description plugin-scripting
 This plugin enables shell scripting in connection with specific sipwitch events.
+
+%description plugin-forward
+This plugin enables forwarding of registration requests and destination routes
+for unknown numbers so that one can create a "secure" peer to peer media
+domain managed by sipwitch and still access an "insecure" b2bua based ip-pbx.
 
 %description plugin-rtpproxy
 Generic assignment of RTP proxy for packet forwarding when local and
@@ -167,6 +177,10 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %defattr(-,root,root,-)
 %{_libdir}/sipwitch/zeroconf.*
 %endif
+
+%files plugin-forward
+%defattr(-,root,root,-)
+%{_libdir}/sipwitch/forward.*
 
 %files plugin-scripting
 %defattr(-,root,root,-)
