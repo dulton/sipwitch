@@ -16,6 +16,6 @@ lib_LTLIBRARIES = libsipwitch.la
 
 libsipwitch_la_LDFLAGS = @SIPWITCH_LIBS@ $(RELEASE) 
 libsipwitch_la_SOURCES = service.cpp digest.cpp process.cpp rtpproxy.cpp \
-	modules.cpp
+	uri.cpp modules.cpp
 
 

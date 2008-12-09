@@ -153,9 +153,8 @@ void forward::reload(service *cfg)
 	char *cp;
 	unsigned len;
 	char buffer[160];
-	struct sockaddr *address;
+	bool refering = false;
 	bool enable = false;
-	unsigned port;
 	const char *key = NULL, *value;
 	char *tmp_realm = (char *)realm, *tmp_digest = cfg->dup((char *)digest);
 	linked_pointer<service::keynode> fp = cfg->getList("forward");
@@ -177,49 +176,25 @@ void forward::reload(service *cfg)
 		key = fp->getId();
 		value = fp->getPointer();
 		if(key && value) {
-			if(String::equal(key, "server")) {
-				if(String::equal(value, "sip:", 4))
-					value += 4;
-				else if(String::equal(value, "sips:", 5))
-					value += 5;
-				
-				if(*cp == '[') {
-					String::set(buffer, sizeof(buffer), value + 1);
-					cp = strchr(buffer, ']');
-					if(cp)
-						*(cp++) = 0;
-					if(cp && *cp == ':')
-						++cp;
+			if(String::equal(key, "refer")) {
+				if(uri::resolve(value, buffer, sizeof(buffer))) {
+					refer = cfg->dup(buffer);
+					refering = true;
+					debug(2, "forward refer resolved as %s", buffer);
 				}
 				else {
-					String::set(buffer, sizeof(buffer), value);
-					cp = strchr(buffer, ':');
-					if(cp)
-						*(cp++) = 0;
+					process::errlog(ERRLOG, "forward: %s: cannot resolve", value);
+					server = NULL;
 				}
-				if(Socket::isNumeric(buffer))
-					server = cfg->dup(value);
+			}
+			else if(String::equal(key, "server")) {
+				if(uri::resolve(value, buffer, sizeof(buffer))) {
+					server = cfg->dup(buffer);
+					debug(2, "forward server resolved as %s", buffer);
+				}
 				else {
-					Socket::address resolve;
-					port = 0;
-					if(cp && *cp)
-						port = atoi(cp);
-					resolve.set(buffer, port);
-					address = resolve.getAddr();
-					if(address) {
-						Socket::getaddress(address, buffer, sizeof(buffer));	
-						len = strlen(buffer);
-						port = Socket::getservice(address);
-						if(!port)
-							port = 5060;
-						snprintf(buffer + len, sizeof(buffer) - len, ":%u", port);
-						server = cfg->dup(buffer);
-						debug(2, "forward server resolved as %s", buffer);
-					}
-					else {
-						process::errlog(ERRLOG, "forward: %s: cannot resolve", value);
-						server = NULL;
-					}
+					process::errlog(ERRLOG, "forward: %s: cannot resolve", value);
+					server = NULL;
 				}
 				if(server && *server) {
 					enable = true;
@@ -235,6 +210,9 @@ void forward::reload(service *cfg)
 		}
 		fp.next();
 	}
+
+	if(!refering)
+		refer = NULL;
 
 	String::upper(tmp_digest);
 	realm = tmp_realm;
