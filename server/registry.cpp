@@ -944,7 +944,7 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 			oi = ai;
 		memcpy(&tp->address, ai, len);
 		memcpy(&contact, oi, len);
-		stack::sipUserid(target_contact, remote, sizeof(remote));
+		uri::userid(target_contact, remote, sizeof(remote));
 		if(creating) {
 			tp->index.registry = this;
 			tp->index.address = (struct sockaddr *)(&tp->address);
@@ -1128,7 +1128,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 		expired->enlist(&targets);
 		expired->status = registry::target::READY;
 		memcpy(&contact, oi, len);
-		stack::sipUserid(target_contact, remote, sizeof(remote));
+		uri::userid(target_contact, remote, sizeof(remote));
 		if(origin)
 			delete origin;
 		++count;

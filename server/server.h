@@ -377,8 +377,6 @@ public:
 	static void clear(session *s);
 	static void close(session *s);
 	static session *access(int cid);
-	static char *sipHostid(const char *uri, char *buf, size_t size);
-	static char *sipUserid(const char *uri, char *buf, size_t size);
 	static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
 	static char *sipPublish(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
 	static char *sipIdentity(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_IDENT_SIZE);

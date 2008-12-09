@@ -161,8 +161,8 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 	eXosip_unlock();
 	invited = stack::create(call, cid);
 	rtpproxy::copy(&invited->proxy, &proxyinfo);
-	stack::sipUserid(uri_target, username, sizeof(username));
-	stack::sipHostid(uri_target, route, sizeof(route));
+	uri::userid(uri_target, username, sizeof(username));
+	uri::hostid(uri_target, route, sizeof(route));
 	String::set(invited->identity, sizeof(invited->identity), uri_target);
 	String::set(invited->display, sizeof(invited->display), username);
 	snprintf(invited->from, sizeof(invited->from), "<%s>", uri_target);

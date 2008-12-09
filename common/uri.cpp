@@ -21,8 +21,70 @@
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
+bool uri::hostid(const char *addr, char *buf, size_t size)
+{
+	assert(buf != NULL);
+	assert(size > 0);
+
+	char *ep;
+	const char *cp;
+	buf[0] = 0;
+
+	if(!addr)
+		return false;
+
+	if(!strnicmp(addr, "sip:", 4))
+		addr += 4;
+	else if(!strnicmp(addr, "sips:", 5))
+		addr += 5;
+
+	cp = strchr(addr, '@');
+	if(cp)
+		addr = ++cp;
+	
+	String::set(buf, size, addr);
+	if(buf[0] == '[')
+		ep = strchr(buf, ']');
+	else
+		ep = strrchr(buf, ':');
+	
+	if(ep)
+		*ep = 0;
+	return true;
+}
+
+bool uri::userid(const char *addr, char *buf, size_t size)
+{
+	assert(buf != NULL);
+	assert(size > 0);
+
+	buf[0] = 0;
+	char *ep;
+
+	if(!addr)
+		return false;
+
+	if(!strnicmp(addr, "sip:", 4))
+		addr += 4;
+	else if(!strnicmp(addr, "sips:", 5))
+		addr += 5;
+	
+	if(!strchr(addr, '@'))
+		return false;
+	
+	string::set(buf, size, addr);
+	ep = strchr(buf, '@');
+	if(ep)
+		*ep = 0;
+	return true;
+}
+
 bool uri::resolve(const char *sipuri, char *buffer, size_t size)
 {
+	assert(sipuri != NULL);
+	assert(buffer != NULL);
+	assert(size > 0);
+
 	const char *uriname;
 	char *cp;
 	unsigned port = 0;
