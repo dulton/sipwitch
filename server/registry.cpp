@@ -103,8 +103,8 @@ void registry::route::operator delete(void *obj)
 registry::registry() :
 service::callback(0), mapped_reuse<MappedRegistry>()
 {
-	realm = (volatile char *)"Local Telephony";
-	digest = (volatile char *)"MD5";
+	realm = (char *)"Local Telephony";
+	digest = (char *)"MD5";
 	prefix = 100;
 	range = 600;
 	expires = 300l;

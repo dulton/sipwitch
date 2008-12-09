@@ -150,8 +150,8 @@ private:
 
 	volatile time_t expires;
 
-	volatile char *digest;
-	volatile char *realm;
+	char * volatile digest;
+	char * volatile realm;
 	unsigned prefix;
 	unsigned range;
 	unsigned routes;

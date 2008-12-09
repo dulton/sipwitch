@@ -30,7 +30,7 @@ class __LOCAL rtp : private modules::sipwitch
 private:
 	unsigned short port;
 	unsigned count;
-	volatile char *published;
+	char *volatile published;
 	cidr::policy *nets;
 
 	static rtp proxy;
@@ -128,7 +128,7 @@ void rtp::reload(service *cfg)
 	assert(cfg != NULL);	
 
 	caddr_t mp;
-	volatile char *vp;
+	char *vp;
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("rtpproxy");
 

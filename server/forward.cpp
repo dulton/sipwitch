@@ -32,10 +32,11 @@ public:
 		MappedRegistry *entry;
 	};
 
-	volatile char *proxy;
-	volatile char *realm;
-	volatile char *digest;
-	volatile char *server;
+	char *volatile proxy;
+	char *volatile realm;
+	char *volatile digest;
+	char *volatile server;
+	char *volatile refer;
 	time_t	expires;
 	bool enabled;
 	condlock_t locking;
@@ -67,8 +68,9 @@ modules::sipwitch()
 {
 	process::errlog(INFO, "server forward plugin loaded");	
 	enabled = false;
-	digest = (volatile char *)"MD5";
-	realm = (volatile char *)"GNU Telephony";
+	refer = NULL;
+	digest = (char *)"MD5";
+	realm = (char *)"GNU Telephony";
 	proxy = NULL;
 	freelist = NULL;
 	memset(index, sizeof(index), 0);

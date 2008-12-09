@@ -35,7 +35,7 @@ class __LOCAL subscriber : private modules::sipwitch
 private:
 	unsigned short port;
 	unsigned count;
-	volatile char *published;
+	char *volatile published;
 
 	static subscriber provider;
 
@@ -131,7 +131,7 @@ void subscriber::reload(service *cfg)
 	assert(cfg != NULL);	
 
 	char *temp;
-	volatile char *vp;
+	char *vp;
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("subscriber");
 
