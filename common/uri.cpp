@@ -79,6 +79,39 @@ bool uri::userid(const char *addr, char *buf, size_t size)
 	return true;
 }
 
+bool uri::rewrite(const char *sipuri, char *buffer, size_t size)
+{
+	const char *schema = "sip:";
+	size_t prefix = 4;
+	const char *name = strchr(sipuri, '@');
+	char *ep;
+
+	if(String::equal(sipuri, "sips:", 5)) {
+		sipuri += 5;
+		prefix = 5;
+		schema = "sips:";
+	}
+	if(String::equal(sipuri, "sip:", 4))
+		sipuri += 4;
+
+	String::set(buffer, size, schema);
+	buffer += prefix;
+	size -= prefix;
+
+	if(name) {
+		sipuri = name + 1;
+		String::set(buffer, size, sipuri);
+		ep = strchr(buffer, '@');
+		if(ep) {
+			*(++ep) = 0;
+			prefix = strlen(buffer);
+			size -= prefix;
+			buffer += prefix;
+		}
+	}
+	return resolve(sipuri, buffer, size);
+}
+
 bool uri::resolve(const char *sipuri, char *buffer, size_t size)
 {
 	assert(sipuri != NULL);
