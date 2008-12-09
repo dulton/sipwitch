@@ -778,32 +778,6 @@ const char *stack::getScheme(void)
 	return "sip";
 }
 
-char *stack::sipIdentity(struct sockaddr_internet *addr, char *buf, const char *user, size_t size)
-{
-	assert(addr != NULL);
-	assert(buf != NULL);
-	assert(user == NULL || *user != 0);
-	assert(size > 0);
-
-	*buf = 0;
-	size_t len;
-
-	if(!size)
-		size = MAX_URI_SIZE;
-
-	if(!addr)
-		return NULL;
-
-	if(user) {
-		String::add(buf, size, user);
-		String::add(buf, size, "@");
-	}
-
-	len = strlen(buf);
-	Socket::getaddress((struct sockaddr *)addr, buf + len, size - len);
-	return buf;
-}
-
 char *stack::sipPublish(struct sockaddr_internet *addr, char *buf, const char *user, size_t size)
 {
 	assert(addr != NULL);

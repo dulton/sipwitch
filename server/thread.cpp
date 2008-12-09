@@ -168,7 +168,7 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 	snprintf(invited->from, sizeof(invited->from), "<%s>", uri_target);
 	resolve.set(route, 5060);
 	if(resolve.getAddr())
-		stack::sipIdentity((struct sockaddr_internet *)resolve.getAddr(), invited->sysident, username, sizeof(invited->sysident));
+		uri::identity(resolve.getAddr(), invited->sysident, username, sizeof(invited->sysident));
 	else
 		snprintf(invited->sysident, sizeof(invited->sysident), "%s@unknown", username);
 
@@ -590,7 +590,7 @@ noproxy:
 		String::set(call->dialed, sizeof(call->dialed), target);
 		snprintf(session->identity, sizeof(session->identity), "%s:%s@%s:%s",
 			from->url->scheme, from->url->username, from->url->host, from->url->port);
-		stack::sipIdentity((struct sockaddr_internet *)from_address.getAddr(), session->sysident, from->url->username,  sizeof(session->sysident));
+		uri::identity(from_address.getAddr(), session->sysident, from->url->username,  sizeof(session->sysident));
 		if(from->displayname) {
 			String::set(session->display, sizeof(session->display), from->displayname);
 			snprintf(session->from, sizeof(session->from),
@@ -616,7 +616,7 @@ noproxy:
 		else
 			String::set(session->display, sizeof(session->display), identity);
 		stack::sipPublish(&iface, session->identity, session->sysident, sizeof(session->identity));
-		stack::sipIdentity((struct sockaddr_internet *)request_address.getAddr(), call->dialed, uri->username, sizeof(call->dialed));
+		uri::identity(request_address.getAddr(), call->dialed, uri->username, sizeof(call->dialed));
 
 		if(extension && !display[0])
 			snprintf(session->from, sizeof(session->from), 

@@ -141,3 +141,22 @@ bool uri::resolve(const char *sipuri, char *buffer, size_t size)
 	return true;	
 }
 
+void uri::identity(struct sockaddr *addr, char *buf, const char *user, size_t size)
+{
+	assert(addr != NULL);
+	assert(buf != NULL);
+	assert(user == NULL || *user != 0);
+	assert(size > 0);
+
+	*buf = 0;
+	size_t len;
+
+	if(user) {
+		String::add(buf, size, user);
+		String::add(buf, size, "@");
+	}
+
+	len = strlen(buf);
+	Socket::getaddress(addr, buf + len, size - len);
+}
+

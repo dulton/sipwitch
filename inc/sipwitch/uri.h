@@ -46,6 +46,7 @@ public:
 	static bool resolve(const char *sipuri, char *buffer, size_t size);
 	static bool userid(const char *sipuri, char *buffer, size_t size);
 	static bool hostid(const char *sipuri, char *buffer, size_t size);
+	static void identity(struct sockaddr *address, char *buffer, const char *user, size_t size);
 };
 
 END_NAMESPACE
