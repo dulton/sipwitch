@@ -91,6 +91,9 @@ void process::release(void)
 	errlog(INFO, "shutdown");
 	if(fifopath[0]) {
 		::remove(fifopath);
+		char *cp = strrchr(fifopath, '/');
+		String::set(cp, 10, "/pidfile");
+		::remove(fifopath);
 		fifopath[0] = 0;
 	}
 }
