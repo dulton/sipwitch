@@ -115,6 +115,32 @@ service(id, PAGING_SIZE)
 	acl = NULL;
 }
 
+const char *server::referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size)
+{
+	const char *refer = NULL;
+
+	linked_pointer<modules::sipwitch> cb = getModules();
+
+	while(!refer && is(cb)) {
+		refer = cb->referRemote(rr, target, buffer, size);
+		cb.next();
+	}
+	return refer;
+}
+
+const char *server::referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size)
+{
+	const char *refer = NULL;
+
+	linked_pointer<modules::sipwitch> cb = getModules();
+
+	while(!refer && is(cb)) {
+		refer = cb->referLocal(rr, target, buffer, size);
+		cb.next();
+	}
+	return refer;
+}
+
 void server::authenticate(int id, const char *realm)
 {
 	linked_pointer<modules::sipwitch> cb = getModules();

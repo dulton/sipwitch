@@ -449,6 +449,8 @@ public:
 	static void expire(MappedRegistry *rr);
 	static void registration(int id, modules::regmode_t mode);
 	static void authenticate(int id, const char *realm);
+	static const char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
+	static const char *referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size);
 
 	static inline bool isProxied(void)
 		{return classify(NULL, NULL, NULL);};

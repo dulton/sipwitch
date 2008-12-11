@@ -57,3 +57,13 @@ void modules::sipwitch::authenticate(int id, const char *realm)
 {
 }
 
+char *modules::sipwitch::referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size)
+{
+	return NULL;
+}
+
+char *modules::sipwitch::referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size)
+{
+	return NULL;
+}
+

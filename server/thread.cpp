@@ -765,6 +765,7 @@ bool thread::authorize(void)
 	registry::pattern *pp;
 	unsigned from_port = 5060, to_port = stack::sip.port, local_port = stack::sip.port;
 	const char *sep1 = "", *sep2 = "";
+	const char *refer = NULL;
 
 	if(!sevent->request || !sevent->request->to || !sevent->request->from || !sevent->request->req_uri)
 		goto invalid;
@@ -1002,6 +1003,14 @@ routing:
 
 static_routing:
 	routed = server::getRouting(target);
+	if(!routed) {
+		registry::mapped *idmap = registry::access(identity);
+		refer = server::referLocal(idmap, target, buffer, sizeof(buffer));
+		registry::detach(idmap);
+		if(refer) {
+			return false;
+		}
+	}
 	if(!routed)
 		goto invalid;
 
@@ -1075,6 +1084,11 @@ remote:
 
 	if(reginfo->type == MappedRegistry::USER && !(reginfo->profile.features & USER_PROFILE_OUTGOING))
 		goto invalid;
+
+	refer = server::referRemote(reginfo, requesting, buffer, sizeof(buffer));
+	if(refer) {
+		return false;
+	}
 
 	return true;
 
@@ -1885,14 +1899,13 @@ void thread::run(void)
 				send_reply(SIP_NOT_FOUND);
 				break;
 			}
+
 			expiration();
 			session = stack::access(sevent->cid);
 			if(!session) {
 				send_reply(SIP_NOT_FOUND);
 				break;
 			};
-			if(!authorize())
-				break;
 
 			session->parent->reinvite(this, session);
 			break;

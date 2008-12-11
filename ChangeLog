@@ -1,5 +1,6 @@
 From version 0.3.3 to 0.3.4
 - new common uri code for libsipwitch to better support plugin development.
+- refer rerouting support in plugins
 
 From version 0.3.2 to 0.3.3
 - reorganized api and dedicated to normal server build.
