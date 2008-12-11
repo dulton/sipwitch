@@ -1007,9 +1007,8 @@ static_routing:
 		registry::mapped *idmap = registry::access(identity);
 		refer = server::referLocal(idmap, target, buffer, sizeof(buffer));
 		registry::detach(idmap);
-		if(refer) {
-			return false;
-		}
+		if(refer)
+			goto redirect;
 	}
 	if(!routed)
 		goto invalid;
@@ -1086,9 +1085,8 @@ remote:
 		goto invalid;
 
 	refer = server::referRemote(reginfo, requesting, buffer, sizeof(buffer));
-	if(refer) {
-		return false;
-	}
+	if(refer)
+		goto redirect;
 
 	return true;
 
@@ -1101,6 +1099,24 @@ invalid:
 		debug(1, "rejecting unknown invite; error=%d\n", error);
 
 	send_reply(error);
+	return false;
+
+redirect:
+	osip_message_t *msg = NULL;
+
+	assert(refer != NULL && *refer != 0);
+
+	snprintf(requesting, sizeof(requesting), "%s:%s@%s:%d",
+		from->url->scheme, from->url->username, from->url->host, from_port);
+
+	snprintf(dbuf, sizeof(dbuf), "%s:%s@%s:%d",
+		to->url->scheme, to->url->username, to->url->host, to_port);
+
+	eXosip_lock();
+	eXosip_refer_build_request(&msg, refer, requesting, dbuf, NULL);
+	if(msg)
+		eXosip_refer_send_request(msg);
+	eXosip_unlock();
 	return false;
 }
 

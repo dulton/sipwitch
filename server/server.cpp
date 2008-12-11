@@ -117,9 +117,15 @@ service(id, PAGING_SIZE)
 
 const char *server::referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size)
 {
-	const char *refer = NULL;
+	assert(target != NULL && *target != 0);
+	assert(buffer != NULL);
+	assert(size > 0);
 
+	const char *refer = NULL;
 	linked_pointer<modules::sipwitch> cb = getModules();
+
+	if(!rr)
+		return NULL;
 
 	while(!refer && is(cb)) {
 		refer = cb->referRemote(rr, target, buffer, size);
@@ -130,9 +136,15 @@ const char *server::referRemote(MappedRegistry *rr, const char *target, char *bu
 
 const char *server::referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size)
 {
-	const char *refer = NULL;
+	assert(target != NULL && *target != 0);
+	assert(buffer != NULL);
+	assert(size > 0);
 
+	const char *refer = NULL;
 	linked_pointer<modules::sipwitch> cb = getModules();
+
+	if(!rr)
+		return NULL;
 
 	while(!refer && is(cb)) {
 		refer = cb->referLocal(rr, target, buffer, size);

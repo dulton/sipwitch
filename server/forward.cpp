@@ -59,6 +59,7 @@ private:
 	void expiring(MappedRegistry *rr);
 	void registration(int id, modules::regmode_t mode);
 	void authenticate(int id, const char *remote_realm);
+	char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
 };
 
 static forward forward_plugin;
@@ -285,6 +286,20 @@ void forward::expiring(MappedRegistry *rr)
 	eXosip_unlock();
 }
 
+char *forward::referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size)
+{
+	if(!refer)
+		return NULL;
+
+	rr = find(rr->rid);		// see if caller is one of our's...
+	if(!rr)
+		return NULL;
+
+	release(rr);
+	snprintf(buffer, sizeof(buffer), "sip:%s@%s", target, refer);
+	return buffer;
+}
+	
 void forward::authenticate(int id, const char *remote_realm)
 {
 	MappedRegistry *rr;
@@ -318,7 +333,6 @@ void forward::authenticate(int id, const char *remote_realm)
 	service::release(node);
 	release(rr);
 }
-
 
 void forward::registration(int id, modules::regmode_t mode)
 {
