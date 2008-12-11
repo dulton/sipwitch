@@ -1106,16 +1106,16 @@ redirect:
 
 	assert(refer != NULL && *refer != 0);
 
-	snprintf(requesting, sizeof(requesting), "%s:%s@%s:%d",
-		from->url->scheme, from->url->username, from->url->host, from_port);
+	send_reply(SIP_TRYING);
 
-	snprintf(dbuf, sizeof(dbuf), "%s:%s@%s:%d",
-		to->url->scheme, to->url->username, to->url->host, to_port);
+	Thread::yield();
 
 	eXosip_lock();
-	eXosip_refer_build_request(&msg, refer, requesting, dbuf, NULL);
-	if(msg)
-		eXosip_refer_send_request(msg);
+	eXosip_call_build_refer(sevent->did, refer, &msg);
+	if(msg) {
+		osip_message_set_header(msg, "Referred-By", dbuf);
+		eXosip_call_send_request(sevent->did, msg);
+	}
 	eXosip_unlock();
 	return false;
 }
