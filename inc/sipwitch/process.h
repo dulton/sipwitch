@@ -85,9 +85,9 @@ public:
 };
 
 #if defined(DEBUG) || defined(OLD_STDCPP) || defined(NEW_STDCPP)
-#define	debug(l, a...)	process::errlog((errlevel_t)(INFO + l), ## a)
+#define	debug(l, args...)	process::errlog((errlevel_t)(INFO + l), ## args)
 #else
-#define	debug(l, a...)
+#define	debug(l, args...)
 #endif
 
 END_NAMESPACE

@@ -877,7 +877,7 @@ rewrite:
 	reginfo = registry::dialing(target);
 	server::getDialing(target, dialed);
 
-	debug(4, "rewrite process; registry=%p, dialed=%p\n", reginfo, dialed.keys);
+	debug(4, "rewrite process; registry=%p, dialed=%p\n", (void *)reginfo, (void *)dialed.keys);
 
 	if(!reginfo && !dialed.keys)
 		goto routing;

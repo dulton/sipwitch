@@ -122,7 +122,7 @@ retry:
 	}
 
 	snprintf(buf, sizeof(buf), "%d\n", getpid());
-	write(fd, buf, strlen(buf));
+	ssize_t ignore = write(fd, buf, strlen(buf));
 	close(fd);
 }
 
@@ -190,7 +190,7 @@ static void dump(void)
 		"\r\n");
 
 	while(!feof(fp)) {
-		fgets(buf, sizeof(buf) - 1, fp);
+		char *ignore = fgets(buf, sizeof(buf) - 1, fp);
 		fputs(buf, stdout);
 	}
 	fflush(stdout);
@@ -214,7 +214,7 @@ static void snapshot(void)
 		"\r\n");
 
 	while(!feof(fp)) {
-		fgets(buf, sizeof(buf) - 1, fp);
+		char *ignore = fgets(buf, sizeof(buf) - 1, fp);
 		fputs(buf, stdout);
 	}
 	fflush(stdout);
@@ -234,7 +234,7 @@ static void config(void)
 		"\r\n");
 
 	while(!feof(fp)) {
-		fgets(buf, sizeof(buf) - 1, fp);
+		char *ignore = fgets(buf, sizeof(buf) - 1, fp);
 		fputs(buf, stdout);
 	}
 	fflush(stdout);
@@ -320,7 +320,7 @@ static void callfile(FILE *fp, const char *id)
 
 	while(!feof(fp)) {
 		buf[0] = 0;
-		fgets(buf, sizeof(buf), fp);
+		char *ignore = fgets(buf, sizeof(buf), fp);
 		if(strnicmp(buf, "call ", 5))
 			continue;
 		cp = buf + 5;
@@ -363,7 +363,7 @@ static void info(void)
 	FILE *fp = fopen(DEFAULT_VARPATH "/run/sipwitch/state.def", "r");
 	String::set(buf, sizeof(buf), "up");
 	if(fp) {
-		fgets(buf, sizeof(buf), fp);
+		char *ignore1 = fgets(buf, sizeof(buf), fp);
 		fclose(fp);
 	}
 	cp = strchr(buf, '\r');
@@ -377,7 +377,7 @@ static void info(void)
 	pid_t pid = 0;
 	fp = fopen(DEFAULT_VARPATH "/run/sipwitch/pidfile", "r");
 	if(fp) {
-		fgets(buf, sizeof(buf), fp);
+		char *ignore2 = fgets(buf, sizeof(buf), fp);
 		fclose(fp);
 		pid = atol(buf);
 		if(pid) {

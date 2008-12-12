@@ -236,7 +236,7 @@ retry:
 
 	if(pid > 1) {
 		snprintf(buf, sizeof(buf), "%d\n", pid);
-		write(fd, buf, strlen(buf));
+		ssize_t ignore = write(fd, buf, strlen(buf));
 	}
 	close(fd);
 	return 0;

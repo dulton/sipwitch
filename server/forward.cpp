@@ -74,7 +74,7 @@ modules::sipwitch()
 	realm = (char *)"GNU Telephony";
 	proxy = NULL;
 	freelist = NULL;
-	memset(index, sizeof(index), 0);
+	memset(index, 0, sizeof(index));
 	allocated = active = 0;
 	expires = 120;
 }

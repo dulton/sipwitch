@@ -350,6 +350,11 @@ fi
 
 AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
 
+if test "x$GCC" = "xyes" ; then
+	CXXFLAGS="$CXXFLAGS -Wno-variadic-macros"
+	SIPWITCH_FLAGS="$SIPWITCH_FLAGS -Wno-variadic-macros"
+fi
+
 AC_SUBST(plugindir)
 AC_SUBST(UCOMMON_REQUIRES)
 AC_SUBST(UCOMMON_MODEL)

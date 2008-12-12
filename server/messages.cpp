@@ -167,7 +167,7 @@ bool messages::publish(const char *to, const char *reply, const char *from, cadd
 	String::set(msg->user, sizeof(msg->user), to);
 	String::set(msg->from, sizeof(msg->from), from);
 	String::set(msg->type, sizeof(msg->type), msgtype);	
-	memset(msg->body, sizeof(msg->body), 0);
+	memset(msg->body, 0, sizeof(msg->body));
 	if(len)
 		memcpy(msg->body, text, len);
 	msg->msglen = len;

@@ -22,14 +22,14 @@ using namespace UCOMMON_NAMESPACE;
 #ifdef	ZEROCONF_AVAHI
 
 extern "C" {
-#include <avahi-client/client.h>
-#include <avahi-client/publish.h>
-#include <avahi-common/alternative.h>
-#include <avahi-common/thread-watch.h>
-#include <avahi-common/malloc.h>
-#include <avahi-common/error.h>
-#include <avahi-common/timeval.h>
-};
+	#include <avahi-client/client.h>
+	#include <avahi-client/publish.h>
+	#include <avahi-common/alternative.h>
+	#include <avahi-common/thread-watch.h>
+	#include <avahi-common/malloc.h>
+	#include <avahi-common/error.h>
+	#include <avahi-common/timeval.h>
+}
 
 class __LOCAL zeroconf : public modules::generic
 {
@@ -61,23 +61,20 @@ private:
 
 extern "C" {
 
-static void client_callback(AvahiClient *c,
-    AvahiClientState state, void *userdata)
-{
-    if(!c)
-        return;
+	static void client_callback(AvahiClient *c, AvahiClientState state, void *userdata)
+	{
+		if(!c)
+			return;
 
-    zeroconf::plugin.setClient(c);
-	zeroconf::plugin.setClient(state);
+		zeroconf::plugin.setClient(c);
+		zeroconf::plugin.setClient(state);
+	}
+
+	static void group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state, void *userdata)
+	{
+		zeroconf::plugin.setGroup(state);
+	}
 }
-
-static void group_callback(AvahiEntryGroup *g,
-    AvahiEntryGroupState state, void *userdata)
-{
-    zeroconf::plugin.setGroup(state);
-}
-
-};
 
 zeroconf::zeroconf() :
 modules::generic()
