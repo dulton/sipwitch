@@ -15,4 +15,4 @@ TESTS = sipwLibrary
 check_PROGRAMS = $(TESTS)
 
 sipwLibrary_SOURCES = libs.cpp
-sipwLibrary_LDFLAGS = ../common/libgnusipwitch.la @SIPWITCH_LIBS@
+sipwLibrary_LDFLAGS = ../common/libsipwitch.la @SIPWITCH_LIBS@

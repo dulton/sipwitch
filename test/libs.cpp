@@ -30,10 +30,10 @@ static int load_callback = 0;
 static class testCallback : public service::callback
 {
 public:
-	testCallback() : service::callback(1, "test") 
+	testCallback() : service::callback(1) 
 		{if(++init_callback == 2) active_flag = true;};
-	bool reload(service *cfg) 
-		{++load_callback; return true;};
+	void reload(service *cfg) 
+		{++load_callback;};
 }	testcalls, extra;
 
 extern "C" int main()
@@ -43,7 +43,6 @@ extern "C" int main()
 	// constructors built
 	assert(init_callback == 2);
 	// test reloading
-	assert(cfg->commit(NULL) == true);
+	cfg->commit(NULL);
 	assert(load_callback == 2);
-	assert(service::getComponent("test") == &extra);
-};
+}
