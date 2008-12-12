@@ -265,6 +265,10 @@ AC_CHECK_FUNCS(setrlimit)
 
 AC_LANG_CPLUSPLUS
 COMPILER_FLAGS=""
+
+if test "x$GCC" = "xyes" ; then
+	EXPORT_FLAGS="$EXPORT_FLAGS -Wno-variadic-macros" ; fi
+
 for flag in $CXXFLAGS ; do
 	case "$flag" in
 	-f*exceptions|-f*rtti|-f*check-new|-f*enforce-eh-specs|-finline|-f*except)
@@ -349,11 +353,6 @@ else
 fi
 
 AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
-
-if test "x$GCC" = "xyes" ; then
-	CXXFLAGS="$CXXFLAGS -Wno-variadic-macros"
-	SIPWITCH_FLAGS="$SIPWITCH_FLAGS -Wno-variadic-macros"
-fi
 
 AC_SUBST(plugindir)
 AC_SUBST(UCOMMON_REQUIRES)
