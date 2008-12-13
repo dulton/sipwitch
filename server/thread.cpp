@@ -747,7 +747,7 @@ untrusted:
 	if(via_host)
 		debug(2, "challenge required for %s:%u", via_host, via_port);
 	else
-		debug(2, "challenge request required", 0);
+		debug(2, "%s", "challenge request required");
 	challenge();
 	return false;
 }

@@ -190,6 +190,7 @@ void stack::call::bye(thread *thread, session *s)
 		}
 		else
 			closing = true;
+	default:
 		break;
 	}
 	Mutex::release(this);
@@ -240,6 +241,8 @@ void stack::call::failed(thread *thread, session *s)
 	case HOLDING:
 		Mutex::release(this);
 		return;
+	default:
+		break;
 	}
 
 	if(s->state == session::RING)
@@ -364,6 +367,8 @@ unconnected:
 		}
 		eXosip_unlock();
 		return;
+	default:
+		break;
 	}
 	Mutex::release(this);
 	debug(2, "reinvite failed for call %08x:%u",
@@ -557,6 +562,8 @@ void stack::call::busy(thread *thread, session *s)
 	case FAILED:
 		Mutex::release(this);
 		return;
+	default:
+		break;
 	}
 	
 	if(s && s != source) {
@@ -578,6 +585,8 @@ void stack::call::busy(thread *thread, session *s)
 			state = BUSY;
 			disconnectLocked();
 		}
+	default:
+		break;
 	}
 
 	Mutex::release(this);
@@ -636,6 +645,8 @@ void stack::call::expired(void)
 		Mutex::release(this);
 		stack::destroy(this);
 		return;
+	default:
+		break;
 	}
 
 	Mutex::release(this);

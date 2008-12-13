@@ -215,13 +215,15 @@ case "$target" in
 	;;
 esac
 
+AC_TYPE_SIGNAL
 AC_CACHE_CHECK(whether sigwait has 2 arguments,
 	ac_cv_libc_sigwait2,
 	AC_TRY_COMPILE([
 		#define _POSIX_PTHREAD_SEMANTICS
+		#define	_GNU_SOURCE
 		#include <stdio.h>
 		#include <signal.h>],
-		[sigwait(NULL, NULL);],
+		[sigset_t sigs; int signo; sigwait(&sigs, &signo);],
 		ac_cv_libc_sigwait2=yes,
 		ac_cv_libc_sigwait2=no
 	)	

@@ -227,7 +227,7 @@ retry:
 	fd = open(buf, O_CREAT|O_WRONLY|O_TRUNC|O_EXCL, 0755);
 	if(fd < 0) {
 		opid = pidfile(uid);
-		if(!opid || opid == 1 && pid > 1) {
+		if((!opid || opid == 1) && pid > 1) {
 			remove(buf);
 			goto retry;
 		}
@@ -236,7 +236,8 @@ retry:
 
 	if(pid > 1) {
 		snprintf(buf, sizeof(buf), "%d\n", pid);
-		ssize_t ignore = write(fd, buf, strlen(buf));
+		if(write(fd, buf, strlen(buf)))
+			debug(3, "%s", "pidfile write failed");
 	}
 	close(fd);
 	return 0;

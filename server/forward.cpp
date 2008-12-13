@@ -151,8 +151,6 @@ void forward::reload(service *cfg)
 {
 	assert(cfg != NULL);
 
-	char *cp;
-	unsigned len;
 	char buffer[160];
 	bool refering = false;
 	bool enable = false;

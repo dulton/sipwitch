@@ -122,7 +122,8 @@ retry:
 	}
 
 	snprintf(buf, sizeof(buf), "%d\n", getpid());
-	ssize_t ignore = write(fd, buf, strlen(buf));
+	if(write(fd, buf, strlen(buf)) < (ssize_t)strlen(buf))
+		error(500, "Failed Lock");
 	close(fd);
 }
 
@@ -190,8 +191,8 @@ static void dump(void)
 		"\r\n");
 
 	while(!feof(fp)) {
-		char *ignore = fgets(buf, sizeof(buf) - 1, fp);
-		fputs(buf, stdout);
+		if(fgets(buf, sizeof(buf) - 1, fp) != NULL)
+			fputs(buf, stdout);
 	}
 	fflush(stdout);
 	exit(0);
@@ -214,8 +215,8 @@ static void snapshot(void)
 		"\r\n");
 
 	while(!feof(fp)) {
-		char *ignore = fgets(buf, sizeof(buf) - 1, fp);
-		fputs(buf, stdout);
+		if(fgets(buf, sizeof(buf) - 1, fp) != NULL)
+			fputs(buf, stdout);
 	}
 	fflush(stdout);
 	exit(0);
@@ -234,8 +235,8 @@ static void config(void)
 		"\r\n");
 
 	while(!feof(fp)) {
-		char *ignore = fgets(buf, sizeof(buf) - 1, fp);
-		fputs(buf, stdout);
+		if(fgets(buf, sizeof(buf) - 1, fp) != NULL)
+			fputs(buf, stdout);
 	}
 	fflush(stdout);
 	exit(0);
@@ -319,8 +320,8 @@ static void callfile(FILE *fp, const char *id)
 	}
 
 	while(!feof(fp)) {
-		buf[0] = 0;
-		char *ignore = fgets(buf, sizeof(buf), fp);
+		if(fgets(buf, sizeof(buf), fp) == NULL)
+			buf[0] = 0;
 		if(strnicmp(buf, "call ", 5))
 			continue;
 		cp = buf + 5;
@@ -363,7 +364,8 @@ static void info(void)
 	FILE *fp = fopen(DEFAULT_VARPATH "/run/sipwitch/state.def", "r");
 	String::set(buf, sizeof(buf), "up");
 	if(fp) {
-		char *ignore1 = fgets(buf, sizeof(buf), fp);
+		if(fgets(buf, sizeof(buf), fp) == NULL)
+			buf[0] = 0;
 		fclose(fp);
 	}
 	cp = strchr(buf, '\r');
@@ -377,7 +379,8 @@ static void info(void)
 	pid_t pid = 0;
 	fp = fopen(DEFAULT_VARPATH "/run/sipwitch/pidfile", "r");
 	if(fp) {
-		char *ignore2 = fgets(buf, sizeof(buf), fp);
+		if(fgets(buf, sizeof(buf), fp) == NULL)
+			buf[0] = 0;
 		fclose(fp);
 		pid = atol(buf);
 		if(pid) {
