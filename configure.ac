@@ -272,8 +272,18 @@ AC_CHECK_FUNCS(setrlimit)
 AC_LANG_CPLUSPLUS
 COMPILER_FLAGS=""
 
-if test "x$GCC" = "xyes" ; then
-	EXPORT_FLAGS="$EXPORT_FLAGS -Wno-variadic-macros" ; fi
+flags="-Wno-variadic-macros"
+for flag in $flags ; do
+    AC_MSG_CHECKING([whether ${CXX} supports $flag])
+    echo 'void f(){}' >conftest.cpp
+    if test -z "`${CXX} $flag -c conftest.cpp 2>&1`"; then
+        EXPORT_FLAGS="$EXPORT_FLAGS $flag"
+        AC_MSG_RESULT(yes)
+    else
+        AC_MSG_RESULT(no)
+    fi
+    rm -f conftest*
+done
 
 for flag in $CXXFLAGS ; do
 	case "$flag" in
