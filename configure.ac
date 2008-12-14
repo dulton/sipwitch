@@ -31,6 +31,10 @@ LT_MAJOR="`echo $LT_VERSION | sed s/:.*$//`"
 AC_SUBST(LT_VERSION)
 AC_SUBST(LT_MAJOR)
 
+AC_C_RESTRICT
+AC_C_VOLATILE
+AC_C_INLINE
+
 if test -z "$PKG_CONFIG_PATH" ; then
 	case "$prefix" in
 	NONE|/usr/local|/usr)
