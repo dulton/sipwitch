@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2007 David Sugar, Tycho Softworks.
+# Copyright (C) 2006-2008 David Sugar, Tycho Softworks.
 #
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without
@@ -10,8 +10,8 @@
 
 AC_INIT(autogen.sh)
 
-VERSION="0.3.4"
-LT_VERSION="0:9:0"
+VERSION="0.3.5"
+LT_VERSION="0:10:0"
 
 UCOMMON_REQUIRES="2.0.0"
 
