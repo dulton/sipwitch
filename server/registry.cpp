@@ -944,17 +944,17 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 			oi = ai;
 		memcpy(&tp->address, ai, len);
 		memcpy(&contact, oi, len);
-		uri::userid(target_contact, remote, sizeof(remote));
 		if(creating) {
 			tp->index.registry = this;
 			tp->index.address = (struct sockaddr *)(&tp->address);
 			tp->index.enlist(&addresses[Socket::keyindex(tp->index.address, keysize)]);
 		}
 		stack::getInterface((struct sockaddr *)(&tp->iface), (struct sockaddr *)(&tp->address));
-		String::set(tp->contact, sizeof(tp->contact), target_contact);
 		if(origin) 
 			delete origin;
 	}
+	String::set(tp->contact, sizeof(tp->contact), target_contact);
+	uri::userid(target_contact, remote, sizeof(remote));
 	locking.share();
 	return 1;
 }
@@ -1044,7 +1044,7 @@ bool registry::mapped::expire(Socket::address& saddr)
 	return false;
 }
 
-bool registry::mapped::refresh(Socket::address& saddr, time_t lease)
+bool registry::mapped::refresh(Socket::address& saddr, time_t lease, const char *target_contact)
 {
 	assert(lease > 0);
 
@@ -1059,12 +1059,19 @@ bool registry::mapped::refresh(Socket::address& saddr, time_t lease)
 	tp = targets;
 	while(tp) {
 		if(Socket::equal(saddr.getAddr(), (struct sockaddr *)(&tp->address))) {
-			Mutex::protect(this);
-			if(lease > expires)
-				expires = lease;
-			Mutex::release(this);
-			tp->expires = lease;
-			return true;
+			char target_userid[MAX_USERID_SIZE];
+			char contact_userid[MAX_USERID_SIZE];
+
+			uri::userid(target_contact, target_userid, sizeof(target_userid));
+			uri::userid(tp->contact, contact_userid, sizeof(contact_userid));
+			if(String::equal(target_userid, contact_userid)) {
+				Mutex::protect(this);
+				if(lease > expires)
+					expires = lease;
+				Mutex::release(this);
+				tp->expires = lease;
+				return true;
+			}
 		}
 		tp.next();
 	}
@@ -1114,6 +1121,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 			delete expired;
 		}
 		tp->expires = lease;
+		String::set(tp->contact, sizeof(tp->contact), target_contact);
 		locking.share();
 		return count;
 	}

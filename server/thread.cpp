@@ -1577,7 +1577,7 @@ void thread::reregister(const char *contact, time_t interval)
 
 	expire += interval + 3;	// overdraft 3 seconds...
 
-	refresh = reginfo->refresh(via_address, expire);
+	refresh = reginfo->refresh(via_address, expire, contact);
 	if(!refresh) {
 		if(reginfo->type == MappedRegistry::USER && (reginfo->profile.features & USER_PROFILE_MULTITARGET))
 			count = reginfo->addTarget(via_address, expire, contact);
