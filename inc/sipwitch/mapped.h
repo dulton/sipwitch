@@ -78,7 +78,7 @@ public:
 	enum {OFFLINE = 0, IDLE, BUSY, AWAY, DND} status;
 	enum {EXPIRED = 0, USER, GATEWAY, SERVICE, REJECT, REFER, TEMPORARY, REGISTRATION} type;
 	bool hidden;
-	int rid;				// registry remap or peer id 
+	int rid;					// registry remap or peer id 
 	unsigned ext;				// 0 or extnum
 	unsigned count;				// active regs count
 	volatile unsigned inuse;	// in use for call count

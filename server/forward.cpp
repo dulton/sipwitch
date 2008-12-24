@@ -30,6 +30,7 @@ public:
 	public:
 		friend class forward;
 		MappedRegistry *entry;
+		bool active;
 	};
 
 	char *volatile proxy;
@@ -47,6 +48,9 @@ public:
 
 	forward();
 
+	void enable(int id);
+	void disable(int id);
+	bool isActive(int id);
 	void remove(int id);
 	void add(MappedRegistry *rr);
 	MappedRegistry *find(int id);
@@ -85,6 +89,25 @@ void forward::release(MappedRegistry *rr)
 		locking.release();
 }
 
+bool forward::isActive(int id)
+{
+	bool active = false;
+
+	linked_pointer<regmap> mp;
+	int path = id % INDEX_SIZE;
+	locking.access();
+	mp = index[path];
+	while(is(mp)) {
+		if(mp->active) {
+			active = true;
+			break;
+		}
+		mp.next();
+	}
+	locking.release();
+	return active;
+}
+
 MappedRegistry *forward::find(int id)
 {
 	linked_pointer<regmap> mp;
@@ -98,6 +121,38 @@ MappedRegistry *forward::find(int id)
 	}
 	locking.release();
 	return NULL;
+}
+
+void forward::disable(int id)
+{
+	linked_pointer<regmap> mp;
+	int path = id % INDEX_SIZE;
+	locking.access();
+	mp = index[path];
+	while(is(mp)) {
+		if(mp->entry->rid == id) {
+			mp->active = false;
+			break;
+		}
+		mp.next();
+	}
+	locking.release();
+}
+
+void forward::enable(int id)
+{
+	linked_pointer<regmap> mp;
+	int path = id % INDEX_SIZE;
+	locking.access();
+	mp = index[path];
+	while(is(mp)) {
+		if(mp->entry->rid == id) {
+			mp->active = true;
+			break;
+		}
+		mp.next();
+	}
+	locking.release();
 }
 
 void forward::remove(int id)
@@ -289,11 +344,9 @@ char *forward::referLocal(MappedRegistry *rr, const char *target, char *buffer, 
 	if(!refer)
 		return NULL;
 
-	rr = find(rr->rid);		// see if caller is one of our's...
-	if(!rr)
+	if(!isActive(rr->rid))
 		return NULL;
 
-	release(rr);
 	snprintf(buffer, sizeof(buffer), "sip:%s@%s", target, refer);
 	return buffer;
 }
@@ -338,39 +391,17 @@ void forward::registration(int id, modules::regmode_t mode)
 	service::keynode *node, *leaf;
 	const char *secret = NULL;
 
-
 	switch(mode) {
-	case modules::REG_TERMINATED:
 	case modules::REG_FAILED:
+		disable(id);
+		return;
+	case modules::REG_TERMINATED:
 		remove(id);
 		return;
 	case modules::REG_SUCCESS:
+		enable(id);
 		return;
 	}
-
-	rr = find(id);
-	if(!rr)
-		return;
-
-	node = service::getUser(rr->userid);
-	if(node) {
-		leaf = node->leaf("secret");
-		if(leaf)
-			secret = leaf->getPointer();
-	}
-
-	if(secret && *secret)
-		debug(3, "authorizing %s", rr->userid);
-	else {
-		debug(3, "cannot authorize %s", rr->userid);
-		service::release(node);
-		release(rr);
-		remove(id);
-		return;
-	}
-
-	service::release(node);
-	release(rr);
 }
 
 END_NAMESPACE
