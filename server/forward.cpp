@@ -48,7 +48,7 @@ public:
 
 	forward();
 
-	void enable(int id);
+	void activate(int id);
 	void disable(int id);
 	bool isActive(int id);
 	void remove(int id);
@@ -139,7 +139,7 @@ void forward::disable(int id)
 	locking.release();
 }
 
-void forward::enable(int id)
+void forward::activate(int id)
 {
 	linked_pointer<regmap> mp;
 	int path = id % INDEX_SIZE;
@@ -399,7 +399,7 @@ void forward::registration(int id, modules::regmode_t mode)
 		remove(id);
 		return;
 	case modules::REG_SUCCESS:
-		enable(id);
+		activate(id);
 		return;
 	}
 }
