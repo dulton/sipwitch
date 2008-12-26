@@ -1159,6 +1159,7 @@ bool thread::authenticate(stack::session *s)
 
 	const char *userid = NULL, *secret = NULL;
 	registry::mapped *rr = s->reg;
+	service::keynode *auth;
 
 	// if not managed destination, try plugins using realm only...
 	if(!rr)
@@ -1172,14 +1173,23 @@ bool thread::authenticate(stack::session *s)
 	if(!authorized.keys) 
 		return false;
 
+	auth = authorized.keys->leaf("authorize");
+	if(auth) {
+		userid = server::getValue(auth, "userid");
+		secret = server::getValue(auth, "secret");
+	}
+
 	switch(rr->type) {
 	// Services use special magic to authenticate using uuid generated
 	// userid that service originally registered with as "contact".  This
 	// means that a single secret is needed for authenticating both ways
 	// and all references to the service is instance unique.
 	case MappedRegistry::SERVICE:
-		userid = rr->remote;
-		secret = service::getValue(authorized.keys, "secret");
+		// sipwitch aware app servers can generate uuid's and use same secret
+		if(!userid)
+			userid = rr->remote;
+		if(!secret)
+			secret = service::getValue(authorized.keys, "secret");
 		break;
 	default:
 		return false;
