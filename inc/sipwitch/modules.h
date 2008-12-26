@@ -47,7 +47,7 @@ public:
 		virtual void activating(MappedRegistry *rr);
 		virtual void expiring(MappedRegistry *rr);
 		virtual void registration(int id, regmode_t reg);
-		virtual void authenticate(int id, const char *realm);
+		virtual bool authenticate(int id, const char *realm);
 		virtual char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
 		virtual char *referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size);
 	};

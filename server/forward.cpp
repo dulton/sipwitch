@@ -62,7 +62,7 @@ private:
 	void activating(MappedRegistry *rr);
 	void expiring(MappedRegistry *rr);
 	void registration(int id, modules::regmode_t mode);
-	void authenticate(int id, const char *remote_realm);
+	bool authenticate(int id, const char *remote_realm);
 	char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
 };
 
@@ -351,7 +351,7 @@ char *forward::referLocal(MappedRegistry *rr, const char *target, char *buffer, 
 	return buffer;
 }
 	
-void forward::authenticate(int id, const char *remote_realm)
+bool forward::authenticate(int id, const char *remote_realm)
 {
 	MappedRegistry *rr;
 	service::keynode *node, *leaf;
@@ -359,7 +359,7 @@ void forward::authenticate(int id, const char *remote_realm)
 	
 	rr = find(id);
 	if(!rr)
-		return;
+		return false;
 
 	node = service::getUser(rr->userid);
 	if(node) {
@@ -375,7 +375,7 @@ void forward::authenticate(int id, const char *remote_realm)
 		service::release(node);
 		release(rr);
 		remove(id);
-		return;
+		return false;
 	}
 	eXosip_lock();
 	eXosip_add_authentication_info(rr->userid, rr->userid, secret, NULL, remote_realm);
@@ -383,6 +383,7 @@ void forward::authenticate(int id, const char *remote_realm)
 	eXosip_unlock();
 	service::release(node);
 	release(rr);
+	return true;
 }
 
 void forward::registration(int id, modules::regmode_t mode)

@@ -153,14 +153,16 @@ const char *server::referLocal(MappedRegistry *rr, const char *target, char *buf
 	return refer;
 }
 
-void server::authenticate(int id, const char *realm)
+bool server::authenticate(int id, const char *realm)
 {
 	linked_pointer<modules::sipwitch> cb = getModules();
 
 	while(is(cb)) {
-		cb->authenticate(id, realm);
+		if(cb->authenticate(id, realm))
+			return true;
 		cb.next();
 	}
+	return false;
 }
 
 void server::registration(int id, modules::regmode_t mode)

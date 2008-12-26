@@ -1164,6 +1164,10 @@ bool thread::authenticate(stack::session *s)
 	if(!rr)
 		return false;
 
+	// if has externally managed registration, call plugins to authenticate...
+	if(rr->rid != -1)
+		return server::authenticate(rr->rid, sip_realm);
+
 	server::getProvision(rr->userid, authorized);
 	if(!authorized.keys) 
 		return false;

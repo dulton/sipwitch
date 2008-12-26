@@ -53,8 +53,9 @@ void modules::sipwitch::registration(int id, regmode_t mode)
 {
 }
 
-void modules::sipwitch::authenticate(int id, const char *realm)
+bool modules::sipwitch::authenticate(int id, const char *realm)
 {
+	return false;
 }
 
 char *modules::sipwitch::referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size)
