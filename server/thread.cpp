@@ -1153,6 +1153,45 @@ void thread::send_reply(int error)
 	eXosip_unlock();
 }
 
+bool thread::authenticate(stack::session *s)
+{
+	assert(s != NULL);
+
+	const char *userid = NULL, *secret = NULL;
+	registry::mapped *rr = s->reg;
+
+	// if not managed destination, lets skip for now...
+	if(!rr)
+		return false;
+
+	server::getProvision(rr->userid, authorized);
+	if(!authorized.keys) 
+		return false;
+
+	switch(rr->type) {
+	// Services use special magic to authenticate using uuid generated
+	// userid that service originally registered with as "contact".  This
+	// means that a single secret is needed for authenticating both ways
+	// and all references to the service is instance unique.
+	case MappedRegistry::SERVICE:
+		userid = rr->remote;
+		secret = service::getValue(authorized.keys, "secret");
+		break;
+	default:
+		return false;
+	}
+
+	if(!sip_realm || !*sip_realm || !userid || !secret || !*userid)
+		return false;
+
+	eXosip_lock();
+	eXosip_add_authentication_info(userid, userid, secret, NULL, sip_realm);
+	eXosip_automatic_action();
+	eXosip_unlock();
+	return true;
+}
+
+
 bool thread::authenticate(void)
 {
 	osip_authorization_t *auth = NULL;
@@ -1758,11 +1797,11 @@ void thread::run(void)
 		case EXOSIP_REGISTRATION_FAILURE:
 			stack::siplog(sevent->response);
 			if(sevent->response && sevent->response->status_code == 401) {
-				char *sip_realm = NULL;
-				osip_proxy_authenticate_t *prx_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->proxy_authenticates, 0);
-				osip_www_authenticate_t *www_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->www_authenticates,0);
-				if(prx_auth)
-					sip_realm = osip_proxy_authenticate_get_realm(prx_auth);
+				sip_realm = NULL;
+				proxy_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->proxy_authenticates, 0);
+				www_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->www_authenticates,0);
+				if(proxy_auth)
+					sip_realm = osip_proxy_authenticate_get_realm(proxy_auth);
 				else if(www_auth)
 					sip_realm = osip_www_authenticate_get_realm(www_auth);
 				sip_realm = String::unquote(sip_realm, "\"\"");
@@ -1846,6 +1885,7 @@ void thread::run(void)
 		case EXOSIP_CALL_SERVERFAILURE:
 		case EXOSIP_CALL_REQUESTFAILURE:
 		case EXOSIP_CALL_GLOBALFAILURE:
+		case EXOSIP_CALL_MESSAGE_REQUESTFAILURE:
 			stack::siplog(sevent->response);
 			authorizing = CALL;
 			if(!sevent->response || sevent->cid <= 0)
@@ -1855,6 +1895,7 @@ void thread::run(void)
 				break;
 			switch(sevent->response->status_code) {
 			case SIP_DECLINE:
+			case SIP_MOVED_PERMANENTLY:
 			case SIP_REQUEST_TIME_OUT:
 			case SIP_SERVER_TIME_OUT:
 			case SIP_REQUEST_TERMINATED:
@@ -1865,9 +1906,23 @@ void thread::run(void)
 			case SIP_BUSY_HERE:
 			case SIP_BUSY_EVRYWHERE:
 			case SIP_TEMPORARILY_UNAVAILABLE:
+			case SIP_MOVED_TEMPORARILY:
 			case SIP_SERVICE_UNAVAILABLE:
 				session->parent->busy(this, session);
 				break;
+			case SIP_UNAUTHORIZED:
+			case SIP_PROXY_AUTHENTICATION_REQUIRED:
+				sip_realm = NULL;
+				proxy_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->proxy_authenticates, 0);
+				www_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->www_authenticates,0);
+				if(proxy_auth)
+					sip_realm = osip_proxy_authenticate_get_realm(proxy_auth);
+				else if(www_auth)
+					sip_realm = osip_www_authenticate_get_realm(www_auth);
+				sip_realm = String::unquote(sip_realm, "\"\"");
+				if(authenticate(session))
+					break;
+				// otherwise failed session if cannot authenticate...
 			default:
 				session->parent->failed(this, session);
 				break;

@@ -1,5 +1,6 @@
 From version 0.3.6 to 0.3.7
 - more registration management support functionality in forward module.
+- start of authentication support for authorized destinations in sipwitch core.
 
 From version 0.3.5 to 0.3.6
 - expanded userid to accept remote user id's that are encoded uuid's.

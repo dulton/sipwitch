@@ -292,7 +292,6 @@ private:
 		rtpproxy *rtp;
 
 		void reply_source(int error);
-		void decline(thread *thread);
 		void ring(thread *thread, session *s = NULL);
 		void busy(thread *thread, session *s = NULL);
 		void failed(thread *thread, session *s);
@@ -525,6 +524,10 @@ private:
 	unsigned via_port;
 	rtpproxy::session proxyinfo;
 
+	char *sip_realm;
+	osip_proxy_authenticate_t *proxy_auth;
+	osip_www_authenticate_t *www_auth;
+
 	enum {EXTERNAL, LOCAL, PUBLIC, ROUTED, FORWARDED} destination;
 	enum {CALL, MESSAGE, REGISTRAR, NONE} authorizing;
 
@@ -541,6 +544,7 @@ private:
 	bool getsource(void);
 	bool unauthenticated(void);
 	bool authenticate(void);
+	bool authenticate(stack::session *session);
 	bool authorize(void);
 	void registration(void);
 	void validate(void);

@@ -234,11 +234,9 @@ void stack::call::failed(thread *thread, session *s)
 
 	Mutex::protect(this);
 	switch(state) {
-	case JOINED:
 	case FINAL:
 	case TERMINATE:
 	case FAILED:
-	case HOLDING:
 		Mutex::release(this);
 		return;
 	default:
