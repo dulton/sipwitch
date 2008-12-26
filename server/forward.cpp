@@ -357,6 +357,9 @@ bool forward::authenticate(int id, const char *remote_realm)
 	service::keynode *node, *leaf;
 	const char *secret = NULL;
 	
+	if(id == -1)
+		return false;
+
 	rr = find(id);
 	if(!rr)
 		return false;

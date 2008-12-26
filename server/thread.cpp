@@ -1160,9 +1160,9 @@ bool thread::authenticate(stack::session *s)
 	const char *userid = NULL, *secret = NULL;
 	registry::mapped *rr = s->reg;
 
-	// if not managed destination, lets skip for now...
+	// if not managed destination, try plugins using realm only...
 	if(!rr)
-		return false;
+		return server::authenticate(-1, sip_realm);
 
 	// if has externally managed registration, call plugins to authenticate...
 	if(rr->rid != -1)
