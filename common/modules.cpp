@@ -63,7 +63,7 @@ MappedRegistry *modules::sipwitch::redirect(const char *target)
 	return NULL;
 }
 
-MappedRegistry *modules::sipwitch::accept(struct sockaddr *source)
+MappedRegistry *modules::sipwitch::accept(const char *request_uri)
 {
 	return NULL;
 }

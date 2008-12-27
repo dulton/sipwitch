@@ -82,6 +82,7 @@ public:
 	static FILE *dumpfile(const char *uid);
 	static FILE *snapshot(const char *uid);
 	static FILE *config(const char *uid = NULL);
+	static void uuid(char *buffer, size_t size, const char *node);
 };
 
 #if defined(DEBUG) || defined(OLD_STDCPP) || defined(NEW_STDCPP)

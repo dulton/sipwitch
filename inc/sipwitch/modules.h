@@ -49,7 +49,7 @@ public:
 		virtual void registration(int id, regmode_t reg);
 		virtual bool authenticate(int id, const char *realm);
 		virtual MappedRegistry *redirect(const char *target);
-		virtual MappedRegistry *accept(struct sockaddr *source);
+		virtual MappedRegistry *accept(const char *request_uri);
 		virtual char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
 		virtual char *referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size);
 	};

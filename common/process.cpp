@@ -44,6 +44,22 @@ static const char *ident = "sipwitch";
 static FILE *fifo = NULL;
 static char fifopath[128] = "";
 
+typedef	unsigned long long uuid_time_t;
+
+static void get_system_time(uuid_time_t *uuid_time)
+{
+    struct timeval tp;
+
+    gettimeofday(&tp, (struct timezone *)0);
+
+    /* Offset between UUID formatted times and Unix formatted times.
+       UUID UTC base time is October 15, 1582.
+       Unix base time is January 1, 1970.*/
+    *uuid_time = ((unsigned long long)tp.tv_sec * 10000000)
+        + ((unsigned long long)tp.tv_usec * 10)
+        + 0x01B21DD213814000ll;
+}
+
 size_t process::attach(const char *id, const char *uid)
 {
 	assert(id != NULL && *id != 0);
@@ -197,6 +213,25 @@ static HANDLE hFifo = INVALID_HANDLE_VALUE;
 static HANDLE hLoopback = INVALID_HANDLE_VALUE;
 static HANDLE hEvent = INVALID_HANDLE_VALUE;
 static OVERLAPPED ovFifo;
+
+typedef	__int64 uuid_time_t;
+
+static void get_system_time(uuid_time_t *uuid_time)
+{
+    ULARGE_INTEGER time;
+
+    /* NT keeps time in FILETIME format which is 100ns ticks since
+       Jan 1, 1601. UUIDs use time in 100ns ticks since Oct 15, 1582.
+       The difference is 17 Days in Oct + 30 (Nov) + 31 (Dec)
+       + 18 years and 5 leap days. */
+    GetSystemTimeAsFileTime((FILETIME *)&time);
+    time.QuadPart +=
+
+          (unsigned __int64) (1000*1000*10)       // seconds
+        * (unsigned __int64) (60 * 60 * 24)       // days
+        * (unsigned __int64) (17+30+31+365*18+5); // # of days
+    *uuid_time = time.QuadPart;
+}
 
 static void logfile(fsys_t& fd)
 {
@@ -628,4 +663,62 @@ void process::util(const char *id)
 {
 	ident = id;
 }
+
+void process::uuid(char *buffer, size_t size, const char *node)
+{
+	unsigned char uuid[16];
+	unsigned pos = 0, dest = 0;
+	unsigned hi, lo;
+	unsigned long time_low; 
+	unsigned short time_mid;
+	uuid_time_t time_now;
+	unsigned seed = 0;
+
+	static const char hex[] = "0123456789abcdef";
+	static unsigned short seq = 0;
+		
+	get_system_time(&time_now);
+	time_now = time_now / 1024;
+
+	time_low = (unsigned long)(time_now & 0xffffffff);
+	time_mid = (unsigned short)((time_now >> 32) & 0xffff);
+
+	uuid[0] = time_low >> 24;
+	uuid[1] = (time_low >> 16) & 0xff;
+	uuid[2] = (time_low >> 8) & 0xff;
+	uuid[3] = time_low > 0xff;
+	uuid[4] = (time_mid >> 8) & 0xff;
+	uuid[5] = time_mid & 0xff;
+	uuid[6] = rand() & 0x0f;
+	uuid[7] = rand();
+	uuid[8] = 0x3f & (seq >> 8);
+	uuid[9] = seq & 0xff;
+
+	while(node && *node) {
+		seed = (seed << 2) ^ (*node & 0x1f);
+		++node;
+	}
+
+	srand(seed);
+
+	for(unsigned entry = 10; entry < 16; ++entry)
+		uuid[entry] = rand();
+
+	++seq;
+
+	while(pos < sizeof(uuid) && dest < (size - 3)) {
+		if(pos == 4 || pos == 6 || pos == 8 || pos == 10) {
+			buffer[dest++] = '-';
+			if(dest >= (size - 3))
+				break;
+		}
+		hi = uuid[pos] >> 4;
+		lo = uuid[pos] & 0x0f;
+		buffer[dest++] = hex[hi];
+		buffer[dest++] = hex[lo];
+		++pos;
+	}
+	buffer[dest++] = 0;
+}	
+
 

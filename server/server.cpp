@@ -148,15 +148,15 @@ MappedRegistry *server::redirect(const char *target)
 	return rr;
 }
 
-MappedRegistry *server::accept(struct sockaddr *source)
+MappedRegistry *server::accept(const char *uri)
 {
-	assert(source != NULL);
+	assert(uri != NULL);
 
 	MappedRegistry *rr = NULL;
 	linked_pointer<modules::sipwitch> cb = getModules();
 
 	while(!rr && is(cb)) {
-		rr = cb->accept(source);
+		rr = cb->accept(uri);
 		cb.next();
 	}
 	return rr;
