@@ -1788,6 +1788,7 @@ void thread::run(void)
 		if(!shutdown_flag)
 			sevent = eXosip_event_wait(0, stack::sip.timing);
 
+		accepted = NULL;
 		via_host = NULL;
 		via_port = 0;
 		via_hops = 0;

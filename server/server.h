@@ -505,6 +505,7 @@ private:
 	service::usernode dialed;
 	service::keynode *routed;
 	registry::mapped *reginfo;
+	MappedRegistry *accepted;
 	eXosip_event_t *sevent;
 	char buffer[MAX_URI_SIZE];	
 	char identbuf[MAX_USERID_SIZE + 12];
