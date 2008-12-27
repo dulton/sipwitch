@@ -90,12 +90,12 @@ public:
 		struct {				// external registry properties...
 			const char *identity;	// forced identity string when calling
 			const char *connect;	// invite uri host identity
-		};
+		} external;
 		struct {				// internal registry properties
 			LinkedObject *published;	// published routes
 			LinkedObject *targets;	// active registrations (can be multiple)
 			LinkedObject *routes;	// active route records
-		};
+		} internal;
 	};
 };
 

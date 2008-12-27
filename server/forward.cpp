@@ -391,10 +391,6 @@ bool forward::authenticate(int id, const char *remote_realm)
 
 void forward::registration(int id, modules::regmode_t mode)
 {
-	MappedRegistry *rr;
-	service::keynode *node, *leaf;
-	const char *secret = NULL;
-
 	switch(mode) {
 	case modules::REG_FAILED:
 		disable(id);

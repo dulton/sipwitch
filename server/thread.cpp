@@ -186,7 +186,7 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 	assert(s != NULL && s->parent != NULL);
 	assert(rr != NULL);
 
-	linked_pointer<registry::target> tp = rr->targets;
+	linked_pointer<registry::target> tp = rr->internal.targets;
 	stack::session *invited;
 	stack::call *call = s->parent;
 	linked_pointer<stack::segment> sp = call->segments.begin();
@@ -1650,7 +1650,7 @@ void thread::reregister(const char *contact, time_t interval)
 		goto reply;
 	}		
 
-	if(reginfo->type != MappedRegistry::SERVICE || reginfo->routes)
+	if(reginfo->type != MappedRegistry::SERVICE || reginfo->internal.routes)
 		goto reply;
 
 	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
