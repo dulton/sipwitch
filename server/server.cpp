@@ -825,7 +825,7 @@ void server::plugins(const char *argv0, const char *list)
 
 	if(!stricmp(list, "auto")) {
 		String::set(path, sizeof(path), argv0);
-		ep = strstr(path, LIB_PREFIX + 1);
+		ep = strstr(path, LIB_PREFIX);
 		if(ep)
 			ep[strlen(LIB_PREFIX)] = 0;
 		else 
@@ -837,7 +837,7 @@ void server::plugins(const char *argv0, const char *list)
 			if(!ep || stricmp(ep, DLL_SUFFIX))
 				continue;
 			snprintf(path + el, sizeof(path) - el, "/%s", buffer);
-			process::errlog(INFO, "loading %s", buffer);
+			process::errlog(INFO, "loading %s" DLL_SUFFIX, buffer);
 			if(fsys::load(path)) 
 				process::errlog(ERRLOG, "failed loading %s", path);
 		}
@@ -847,9 +847,9 @@ void server::plugins(const char *argv0, const char *list)
 		String::set(buffer, sizeof(buffer), list);
 		while(NULL != (cp = String::token(buffer, &tp, ", ;:\r\n"))) {
 			String::set(path, sizeof(path), argv0);
-			ep = strstr(path, LIB_PREFIX + 1);
+			ep = strstr(path, LIB_PREFIX);
 			if(ep) {
-				ep[strlen(LIB_PREFIX)] = 0;
+				ep[strlen(LIB_PREFIX) + 1] = 0;
 				String::add(path, sizeof(path), cp);
 				String::add(path, sizeof(path), DLL_SUFFIX);
 				if(fsys::isfile(path)) {
@@ -858,7 +858,7 @@ void server::plugins(const char *argv0, const char *list)
 				}
 			}
 			snprintf(path, sizeof(path), DEFAULT_LIBPATH "/sipwitch/%s" DLL_SUFFIX, cp);
-			process::errlog(INFO, "loading %s", path);
+			process::errlog(INFO, "loading %s" DLL_SUFFIX, cp);
 loader:
 			if(fsys::load(path)) 
 				process::errlog(ERRLOG, "failed loading %s", path);

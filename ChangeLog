@@ -1,3 +1,6 @@
+From version 0.3.7 to 0.3.8
+- cleanup in module loading and path computations.
+
 From version 0.3.6 to 0.3.7
 - more registration management support functionality in forward module.
 - start of authentication support for authorized destinations in sipwitch core.

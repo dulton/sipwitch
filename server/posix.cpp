@@ -236,7 +236,7 @@ retry:
 
 	if(pid > 1) {
 		snprintf(buf, sizeof(buf), "%d\n", pid);
-		if(write(fd, buf, strlen(buf)))
+		if(write(fd, buf, strlen(buf)) < 1)
 			debug(3, "%s", "pidfile write failed");
 	}
 	close(fd);
