@@ -86,6 +86,7 @@ public:
 	time_t	created;			// initial registration
 	volatile time_t  expires;	// when registry expires as a whole
 	profile_t profile;			// profile at time of registration
+	const char *identity;		// forced identity string option when calling
 	LinkedObject *published;	// published routes
 	LinkedObject *targets;		// active registrations (can be multiple)
 	LinkedObject *routes;		// active route records
