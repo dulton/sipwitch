@@ -28,6 +28,7 @@ using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
 static const char *replytarget = NULL;
+static const char *ident = "sipwitch";
 
 #ifndef	_MSWINDOWS_
 
@@ -42,7 +43,6 @@ static const char *replytarget = NULL;
 
 static FILE *fifo = NULL;
 static char fifopath[128] = "";
-static const char *ident = "sipwitch";
 
 size_t process::attach(const char *id, const char *uid)
 {
