@@ -448,6 +448,8 @@ public:
 	static void expire(MappedRegistry *rr);
 	static void registration(int id, modules::regmode_t mode);
 	static bool authenticate(int id, const char *realm);
+	static MappedRegistry *redirect(const char *target);
+	static MappedRegistry *accept(struct sockaddr *source);
 	static const char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
 	static const char *referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size);
 

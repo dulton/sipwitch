@@ -134,6 +134,34 @@ const char *server::referRemote(MappedRegistry *rr, const char *target, char *bu
 	return refer;
 }
 
+MappedRegistry *server::redirect(const char *target)
+{
+	assert(target != NULL && *target != 0);
+
+	MappedRegistry *rr = NULL;
+	linked_pointer<modules::sipwitch> cb = getModules();
+
+	while(!rr && is(cb)) {
+		rr = cb->redirect(target);
+		cb.next();
+	}
+	return rr;
+}
+
+MappedRegistry *server::accept(struct sockaddr *source)
+{
+	assert(source != NULL);
+
+	MappedRegistry *rr = NULL;
+	linked_pointer<modules::sipwitch> cb = getModules();
+
+	while(!rr && is(cb)) {
+		rr = cb->accept(source);
+		cb.next();
+	}
+	return rr;
+}
+
 const char *server::referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size)
 {
 	assert(target != NULL && *target != 0);

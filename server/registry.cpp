@@ -889,7 +889,12 @@ registry::mapped *registry::access(const char *id)
 
 void registry::detach(mapped *rr)
 {
-	if(!rr)
+	// External registries are created in plugins, are not in shared memory,
+	// and are not locked or otherwise managed under the registry.  They are
+	// used to give an artificial "local call leg" registration entity when
+	// call legs are extended through plugins, such as for service providers.
+
+	if(!rr || rr->type == MappedRegistry::EXTERNAL)
 		return;
 
 	locking.release();

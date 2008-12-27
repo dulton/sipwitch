@@ -58,6 +58,16 @@ bool modules::sipwitch::authenticate(int id, const char *realm)
 	return false;
 }
 
+MappedRegistry *modules::sipwitch::redirect(const char *target)
+{
+	return NULL;
+}
+
+MappedRegistry *modules::sipwitch::accept(struct sockaddr *source)
+{
+	return NULL;
+}
+
 char *modules::sipwitch::referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size)
 {
 	return NULL;
