@@ -487,46 +487,6 @@ void SignalThread::run(void)
 	}
 }
 
-#ifdef USES_COMMANDS
-static void command(const char *uid, const char *cmd, unsigned timeout)
-{
-	assert(uid == NULL || *uid != 0);
-	assert(cmd != NULL && *cmd != 0);
-	assert(timeout > 0);
-
-	sigset_t sigs;
-	int signo;
-
-	sigemptyset(&sigs);
-	sigaddset(&sigs, SIGUSR1);
-	sigaddset(&sigs, SIGUSR2);
-	sigaddset(&sigs, SIGALRM);
-	pthread_sigmask(SIG_BLOCK, &sigs, NULL);
-
-	server::utils(uid);
-
-	if(!process::control(uid, "%d %s", getpid(), cmd)) {
-		fprintf(stderr, "*** sipw: %s; server not responding\n", cmd);
-		exit(2);
-	}
-
-	alarm(timeout);
-#ifdef	HAVE_SIGWAIT2
-	sigwait(&sigs, &signo);
-#else
-	signo = sigwait(&sigs);
-#endif
-	if(signo == SIGUSR1)
-		exit(0);
-	if(signo == SIGALRM) {
-		fprintf(stderr, "*** sipw: %s; server timed out\n", cmd);
-		exit(1);
-	}
-	fprintf(stderr, "*** sipw: %s; request failed\n", cmd);
-	exit(3);
-}
-#endif
-
 extern "C" int main(int argc, char **argv)
 {
 	static const char *user = NULL;
@@ -551,7 +511,6 @@ extern "C" int main(int argc, char **argv)
 
 	corefiles();
 
-#ifdef	USES_COMMANDS
 	if(argv[1] && (!strcmp(argv[1], "-gdb") || !strcmp(argv[1], "--gdb"))) {
 		argc = 0;
 		args[argc++] = (char *)"gdb";
@@ -592,8 +551,6 @@ extern "C" int main(int argc, char **argv)
 		execvp("valgrind", args);
 		exit(-1);
 	}
-	
-#endif
 
 	// for deaemon env usually loaded from /etc/defaults or /etc/sysconfig
 
@@ -774,125 +731,6 @@ extern "C" int main(int argc, char **argv)
 		}
 		if(!*cp)
 			continue;
-
-#ifdef	USES_COMMANDS
-		signal(SIGPIPE, SIG_IGN);
-		setenv("IDENT", "sipwitch", 1);
-		openlog("sipw", 0, LOG_USER);
-
-		if(!stricmp(*argv, "stop") || !stricmp(*argv, "reload") || !stricmp(*argv, "abort") || !stricmp(*argv, "restart")) {
-			server::utils(user);
-			if(!process::control(user, "%s", *argv)) {
-				fprintf(stderr, "*** sipw: %s; server not responding\n", *argv);
-				exit(2);
-			}
-			exit(0);
-		}
-
-		if(!stricmp(*argv, "check")) {
-			server::utils(user);
-			if(!process::control(user, "%s", *argv)) {
-				fprintf(stderr, "*** sipw: %s; server cannot be checked\n", *argv);
-				exit(2);
-			}
-			exit(0);
-		}
-
-		if(!stricmp(*argv, "message")) {
-			userid = *(++argv);
-			text = *(++argv);
-
-			if(!userid || !text) {
-				fprintf(stderr, "*** sipw: use message userid \"text\"\n");
-				exit(-1);
-			}
-			snprintf(tbuf, sizeof(tbuf), "message %s {%s}", userid, text);
-			command(user, tbuf, 30);
-		}
-
-		if(!stricmp(*argv, "digest")) {
-			userid = *(++argv);
-			secret = *(++argv);
-			string_t digest;		
-	
-			if(!userid || !secret) {
-				fprintf(stderr, "*** sipw: use digest userid secret\n");
-				exit(-1);
-			}
-
-			server::utils(user);
-			printf("<!-- provision template example for realm %s -->\n", registry::getRealm());
-			printf("<provision>\n");
-			printf("  <user><id>%s</id>\n", userid);
-			digest = (string_t)userid + ":" + (string_t)getenv("REALM") + ":" + (string_t)secret;
-			if(!stricmp(getenv("DIGEST"), "sha1"))
-				digest::sha1(digest);
-			else if(!stricmp(getenv("DIGEST"), "rmd160"))
-				digest::rmd160(digest);
-			else
-				digest::md5(digest);
-			if(digest[0])
-				printf("    <digest>%s</digest>\n", *digest);
-			printf("  </user>\n");
-			printf("</provision>\n");
-			exit(0);
-		}
-
-		if(!stricmp(*argv, "registry")) 
-			server::regdump();
-
-		if(!stricmp(*argv, "address")) {
-			if(!argv[1]) {
-				fprintf(stderr, "*** sipw: address: missing\n");
-				exit(-1);
-			}
-			if(argv[2]) {
-				fprintf(stderr, "*** sip: address: only one address\n");
-				exit(-1);
-			}
-			command(user, *argv, 30);
-		}
-
-
-		if(!stricmp(*argv, "state")) {
-			if(!argv[1]) {
-				fprintf(stderr, "*** sipw: state: selection missing\n");
-				exit(-1);
-			}
-			if(argv[2]) {
-				fprintf(stderr, "*** sip: state: only one selection\n");
-				exit(-1);
-			}
-			command(user, *argv, 30);
-		}
-
-		if(!stricmp(*argv, "activate")) {
-			if(!argv[1]) {
-				fprintf(stderr, "*** sipw: activate: userid [address] missing\n");
-				exit(-1);
-			}
-			if(argv[2] && argv[3]) {
-				fprintf(stderr, "*** sipw: activate: only one address\n");
-				exit(-1);
-			}
-			command(user, *argv, 30);
-		}
-
-		if(!stricmp(*argv, "release")) {
-			if(!argv[1]) {
-				fprintf(stderr, "*** sipw: release: userid missing\n");
-				exit(-1);
-			}
-			if(argv[2]) {
-				fprintf(stderr, "*** sipw: release: only one userid\n");
-				exit(-1);
-			}
-			command(user, *argv, 30);
-		}
-
-		if(!stricmp(*argv, "dump") || !stricmp(*argv, "snapshot"))
-			command(user, *argv, 30);
-#endif
 
 		fprintf(stderr, "*** sipw: %s: unknown option\n", *argv);
 		exit(-1);

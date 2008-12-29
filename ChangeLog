@@ -3,6 +3,7 @@ From version 0.3.7 to 0.3.8
 - fix for mingw32 cross builds, mingw32 now requires ucommon >= 2.0.2
 - External registry objects for (provider) plugins that create call legs.
 - routeLocal() for provider plugins to return remapped call leg registries.
+- sipwitch server control options externalized into new "sipwitch" binary.
 
 From version 0.3.6 to 0.3.7
 - more registration management support functionality in forward module.

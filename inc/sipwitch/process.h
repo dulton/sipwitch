@@ -75,7 +75,6 @@ public:
 	static char *receive(void);
 	static void reply(const char *err = NULL);
 	static size_t attach(const char *ident, const char *user);
-	static void util(const char *ident);
 	static void release(void);
 	static bool state(const char *value);
 	static bool system(const char *fmt, ...) __PRINTF(1, 2);

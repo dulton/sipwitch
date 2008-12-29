@@ -199,9 +199,6 @@ AC_ARG_ENABLE(commands,
 	AC_HELP_STRING([--disable-commands],[disable command options]))
 if test -z "$enable_commands" ; then
 	enable_commands="yes" ; fi
-if test "$enable_commands" = "yes" ; then
-	AC_DEFINE(USES_COMMANDS, [1], [command options])
-fi
 
 AC_CHECK_HEADER(eXosip2/eXosip.h,,[
 	AC_ERROR("libeXosip2 must be installed or build --disable-sipwitch-server")

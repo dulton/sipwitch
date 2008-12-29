@@ -17,10 +17,6 @@
 #include <eXosip2/eXosip.h>
 #include <config.h>
 
-#ifdef	_MSWINDOWS_
-#undef	USES_COMMANDS
-#endif
-
 #ifndef	SESSION_EXPIRES
 #define	SESSION_EXPIRES	"session-expires"
 #endif
@@ -431,7 +427,6 @@ public:
 	static void release(keynode *node);
 	static void release(usernode& user);
 	static void reload(const char *uid);
-	static void utils(const char *uid);
 	static Socket::address *getContact(const char *id);
 	static unsigned forwarding(keynode *node);
 	static void plugins(const char *argv0, const char *names);
@@ -441,7 +436,6 @@ public:
 	static void stop(void);
 	static caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
 	static unsigned allocate(void);
-	static void regdump(void);	
 
 	static bool classify(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
 	static void activate(MappedRegistry *rr);

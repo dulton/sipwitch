@@ -22,61 +22,6 @@ using namespace UCOMMON_NAMESPACE;
 static mempager mempool(PAGING_SIZE);
 static bool running = true;
 
-#ifdef	USES_COMMANDS
-static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
-{
-	assert(a1 != NULL);
-
-	char sep = '\n';
-	char buf[64];
-	unsigned len;
-	unsigned p1 = 0, p2 = 0;
-
-	if(!a1)
-		return;
-
-	Socket::getaddress((struct sockaddr *)a1, buf, sizeof(buf));
-	len = strlen(buf);
-	switch(a1->address.sa_family) {
-	case AF_INET:
-		p1 = (unsigned)ntohs(a1->ipv4.sin_port);
-		break;
-#ifdef	AF_INET6
-	case AF_INET6:
-		p1 = (unsigned)ntohs(a1->ipv6.sin6_port);
-		break;
-#endif
-	}
-
-	if(a2) {
-		switch(a2->address.sa_family) {
-		case AF_INET:
-			p2 = (unsigned)ntohs(a2->ipv4.sin_port);
-			break;
-#ifdef	AF_INET6
-		case AF_INET6:
-			p2 = (unsigned)ntohs(a2->ipv6.sin6_port);
-			break;
-#endif
-		}
-	}
-
-	if(a2 && p2)
-		sep = ',';
-
-	if(p1)
-		printf("%s:%u%c", buf, p1, sep);
-	else
-		printf("none%c", sep);
-
-	if(!a2 || !p2)
-		return;
-
-	Socket::getaddress((struct sockaddr *)a2, buf, sizeof(buf));
-	printf("%s:%u\n", buf, p2);
-}
-#endif
-
 static bool activating(int argc, char **args)
 {
 	assert(args != NULL);
@@ -697,39 +642,6 @@ void server::getProvision(const char *uid, usernode& user)
 	user.keys = node;
 }
 
-void server::utils(const char *uid)
-{
-	assert(uid == NULL || *uid != 0);
-
-	FILE *fp = service::open(uid);
-	const char *key = NULL, *value;
-	linked_pointer<keynode> sp;
-
-	cfg = new server("sipwitch");
-	
-	crit(cfg != NULL, "util has no config");
-
-	if(fp)
-		if(!cfg->load(fp)) {
-			process::errlog(ERRLOG, "invalid config");
-			delete cfg;
-			return;
-		}
-
-	setenv("REALM", registry::getRealm(), 1);
-	setenv("DIGEST", "md5", 1);
-	sp = cfg->getList("registry");
-	while(sp) {
-		key = sp->getId();
-		value = sp->getPointer();
-		if(key && value && !strcmp(key, "realm"))
-			setenv("REALM", value, 1);
-		else if(key && value && !strcmp(key, "digest"))
-			setenv("DIGEST", value, 1);
-		sp.next();
-	}
-}
-
 bool server::check(void)
 {
 	process::errlog(INFO, "checking config...");
@@ -894,73 +806,6 @@ loader:
 	}
 }
 
-void server::regdump(void)
-{
-#ifdef	USES_COMMANDS
-	mapped_view<MappedRegistry> reg("sipwitch.regmap");
-	unsigned count = reg.getCount();
-	unsigned found = 0, index = 0;
-	volatile const MappedRegistry *member;
-	MappedRegistry buffer;
-	time_t now;
-	char ext[8], exp[8], use[8];
-	const char *type;
-
-	if(!count) {
-		fprintf(stderr, "*** sipw: cannot access mapped registry\n");
-		exit(-1);
-	}
-
-	time(&now);
-	while(index < count) {
-		member = reg(index++);
-		do {	
-			memcpy(&buffer, (const void *)member, sizeof(buffer));
-		} while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
-		if(buffer.type == MappedRegistry::EXPIRED)
-			continue;
-		else if(buffer.type == MappedRegistry::TEMPORARY && !buffer.inuse)
-			continue;
-		if(!found++)
-			printf("%7s %-30s type %-30s  use expires address\n", "ext", "user", "profile");
-		ext[0] = 0;
-		if(buffer.ext)
-			snprintf(ext, sizeof(ext), "%7d", buffer.ext); 
-		exp[0] = '-';
-		exp[1] = 0;
-		snprintf(use, sizeof(use), "%u", buffer.inuse);
-		if(buffer.expires && buffer.type != MappedRegistry::TEMPORARY)
-			snprintf(exp, sizeof(exp), "%ld", buffer.expires - now);
-		switch(buffer.type) {
-		case MappedRegistry::REJECT:
-			type = "rej";
-			break;
-		case MappedRegistry::REFER:
-			type = "ref";
-			break;
-		case MappedRegistry::GATEWAY:
-			type = "gw";
-			break;
-		case MappedRegistry::SERVICE:
-			type = "peer";
-			break;
-		case MappedRegistry::TEMPORARY:
-			type = "temp";
-			break;
-		default:
-			type = "user";
-		};
-		printf("%7s %-30s %-4s %-30s %4s %7s ", ext, buffer.userid, type, buffer.profile.id, use, exp);
-		paddress(&buffer.contact, NULL);
-		fflush(stdout);
-	}
-
-	printf("found %d entries active of %d\n", found, count);  
-	exit(0);
-
-#endif
-}
-
 void server::stop(void)
 {
 	running = false;
@@ -1120,10 +965,8 @@ void server::version(void)
 
 void server::usage(void)
 {
-#if !defined(_MSWINDOWS_) && defined(USES_COMMANDS)
-	printf("Usage: sipw [debug] [options] [command...]\n"
-#elif defined(USES_COMMANDS)
-	printf("Usage: sipw [options] [command...]\n"
+#if !defined(_MSWINDOWS_)
+	printf("Usage: sipw [debug] [options]\n"
 #else
 	printf("Usage: sipw [options]\n"
 #endif
@@ -1131,8 +974,7 @@ void server::usage(void)
 		"  --help                Display this information\n"
 		"  -foreground           Run server in foreground\n"
 		"  -background           Run server as daemon\n"
-#ifdef	_MSWINDOWS_
-#else
+#ifndef _MSWINDOWS_
 		"  -restartable			 Run server as restartable daemon\n"
 #endif
 		"  -trace                Trace/dump sip messages\n"
@@ -1146,29 +988,7 @@ void server::usage(void)
 #endif
 		"  -priority=<level>     Increase process priority\n"
 		"  -v[vv], -x<n>         Select verbosity or debug level\n"
-#if defined(USES_COMMANDS) || defined(_MSWINDOWS_)
-		"Commands:\n"
-		"  stop                  Stop running server\n"
-		"  reload                Reload config file\n"
-#ifdef	_MSWINDOWS_
-		"  register              Register as service deamon\n"
-		"  release               Release service deamon registeration\n"
-#endif
-#endif
-#ifdef	USES_COMMANDS
-		"  restart               Restart server\n"
-		"  address               Set published address\n"
-		"  check                 Test for thread deadlocks\n"
-		"  snapshot              Create snapshot file\n"
-		"  dump                  Dump in-memory config tables\n"
-		"  message <user> <text> Send instant message to user agent\n"
-		"  digest <user> <pass>  Compute digest based on server realm\n"
-		"  registry              List registrations from shared memory\n"
-		"  state <level>         Set server running state\n"
-		"  activate <user>       Activate static user registration\n"
-		"  release <user>        Release registered user\n"
-#endif
-#if defined(USES_COMMANDS) && !defined(_MSWINDOWS_)
+#if !defined(_MSWINDOWS_)
 		"Debug Option:\n"
 		"  -gdb                  Run server from gdb\n"
 		"  -memcheck             Check for memory leaks with valgrind\n"

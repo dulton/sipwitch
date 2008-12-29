@@ -659,11 +659,6 @@ FILE *process::config(const char *uid)
 	return fopen(buf, "r");
 }
 
-void process::util(const char *id)
-{
-	ident = id;
-}
-
 void process::uuid(char *buffer, size_t size, const char *node)
 {
 	unsigned char uuid[16];
