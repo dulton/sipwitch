@@ -14,9 +14,11 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sipwitch/sipwitch.h"
+#ifndef	_MSWINDOWS_
 #include <signal.h>
 #include <pwd.h>
 #include <fcntl.h>
+#endif
 #include <config.h>
 
 using namespace SIPWITCH_NAMESPACE;
@@ -149,10 +151,15 @@ static void command(char **argv, unsigned timeout)
 {
 	char buffer[512];
 	size_t len;
+	fd_t fd;
+
+#ifdef	_MSWINDOWS_
+	snprintf(buffer, sizeof(buffer), "\\\\.\\mailslot\\sipwitch_ctrl");
+	fd = CreateFile(buffer, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);	
+#else
 	sigset_t sigs;
 	int signo;
 	struct passwd *pwd = getpwuid(getuid());
-	fd_t fd;
 
 	sigemptyset(&sigs);
 	sigaddset(&sigs, SIGUSR1);
@@ -165,14 +172,18 @@ static void command(char **argv, unsigned timeout)
 		snprintf(buffer, sizeof(buffer), "/tmp/sipwitch-%s/control", pwd->pw_name);
 		fd = ::open(buffer, O_WRONLY | O_NONBLOCK);
 	}
-	if(fd < 0) {
+#endif
+
+	if(fd == INVALID_HANDLE_VALUE) {
 		fprintf(stderr, "*** sipwitch: offline\n");
 		exit(2);
 	}
 
+#ifndef	_MSWINDOWS_
 	if(timeout)
 		snprintf(buffer, sizeof(buffer), "%d", getpid());
 	else
+#endif
 		buffer[0] = 0;
 
 	while(*argv) {
@@ -180,6 +191,12 @@ static void command(char **argv, unsigned timeout)
 		snprintf(buffer + len, sizeof(buffer) - len - 1, " %s", *(argv++));
 	}
 
+#ifdef	_MSWINDOWS_
+	if(!WriteFile(fd, buffer, (DWORD)strlen(buffer) + 1, NULL, NULL)) {
+		fprintf(stderr, "*** sipwitch: control failed\n");
+		exit(4);
+	}
+#else
 	len = strlen(buffer);
 	buffer[len++] = '\n';
 	buffer[len] = 0;
@@ -206,6 +223,7 @@ static void command(char **argv, unsigned timeout)
 	}
 	fprintf(stderr, "*** sipwitch: request failed\n");
 	exit(3); 
+#endif
 }
 
 static void usage(void)
