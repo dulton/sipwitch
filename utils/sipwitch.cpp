@@ -184,7 +184,7 @@ static void command(char **argv, unsigned timeout)
 	buffer[len++] = '\n';
 	buffer[len] = 0;
 
-	if(::write(fd, buffer, len) < len) {
+	if(::write(fd, buffer, len) < (int)len) {
 		fprintf(stderr, "*** sipwitch: control failed\n");
 		exit(4);
 	}

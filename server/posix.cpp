@@ -501,12 +501,8 @@ extern "C" int main(int argc, char **argv)
 	static bool restartable = false;
 	static bool dumping = false;
 
-	const char *userid;
-	const char *secret;
-	const char *text;
 	char *cp;
 	char *args[65];
-	char tbuf[512];
 	const char *argv0 = argv[0];
 
 	corefiles();
