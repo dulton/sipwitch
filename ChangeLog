@@ -1,3 +1,6 @@
+From version 0.3.8 to 0.3.9
+- man page for daemon admin support shell utility.
+
 From version 0.3.7 to 0.3.8
 - cleanup in module loading and path computations.
 - fix for mingw32 cross builds, mingw32 now requires ucommon >= 2.0.2

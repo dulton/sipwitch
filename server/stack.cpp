@@ -696,12 +696,20 @@ void stack::reload(service *cfg)
 				val = tobool(value);
 				eXosip_set_option(EXOSIP_OPT_UDP_LEARN_PORT, &val);
 			}
-			else if(!stricmp(key, "restricted"))
-				restricted = cfg->dup(value);
+			else if(!stricmp(key, "restricted")) {
+				if(String::equal(value, "none"))
+					restricted = NULL;
+				else
+					restricted = cfg->dup(value);
+			}
 			else if(!stricmp(key, "localnames"))
 				localhosts = cfg->dup(value);
-			else if(!stricmp(key, "trusted"))
-				trusted = cfg->dup(value);
+			else if(!stricmp(key, "trusted")) {
+				if(String::equal(value, "none"))
+					trusted = NULL;
+				else
+					trusted = cfg->dup(value);
+			}
 			else if(!stricmp(key, "system"))
 				system = value;
 			else if(!stricmp(key, "anon"))

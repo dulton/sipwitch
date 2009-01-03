@@ -158,6 +158,7 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %files 
 %defattr(-,root,root,-)
 %doc README COPYING INSTALL NEWS FEATURES SUPPORT TODO NOTES AUTHORS MODULES ChangeLog
+%doc %{_mandir}/man8/*.8*
 %{_sbindir}/*
 %{_bindir}/*
 %dir %{_libdir}/sipwitch
@@ -167,6 +168,7 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %attr(0660,root,root) %config %{_sysconfdir}/sipwitch.conf
 %attr(0660,root,root) %config %{_sysconfdir}/sysconfig/sipwitch
 %attr(0660,root,root) %config %{_localstatedir}/lib/sipwitch/*.xml
+
 
 %files -n %{_libname}
 %defattr(-,root,root,-)
