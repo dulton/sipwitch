@@ -24,6 +24,20 @@
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
+static void capture(void)
+{
+	char buffer[512];
+	FILE *fp;
+
+	snprintf(buffer, sizeof(buffer), "/tmp/.sipwitch.%d", getpid());
+	fp = fopen(buffer, "r");
+	remove(buffer);
+	while(fp && fgets(buffer, sizeof(buffer), fp) != NULL)
+		fputs(buffer, stdout);
+	if(fp)
+		fclose(fp);
+}
+
 static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 {
 	assert(a1 != NULL);
@@ -215,8 +229,10 @@ static void command(char **argv, unsigned timeout)
 #else
 	signo = sigwait(&sigs);
 #endif
-	if(signo == SIGUSR1)
+	if(signo == SIGUSR1) {
+		capture();
 		exit(0);
+	}
 	if(signo == SIGALRM) {
 		fprintf(stderr, "*** sipwitch: timed out\n");
 		exit(1);
@@ -385,7 +401,7 @@ extern "C" int main(int argc, char **argv)
 	if(!argv[1])
 		fprintf(stderr, "use: sipwitch command [arguments...]\n");
 	else
-		fprintf(stderr, "*** sipwitch: %s: unknown command or option\n", argv[1]);
+		fprintf(stderr, "*** sipwitch: %s: unknown command or option\n", argv[0]);
 	exit(1);
 }
 

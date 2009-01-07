@@ -586,7 +586,10 @@ FILE *process::dumpfile(const char *uid)
 	unsigned len = strlen(buf);
 	snprintf(buf + len, sizeof(buf) - len, "\\%s\\dumpfile.log", ident);	 
 #else
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/dumpfile", ident);
+	if(replytarget && isdigit(*replytarget))
+		snprintf(buf, sizeof(buf), "/tmp/.sipwitch.%d", atoi(replytarget));
+	else
+		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/dumpfile", ident);
 #endif
 	fp = fopen(buf, "w");
 #ifndef	_MSWINDOWS_
@@ -608,7 +611,10 @@ FILE *process::snapshot(const char *uid)
 	unsigned len = strlen(buf);
 	snprintf(buf + len, sizeof(buf) - len, "\\%s\\snapshot.log", ident);	 
 #else
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/snapshot", ident);
+	if(replytarget && isdigit(*replytarget))
+		snprintf(buf, sizeof(buf), "/tmp/.sipwitch.%d", atoi(replytarget));
+	else
+		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/snapshot", ident);
 #endif
 	fp = fopen(buf, "w");
 #ifndef	_MSWINDOWS_
