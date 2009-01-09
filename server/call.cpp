@@ -82,6 +82,7 @@ void stack::call::disconnectLocked(void)
 	switch(state) {
 	case RINGING:
 	case RINGBACK:
+	case TRYING:
 		reason = "declined";
 		reply_source(SIP_DECLINE);
 		break;
@@ -92,7 +93,6 @@ void stack::call::disconnectLocked(void)
 		reason = "busy";
 		reply_source(SIP_BUSY_HERE);
 		break;
-	case TRYING:
 	case ANSWERED:
 	case FAILED:
 		reason = "failed";
