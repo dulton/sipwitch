@@ -161,6 +161,7 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %doc %{_mandir}/man8/*.8*
 %{_sbindir}/*
 %{_bindir}/*
+%{_datadir}/snmp/mibs/GNUTelephony-MIB.txt
 %dir %{_libdir}/sipwitch
 %config %{_sysconfdir}/logrotate.d/sipwitch
 %attr(0755,root,root) %{_sysconfdir}/init.d/sipwitch
@@ -168,7 +169,6 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %attr(0660,root,root) %config %{_sysconfdir}/sipwitch.conf
 %attr(0660,root,root) %config %{_sysconfdir}/sysconfig/sipwitch
 %attr(0660,root,root) %config %{_localstatedir}/lib/sipwitch/*.xml
-
 
 %files -n %{_libname}
 %defattr(-,root,root,-)

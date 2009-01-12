@@ -1,0 +1,490 @@
+-- This is a common MIB for GNU Telephony service traps
+
+-- Author: David Sugar
+
+GNUTelephony-MIB DEFINITIONS ::= BEGIN
+	IMPORTS
+        MODULE-IDENTITY, NOTIFICATION-TYPE, enterprises, Integer32, IpAddress
+			FROM SNMPv2-SMI
+                
+		OBJECT-TYPE
+			FROM RFC-1212
+
+		DisplayString, DateAndTime
+			 FROM SNMPv2-TC
+
+        MODULE-COMPLIANCE, NOTIFICATION-GROUP, OBJECT-GROUP        
+			FROM SNMPv2-CONF;  
+
+-- GNU Telephony is registered with IANA for an enterprise MIB
+
+gnutelephony MODULE-IDENTITY
+	LAST-UPDATED "200901101200Z"
+	ORGANIZATION "GNU Telephony"
+	CONTACT-INFO
+		 "	David Sugar
+			GNU Telephony
+			PO Box 399
+			Cape May Court House, NJ, 08210, USA
+			E-mail: dyfet@gnutelephony.org"
+	DESCRIPTION
+		"The MIB module represting GNU Telephonys'
+		implementation of enterprise specific MIBs
+		for GNU Telephony services."
+
+		REVISION "200901101200Z"
+		DESCRIPTION
+		"The initial version of GNU Telephony MIB module."
+	::= { enterprises 25538 }
+
+gnutelephonyService OBJECT IDENTIFIER ::= { gnutelephony 3 }
+
+-- Same location as TRAPS
+
+gnutelephonyNotifications OBJECT IDENTIFIER ::= { gnutelephonyService 0 }
+
+serviceVersion OBJECT-TYPE
+	SYNTAX DisplayString
+	MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION
+		"The service version currently running"
+	::= { gnutelephonyService 1 }
+
+serviceIdentity OBJECT-TYPE
+	SYNTAX DisplayString
+	MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION
+		"The service entity (sipwitch, bayonne, etc)"
+	::= { gnutelephonyService 2 }
+
+-- user agent stuff our sip server may pass through traps
+
+uaIdentity OBJECT-TYPE
+	SYNTAX DisplayString
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"ua user identity"
+	::= { gnutelephonyService 3 }
+
+uaLocation OBJECT-TYPE
+	SYNTAX IpAddress
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"ua ip address"
+	::= { gnutelephonyService 4 }
+
+-- registry type stuff
+
+registryIdentity OBJECT-TYPE
+	SYNTAX DisplayString
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"registry named id"
+	::= { gnutelephonyService 5 }
+
+registryLocation OBJECT-TYPE
+	SYNTAX IpAddress
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"registry location"
+	::= { gnutelephonyService 6 }
+
+-- board stuff
+
+boardIndex OBJECT-TYPE
+	SYNTAX Integer32
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"board index number"
+	::= { gnutelephonyService 7 }
+
+-- span stuff
+
+spanIndex OBJECT-TYPE
+	SYNTAX Integer32
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"span index number"
+	::= { gnutelephonyService 8 }	
+
+spanAlarm OBJECT-TYPE
+	SYNTAX INTEGER { cleared(0), yellow(1), red(2), bipolar(3) }
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"span alarm condition"
+	::= { gnutelephonyService 9 }
+
+-- timeslot stuff
+
+timeslotIndex OBJECT-TYPE
+	SYNTAX Integer32
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"timeslot index number"
+	::= { gnutelephonyService 10 }
+
+-- call stuff
+
+callSession OBJECT-TYPE
+	SYNTAX DisplayString
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"call session id"
+	::= { gnutelephonyService 11 }
+
+callSource OBJECT-TYPE
+	SYNTAX DisplayString
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"call session source"
+	::= { gnutelephonyService 12 }
+
+callTarget OBJECT-TYPE
+	SYNTAX DisplayString
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"call session target"
+	::= { gnutelephonyService 13 }
+
+callDivert OBJECT-TYPE
+	SYNTAX DisplayString
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"call session diverted"
+	::= { gnutelephonyService 14 }
+
+callService OBJECT-TYPE
+	SYNTAX DisplayString
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"call reason or use"
+	::= { gnutelephonyService 15 }
+	
+callIdentity OBJECT-TYPE
+	SYNTAX DisplayString
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"identity of caller"
+	::= { gnutelephonyService 16 }
+
+callStarted OBJECT-TYPE
+	SYNTAX DateAndTime
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"time call started"
+	::= { gnutelephonyService 17 }
+
+-- Start of traps
+
+serviceStartup NOTIFICATION-TYPE
+	OBJECTS {
+		serviceIdentity,
+		serviceVersion
+	}
+	STATUS current
+	DESCRIPTION
+		"Service statup notification"
+	::= { gnutelephonyNotifications 1 }
+
+serviceShutdown NOTIFICATION-TYPE
+	OBJECTS {
+		serviceIdentity,
+		serviceVersion
+	}
+	STATUS current
+	DESCRIPTION
+		"Service shutdown notification"
+	::= { gnutelephonyNotifications 2 }
+
+serviceReloaded NOTIFICATION-TYPE
+	OBJECTS {
+		serviceIdentity,
+		serviceVersion
+	}
+	STATUS current
+	DESCRIPTION
+		"Service reloading notification"
+	::= { gnutelephonyNotifications 3 }
+
+serviceFailed NOTIFICATION-TYPE
+	OBJECTS {
+		serviceIdentity,
+		serviceVersion
+	}
+	STATUS current
+	DESCRIPTION
+		"Service failure to start"
+	::= { gnutelephonyNotifications 4 }
+
+serviceBusy NOTIFICATION-TYPE
+	OBJECTS {
+		serviceIdentity,
+		serviceVersion
+	}
+	STATUS current
+	DESCRIPTION
+		"Service busy/no ports available"
+	::= { gnutelephonyNotifications 5 }
+
+-- user agent registration traps
+
+uaRegister NOTIFICATION-TYPE
+	OBJECTS {
+		uaIdentity,
+		uaLocation
+	}
+	STATUS current
+	DESCRIPTION
+		"Registration of user agent."
+	::= { gnutelephonyNotifications 10 }
+
+uaRelease NOTIFICATION-TYPE
+	OBJECTS {
+		uaIdentity,
+		uaLocation
+	}
+	STATUS current
+	DESCRIPTION
+		"Release of user agent."
+	::= { gnutelephonyNotifications 11 }
+
+uaReject NOTIFICATION-TYPE
+	OBJECTS {
+		uaIdentity,
+		uaLocation
+	}
+	STATUS current
+	DESCRIPTION
+		"Reject ua registration (unauthorized)."
+	::= { gnutelephonyNotifications 12 }
+
+-- service registration related traps
+
+registryAccepted NOTIFICATION-TYPE
+	OBJECTS {
+		registryIdentity,
+		registryLocation
+	}
+	STATUS current
+	DESCRIPTION
+		"Successful registration"
+	::= { gnutelephonyNotifications 20 }
+
+registryRejected NOTIFICATION-TYPE
+	OBJECTS {
+		registryIdentity,
+		registryLocation
+	}
+	STATUS current
+	DESCRIPTION
+		"registration rejected"
+	::= { gnutelephonyNotifications 21 }
+
+registryFailed NOTIFICATION-TYPE
+	OBJECTS {
+		registryIdentity,
+		registryLocation
+	}
+	STATUS current
+	DESCRIPTION
+		"registration lost contact"
+	::= { gnutelephonyNotifications 22 }
+
+registryTerminated NOTIFICATION-TYPE
+	OBJECTS {
+		registryIdentity,
+		registryLocation
+	}
+	STATUS current
+	DESCRIPTION
+		"registration terminated"
+	::= { gnutelephonyNotifications 23 }
+
+-- Timeslot events
+
+timeslotDisable NOTIFICATION-TYPE
+	OBJECTS {
+		serviceIdentity,
+		serviceVersion,
+		timeslotIndex
+	}
+	STATUS current
+	DESCRIPTION
+		"timeslot disabled"
+	::= { gnutelephonyNotifications 30 }
+
+timeslotEnable NOTIFICATION-TYPE
+	OBJECTS {
+		serviceIdentity,
+		serviceVersion,
+		timeslotIndex
+	}
+	STATUS current
+	DESCRIPTION
+		"timeslot enabled"
+	::= { gnutelephonyNotifications 31 }
+
+-- Span events
+
+spanDisable NOTIFICATION-TYPE
+	OBJECTS {
+		serviceIdentity,
+		serviceVersion,
+		spanIndex
+	}
+	STATUS current
+	DESCRIPTION
+		"span disabled"
+	::= { gnutelephonyNotifications 40 }
+
+spanEnable NOTIFICATION-TYPE
+	OBJECTS {
+		serviceIdentity,
+		serviceVersion,
+		spanIndex
+	}
+	STATUS current
+	DESCRIPTION
+		"span enabled"
+	::= { gnutelephonyNotifications 41 }
+
+spanAlert NOTIFICATION-TYPE
+	OBJECTS {
+		serviceIdentity,
+		serviceVersion,
+		spanIndex,
+		spanAlarm
+	}
+	STATUS current
+	DESCRIPTION
+		"span alerting"
+	::= { gnutelephonyNotifications 42 }
+
+-- Board events
+
+boardDisable NOTIFICATION-TYPE
+	OBJECTS {
+		serviceIdentity,
+		serviceVersion,
+		boardIndex
+	}
+	STATUS current
+	DESCRIPTION
+		"board disabled"
+	::= { gnutelephonyNotifications 50 }
+
+boardEnable NOTIFICATION-TYPE
+	OBJECTS {
+		serviceIdentity,
+		serviceVersion,
+		boardIndex
+	}
+	STATUS current
+	DESCRIPTION
+		"board enabled"
+	::= { gnutelephonyNotifications 51 }
+
+-- call events
+
+callCompleted NOTIFICATION-TYPE
+	OBJECTS {
+		callSession,
+		callStarted,
+		callSource,
+		callTarget,
+		callDivert,
+		callService,
+		callIdentity
+	}
+	STATUS current
+	DESCRIPTION
+		"call cdr notification"
+	::= { gnutelephonyNotifications 70 }
+
+-- SNMPv2 Conformance Information
+
+gnutelephonyMibConformance OBJECT IDENTIFIER ::= { gnutelephony 9 }
+gnutelephonyMibCompliances OBJECT IDENTIFIER ::= { gnutelephonyMibConformance 1 }
+gnutelephonyMibGroups OBJECT IDENTIFIER ::= { gnutelephonyMibConformance 2 }
+
+gnutelephonyMibCompliance MODULE-COMPLIANCE
+	STATUS				current
+	DESCRIPTION			"Complikance statement for the GNU Telephony MIB."
+	MODULE				-- Module GNUTelephony-MIB
+	MANDATORY-GROUPS	{
+		gnutelephonyMibBasicGroup,
+		gnutelephonyMibTrapGroup
+	}
+	::= { gnutelephonyMibCompliances 1 }
+
+gnutelephonyMibBasicGroup	OBJECT-GROUP
+	OBJECTS {
+		serviceVersion,
+		serviceIdentity,
+		registryIdentity,
+		registryLocation,
+		uaIdentity,
+		uaLocation,
+		timeslotIndex,
+		boardIndex,
+		spanIndex,
+		spanAlarm,
+		callSession,
+		callSource,
+		callTarget,
+		callDivert,
+		callService,
+		callStarted,
+		callIdentity
+	}
+	STATUS			current
+	DESCRIPTION		"Objects used in traps."
+	::= { gnutelephonyMibGroups 1 }
+
+gnutelephonyMibTrapGroup	NOTIFICATION-GROUP
+	NOTIFICATIONS {
+		serviceStartup,
+		serviceShutdown,
+		serviceReloaded,
+		serviceFailed,
+		serviceBusy,
+		registryAccepted,
+		registryRejected,
+		registryFailed,
+		registryTerminated,
+		uaRegister,
+		uaRelease,
+		uaReject,
+		boardEnable,
+		boardDisable,
+		timeslotEnable,
+		timeslotDisable,
+		spanEnable,
+		spanDisable,
+		spanAlert,
+		callCompleted
+	}
+	STATUS			current
+	DESCRIPTION		"GNU Telephony Traps."
+	::= { gnutelephonyMibGroups 2 }
+	
+END
+	
+			
