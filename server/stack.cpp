@@ -147,7 +147,7 @@ void stack::background::run(void)
 			Conditional::unlock();
 			process::errlog(DEBUG1, "stopping background thread");
 			thread = NULL;
-			DetachedThread::exit();
+			return;	// exits thread...
 		}
 		timeout = expires.get();
 		if(!signalled && timeout) {

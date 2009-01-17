@@ -1797,9 +1797,8 @@ void thread::run(void)
 		if(shutdown_flag) {
 			process::errlog(DEBUG1, "stopping thread %d", instance);
 			++shutdown_count;
-			DetachedThread::exit();
+			return; // exits thread...
 		}
-
 
 		if(!sevent)
 			continue;

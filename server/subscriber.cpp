@@ -83,7 +83,6 @@ void subscriber::listener::run(void)
 		}
 	}
 	process::errlog(DEBUG1, "stopping rtpproxy thread");
-	JoinableThread::exit();
 }
 
 subscriber::subscriber() :

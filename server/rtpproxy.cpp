@@ -79,7 +79,6 @@ void rtp::listener::run(void)
 		}
 	}
 	process::errlog(DEBUG1, "stopping rtpproxy thread");
-	JoinableThread::exit();
 }
 
 rtp::rtp() :
