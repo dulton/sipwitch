@@ -466,7 +466,7 @@ void SignalThread::run(void)
 #endif
 		alarm(0);
 		if(shutdown)
-			join();
+			return;
 		process::errlog(DEBUG1, "received signal %d", signo);
 		switch(signo) {
 		case SIGALRM:
