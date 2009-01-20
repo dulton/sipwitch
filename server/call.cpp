@@ -57,9 +57,9 @@ void stack::call::joinLocked(session *join)
 	while(sp) {
 		s = &(sp->sid);
 		if(s != source && s != target) {
-			if(s->reg) {
-				s->reg->decUse();
-				s->reg = NULL;
+			if(!s->closed) {
+				registry::decUse(s->reg, stats::OUTGOING);
+				s->closed = true;
 			}
 			if(s->state == session::REFER)
 				s->state = session::CLOSED;
@@ -117,9 +117,12 @@ void stack::call::disconnectLocked(void)
 		
 	linked_pointer<segment> sp = segments.begin();
 	while(sp) {
-		if(sp->sid.reg) {
-			sp->sid.reg->decUse();
-			sp->sid.reg = NULL;
+		if(!sp->sid.closed) {
+			if(&(sp->sid) == sp->sid.parent->source)
+				registry::decUse(sp->sid.reg, stats::INCOMING);
+			else
+				registry::decUse(sp->sid.reg, stats::OUTGOING);
+			sp->sid.closed = true;
 		}
 		if(sp->sid.state == session::REFER)
 			sp->sid.state = session::CLOSED;

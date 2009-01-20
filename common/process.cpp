@@ -601,6 +601,31 @@ FILE *process::dumpfile(const char *uid)
 	return fp;
 }
 
+FILE *process::period(const char *uid)
+{
+	FILE *fp;
+	char buf[256];
+
+#ifdef	_MSWINDOWS_
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	unsigned len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\%s\\period.log", ident);	 
+#else
+	if(replytarget && isdigit(*replytarget))
+		snprintf(buf, sizeof(buf), "/tmp/.sipwitch.%d", atoi(replytarget));
+	else
+		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/period", ident);
+#endif
+	fp = fopen(buf, "w");
+#ifndef	_MSWINDOWS_
+	if(!fp) {
+		snprintf(buf, sizeof(buf), "/tmp/%s-%s/period", ident, uid);
+		fp = fopen(buf, "w");
+	}
+#endif
+	return fp;
+}
+
 FILE *process::snapshot(const char *uid)
 {
 	FILE *fp;

@@ -3,6 +3,7 @@ From version 0.3.8 to 0.3.9
 - sipwitch can return server info to calling pid.
 - disconnect in trying is a declined call, not failed one.
 - GNU Telephony MIB introduced for future snmp plugin.
+- basic sipwitch call statistics added.
 
 From version 0.3.7 to 0.3.8
 - cleanup in module loading and path computations.

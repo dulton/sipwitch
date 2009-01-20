@@ -36,6 +36,7 @@ static LinkedObject *freeroutes = NULL;
 static LinkedObject *freetargets = NULL;
 static LinkedObject **keys = NULL;
 static condlock_t locking;
+static stats *statmap = NULL;
 
 registry registry::reg;
 
@@ -111,18 +112,46 @@ service::callback(0), mapped_reuse<MappedRegistry>()
 	routes = 10;
 }
 
-void registry::mapped::incUse(void)
+void registry::incUse(mapped *rr, stats::stat_t stat)
 {
-	Mutex::protect(this);
-	++inuse;
-	Mutex::release(this);
+	if(rr) {
+		Mutex::protect(rr);
+		++rr->inuse;
+		Mutex::release(rr);
+		switch(rr->type) {
+		case MappedRegistry::GATEWAY:
+			statmap[3].assign(stat);
+			break;
+		case MappedRegistry::SERVICE:
+			statmap[2].assign(stat);
+			break;
+		default:
+			statmap[1].assign(stat);
+		} 
+	}
+	else
+		statmap[4].assign(stat);
 }
 
-void registry::mapped::decUse(void)
+void registry::decUse(mapped *rr, stats::stat_t stat)
 {
-	Mutex::protect(this);
-	--inuse;
-	Mutex::release(this);
+	if(rr) {
+		Mutex::protect(rr);
+		--rr->inuse;
+		Mutex::release(rr);
+		switch(rr->type) {
+		case MappedRegistry::GATEWAY:
+			statmap[3].release(stat);
+			break;
+		case MappedRegistry::SERVICE:
+			statmap[2].release(stat);
+			break;
+		default:
+			statmap[1].release(stat);
+		} 
+	}
+	else
+		statmap[4].release(stat);
 }
 
 registry::mapped *registry::find(const char *id)
@@ -155,10 +184,11 @@ void registry::start(service *cfg)
 	assert(cfg != NULL);
 
 	process::errlog(DEBUG1, "registry starting; mapping %d entries", mapped_entries);
-	MappedReuse::create("sipwitch.regmap", mapped_entries);
+	MappedReuse::create(REGISTRY_MAP, mapped_entries);
 	if(!reg)
 		process::errlog(FAILURE, "registry could not be mapped");
 	initialize();
+	statmap = stats::create();
 }
 
 bool registry::check(void)
@@ -175,7 +205,7 @@ void registry::stop(service *cfg)
 
 	process::errlog(DEBUG1, "registry stopping");
 	MappedMemory::release();
-	MappedMemory::remove("sipwitch.regmap");
+	MappedMemory::remove(REGISTRY_MAP);
 }
 
 void registry::snapshot(FILE *fp) 
@@ -433,7 +463,7 @@ unsigned registry::getEntries(void)
 	return mapped_entries;
 }
 
-registry::mapped *registry::invite(const char *id)
+registry::mapped *registry::invite(const char *id, stats::stat_t stat)
 {
 	assert(id != NULL && *id != 0);
 
@@ -443,7 +473,7 @@ registry::mapped *registry::invite(const char *id)
 	locking.access();
 	rr = find(id);
 	if(rr) {
-		rr->incUse();
+		incUse(rr, stat);
 		locking.release();
 		return rr;
 	}

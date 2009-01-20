@@ -91,9 +91,61 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 	printf("%s:%u\n", buf, p2);
 }
 
+static void dumpstats(char **argv)
+{
+	char text[80];
+	time_t now;
+
+	if(argv[1]) {
+		fprintf(stderr, "*** sipwitch: stats: no arguments used\n");
+		exit(-1);
+	}
+	mapped_view<stats> sta(STAT_MAP);
+	unsigned count = sta.getCount();
+	unsigned index = 0;
+	const volatile stats *map;
+	unsigned current;
+	
+	if(!count) {
+		fprintf(stderr, "*** sipwitch: offline\n");
+		exit(-1);
+	}
+	time(&now);
+	while(index < count) {
+		map = sta(index++);
+
+		if(!map->id[0])
+			continue;
+
+		snprintf(text, sizeof(text), "%-12s", map->id);
+		for(unsigned entry = 0; entry < 2; ++entry) {
+			size_t len = strlen(text);
+			snprintf(text + len, sizeof(text) - len, " %09lu %07lu %05hu %05hu",
+				map->data[entry].total,
+				map->data[entry].period, 
+				map->data[entry].current,
+				map->data[entry].peak);
+		}
+		current = map->data[0].current + map->data[1].current;
+		if(current)
+			printf("%s 0s\n", text);
+		else if(!map->lastcall)
+			printf("%s -\n", text);
+		else if(now - map->lastcall > (3600l * 99l))
+			printf("%s %ld%c\n", text, (now - map->lastcall) / (3600l * 24l), 'd');
+		else if(now - map->lastcall > (60l * 120l))
+			printf("%s %ld%c\n", text, (now - map->lastcall) / 3600l, 'h');
+		else if(now - map->lastcall > 120l)
+			printf("%s %ld%c\n", text, (now - map->lastcall) / 60l, 'm');
+		else
+			printf("%s %ld%c\n", text, now - map->lastcall, 's');
+	}
+	exit(0);
+}
+
 static void registry(char **argv)
 {
-	mapped_view<MappedRegistry> reg("sipwitch.regmap");
+	mapped_view<MappedRegistry> reg(REGISTRY_MAP);
 	unsigned count = reg.getCount();
 	unsigned found = 0, index = 0;
 	volatile const MappedRegistry *member;
@@ -253,11 +305,13 @@ static void usage(void)
         "  concurrency <level>     Server concurrency level\n"
 		"  down                    Shut down server\n"
 		"  message <ext> <text>    Send text message to extension\n"
+		"  period                  Dump and flush periodic stats\n"
         "  registry                Dump registry\n"
         "  release <ext>           Release registration\n"
 		"  reload                  Reload configuration\n"
         "  restart                 Server restart\n"
         "  snapshot                Server snapshot\n"
+        "  stats                   Dump server statistics\n"
         "  state <selection>       Change server state\n"
         "  verbose <level>         Server verbose logging level\n"
 	);		
@@ -379,7 +433,7 @@ extern "C" int main(int argc, char **argv)
 	++argv;
 	if(String::equal(*argv, "help"))
 		usage();
-	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot"))
+	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot") || String::equal(*argv, "period") || String::equal(*argv, "pstats"))
 		single(argv, 30);
 	else if(String::equal(*argv, "down") || String::equal(*argv, "restart") || String::equal(*argv, "abort"))
 		single(argv, 0);
@@ -389,6 +443,8 @@ extern "C" int main(int argc, char **argv)
 		message(argv);
 	else if(String::equal(*argv, "registry"))
 		registry(argv);
+	else if(String::equal(*argv, "stats"))
+		dumpstats(argv);
 	else if(String::equal(*argv, "address"))
 		address(argv);
 	else if(String::equal(*argv, "activate"))

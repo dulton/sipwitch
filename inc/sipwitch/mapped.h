@@ -27,6 +27,10 @@
 #include <sipwitch/namespace.h>
 #endif
 
+#ifndef	_SIPWITCH_STATS_H_
+#include <sipwitch/stats.h>
+#endif
+
 /**
  * Classes related to memory mapped objects from sipwitch server.
  * This covers the published interfaces to the sipwitch server itself.  These
@@ -63,6 +67,9 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+#define	CALL_MAP		"sipwitch.calls"
+#define	REGISTRY_MAP	"sipwitch.regs"
+
 typedef struct {
 	char id[MAX_USERID_SIZE];
 	unsigned short features;
@@ -90,6 +97,7 @@ public:
 		struct {				// external registry properties...
 			const char *identity;	// forced identity string when calling
 			const char *connect;	// invite uri host identity
+			stats *statnode;		// associated stat node...
 		} external;
 		struct {				// internal registry properties
 			LinkedObject *published;	// published routes

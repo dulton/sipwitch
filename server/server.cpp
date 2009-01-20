@@ -858,6 +858,11 @@ void server::run(const char *user)
 			continue;
 		}
 
+		if(!stricmp(cp, "period") || !stricmp(cp, "pstats")) {
+			service::period(user);
+			continue;
+		}
+
 		if(!stricmp(cp, "dump")) {
 			service::dumpfile(user);
 			continue;

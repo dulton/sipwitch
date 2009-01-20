@@ -160,6 +160,7 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 		
 	eXosip_unlock();
 	invited = stack::create(call, cid);
+	registry::incUse(NULL, stats::OUTGOING);
 	rtpproxy::copy(&invited->proxy, &proxyinfo);
 	uri::userid(uri_target, username, sizeof(username));
 	uri::hostid(uri_target, route, sizeof(route));
@@ -384,7 +385,7 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 		else
 			snprintf(invited->from, sizeof(invited->from),
 				"<%s>", invited->identity);
-		rr->incUse();
+		registry::incUse(rr, stats::OUTGOING);
 		invited->reg = rr;
 
 		stack::sipPublish(&tp->address, route, NULL, sizeof(route));
@@ -581,7 +582,8 @@ noproxy:
 			snprintf(session->from, sizeof(session->from),
 				"<%s>", session->identity);
 
-		session->reg = registry::invite(identity);
+		session->closed = false;
+		session->reg = registry::invite(identity, stats::INCOMING);
 		debug(1, "local call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, call->dialed, session->sysident);
 		break;
@@ -603,6 +605,9 @@ noproxy:
 		}
 		debug(1, "incoming call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, call->dialed, session->sysident);
+
+		session->closed = false;
+		registry::incUse(NULL, stats::INCOMING);	// external...
 		break;
 	case EXTERNAL:
 		call->type = stack::call::OUTGOING;
@@ -610,7 +615,7 @@ noproxy:
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
 			String::set(session->sysident, sizeof(session->sysident), identity);
-		session->reg = registry::invite(identity);
+		session->reg = registry::invite(identity, stats::OUTGOING);
 		if(display[0])
 			String::set(session->display, sizeof(session->display), display);
 		else
@@ -631,6 +636,7 @@ noproxy:
 		debug(1, "outgoing call %08x:%u from %s to %s", 
 			session->sequence, session->cid, getIdent(), requesting);
 		inviteRemote(session, requesting);
+		session->closed = false;
 		goto exit;
 	case ROUTED:
 		call->type = stack::call::OUTGOING;
@@ -653,11 +659,13 @@ noproxy:
 				"\"%s\" <%s>", session->display, session->identity);
 	
 		String::set(call->dialed, sizeof(call->dialed), dialing);
-		session->reg = registry::invite(identity);
+		session->closed = false;
+		session->reg = registry::invite(identity, stats::INCOMING);
 		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
 			session->sequence, session->cid, target, getIdent(), dialing);
 		break;  	
 	default:
+		session->closed = true;
 		break;
 	}
 
@@ -897,7 +905,7 @@ rewrite:
 			return authenticate();
 		if(!stricmp(dialed.keys->getId(), "test")) {
 			if(session && authenticate()) {
-				session->reg = registry::invite(identity);
+				session->reg = registry::invite(identity, stats::INCOMING);
 				cp = service::getValue(dialed.keys, "error");
 				if(cp) {
 					error = atoi(cp);
@@ -2003,6 +2011,7 @@ void thread::run(void)
 				break;
 			expiration();
 			session = stack::create(sevent->cid, sevent->did, sevent->tid);
+			session->closed = true;
 			if(authorize()) 
 				invite();
 			break;

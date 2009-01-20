@@ -800,6 +800,27 @@ void service::dumpfile(const char *uid)
 	fclose(fp);
 }
 
+void service::period(const char *uid)
+{
+	assert(uid == NULL || *uid != 0);
+
+	keynode *env = getEnviron();
+
+	if(!uid)
+		uid = getValue(env, "USER");
+
+	FILE *fp = process::period(uid);
+	release(env);
+
+	if(!fp) {
+		process::errlog(ERRLOG, "period; cannot access file");
+		return;
+	}
+
+	stats::period(fp);
+	fclose(fp);
+}
+
 void service::snapshot(const char *uid)
 {
 	assert(uid == NULL || *uid != 0);

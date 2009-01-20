@@ -54,8 +54,6 @@ public:
 	class __LOCAL mapped : public MappedRegistry
 	{
 	public:
-		void incUse(void);
-		void decUse(void);
 		bool expire(Socket::address& addr);
 		bool refresh(Socket::address& addr, time_t expires, const char *target_contact);
 		unsigned setTargets(Socket::address& addr);
@@ -173,6 +171,8 @@ public:
 	inline static unsigned getRoutes(void)
 		{return reg.routes;};
 
+	static void incUse(mapped *rr, stats::stat_t stat);
+	static void decUse(mapped *rr, stats::stat_t stat);
 	static unsigned getEntries(void);
 	static unsigned getIndex(mapped *rr);
 	static bool isExtension(const char *id);
@@ -183,7 +183,7 @@ public:
 	static mapped *getExtension(const char *id);
 	static mapped *create(const char *id);
 	static mapped *access(const char *id);
-	static mapped *invite(const char *id);
+	static mapped *invite(const char *id, stats::stat_t stat);
 	static mapped *dialing(const char *id);
 	static bool exists(const char *id);
 	static pattern *getRouting(unsigned trs, const char *id);
@@ -233,6 +233,7 @@ private:
 		call *parent;
 		time_t expires;					// session/invite expires...
 		time_t ringing;					// ring no-answer timer...
+		bool closed;
 
 		enum {OPEN, CLOSED, RING, BUSY, REORDER, REFER} state;
 

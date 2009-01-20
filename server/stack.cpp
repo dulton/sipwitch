@@ -71,6 +71,7 @@ stack::segment::segment(call *cr, int cid, int did, int tid) : OrderedObject()
 	sid.state = session::OPEN;
 	sid.sdp[0] = 0;
 	sid.reg = NULL;
+	sid.closed = false;
 }
 
 void *stack::segment::operator new(size_t size)
@@ -286,9 +287,12 @@ void stack::close(session *s)
 
 	cr = s->parent;
 
-	if(s->reg) {
-		s->reg->decUse();
-		s->reg = NULL;
+	if(!s->closed) {
+		if(s == cr->source)
+			registry::decUse(s->reg, stats::INCOMING);
+		else
+			registry::decUse(s->reg, stats::OUTGOING);
+		s->closed = true;
 	}
 
 	Mutex::protect(cr);
@@ -311,12 +315,16 @@ void stack::clear(session *s)
 	if(!s)
 		return;
 
-	if(s->reg) {
-		s->reg->decUse();
-		s->reg = NULL;
+	cr = s->parent;
+
+	if(!s->closed) {
+		if(s == cr->source)
+			registry::decUse(s->reg, stats::INCOMING);
+		else
+			registry::decUse(s->reg, stats::OUTGOING);
+		s->closed = true;
 	}
 
-	cr = s->parent;
 	Mutex::protect(cr);
 
 	if(--cr->count == 0) {
@@ -428,9 +436,9 @@ void stack::disjoin(call *cr)
 	while(sp) {
 		session *s = sp->get();
 		if(s != cr->source) {
-			if(s->reg) {
-				s->reg->decUse();
-				s->reg = NULL;
+			if(!s->closed) {
+				registry::decUse(s->reg, stats::OUTGOING);
+				s->closed = true;
 			}
 			if(s->cid > 0 && s->state != session::CLOSED) {
 				eXosip_lock();
@@ -459,10 +467,15 @@ void stack::destroy(call *cr)
 	while(sp) {
 		--active_segments;
 		segment *next = sp.getNext();
-		if(sp->sid.reg) {
-			sp->sid.reg->decUse();
-			sp->sid.reg = NULL;
+		
+		if(!sp->sid.closed) {
+			if(&(sp->sid) == cr->source)
+				registry::decUse(sp->sid.reg, stats::INCOMING);
+			else
+				registry::decUse(sp->sid.reg, stats::OUTGOING);
+			sp->sid.closed = true;
 		}
+
 		if(sp->sid.cid > 0) {
 			if(sp->sid.state != session::CLOSED) {
 				eXosip_lock();
@@ -564,7 +577,7 @@ void stack::start(service *cfg)
 	process::errlog(DEBUG1, "sip stack starting; creating %d threads at priority %d", threading, priority); 
 	eXosip_init();
 
-	MappedReuse::create("sipwitch.callmap", mapped_calls);
+	MappedReuse::create(CALL_MAP, mapped_calls);
 	if(!sip)
 		process::errlog(FAILURE, "calls could not be mapped");
 
@@ -612,7 +625,7 @@ void stack::stop(service *cfg)
 	thread::shutdown();
 	Thread::yield();
 	MappedMemory::release();
-	MappedMemory::remove("sipwitch.callmap");
+	MappedMemory::remove(CALL_MAP);
 }
 
 bool stack::check(void)
