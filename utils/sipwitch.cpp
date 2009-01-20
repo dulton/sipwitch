@@ -26,6 +26,7 @@ using namespace UCOMMON_NAMESPACE;
 
 static void capture(void)
 {
+#ifndef	_MSWINDOWS_
 	char buffer[512];
 	FILE *fp;
 
@@ -36,6 +37,7 @@ static void capture(void)
 		fputs(buffer, stdout);
 	if(fp)
 		fclose(fp);
+#endif
 }
 
 static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
