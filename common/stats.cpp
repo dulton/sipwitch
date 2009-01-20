@@ -21,7 +21,7 @@
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
-static unsigned used = 0, total = 6;
+static unsigned used = 0, total = 7;
 static stats *base = NULL;
 
 static class __LOCAL sta : public mapped_array<stats>
@@ -57,6 +57,7 @@ stats *stats::create(void)
 	request("service");
 	request("gateway");
 	request("external");
+	request("other");
 	return base;
 }
 

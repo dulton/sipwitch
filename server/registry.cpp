@@ -119,14 +119,18 @@ void registry::incUse(mapped *rr, stats::stat_t stat)
 		++rr->inuse;
 		Mutex::release(rr);
 		switch(rr->type) {
+		case MappedRegistry::EXTERNAL:
+			if(rr->external.statnode) {
+				rr->external.statnode->assign(stat);
+				break;
+			}
+			statmap[5].assign(stat);
+			break;
 		case MappedRegistry::GATEWAY:
 			statmap[3].assign(stat);
 			break;
 		case MappedRegistry::SERVICE:
 			statmap[2].assign(stat);
-			break;
-		case MappedRegistry::EXTERNAL:
-			rr->external.statnode->assign(stat);
 			break;
 		default:
 			statmap[1].assign(stat);
@@ -143,14 +147,18 @@ void registry::decUse(mapped *rr, stats::stat_t stat)
 		--rr->inuse;
 		Mutex::release(rr);
 		switch(rr->type) {
+		case MappedRegistry::EXTERNAL:
+			if(rr->external.statnode) {
+				rr->external.statnode->release(stat);
+				break;
+			}
+			statmap[5].release(stat);
+			break;
 		case MappedRegistry::GATEWAY:
 			statmap[3].release(stat);
 			break;
 		case MappedRegistry::SERVICE:
 			statmap[2].release(stat);
-			break;
-		case MappedRegistry::EXTERNAL:
-			rr->external.statnode->release(stat);
 			break;
 		default:
 			statmap[1].release(stat);
