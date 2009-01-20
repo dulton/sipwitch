@@ -771,7 +771,7 @@ bool thread::authorize(void)
 	const char *target;
 	char dbuf[MAX_USERID_SIZE];
 	registry::pattern *pp;
-	unsigned from_port = 5060, to_port = stack::sip.port, local_port = stack::sip.port;
+	unsigned from_port = 5060, to_port = stack::sip_port, local_port = stack::sip_port;
 	const char *sep1 = "", *sep2 = "";
 	const char *refer = NULL;
 
@@ -848,7 +848,7 @@ bool thread::authorize(void)
 		goto invalid;
 	}
 
-	if(local_port != stack::sip.port)
+	if(local_port != stack::sip_port)
 		goto remote;
 
 	if(String::ifind(stack::sip.localnames, uri->host, " ,;:\t\n"))
@@ -1556,7 +1556,7 @@ void thread::registration(void)
 		error = SIP_NOT_FOUND;
 		if(!String::ifind(stack::sip.localnames, reguri->host, " ,;:\t\n")) {
 			stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
-			if(!Socket::equalhost((struct sockaddr *)&iface, request_address.getAddr()) && atoi(port) == stack::sip.port)
+			if(!Socket::equalhost((struct sockaddr *)&iface, request_address.getAddr()) && atoi(port) == stack::sip_port)
 				goto reply;
 		}
 

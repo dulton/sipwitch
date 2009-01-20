@@ -181,7 +181,7 @@ bool messages::system(const char *to, const char *text)
 	const char *scheme;
 	const char *sysid = stack::sip.system;
 	const char *host = stack::sip.published;
-	unsigned short port  = stack::sip.port;
+	unsigned short port  = sip_port;
 
 	if(stack::sip.tlsmode)
 		scheme = "sips";

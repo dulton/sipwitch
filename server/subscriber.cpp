@@ -34,6 +34,10 @@ private:
 
 	friend class listener;
 
+	void registration(int id, modules::regmode_t mode);
+	bool authenticate(int id, const char *remote_realm);
+	void update(void);
+
 public:
 	subscriber();
 
@@ -44,16 +48,17 @@ public:
 	void snapshot(FILE *fp);
 } _sub;
 
+static volatile bool changed = false;
 static bool rtp_running = false;
 static volatile timeout_t interval = 50;
 static volatile time_t refresh = 60;
 static volatile time_t updated = 0;
 static int priority = 0;
 static const char *iface = NULL;
-static char *registrar = NULL;
+static char *server = NULL;
 static char *proxy = NULL;
 static char *userid = NULL;
-static char *secret = NULL;
+static char *volatile secret = NULL;
 static char *identity = NULL;
 static MappedRegistry provider;	// fake provider record to be used...
 static char *volatile published = NULL;
@@ -90,12 +95,53 @@ modules::sipwitch()
 	provider.type = MappedRegistry::EXTERNAL;
 }
 
+void subscriber::update(void)
+{
+	osip_message_t *msg = NULL;
+	char contact[MAX_URI_SIZE];
+	char uri[MAX_URI_SIZE];
+	char reg[MAX_URI_SIZE];
+	unsigned len;
+	Socket::address dest = server;
+
+	process::uuid(provider.remote, sizeof(provider.remote), server);
+	snprintf(uri, sizeof(uri), "sip:%s@%s", userid, server);
+	snprintf(reg, sizeof(reg), "sip:%s", server);
+	snprintf(contact, sizeof(contact), "sip:%s@", provider.remote);
+
+	changed = false;
+	len = strlen(contact);
+	Socket::getinterface((struct sockaddr *)&provider.contact, dest.getAddr());
+	Socket::getaddress((struct sockaddr *)&provider.contact, contact + len, sizeof(contact) - len);
+	len = strlen(contact);
+	snprintf(contact + len, sizeof(contact) - len, ":%u", sip_port);
+	debug(3, "registering %s with %s", contact, server);
+		
+	eXosip_lock();
+	provider.rid = eXosip_register_build_initial_register(uri, reg, contact, refresh, &msg);
+	if(msg) {
+		osip_message_set_header(msg, "Event", "Registration");
+		osip_message_set_header(msg, "Allow-Events", "presence");
+		eXosip_register_send_register(provider.rid, msg);
+		provider.status = MappedRegistry::IDLE;
+	}
+	else {
+		provider.status = MappedRegistry::OFFLINE;
+		provider.rid = -1;
+	}
+	eXosip_unlock();
+}
+
 void subscriber::start(service *cfg) 
 {
 	assert(cfg != NULL);
 
 	if(count) {
 		provider.external.statnode = stats::request("provider");	
+
+		if(changed)
+			update();
+		
 		rtpproxy::startup(count, port, iface);
 		process::errlog(INFO, "rtp proxy started for %d ports", count);
 		thr = new listener();
@@ -130,6 +176,7 @@ void subscriber::reload(service *cfg)
 	char *vp;
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("subscriber");
+	char buffer[160];
 
 	updated = 0l;
 
@@ -155,11 +202,16 @@ void subscriber::reload(service *cfg)
 				if(vp)
 					free((void *)vp);
 			}			
-			else if(!stricmp(key, "registrar")) {
-				temp = registrar;
-				registrar = strdup(value);
-				if(temp)
-					free(temp);
+			else if(!stricmp(key, "registrar") || !stricmp(key, "server")) {
+				if(uri::resolve(value, buffer, sizeof(buffer))) {
+					changed = true;
+					server = cfg->dup(buffer);
+					debug(2, "subscriber provider is %s", buffer);
+				}
+				else {
+					changed = false;
+					process::errlog(ERRLOG, "subscriber: %s: cannot resolve", value);
+				}
 			}
 			else if(!stricmp(key, "proxy")) {
 				temp = proxy;
@@ -215,6 +267,49 @@ bool subscriber::classifier(rtpproxy::session *sid, rtpproxy::session *src, stru
 		}
 	}
 	return false;
+}
+
+void subscriber::registration(int id, modules::regmode_t mode) 
+{
+	if(id == -1 || id != provider.rid)
+		return;
+
+	switch(mode) {
+	case modules::REG_FAILED:
+		process::errlog(ERRLOG, "service provider offline");
+		provider.status = MappedRegistry::OFFLINE;
+		return;
+	case modules::REG_TERMINATED:
+		process::errlog(ERRLOG, "service provider failed");
+		provider.rid = -1;
+		provider.status = MappedRegistry::OFFLINE;
+		if(changed)
+			update();
+		return;
+	case modules::REG_SUCCESS:
+		process::errlog(NOTICE, "service provider active");
+		provider.status = MappedRegistry::IDLE;
+		return;
+	}
+}	
+
+bool subscriber::authenticate(int id, const char *remote_realm)
+{
+	if(id == -1 || id != provider.rid)
+		return false;
+
+	if(secret && *secret)
+		debug(3, "authorizing %s for %s", userid, remote_realm);
+	else {
+		debug(3, "cannot authorize %s for %s", userid, remote_realm);
+		return false;
+	}
+
+	eXosip_lock();
+	eXosip_add_authentication_info(userid, userid, secret, NULL, remote_realm);
+	eXosip_automatic_action();
+	eXosip_unlock();
+	return true;
 }
 
 END_NAMESPACE

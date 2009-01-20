@@ -1,3 +1,6 @@
+From version 0.3.9 to 0.3.10
+- subscriber plugin provider registration management.
+
 From version 0.3.8 to 0.3.9
 - man page for daemon admin support shell utility.
 - sipwitch can return server info to calling pid.

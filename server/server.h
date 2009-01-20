@@ -349,7 +349,6 @@ private:
 	String agent;
 	String system;
 	String anon;
-	unsigned short port;
 	bool incoming, outgoing, dumping;
 	int send101;
 	timeout_t ring_timer, cfna_timer, reset_timer;

@@ -193,7 +193,6 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	timing = 500;
 	iface = NULL;
 	protocol = IPPROTO_UDP;
-	port = 5060;
 	family = AF_INET;
 	tlsmode = 0;
 	send101 = 1;
@@ -504,11 +503,11 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 	Socket::getinterface(iface, dest);
 	switch(iface->sa_family) {
 	case AF_INET:
-		((struct sockaddr_in*)(iface))->sin_port = htons(sip.port);
+		((struct sockaddr_in*)(iface))->sin_port = htons(sip_port);
 		break;
 #ifdef	AF_INET6
 	case AF_INET6:
-		((struct sockaddr_in6*)(iface))->sin6_port = htons(sip.port);
+		((struct sockaddr_in6*)(iface))->sin6_port = htons(sip_port);
 		break;
 #endif
 	}
@@ -590,14 +589,14 @@ void stack::start(service *cfg)
 #endif
 
 	Socket::family(family);
-	if(eXosip_listen_addr(protocol, iface, port, family, tlsmode)) {
+	if(eXosip_listen_addr(protocol, iface, sip_port, family, tlsmode)) {
 #ifdef	AF_INET6
 		if(!iface && family == AF_INET6)
 			iface = "::0";
 #endif
 		if(!iface)
 			iface = "*";
-		process::errlog(FAILURE, "sip cannot bind interface %s, port %d", iface, port);
+		process::errlog(FAILURE, "sip cannot bind interface %s, port %d", iface, sip_port);
 	}
 
 	osip_trace_initialize_syslog(TRACE_LEVEL0, (char *)"sipwitch");
@@ -734,7 +733,7 @@ void stack::reload(service *cfg)
 			else if(!stricmp(key, "agent") && !isConfigured())
 				agent = value;
 			else if(!stricmp(key, "port") && !isConfigured())
-				port = atoi(value);
+				sip_port = atoi(value);
 			else if(!stricmp(key, "mapped") && !isConfigured())
 				mapped_calls = atoi(value);
 			else if(!stricmp(key, "transport") && !isConfigured()) {
@@ -832,9 +831,9 @@ char *stack::sipPublish(struct sockaddr_internet *addr, char *buf, const char *u
 
 	String::add(buf, size, sip.published);
 	if(ipv6)
-		snprintf(pbuf, sizeof(pbuf), "]:%u", sip.port);
+		snprintf(pbuf, sizeof(pbuf), "]:%u", sip_port);
 	else
-		snprintf(pbuf, sizeof(pbuf), ":%u", sip.port);
+		snprintf(pbuf, sizeof(pbuf), ":%u", sip_port);
 	String::add(buf, size, pbuf);
 	return buf;
 }
@@ -873,7 +872,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 		return NULL;
 	}
 	if(!port)
-		port = sip.port;
+		port = sip_port;
 
 	if(sip.tlsmode)
 		String::set(buf, size, "sips:");

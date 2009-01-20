@@ -31,6 +31,7 @@ using namespace UCOMMON_NAMESPACE;
 
 LinkedObject *service::callback::runlevels[4] = {NULL, NULL, NULL, NULL};
 unsigned service::callback::count = 0;
+unsigned short service::callback::sip_port = 5060;
 condlock_t service::locking;
 service *service::cfg = NULL;
 volatile service::dialmode_t service::dialmode = service::ALL_DIALING;
