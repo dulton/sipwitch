@@ -125,6 +125,9 @@ void registry::incUse(mapped *rr, stats::stat_t stat)
 		case MappedRegistry::SERVICE:
 			statmap[2].assign(stat);
 			break;
+		case MappedRegistry::EXTERNAL:
+			rr->external.statnode->assign(stat);
+			break;
 		default:
 			statmap[1].assign(stat);
 		} 
@@ -145,6 +148,9 @@ void registry::decUse(mapped *rr, stats::stat_t stat)
 			break;
 		case MappedRegistry::SERVICE:
 			statmap[2].release(stat);
+			break;
+		case MappedRegistry::EXTERNAL:
+			rr->external.statnode->release(stat);
 			break;
 		default:
 			statmap[1].release(stat);
