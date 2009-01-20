@@ -396,9 +396,59 @@ static void info(void)
 	error(200, "ok");
 }
 
+static void dumpstats(const char *id)
+{
+	mapped_view<stats> sta(STAT_MAP);
+	unsigned count = sta.getCount();
+	unsigned index = 0;
+	volatile const stats *member;
+	stats buffer;
+	time_t now;
+
+	if(!count) 
+		error(405, "Server unavailable");
+
+	printf(
+		"Status: 200 OK\r\n"
+		"Content-Type: text/xml\r\n"
+		"\r\n");
+
+	printf("<?xml version=\"1.0\"?>\n");
+	printf("<mappedStats>\n");
+	time(&now);
+
+	while(index < count) {
+		member = sta(index++);
+		do {	
+			memcpy(&buffer, (const void *)member, sizeof(buffer));
+		} while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
+		if(!member->id[0])
+			continue;
+		if(id && !String::equal(id, buffer.id))
+			continue;
+		printf(" <entry id=\"%s\">\n", buffer.id);
+		printf("  <incoming>\n");
+		printf("   <total>%lu</total>\n", buffer.data[0].total);
+		printf("   <period>%lu</period>\n", buffer.data[0].period);
+		printf("   <current>%hu</current>\n", buffer.data[0].current);
+		printf("   <peak>%hu</peak>\n", buffer.data[0].peak);
+		printf("  </incoming>\n");
+		printf("  <outgoing>\n");
+		printf("   <total>%lu</total>\n", buffer.data[1].total);
+		printf("   <period>%lu</period>\n", buffer.data[1].period);
+		printf("   <current>%hu</current>\n", buffer.data[1].current);
+		printf("   <peak>%hu</peak>\n", buffer.data[1].peak);
+		printf("  </outgoing>\n");
+		printf(" </entry>\n");
+	}
+	printf("</mappedStats>\n");
+	fflush(stdout);
+	exit(0);
+}
+
 static void registry(const char *id)
 {
-	mapped_view<MappedRegistry> reg("sipwitch.regmap");
+	mapped_view<MappedRegistry> reg(REGISTRY_MAP);
 	unsigned count = reg.getCount();
 	unsigned index = 0;
 	volatile const MappedRegistry *member;
@@ -572,11 +622,17 @@ extern "C" int main(int argc, char **argv)
 		if(!stricmp(cgi_query, "registry"))
 			registry(NULL);
 
+		if(!stricmp(cgi_query, "stats"))
+			dumpstats(NULL);
+
 		if(!stricmp(cgi_query, "calls"))
 			calls(NULL);
 		
 		if(!strnicmp(cgi_query, "registry=", 9))
 			registry(cgi_query + 9); 
+
+		if(!strnicmp(cgi_query, "stats=", 6))
+			dumpstats(cgi_query + 6); 
 
 		if(!strnicmp(cgi_query, "calls=", 6))
 			calls(cgi_query + 6); 
