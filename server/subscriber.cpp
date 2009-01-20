@@ -18,6 +18,32 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+class __LOCAL listener : public JoinableThread
+{
+public:
+	listener();
+
+private:
+	void run(void);
+};
+
+static class __LOCAL subscriber : private modules::sipwitch
+{
+private:
+	static subscriber _sub;
+
+	friend class listener;
+
+public:
+	subscriber();
+
+	bool classifier(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
+	void reload(service *cfg);
+	void start(service *cfg);
+	void stop(service *cfg);
+	void snapshot(FILE *fp);
+} _sub;
+
 static bool rtp_running = false;
 static volatile timeout_t interval = 50;
 static volatile time_t refresh = 60;
@@ -29,47 +55,18 @@ static char *proxy = NULL;
 static char *userid = NULL;
 static char *secret = NULL;
 static char *identity = NULL;
+static MappedRegistry provider;	// fake provider record to be used...
+static char *volatile published = NULL;
+static unsigned short port = 9000;
+static unsigned count = 0;
+static listener *thr = NULL;
 
-class __LOCAL subscriber : private modules::sipwitch
-{
-private:
-	unsigned short port;
-	unsigned count;
-	char *volatile published;
-
-	static subscriber provider;
-
-	class __LOCAL listener : public JoinableThread
-	{
-	public:
-		listener();
-
-	private:
-		void run(void);
-	};
-
-	listener *thr;
-
-	friend class subscriber::listener;
-
-public:
-	subscriber();
-
-	bool classifier(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
-	void reload(service *cfg);
-	void start(service *cfg);
-	void stop(service *cfg);
-	void snapshot(FILE *fp);
-};
-
-subscriber subscriber::provider;
-
-subscriber::listener::listener() :
+listener::listener() :
 JoinableThread(priority)
 {
 }
 
-void subscriber::listener::run(void)
+void listener::run(void)
 {
 	time_t now;
 
@@ -79,7 +76,7 @@ void subscriber::listener::run(void)
 		time(&now);
 		if(now > updated) {
 			updated = now + refresh;
-			rtpproxy::publish((const char *)subscriber::provider.published);
+			rtpproxy::publish((const char *)published);
 		}
 	}
 	process::errlog(DEBUG1, "stopping rtpproxy thread");
@@ -88,10 +85,9 @@ void subscriber::listener::run(void)
 subscriber::subscriber() :
 modules::sipwitch()
 {
-	port = 9000;
-	count = 0; 	
-	published = NULL;
-	thr = NULL;
+	memset(&provider, 0, sizeof(provider));
+	provider.rid = -1;
+	provider.type = MappedRegistry::EXTERNAL;
 }
 
 void subscriber::start(service *cfg) 
@@ -99,9 +95,10 @@ void subscriber::start(service *cfg)
 	assert(cfg != NULL);
 
 	if(count) {
+		provider.external.statnode = stats::request("provider");	
 		rtpproxy::startup(count, port, iface);
 		process::errlog(INFO, "rtp proxy started for %d ports", count);
-		thr = new subscriber::listener();
+		thr = new listener();
 		thr->start();
 	} 
 }
@@ -191,6 +188,9 @@ void subscriber::reload(service *cfg)
 		}
 		sp.next();
 	}
+
+	if(!isConfigured() && count)
+		stats::allocate(1);
 }
 
 bool subscriber::classifier(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
