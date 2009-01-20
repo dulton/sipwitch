@@ -1,4 +1,4 @@
-{!?release: %define release 0}
+%{!?release: %define release 0}
 %{!?version: %define version @VERSION@}
 
 %{!?uses_avahi:  %define uses_avahi 1}
@@ -26,7 +26,7 @@ URL: http://www.gnu.org/software/sipwitch
 Group: Networking/Telephony
 Source0: http://www.gnutelephony.org/dist/tarballs/sipwitch-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildRequires: ucommon-devel >= 1.9.8
+BuildRequires: ucommon-devel >= @UCOMMON_REQUIRES@
 BuildRequires: libeXosip2-devel >= 3.0.0
 BuildRequires: gcc-c++ pkgconfig
 %if %uses_openssl

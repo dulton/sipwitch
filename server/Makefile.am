@@ -11,7 +11,7 @@
 MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
 LDADD = ../common/libsipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ @DAEMON_LIBS@
-EXTRA_DIST = *.xml *.conf *.log *.defaults *.init GNUTelephonyt-MIB.txt
+EXTRA_DIST = *.xml *.conf *.log *.defaults *.init GNUTelephony-MIB.txt
 EXTRA_LTLIBRARIES =
 
 sbin_PROGRAMS = sipw

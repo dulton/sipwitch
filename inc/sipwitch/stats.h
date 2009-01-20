@@ -35,10 +35,6 @@
 #include <ucommon/string.h>
 #endif
 
-#ifndef	_CCSCRIPT_H_
-#include <ccscript.h>
-#endif
-
 #ifndef	_SIPWITCH_NAMESPACE_H_
 #include <sipwitch/namespace.h>
 #endif
