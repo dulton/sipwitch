@@ -296,6 +296,16 @@ static void command(char **argv, unsigned timeout)
 #endif
 }
 
+static void version(void)
+{
+	printf("SIP Witch " VERSION "\n"
+        "Copyright (C) 2007,2008,2009 David Sugar, Tycho Softworks\n"
+		"License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
+		"This is free software: you are free to change and redistribute it.\n"
+        "There is NO WARRANTY, to the extent permitted by law.\n");
+    exit(0);
+}
+
 static void usage(void)
 {
 	printf("usage: sipwitch command\n"
@@ -317,6 +327,8 @@ static void usage(void)
         "  state <selection>       Change server state\n"
         "  verbose <level>         Server verbose logging level\n"
 	);		
+
+	printf("Report bugs to dyfet@gnutelephony.org\n");
 	exit(0);
 }
 
@@ -433,7 +445,9 @@ extern "C" int main(int argc, char **argv)
 		usage();
 
 	++argv;
-	if(String::equal(*argv, "help"))
+	if(String::equal(*argv, "version") || String::equal(*argv, "-version") || String::equal(*argv, "--version"))
+		version();
+	else if(String::equal(*argv, "help") || String::equal(*argv, "-help") || String::equal(*argv, "--help"))
 		usage();
 	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot") || String::equal(*argv, "period") || String::equal(*argv, "pstats"))
 		single(argv, 30);

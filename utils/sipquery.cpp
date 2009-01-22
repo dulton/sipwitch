@@ -72,6 +72,15 @@ extern "C" int main(int argc, char **argv)
 			continue;
 		}
 
+		if(!strcmp(*argv, "-version")) {
+			printf("sipquery 0.1\n"
+				"Copyright (C) 2008 David Sugar, Tycho Softworks\n"
+				"License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
+				"This is free software: you are free to change and redistribute it.\n"
+				"There is NO WARRANTY, to the extent permitted by law.\n");
+			exit(0);
+		}
+
 		if(!strcmp(*argv, "-v") || !strcmp(*argv, "-verbose")) {
 			verbose = 1;
 			continue;
@@ -172,7 +181,8 @@ extern "C" int main(int argc, char **argv)
 				"  -forward  ip-address\n"
 				"  -port     port-numer\n"
 				"  -timeout  seconds\n"
-				"  -verbsose\n");
+				"  -verbsose\n"
+				"Report bugs to dyfet@gnutelephony.org\n");
 			exit(3);
 		}
 

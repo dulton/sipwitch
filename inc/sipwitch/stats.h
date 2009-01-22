@@ -15,8 +15,8 @@
 
 /**
  * Basic server call statistics.
- * This provides the interface for managing stat nodes, which are kept in
- * shared memory.
+ * This provides the interface for managing server call statistics, which are 
+ * kept in shared memory.
  * @file sipwitch/stats.h
  */
 
@@ -61,6 +61,7 @@ public:
 
 	void assign(stat_t element);
 	void release(stat_t element);
+
 	unsigned active(void) const;
 
 	static void period(FILE *fp = NULL);

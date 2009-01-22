@@ -961,7 +961,7 @@ invalid:
 void server::version(void)
 {
 	printf("SIP Witch " VERSION "\n"
-        "Copyright (C) 2007-2008 David Sugar, Tycho Softworks\n"
+        "Copyright (C) 2007,2008,2009 David Sugar, Tycho Softworks\n"
 		"License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
 		"This is free software: you are free to change and redistribute it.\n"
         "There is NO WARRANTY, to the extent permitted by law.\n");
@@ -976,7 +976,7 @@ void server::usage(void)
 	printf("Usage: sipw [options]\n"
 #endif
 		"Options:\n"
-		"  --help                Display this information\n"
+		"  -help                Display this information\n"
 		"  -foreground           Run server in foreground\n"
 		"  -background           Run server as daemon\n"
 #ifndef _MSWINDOWS_
@@ -1000,6 +1000,7 @@ void server::usage(void)
 		"  -memleak              Find where leaks are with valgrind\n"
 #endif
 	);
+	printf("Report bugs to dyfet@gnutelephony.org\n");
 	exit(0);
 }
 
