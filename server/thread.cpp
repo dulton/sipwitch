@@ -784,7 +784,7 @@ bool thread::authorize(void)
 
 	error = SIP_ADDRESS_INCOMPLETE;
 
-	if(stack::sip.tlsmode)
+	if(stack::sip_tlsmode)
 		scheme = "sips";
 
 	if(!from->url->host || !uri->host)

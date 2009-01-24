@@ -55,8 +55,6 @@ private:
     char *name;
 	const char *protocol;
     int error;
-	int family;
-	int port;
 };
 
 extern "C" {
@@ -79,9 +77,7 @@ extern "C" {
 zeroconf::zeroconf() :
 modules::generic()
 {
-	family = AF_INET;
 	protocol = "_sip._udp";
-	port = 5060;
 	poller = NULL;
 	client = NULL;
 	name = avahi_strdup("sipwitch");
@@ -140,9 +136,9 @@ add:
     if(!group)
         goto failed;
 
-	process::errlog(INFO, "zeroconf adding sip on port %d", port);
+	process::errlog(INFO, "zeroconf adding sip on port %d", sip_port);
 	ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC,
-		avifamily, (AvahiPublishFlags)0, name, protocol, NULL, NULL, port, NULL);
+		avifamily, (AvahiPublishFlags)0, name, protocol, NULL, NULL, sip_port, NULL);
 
 	if(ret < 0)
 		process::errlog(ERRLOG, "zeroconf %s failed; error=%s", 
@@ -191,8 +187,6 @@ void zeroconf::reload(service *cfg)
 {
 	assert(cfg != NULL);
 
-	linked_pointer<service::keynode> sp = cfg->getList("stack");
-    const char *key = NULL, *value;
 	static bool started = false;
 
 	if(started)
@@ -200,25 +194,8 @@ void zeroconf::reload(service *cfg)
 
 	started = true;
 
-	while(sp) {
-        key = sp->getId();
-        value = sp->getPointer();
-        if(key && value) {
-			if(!stricmp(key, "port"))
-				port = atoi(value);
-            else if(!stricmp(key, "transport")) {
-                if(!stricmp(value, "tcp") || !stricmp(value, "tls"))
-                    protocol = "_sip._tcp";
-			}
-#ifdef	AF_INET6
-			else if(!stricmp(key, "interface")) {
-                if(strchr(value, ':') != NULL)
-                    family = AF_INET6;
-			}
-#endif
-		}
-		sp.next();
-	}
+	if(sip_protocol = IPPROTO_TCP)
+        protocol = "_sip._tcp";
 }
 
 #else

@@ -192,9 +192,6 @@ service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
 	priority = 1;
 	timing = 500;
 	iface = NULL;
-	protocol = IPPROTO_UDP;
-	family = AF_INET;
-	tlsmode = 0;
 	send101 = 1;
 	dumping = false;
 	incoming = false;
@@ -581,17 +578,17 @@ void stack::start(service *cfg)
 		process::errlog(FAILURE, "calls could not be mapped");
 
 #ifdef	AF_INET6
-	if(family == AF_INET6) {
+	if(sip_family == AF_INET6) {
 		eXosip_enable_ipv6(1);
 		if(!iface)
 			iface = "::0";
 	}
 #endif
 
-	Socket::family(family);
-	if(eXosip_listen_addr(protocol, iface, sip_port, family, tlsmode)) {
+	Socket::family(sip_family);
+	if(eXosip_listen_addr(sip_protocol, iface, sip_port, sip_family, sip_tlsmode)) {
 #ifdef	AF_INET6
-		if(!iface && family == AF_INET6)
+		if(!iface && sip_family == AF_INET6)
 			iface = "::0";
 #endif
 		if(!iface)
@@ -690,7 +687,7 @@ void stack::reload(service *cfg)
 			else if(!stricmp(key, "interface") && !isConfigured()) {
 #ifdef	AF_INET6
 				if(strchr(value, ':') != NULL)
-					family = AF_INET6;
+					sip_family = AF_INET6;
 #endif
 				if(!strcmp(value, ":::") || !strcmp(value, "::0") || !strcmp(value, "::*") || !stricmp(value, "*") || !*value)
 					value = NULL;
@@ -738,9 +735,9 @@ void stack::reload(service *cfg)
 				mapped_calls = atoi(value);
 			else if(!stricmp(key, "transport") && !isConfigured()) {
 				if(!stricmp(value, "tcp") || !stricmp(value, "tls"))
-					protocol = IPPROTO_TCP;
+					sip_protocol = IPPROTO_TCP;
 				else if(!stricmp(value, "tls"))
-					tlsmode = 1;
+					sip_tlsmode = 1;
 			}
 		}
 		sp.next();
@@ -765,7 +762,7 @@ void stack::reload(service *cfg)
 	localnames = localhosts;
 	proxy = new_proxy;
 
-	if(family != AF_INET)
+	if(sip_family != AF_INET)
 		rtpproxy::enableIPV6();
 
 	if(ring_value && ring_value < 100)
@@ -793,7 +790,7 @@ void stack::reload(service *cfg)
 
 const char *stack::getScheme(void)
 {
-	if(sip.tlsmode)
+	if(sip_tlsmode)
 		return "sips";
 	return "sip";
 }
@@ -811,7 +808,7 @@ char *stack::sipPublish(struct sockaddr_internet *addr, char *buf, const char *u
 	if(sip.published == NULL)
 		return sipAddress(addr, buf, user, size);
 
-	if(sip.tlsmode)
+	if(sip_tlsmode)
 		String::set(buf, size, "sips:");
 	else 
 		String::set(buf, size, "sip:");
@@ -874,7 +871,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 	if(!port)
 		port = sip_port;
 
-	if(sip.tlsmode)
+	if(sip_tlsmode)
 		String::set(buf, size, "sips:");
 	else 
 		String::set(buf, size, "sip:");
@@ -904,12 +901,12 @@ Socket::address *stack::getAddress(const char *addr, Socket::address *ap)
 	assert(addr != NULL && *addr != 0);
 
 	char buffer[MAX_URI_SIZE];
-	int family = sip.family;
+	int family = sip_family;
 	const char *svc = "sip";
 	const char *sp;
 	char *ep;
 	int proto = SOCK_DGRAM;
-	if(sip.protocol == IPPROTO_TCP)
+	if(sip_protocol == IPPROTO_TCP)
 		proto = SOCK_STREAM;
 
 	sp = strchr(addr, '<');

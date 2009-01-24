@@ -183,7 +183,7 @@ bool messages::system(const char *to, const char *text)
 	const char *host = stack::sip.published;
 	unsigned short port  = sip_port;
 
-	if(stack::sip.tlsmode)
+	if(stack::sip_tlsmode)
 		scheme = "sips";
 	else
 		scheme = "sip";
@@ -191,7 +191,7 @@ bool messages::system(const char *to, const char *text)
 	if(!host) {
 		host = "127.0.0.1";
 #ifdef	AF_INET6
-		if(!host && stack::sip.family == AF_INET6)
+		if(!host && stack::sip_family == AF_INET6)
 			host = "::1";
 #endif
 	}

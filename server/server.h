@@ -354,8 +354,6 @@ private:
 	timeout_t ring_timer, cfna_timer, reset_timer;
 	unsigned invite_expires;
 
-	int family, tlsmode, protocol;
-
 	static stack sip;
 
 public:

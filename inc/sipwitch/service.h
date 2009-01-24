@@ -131,6 +131,9 @@ public:
 		static LinkedObject *runlevels[4];
 		static unsigned count;
 		static unsigned short sip_port;
+		static int sip_protocol;
+		static int sip_family;
+		static int sip_tlsmode;
 
         callback(int level = 0);
         virtual ~callback();
