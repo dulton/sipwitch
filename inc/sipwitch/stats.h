@@ -53,8 +53,8 @@ public:
 
 	struct
 	{
-		unsigned long total, period;
-		unsigned short current, peak;
+		unsigned long total, period, pperiod;
+		unsigned short current, peak, min, max, pmin, pmax;
 	} data[2];
 
 	time_t lastcall;

@@ -858,11 +858,6 @@ void server::run(const char *user)
 			continue;
 		}
 
-		if(!stricmp(cp, "period") || !stricmp(cp, "pstats")) {
-			service::period(user);
-			continue;
-		}
-
 		if(!stricmp(cp, "dump")) {
 			service::dumpfile(user);
 			continue;
@@ -876,7 +871,6 @@ void server::run(const char *user)
 		argc = 0;
 		tokens = NULL;
 		while(argc < 64 && NULL != (cp = const_cast<char *>(String::token(cp, &tokens, " \t", "{}")))) {
-			printf("TOKEN %s\n", cp);
 			argv[argc++] = cp;
 		}
 		argv[argc] = NULL;
@@ -890,6 +884,13 @@ invalid:
 				continue;
 			}
 			process::setVerbose(errlevel_t(atoi(argv[1])));
+			continue;
+		}
+
+		if(!stricmp(argv[0], "period")) {
+			if(argc != 2)
+				goto invalid;
+			service::period(atol(argv[1]));
 			continue;
 		}
 

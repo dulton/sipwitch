@@ -80,7 +80,7 @@ public:
 	static bool system(const char *fmt, ...) __PRINTF(1, 2);
 	static FILE *dumpfile(const char *uid);
 	static FILE *snapshot(const char *uid);
-	static FILE *period(const char *uid);
+	static FILE *statfile(void);
 	static FILE *config(const char *uid = NULL);
 	static void uuid(char *buffer, size_t size, const char *node);
 };

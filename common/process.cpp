@@ -102,6 +102,20 @@ static void logfile(fsys_t &fs)
 	fsys::create(fs, buf, fsys::ACCESS_APPEND, 0660); 
 }
 
+FILE *process::statfile(void)
+{
+	char buf[128];
+	FILE *fp;
+
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/%s.stats", ident);
+	fp = fopen(buf, "a");
+	if(fp)
+		return fp;
+
+	snprintf(buf, sizeof(buf), "/tmp/%s-%s/stats", ident, process::identity());
+	return fopen(buf, "a");
+}
+
 void process::release(void)
 {
 	errlog(INFO, "shutdown");
@@ -232,6 +246,19 @@ static void get_system_time(uuid_time_t *uuid_time)
         * (unsigned __int64) (17+30+31+365*18+5); // # of days
     *uuid_time = time.QuadPart;
 }
+
+FILE *process::statfile(void)
+{
+	char buf[256];
+	unsigned len;
+
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\%s\\service.stats", ident);
+	
+	return fopen(buf, "a");
+}
+
 
 static void logfile(fsys_t& fd)
 {
@@ -595,31 +622,6 @@ FILE *process::dumpfile(const char *uid)
 #ifndef	_MSWINDOWS_
 	if(!fp) {
 		snprintf(buf, sizeof(buf), "/tmp/%s-%s/dumpfile", ident, uid);
-		fp = fopen(buf, "w");
-	}
-#endif
-	return fp;
-}
-
-FILE *process::period(const char *uid)
-{
-	FILE *fp;
-	char buf[256];
-
-#ifdef	_MSWINDOWS_
-	GetEnvironmentVariable("APPDATA", buf, 192);
-	unsigned len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\%s\\period.log", ident);	 
-#else
-	if(replytarget && isdigit(*replytarget))
-		snprintf(buf, sizeof(buf), "/tmp/.sipwitch.%d", atoi(replytarget));
-	else
-		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/period", ident);
-#endif
-	fp = fopen(buf, "w");
-#ifndef	_MSWINDOWS_
-	if(!fp) {
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s/period", ident, uid);
 		fp = fopen(buf, "w");
 	}
 #endif

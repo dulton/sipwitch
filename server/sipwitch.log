@@ -9,3 +9,11 @@
 	rotate 5
 }
 
+/var/log/sipwitch.stats {
+	missingok
+	notifempty
+	daily
+	compress
+	delaycompress
+	rotate 5
+}

@@ -93,6 +93,42 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 	printf("%s:%u\n", buf, p2);
 }
 
+static void periodic(char **argv)
+{
+	char text[80];
+
+	if(argv[1]) {
+		fprintf(stderr, "*** sipwitch: pstats: no arguments used\n");
+		exit(-1);
+	}
+	mapped_view<stats> sta(STAT_MAP);
+	unsigned count = sta.getCount();
+	unsigned index = 0;
+	const volatile stats *map;
+	
+	if(!count) {
+		fprintf(stderr, "*** sipwitch: offline\n");
+		exit(-1);
+	}
+	while(index < count) {
+		map = sta(index++);
+
+		if(!map->id[0])
+			continue;
+
+		snprintf(text, sizeof(text), "%-12s", map->id);
+		for(unsigned entry = 0; entry < 2; ++entry) {
+			size_t len = strlen(text);
+			snprintf(text + len, sizeof(text) - len, " %07lu %05hu %05hu",
+				map->data[entry].pperiod,
+				map->data[entry].pmin, 
+				map->data[entry].pmax);
+		}
+		printf("%s\n", text);
+	}
+	exit(0);
+}
+
 static void dumpstats(char **argv)
 {
 	char text[80];
@@ -317,7 +353,8 @@ static void usage(void)
         "  concurrency <level>     Server concurrency level\n"
 		"  down                    Shut down server\n"
 		"  message <ext> <text>    Send text message to extension\n"
-		"  period                  Dump and flush periodic stats\n"
+		"  period <interval>       Collect periodic statistics\n"
+		"  pstats                  Dump periodic statistics\n"
         "  registry                Dump registry\n"
         "  release <ext>           Release registration\n"
 		"  reload                  Reload configuration\n"
@@ -352,6 +389,19 @@ static void level(char **argv, int timeout)
 		exit(-1);
 	}
 	command(argv, timeout);
+}
+
+static void period(char **argv)
+{
+	if(!argv[1]) {
+		fprintf(stderr, "*** sipwitch: period: interval missing\n");
+		exit(-1);
+	}
+	if(argv[2]) {
+		fprintf(stderr, "*** sipwitch: period: too many arguments\n");
+		exit(-1);
+	}
+	command(argv, 10);
 }
 
 static void address(char **argv)
@@ -412,7 +462,6 @@ static void activate(char **argv)
 	command(argv, 10);
 }
 
-
 static void message(char **argv)
 {
 	char buffer[500];
@@ -449,7 +498,7 @@ extern "C" int main(int argc, char **argv)
 		version();
 	else if(String::equal(*argv, "help") || String::equal(*argv, "-help") || String::equal(*argv, "--help"))
 		usage();
-	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot") || String::equal(*argv, "period") || String::equal(*argv, "pstats"))
+	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot"))
 		single(argv, 30);
 	else if(String::equal(*argv, "down") || String::equal(*argv, "restart") || String::equal(*argv, "abort"))
 		single(argv, 0);
@@ -461,8 +510,12 @@ extern "C" int main(int argc, char **argv)
 		registry(argv);
 	else if(String::equal(*argv, "stats"))
 		dumpstats(argv);
+	else if(String::equal(*argv, "pstats"))
+		periodic(argv);
 	else if(String::equal(*argv, "address"))
 		address(argv);
+	else if(String::equal(*argv, "period"))
+		period(argv);
 	else if(String::equal(*argv, "activate"))
 		activate(argv);
 	else if(String::equal(*argv, "release"))

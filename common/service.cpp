@@ -43,6 +43,7 @@ static char header[80] = "- welcome";
 static socket_t trap4 = INVALID_SOCKET;
 static socket_t trap6 = INVALID_SOCKET;
 static time_t started = 0l;
+static time_t periodic = 0l;
 
 static size_t xmldecode(char *out, size_t limit, const char *src)
 {
@@ -183,8 +184,10 @@ memalloc(s), root()
 	root.setPointer(NULL);
 	snmpservers = NULL;
 	community = "public";
-	if(!started)
+	if(!started) {
 		time(&started);
+		time(&periodic);
+	}
 
 	env = addNode(&root, "environ", NULL);
 	while(varp && *varp) {
@@ -804,23 +807,38 @@ void service::dumpfile(const char *uid)
 	fclose(fp);
 }
 
-void service::period(const char *uid)
+void service::period(long slice)
 {
-	assert(uid == NULL || *uid != 0);
+	assert(slice > 0);
 
-	keynode *env = getEnviron();
+	time_t now, next;
+	struct tm *dt;
 
-	if(!uid)
-		uid = getValue(env, "USER");
+	slice *= 60l;	// convert to minute intervals...
+	time(&now);
+	next = ((periodic / slice) + 1l) * slice;
+	if(now < next)
+		return;
 
-	FILE *fp = process::period(uid);
-	release(env);
+	next = (now / slice) * slice;
+
+	FILE *fp = process::statfile();
 
 	if(!fp) {
-		process::errlog(ERRLOG, "period; cannot access file");
+		process::errlog(ERRLOG, "period; cannot access stats file");
 		return;
 	}
 
+	dt = localtime(&periodic);
+
+	if(dt->tm_year < 1900)
+		dt->tm_year += 1900;
+
+	fprintf(fp, "%04d-%02d-%02d %02d:%02d:%02d %ld\n",
+		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+		dt->tm_hour, dt->tm_min, dt->tm_sec, next - periodic);
+
+	periodic = next;
 	stats::period(fp);
 	fclose(fp);
 }

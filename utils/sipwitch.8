@@ -32,8 +32,11 @@ stop and shutdown the running sipwitch daemon.
 \fBmessage\fR \fIext\fR \fI``Text''\fR
 send a short text message to a registered extension.
 .TP
-\fBperiod|pstats\fR
-dump and flush periodic stats, often used for cron.
+\fBperiod\fR \fIinterval\fR
+dump periodic stats for specified minute interval, often used for cron.
+.TP
+\fBpstats\fR
+dump server periodic statistics.  See ``stats''.
 .TP
 \fBregistry\fR
 dump all user agent registrations to stdout.

@@ -93,6 +93,8 @@ void stats::assign(stat_t entry)
 	++data[entry].current;
 	if(data[entry].current > data[entry].peak)
 		data[entry].peak = data[entry].current;
+	if(data[entry].current > data[entry].max)
+		data[entry].max = data[entry].current;
 	Mutex::release(this);
 	if(this != base)
 		base->assign(entry);
@@ -104,6 +106,8 @@ void stats::release(stat_t entry)
 	if(active() == 1)
 		time(&lastcall);
 	--data[entry].current;
+	if(data[entry].current < data[entry].min)
+		data[entry].min = data[entry].current;
 	Mutex::release(this);
 	if(this != base)
 		base->release(entry);
@@ -122,7 +126,7 @@ void stats::period(FILE *fp)
 			continue;
 
 		if(fp) {
-			snprintf(text, sizeof(text), "%-12s", node->id);
+			snprintf(text, sizeof(text), " %-12s", node->id);
 			len = strlen(text);
 		}
 		else
@@ -131,11 +135,14 @@ void stats::period(FILE *fp)
 		Mutex::protect(node);
 		for(unsigned entry = 0; entry < 2; ++entry) {
 			if(fp) {
-				snprintf(text + len, sizeof(text) - len, " %09lu %05hu",
-				node->data[entry].period, node->data[entry].peak);
+				snprintf(text + len, sizeof(text) - len, " %09lu %05hu %05hu",
+				node->data[entry].period, node->data[entry].min, node->data[entry].max);
 				len = strlen(text);
 			}
-			node->data[entry].peak = node->data[entry].current;
+			node->data[entry].pperiod = node->data[entry].period;
+			node->data[entry].pmin = node->data[entry].min;
+			node->data[entry].pmax = node->data[entry].max;
+			node->data[entry].min = node->data[entry].max = node->data[entry].current;
 			node->data[entry].period = 0;
 		}
 		last = node->lastcall;
