@@ -824,23 +824,20 @@ void service::period(long slice)
 
 	FILE *fp = process::statfile();
 
-	if(!fp) {
-		process::errlog(ERRLOG, "period; cannot access stats file");
-		return;
+	if(fp) {
+		dt = localtime(&periodic);
+
+		if(dt->tm_year < 1900)
+			dt->tm_year += 1900;
+
+		fprintf(fp, "%04d-%02d-%02d %02d:%02d:%02d %ld\n",
+			dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+			dt->tm_hour, dt->tm_min, dt->tm_sec, next - periodic);
 	}
-
-	dt = localtime(&periodic);
-
-	if(dt->tm_year < 1900)
-		dt->tm_year += 1900;
-
-	fprintf(fp, "%04d-%02d-%02d %02d:%02d:%02d %ld\n",
-		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
-		dt->tm_hour, dt->tm_min, dt->tm_sec, next - periodic);
-
 	periodic = next;
 	stats::period(fp);
-	fclose(fp);
+	if(fp)
+		fclose(fp);
 }
 
 void service::snapshot(const char *uid)
