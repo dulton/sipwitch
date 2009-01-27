@@ -58,6 +58,7 @@ public:
 	} data[2];
 
 	time_t lastcall;
+	unsigned short limit;
 
 	void assign(stat_t element);
 	void release(stat_t element);

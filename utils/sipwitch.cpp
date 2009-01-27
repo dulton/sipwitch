@@ -116,7 +116,11 @@ static void periodic(char **argv)
 		if(!map->id[0])
 			continue;
 
-		snprintf(text, sizeof(text), "%-12s", map->id);
+		if(map->limit)
+			snprintf(text, sizeof(text), "%-12s %05hu", map->id, map->limit);
+		else
+			snprintf(text, sizeof(text), "%-12s -    ", map->id);
+
 		for(unsigned entry = 0; entry < 2; ++entry) {
 			size_t len = strlen(text);
 			snprintf(text + len, sizeof(text) - len, " %07lu %05hu %05hu",
@@ -155,12 +159,15 @@ static void dumpstats(char **argv)
 		if(!map->id[0])
 			continue;
 
-		snprintf(text, sizeof(text), "%-12s", map->id);
+		if(map->limit)
+			snprintf(text, sizeof(text), "%-12s %05hu", map->id, map->limit);
+		else
+			snprintf(text, sizeof(text), "%-12s -    ", map->id);
+
 		for(unsigned entry = 0; entry < 2; ++entry) {
 			size_t len = strlen(text);
-			snprintf(text + len, sizeof(text) - len, " %09lu %07lu %05hu %05hu",
+			snprintf(text + len, sizeof(text) - len, " %09lu %05hu %05hu",
 				map->data[entry].total,
-				map->data[entry].period, 
 				map->data[entry].current,
 				map->data[entry].peak);
 		}
