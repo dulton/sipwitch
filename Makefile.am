@@ -14,9 +14,11 @@ EXTRA_DIST = autogen.sh README *.pc.in FEATURES  TODO Doxyfile \
 #  *.pc.in *.spec.in *.spec
 
 SUBDIRS = common server utils inc test
-DIST_SUBDIRS = common server utils inc test
+DIST_SUBDIRS = common server utils inc test swig
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsipwitch.pc
 
+swig-python:
+	(cd swig ; make python-swig)
 

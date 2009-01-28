@@ -145,8 +145,9 @@ static void dumpstats(char **argv)
 	mapped_view<stats> sta(STAT_MAP);
 	unsigned count = sta.getCount();
 	unsigned index = 0;
-	const volatile stats *map;
+	const stats *map;
 	unsigned current;
+	stats buffer;
 	
 	if(!count) {
 		fprintf(stderr, "*** sipwitch: offline\n");
@@ -154,10 +155,15 @@ static void dumpstats(char **argv)
 	}
 	time(&now);
 	while(index < count) {
-		map = sta(index++);
+		map = const_cast<const stats *>(sta(index++));
 
 		if(!map->id[0])
 			continue;
+
+		do {
+			memcpy(&buffer, map, sizeof(buffer));
+		} while(memcmp(&buffer, map, sizeof(buffer)));
+		map = &buffer;
 
 		if(map->limit)
 			snprintf(text, sizeof(text), "%-12s %05hu", map->id, map->limit);

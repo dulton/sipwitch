@@ -57,6 +57,7 @@ fi
 
 export PKG_CONFIG_PATH
 
+INCLUDE_FLAGS=""
 EXPORT_LIBS=""
 EXPORT_FLAGS=""
 SIPWITCH_LIBS=""
@@ -290,6 +291,11 @@ for flag in $CXXFLAGS ; do
 		;;
 	-fvisibility=*)
 		;;
+	-I*)
+		idir=`echo $flag | sed -e "s/^-I//"`
+		COMPILER_FLAGS="$COMPILER_FLAGS $flag"
+		INCLUDE_FLAGS="$INCLUDE_FLAGS $flag"
+		;;
 	*)
 		COMPILER_FLAGS="$COMPILER_FLAGS $flag"
 		;;
@@ -370,9 +376,11 @@ AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
 AC_SUBST(plugindir)
 AC_SUBST(UCOMMON_REQUIRES)
 AC_SUBST(UCOMMON_MODEL)
+AC_SUBST(UCOMMON_CLINK)
 AC_SUBST(DAEMON_LIBS)
 AC_SUBST(EXPORT_FLAGS)
 AC_SUBST(EXPORT_LIBS)
+AC_SUBST(INCLUDE_FLAGS)
 AC_SUBST(SIPWITCH_FLAGS)
 AC_SUBST(SIPWITCH_LIBS)
 AC_SUBST(SIPWITCH_EXOSIP2)
@@ -381,6 +389,6 @@ AC_SUBST(CXXFLAGS)
 AC_SUBST(MODFLAGS)
 AC_SUBST(DLOPEN)
 AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile 
-server/Makefile utils/Makefile test/Makefile 
+server/Makefile utils/Makefile test/Makefile swig/Makefile 
 libsipwitch.pc sipwitch.spec)
 

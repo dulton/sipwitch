@@ -1,0 +1,58 @@
+No swig module is built by default when you run make. This is because the
+behaviors and rules for building swig bindings are complex, and I did not want
+to have a bunch of complex configure tests to see which scripting languages
+were installed and usable with whatever version of swig was installed, which
+also would need further configure tests. Furthermore, just because one has perl
+installed does not necessarily mean one wants to build or use a perl module for
+sipwitch. For the purpose of packaging and binary distribution, the packager
+will likely build separate installable binary packages for various scripting
+languages as chosen and tested for a given distribution's environment.
+
+The swig files and make targets offered have been tested for modern GNU/Linux
+distributions.  Specific language bindings may need to be further modified for
+older (or newer) releases of scripting languages, for different versions of
+swig itself, or to support generating bindings for a language we have not yet
+tested.  However, the goal is to use a single definition file and common source
+for all scripting languages targetted for generating wrappers.  To minimize
+linkage, static implimentation functions are used.  To assure platform
+portability and consistent behavior our swig binding is built in C++ with the
+ucommon library and using the original sipwitch headers.
+
+The basic premise of our swig binding is that it will allow one to create local
+applications which can communicate with a resident instance of a sipwitch
+daemon.  This might be used to create administration services in various
+scripting languages, including scheduled cron jobs to collect call statistics,
+or local gui front ends.  The bindings might also be used to create and support
+admininstrative web applications on the local box which need to interact with
+the sipwitch daemon.
+
+This binding offer access to sipwitch shared memory for call statistics and
+registration information.  It also offer access to the sipwitch control fifo.
+The control fifo returns status through signals to the originating process, so
+it is important to either have your admin scripts launched from an environment
+where multiple instances of an administration program (such as might be served
+from a web page) operates in a separate process (ie. is "forked", as is common
+with cgi or from within apache).  To support exception handling for scripting
+runtimes that use native threading, operations are serialized through a mutex.
+
+One reason to use swig to generate wrapper access to objects directly
+accessible in shared memory is because most scripting languages have alternate
+representations for data types than those of the native machine architecture.
+We also use dynamically allocated shadow objects to represent a single shared
+memory "record", which holds an instance of data from the time it is retrieved.
+For some scripting languages which have automatic garbage collection, this
+means we do not treat our passed pointers to shared memory objects as special
+"persistent" objects assignable only through "weak" references. 
+
+Our binding makes use of exception handling to pass errors back to the
+interpreter runtime.  An addition error() method is offered, and will be needed
+when the scripting language does not support exceptions.  I also assume the
+sipwitch module will exist in a namespace or directory hierarchy. The
+placement of a given binding in the namespace of a specific interpreter may
+vary. For scripting languages where there are no namespaces, an alternate
+naming scheme with prefixed entries for the binding functions might be used.
+Some scripting languages may have other specific quirks and features. For
+example, for python, a module range() function is offered to return a list of
+index values to use in "for" loops.  As I found Python the easiest scripting
+language to "swig", initial development had started there.
+
