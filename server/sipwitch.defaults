@@ -1,8 +1,8 @@
 # Default values for daemon operation.  This should be edited and is invoked
 # by init script.
 
-# install plugins
-#PLUGINS="zeroconf scripting"
+# install specifc plugins, or use "auto" to auto-load whatever is installed...
+#PLUGINS="zeroconf scripting subscriber forward rtpproxy"
 
 # runtime priority, recommended realtime for high capacity
 #PRIORITY="1"
