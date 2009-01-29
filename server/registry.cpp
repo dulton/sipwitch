@@ -315,6 +315,27 @@ void registry::snapshot(FILE *fp)
 	locking.release();
 } 
 
+void registry::clear(mapped *rr)
+{
+	assert(rr != NULL);
+	
+	rr->userid[0] = 0;
+	rr->display[0] = 0;
+	rr->remote[0] = 0;
+	rr->status = MappedRegistry::OFFLINE;
+	rr->type = MappedRegistry::EXPIRED;
+	rr->hidden = false;
+	rr->rid = -1;
+	rr->ext = 0;
+	rr->count = 0;
+	rr->inuse = 0;
+	rr->created = 0;
+	rr->expires = 0;
+	// this one is safe to clear...
+	memset(&rr->profile, 0, sizeof(profile_t));
+	rr->internal.published = rr->internal.targets = rr->internal.routes = NULL;
+}
+	
 bool registry::remove(const char *id)
 {
 	assert(id != NULL && *id != 0);
@@ -394,7 +415,7 @@ void registry::expire(mapped *rr)
 	rr->status = MappedRegistry::OFFLINE;
 	rr->type = MappedRegistry::EXPIRED;
 	rr->rid = -1;
-	rp->delist(&keys[path]);
+	rr->delist(&keys[path]);
 	reg.removeLocked(rr);
 }
 
@@ -500,7 +521,7 @@ registry::mapped *registry::invite(const char *id, stats::stat_t stat)
 		return NULL;
 	}
 
-	memset(rr, 0, sizeof(mapped));
+	clear(rr);
 	rr->type = MappedRegistry::TEMPORARY;
 	rr->expires = 0;
 	rr->created = 0;
@@ -543,7 +564,7 @@ registry::mapped *registry::create(const char *id)
 	else {
 		rr = static_cast<mapped*>(reg.getLocked());
 		if(rr)
-			memset(rr, 0, sizeof(mapped));
+			clear(rr);
 	}
 	if(!rr) {
 		locking.commit();

@@ -137,6 +137,7 @@ private:
 	void stop(service *cfg);
 	void snapshot(FILE *fp);
 
+	static void clear(mapped *rr);
 	static void expire(mapped *rr);
 	static mapped *find(const char *id);
 
