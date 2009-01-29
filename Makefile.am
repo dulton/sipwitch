@@ -22,3 +22,7 @@ pkgconfig_DATA = libsipwitch.pc
 swig-python:
 	(cd swig ; make python-swig)
 
+swig-php5:
+	(cd swig ; make php5-swig)
+
+

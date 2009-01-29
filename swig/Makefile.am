@@ -16,19 +16,28 @@ EXTRA_DIST = README swig.i swig.h swig.cpp setup.py
 python-swig: swig-clean
 	swig -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i	
 	LDFLAGS="@LDFLAGS@ @UCOMMON_CLINK@" CFLAGS="@SIPWITCH_FLAGS@ -I$(abs_top_srcdir)/inc -I$(abs_top_srcdir)" python setup.py build_ext --inplace --swig-opts=-c++ -lucommon
-	$(mkinstalldirs) $(DESTDIR)$(shell  python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages" ; print path')
+	$(mkinstalldirs) $(DESTDIR)`python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages" ; print path'`
 	$(STRIP) _sipwitch.so
-	$(INSTALL) sipwitch.py _sipwitch.so $(DESTDIR)$(shell  python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages" ; print path')
+	$(INSTALL) sipwitch.py _sipwitch.so $(DESTDIR)`python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages" ; print path'`
+
+php5-swig: swig-clean
+	swig -c++ -php5 @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
+	g++ `php-config --includes` -Wno-format -fpic @SIPWITCH_FLAGS@ -o wrapper.o -c wrapper.cpp -I$(top_srcdir)/inc -I$(top_srcdir) 
+	g++ -shared $(MODFLAGS) -o sipwitch.so wrapper.o -L../../ucommon/src/.libs -lucommon @UCOMMON_CLINK@
+	$(mkinstalldirs) $(DESTDIR)`php-config --extension-dir`
+	$(STRIP) sipwitch.so
+	$(INSTALL) sipwitch.so $(DESTDIR)`php-config --extension-dir`
 
 # my internal use testing targets...
+
+php5-test: swig-clean
+	swig -c++ -php5 @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
+	g++ `php-config --includes` -Wno-format -fpic @SIPWITCH_FLAGS@ -o wrapper.o -c wrapper.cpp -I$(top_srcdir)/inc -I$(top_srcdir) 
+	g++ -shared $(MODFLAGS) -o sipwitch.so wrapper.o -L../../ucommon/src/.libs -lucommon @UCOMMON_CLINK@
 
 python-test: swig-clean
 	swig -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
 	LDFLAGS="@LDFLAGS@ @UCOMMON_CLINK@" CFLAGS="@SIPWITCH_FLAGS@ -I$(abs_top_srcdir)/inc -I$(abs_top_srcdir)" python setup.py build_ext --inplace --swig-opts=-c++ -L../../ucommon/src/.libs -lucommon
-
-path-test:
-	echo $(DESTDIR)/$(shell  python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages" ; print path')
-
 
 # general cleanup
 
