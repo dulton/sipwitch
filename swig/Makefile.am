@@ -15,13 +15,20 @@ EXTRA_DIST = README swig.i swig.h swig.cpp setup.py
 
 python-swig: swig-clean
 	swig -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i	
-	LDFLAGS="@LDFLAGS@ @UCOMMON_CLINK@" CFLAGS="@SIPWITCH_FLAGS@ -I$(abs_top_srcdir)/inc -I$(abs_top_srcdir)" python setup.py install build_ext --swig-opts=-c++ -lucommon
+	LDFLAGS="@LDFLAGS@ @UCOMMON_CLINK@" CFLAGS="@SIPWITCH_FLAGS@ -I$(abs_top_srcdir)/inc -I$(abs_top_srcdir)" python setup.py build_ext --inplace --swig-opts=-c++ -lucommon
+	$(mkinstalldirs) $(DESTDIR)/$(shell  python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages" ; print path')
+	$(STRIP) _sipwitch.so
+	$(INSTALL) sipwitch.py _sipwitch.so $(DESTDIR)/$(shell  python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages" ; print path')
 
 # my internal use testing targets...
 
 python-test: swig-clean
 	swig -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
 	LDFLAGS="@LDFLAGS@ @UCOMMON_CLINK@" CFLAGS="@SIPWITCH_FLAGS@ -I$(abs_top_srcdir)/inc -I$(abs_top_srcdir)" python setup.py build_ext --inplace --swig-opts=-c++ -L../../ucommon/src/.libs -lucommon
+
+path-test:
+	echo $(DESTDIR)/$(shell  python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages" ; print path')
+
 
 # general cleanup
 
