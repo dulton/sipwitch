@@ -4,6 +4,8 @@
 %{!?uses_avahi:  %define uses_avahi 1}
 %{!?uses_openssl:  %define uses_openssl 1}
 %{!?uses_gcrypt: %define uses_gcrypt 0}
+%{!?uses_python: %define uses_python 1}
+%{!?uses_php5: %define uses_php5 1}
 
 %define _libname libsipwitch@LT_MAJOR@
 %define _devname libsipwitch-devel
@@ -15,6 +17,20 @@
 %define mod_zeroconf 0
 %if %{uses_avahi}
 %define	mod_zeroconf 1
+%endif
+
+%define req_swig 0
+%define mod_python 0
+%define mod_php5 0
+
+%if %{uses_python}
+%define	req_swig 1
+%define mod_python 1
+%endif
+
+%if %{uses_php5}
+%define	req_swig 1
+%define mod_php5 1
 %endif
 
 Name: sipwitch
@@ -29,6 +45,15 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: ucommon-devel >= @UCOMMON_REQUIRES@
 BuildRequires: libeXosip2-devel >= 3.0.0
 BuildRequires: gcc-c++ pkgconfig
+%if %{req_swig}
+BuildRequires: swig >= 1.3.0
+%endif
+%if %{mod_python}
+BuildRequires: python-dev
+%endif
+%if %{mod_php5}
+BuildRequires: php5-dev
+%endif
 %if %uses_openssl
 BuildRequires: openssl-devel
 %endif
@@ -56,6 +81,20 @@ Provides: %{name}-devel = %{version}-%{release}
 Requires: sipwitch = %{version}
 Group: Networking/Telephony
 Summary: Zeroconf plugin for sipwitch
+%endif
+
+%if %{mod_python}
+%package -n python-sipwitch
+Requires: python
+Group: Networking/Telephony
+Summary: Python package to control sipwitch server
+%endif
+
+%if %{mod_php5}
+%package -n php5-sipwitch
+Requires: php5
+Group: Networking/Telephony
+Summary: PHP5 package to control sipwitch server
 %endif
 
 %package plugin-scripting
@@ -104,6 +143,22 @@ This plugin activates zeroconf network services for sipwitch and publishes
 sipwitch as a sip server.
 %endif
 
+%if %{mod_python}
+%description -n python-sipwitch
+This module allows one to interact with and control a locally running 
+instance of the GNU SIP Witch daemon using python.  This can be used to
+create sipwitch admininstration scripts or python web services that
+interact with the locally running instance of sipwitch.
+%endif
+
+%if %{mod_php5}
+%description -n php5-sipwitch
+This extension allows one to interact with and control a locally running 
+instance of the GNU SIP Witch daemon using php5.  This can be used to
+create sipwitch admininstration scripts or php5 web services that
+interact with the locally running instance of sipwitch.
+%endif
+
 %description plugin-scripting
 This plugin enables shell scripting in connection with specific sipwitch events.
 
@@ -148,6 +203,14 @@ remote voip service provider.
 %{__rm} -f %{buildroot}/%{_libdir}/sipwitch/*.a
 %{__rm} -f %{buildroot}/%{_libdir}/sipwitch/*.la
 
+%if %{mod_python}
+%{__make} DESTDIR=%{buildroot} swig-python
+%endif
+
+%if %{mod_php5}
+%{__make} DESTDIR=%{buildroot} swig-php5
+%endif
+
 # setup for automatic plugin loading.  
 # Plugins selected by packages admin has installed.
 echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
@@ -180,6 +243,19 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %{_libdir}/sipwitch/zeroconf.*
 %endif
 
+%if %{mod_python}
+%files -n python-sipwitch
+%defattr(-,root,root,-)
+%{_libdir}/python*/site-packages/sipwitch.py
+%{_libdir}/python*/site-packages/_sipwitch.so
+%endif
+
+%if %{mod_php5}
+%files -n php5-sipwitch
+%defattr(-,root,root,-)
+%{_libdir}/php5/*/sipwitch.so
+%endif
+
 %files plugin-forward
 %defattr(-,root,root,-)
 %{_libdir}/sipwitch/forward.*
@@ -208,6 +284,20 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %post -n %{_libname} -p /sbin/ldconfig
 
 %postun -n %{_libname} -p /sbin/ldconfig
+
+%if %{mod_python}
+%post -n python-sipwitch 
+version=`python -c "import sys ; print sys.version[:3]"`
+prefix=/usr/lib/python$version/site-packages
+cmd="import py_compile ; py_compile.compile('$prefix/sipwitch.py')"
+python -c "$cmd"
+python -O -c "$cmd"
+
+%preun -n python-sipwitch
+version=`python -c "import sys ; print sys.version[:3]"`
+rm -f /usr/lib/python$version/site-packages/sipwitch.pyc
+rm -f /usr/lib/python$version/site-packages/sipwitch.pyo
+%endif
 
 %post
 if [ -x /sbin/chkconfig ] ; then /sbin/chkconfig --add sipwitch ; fi
