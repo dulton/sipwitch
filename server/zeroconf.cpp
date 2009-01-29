@@ -194,7 +194,7 @@ void zeroconf::reload(service *cfg)
 
 	started = true;
 
-	if(sip_protocol = IPPROTO_TCP)
+	if(sip_protocol == IPPROTO_TCP)
         protocol = "_sip._tcp";
 }
 
