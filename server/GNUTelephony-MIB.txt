@@ -191,6 +191,24 @@ callStarted OBJECT-TYPE
 		"time call started"
 	::= { gnutelephonyService 17 }
 
+-- Alerts
+
+alertLevel OBJECT-TYPE
+	SYNTAX INTEGER { normal(0), info(1), notice(2), warning(3), error(4), critical(5) }
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"alert notification level"
+	::= { gnutelephonyService 18 }
+
+alertMessage OBJECT-TYPE
+	SYNTAX DisplayString
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"alert notification text"
+	::= { gnutelephonyService 19 }
+
 -- Start of traps
 
 serviceStartup NOTIFICATION-TYPE
@@ -242,6 +260,16 @@ serviceBusy NOTIFICATION-TYPE
 	DESCRIPTION
 		"Service busy/no ports available"
 	::= { gnutelephonyNotifications 5 }
+
+serviceAlert NOTIFICATION-TYPE
+	OBJECTS {
+		alertLevel,
+		alertMessage
+	}
+	STATUS current
+	DESCRIPTION
+		"service alert notification event"
+	::= { gnutelephonyNotifications 6 }
 
 -- user agent registration traps
 
@@ -452,7 +480,9 @@ gnutelephonyMibBasicGroup	OBJECT-GROUP
 		callDivert,
 		callService,
 		callStarted,
-		callIdentity
+		callIdentity,
+		alertLevel,
+		alertMessage
 	}
 	STATUS			current
 	DESCRIPTION		"Objects used in traps."
@@ -465,6 +495,7 @@ gnutelephonyMibTrapGroup	NOTIFICATION-GROUP
 		serviceReloaded,
 		serviceFailed,
 		serviceBusy,
+		serviceAlert,
 		registryAccepted,
 		registryRejected,
 		registryFailed,
