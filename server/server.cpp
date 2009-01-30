@@ -38,7 +38,7 @@ static bool activating(int argc, char **args)
 		addr = server::getContact(args[1]);
 	if(!addr)
 		return false;
-	if(NULL == (reg = registry::create(args[1]))) {
+	if(NULL == (reg = registry::allocate(args[1]))) {
 		delete addr;
 		return false;
 	}

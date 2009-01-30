@@ -1652,7 +1652,7 @@ void thread::reregister(const char *contact, time_t interval)
 		goto reply;
 	}
 
-	reginfo = registry::create(identity);
+	reginfo = registry::allocate(identity);
 	if(!reginfo) {
 		if(!warning_registry) {
 			warning_registry = true;

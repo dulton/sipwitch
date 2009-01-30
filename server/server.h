@@ -48,7 +48,7 @@ using namespace UCOMMON_NAMESPACE;
 
 class thread;
 
-class __LOCAL registry : private service::callback, private mapped_reuse<MappedRegistry> 
+class __LOCAL registry : private service::callback, private mapped_array<MappedRegistry> 
 { 
 public: 
 	class __LOCAL mapped : public MappedRegistry
@@ -182,7 +182,7 @@ public:
 	static mapped *contact(const char *uri);
 	static mapped *contact(struct sockaddr *addr, const char *uid);
 	static mapped *getExtension(const char *id);
-	static mapped *create(const char *id);
+	static mapped *allocate(const char *id);
 	static mapped *access(const char *id);
 	static mapped *invite(const char *id, stats::stat_t stat);
 	static mapped *dialing(const char *id);

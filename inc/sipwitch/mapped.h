@@ -76,7 +76,7 @@ typedef struct {
 	unsigned level;
 } profile_t;
 
-class __EXPORT MappedRegistry : public ReusableObject
+class __EXPORT MappedRegistry : public LinkedObject
 {
 public:
 	char	userid[MAX_USERID_SIZE];

@@ -25,6 +25,7 @@ static volatile unsigned published_routes = 0;
 static volatile unsigned allocated_routes = 0;
 static volatile unsigned allocated_targets = 0;
 static unsigned mapped_entries = 999;
+static unsigned mapped_allocated = 0;
 
 static unsigned keysize = 177;
 static registry::mapped **extmap = NULL;
@@ -37,6 +38,7 @@ static LinkedObject *freetargets = NULL;
 static LinkedObject **keys = NULL;
 static condlock_t locking;
 static stats *statmap = NULL;
+static LinkedObject *freelist = NULL;
 
 registry registry::reg;
 
@@ -102,7 +104,7 @@ void registry::route::operator delete(void *obj)
 }
 
 registry::registry() :
-service::callback(0), mapped_reuse<MappedRegistry>()
+service::callback(0), mapped_array<MappedRegistry>()
 {
 	realm = (char *)"Local Telephony";
 	digest = (char *)"MD5";
@@ -198,7 +200,7 @@ void registry::start(service *cfg)
 	assert(cfg != NULL);
 
 	process::errlog(DEBUG1, "registry starting; mapping %d entries", mapped_entries);
-	MappedReuse::create(REGISTRY_MAP, mapped_entries);
+	create(REGISTRY_MAP, mapped_entries);
 	if(!reg)
 		process::errlog(FAILURE, "registry could not be mapped");
 	initialize();
@@ -245,7 +247,7 @@ void registry::snapshot(FILE *fp)
 
 	while(regcount < mapped_entries) {
 		time(&now);
-		rr = static_cast<mapped*>(reg.pos(regcount++));
+		rr = static_cast<mapped*>(reg(regcount++));
 		if(rr->type == MappedRegistry::TEMPORARY) {
 			fprintf(fp, "  temp %s; use=%d\n", rr->userid, rr->inuse);
 		}
@@ -416,7 +418,7 @@ void registry::expire(mapped *rr)
 	rr->type = MappedRegistry::EXPIRED;
 	rr->rid = -1;
 	rr->delist(&keys[path]);
-	reg.removeLocked(rr);
+	rr->enlist(&freelist);
 }
 
 void registry::cleanup(time_t period)
@@ -427,7 +429,7 @@ void registry::cleanup(time_t period)
 
 	while(regcount < mapped_entries) {
 		time(&now);
-		rr = static_cast<mapped*>(reg.pos(regcount++));
+		rr = static_cast<mapped*>(reg(regcount++));
 		locking.modify();
 		if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires + period < now && !rr->inuse) {
 			server::expire(rr);
@@ -514,9 +516,13 @@ registry::mapped *registry::invite(const char *id, stats::stat_t stat)
 	}
 
 	locking.exclusive();
-	rr = static_cast<mapped*>(reg.getLocked());
-
-	if(!rr) {
+	if(freelist) {
+		rr = (mapped *)freelist;
+		freelist = rr->getNext();
+	}
+	else if(mapped_allocated < mapped_entries)
+		rr = (mapped *)reg(mapped_allocated++);
+	else {
 		locking.commit();
 		return NULL;
 	}
@@ -538,7 +544,7 @@ registry::mapped *registry::invite(const char *id, stats::stat_t stat)
 	return rr;
 }
 
-registry::mapped *registry::create(const char *id)
+registry::mapped *registry::allocate(const char *id)
 {
 	assert(id != NULL && *id != 0);
 
@@ -562,7 +568,11 @@ registry::mapped *registry::create(const char *id)
 	if(rr) 
 		listed = true;
 	else {
-		rr = static_cast<mapped*>(reg.getLocked());
+		if(freelist) {
+			rr = (mapped *)freelist;
+			freelist = rr->getNext();
+		} else if(mapped_allocated < mapped_entries)
+			rr = (mapped *)reg(mapped_allocated++);
 		if(rr)
 			clear(rr);
 	}
@@ -605,7 +615,7 @@ registry::mapped *registry::create(const char *id)
 			listed = false;
 		}
 		if(!listed)
-			reg.removeLocked(rr);
+			rr->enlist(&freelist);
 		locking.commit();
 		return NULL;
 	}
