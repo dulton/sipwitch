@@ -24,8 +24,8 @@ static volatile unsigned active_targets = 0;
 static volatile unsigned published_routes = 0;
 static volatile unsigned allocated_routes = 0;
 static volatile unsigned allocated_targets = 0;
+static volatile unsigned allocated_entries = 0;
 static unsigned mapped_entries = 999;
-static unsigned mapped_allocated = 0;
 
 static unsigned keysize = 177;
 static registry::mapped **extmap = NULL;
@@ -244,6 +244,7 @@ void registry::snapshot(FILE *fp)
 	fprintf(fp, "  published routes:  %d\n", published_routes);
 	fprintf(fp, "  allocated routes:  %d\n", allocated_routes);
 	fprintf(fp, "  allocated targets: %d\n", allocated_targets);
+	fprintf(fp, "  allocated entries: %d\n", allocated_entries);
 
 	while(regcount < mapped_entries) {
 		time(&now);
@@ -520,8 +521,8 @@ registry::mapped *registry::invite(const char *id, stats::stat_t stat)
 		rr = (mapped *)freelist;
 		freelist = rr->getNext();
 	}
-	else if(mapped_allocated < mapped_entries)
-		rr = (mapped *)reg(mapped_allocated++);
+	else if(allocated_entries < mapped_entries)
+		rr = (mapped *)reg(allocated_entries++);
 	else {
 		locking.commit();
 		return NULL;
@@ -571,8 +572,8 @@ registry::mapped *registry::allocate(const char *id)
 		if(freelist) {
 			rr = (mapped *)freelist;
 			freelist = rr->getNext();
-		} else if(mapped_allocated < mapped_entries)
-			rr = (mapped *)reg(mapped_allocated++);
+		} else if(allocated_entries < mapped_entries)
+			rr = (mapped *)reg(allocated_entries++);
 		if(rr)
 			clear(rr);
 	}
