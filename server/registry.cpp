@@ -436,8 +436,10 @@ void registry::cleanup(time_t period)
 			server::expire(rr);
 			expire(rr);
 		}
-		else if(!rr->inuse && rr->type == MappedRegistry::EXPIRED && !rr->status == MappedRegistry::OFFLINE)
+		else if(!rr->inuse && rr->type == MappedRegistry::EXPIRED && !rr->status == MappedRegistry::OFFLINE) {
 			server::expire(rr);
+			expire(rr);
+		}
 		locking.commit();
 		Thread::yield();
 	}

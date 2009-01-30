@@ -226,8 +226,6 @@ static void registry(char **argv)
 		else if(buffer.type == MappedRegistry::TEMPORARY && !buffer.inuse)
 			continue;
 
-		printf("INDEX %d\n", index);
-
 		if(!found++)
 			printf("%7s %-30s type %-30s  use expires address\n", "ext", "user", "profile");
 		ext[0] = 0;
