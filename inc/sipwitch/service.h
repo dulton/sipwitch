@@ -155,6 +155,7 @@ public:
 		inline bool isActive(void) const
 			{return active_flag;};
 
+		virtual void period(long slice);
 		virtual void cdrlog(cdr *call);
 		virtual bool check(void);
 		virtual void snapshot(FILE *fp);

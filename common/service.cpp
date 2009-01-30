@@ -147,6 +147,10 @@ bool service::callback::check(void)
 	return true;
 }
 
+void service::callback::period(long slice)
+{
+}
+
 void service::callback::cdrlog(cdr *cdr)
 {
 }
@@ -846,6 +850,12 @@ void service::period(long slice)
 	stats::period(fp);
 	if(fp)
 		fclose(fp);
+
+	linked_pointer<service::callback> cb = getModules();
+	while(is(cb)) {
+		cb->period(slice);
+		cb.next();
+	}
 }
 
 void service::snapshot(const char *uid)
