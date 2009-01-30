@@ -332,11 +332,9 @@ static void callfile(FILE *fp, const char *id)
 	while(!feof(fp)) {
 		if(fgets(buf, sizeof(buf), fp) == NULL)
 			buf[0] = 0;
-		if(strnicmp(buf, "call ", 5))
+		if(!buf[0])
 			continue;
-		cp = buf + 5;
-		while(*cp == ' ')
-			++cp;
+		cp = buf;
 		++line;
 		if(date == last_date && line <= last_line)
 			continue;

@@ -482,6 +482,7 @@ void thread::invite(void)
 	unsigned toext = 0;
 	osip_header_t *msgheader = NULL;
 	char fromext[32];
+	cdr *cdrnode;
 
 	// FIXME: we should get proxy count extimate from sdp into global thread object...
 
@@ -540,6 +541,12 @@ noproxy:
 	}
 
 	time(&call->starting);
+	cdrnode = cdr::get();
+	cdrnode->type = cdr::START;
+	cdrnode->starting = call->starting;
+	cdrnode->sequence = session->sequence;
+	cdrnode->cid = session->cid;
+	String::set(cdrnode->uuid, sizeof(cdrnode->uuid), session->uuid);	
 
 	switch(destination) {
 	case LOCAL:
@@ -554,6 +561,10 @@ noproxy:
 			String::set(session->display, sizeof(session->display), session->sysident);
 
 		String::set(call->dialed, sizeof(call->dialed), dialing);
+		String::set(cdrnode->ident, sizeof(cdrnode->ident), session->sysident);
+		String::set(cdrnode->dialed, sizeof(cdrnode->dialed), call->dialed);
+		String::set(cdrnode->display, sizeof(cdrnode->display), session->display);
+		cdr::post(cdrnode);
 		stack::sipPublish(&iface, session->identity, session->sysident, sizeof(session->identity));
 
 		if(toext) {
@@ -606,6 +617,11 @@ noproxy:
 		debug(1, "incoming call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, call->dialed, session->sysident);
 
+		String::set(cdrnode->ident, sizeof(cdrnode->ident), session->sysident);
+		String::set(cdrnode->dialed, sizeof(cdrnode->dialed), call->dialed);
+		String::set(cdrnode->display, sizeof(cdrnode->display), session->display);
+		cdr::post(cdrnode);
+
 		session->closed = false;
 		registry::incUse(NULL, stats::INCOMING);	// external...
 		break;
@@ -635,6 +651,12 @@ noproxy:
 
 		debug(1, "outgoing call %08x:%u from %s to %s", 
 			session->sequence, session->cid, getIdent(), requesting);
+
+		String::set(cdrnode->ident, sizeof(cdrnode->ident), session->sysident);
+		String::set(cdrnode->dialed, sizeof(cdrnode->dialed), call->dialed);
+		String::set(cdrnode->display, sizeof(cdrnode->display), session->display);
+		cdr::post(cdrnode);
+
 		inviteRemote(session, requesting);
 		session->closed = false;
 		goto exit;
@@ -659,12 +681,23 @@ noproxy:
 				"\"%s\" <%s>", session->display, session->identity);
 	
 		String::set(call->dialed, sizeof(call->dialed), dialing);
+
+		String::set(cdrnode->ident, sizeof(cdrnode->ident), session->sysident);
+		String::set(cdrnode->dialed, sizeof(cdrnode->dialed), call->dialed);
+		String::set(cdrnode->display, sizeof(cdrnode->display), session->display);
+		cdr::post(cdrnode);
+
 		session->closed = false;
 		session->reg = registry::invite(identity, stats::INCOMING);
 		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
 			session->sequence, session->cid, target, getIdent(), dialing);
 		break;  	
 	default:
+		String::set(cdrnode->ident, sizeof(cdrnode->ident), "unknown");
+		String::set(cdrnode->dialed, sizeof(cdrnode->dialed), dialing);
+		String::set(cdrnode->display, sizeof(cdrnode->display), "");
+		cdr::post(cdrnode);
+
 		session->closed = true;
 		break;
 	}

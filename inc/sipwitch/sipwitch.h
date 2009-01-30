@@ -34,6 +34,7 @@
 #include <sipwitch/digest.h>
 #include <sipwitch/stats.h>
 #include <sipwitch/uri.h>
+#include <sipwitch/cdr.h>
 #include <sipwitch/rtpproxy.h>
 
 /**

@@ -655,13 +655,11 @@ void stack::call::expired(void)
 
 void stack::call::log(void)
 {
-	struct tm *dt;
-
-	if(!reason)
-		return;
-
 	if(!starting)
 		return;
+
+	if(!reason)
+		reason = "unknown";
 
 	if(!ending)
 		time(&ending);
@@ -672,14 +670,19 @@ void stack::call::log(void)
 	if(!joined)
 		joined = "n/a";
 
-	dt = localtime(&starting);
-
-	process::printlog("call %08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s\n",
-		source->sequence, source->cid, reason,
-		dt->tm_year + 1900, dt->tm_mon + 1, dt->tm_mday,
-		dt->tm_hour, dt->tm_min, dt->tm_sec, ending - starting,
-		source->sysident, dialed, joined, source->display);		
-	
+	cdr *node = cdr::get();
+	node->type = cdr::STOP;
+	node->starting = starting;
+	node->sequence = source->sequence;
+	node->cid = source->cid;
+	node->duration = ending - starting;
+	String::set(node->uuid, sizeof(node->uuid), source->uuid);
+	String::set(node->reason, sizeof(node->reason), reason);
+	String::set(node->ident, sizeof(node->ident), source->sysident);
+	String::set(node->dialed, sizeof(node->dialed), dialed);
+	String::set(node->joined, sizeof(node->joined), joined);
+	String::set(node->display, sizeof(node->display), source->display);
+	cdr::post(node);	
 	starting = 0l;
 }
 

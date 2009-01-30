@@ -102,6 +102,20 @@ static void logfile(fsys_t &fs)
 	fsys::create(fs, buf, fsys::ACCESS_APPEND, 0660); 
 }
 
+FILE *process::callfile(void)
+{
+	char buf[128];
+	FILE *fp;
+
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/%s.calls", ident);
+	fp = fopen(buf, "a");
+	if(fp)
+		return fp;
+
+	snprintf(buf, sizeof(buf), "/tmp/%s-%s/calls", ident, process::identity());
+	return fopen(buf, "a");
+}
+
 FILE *process::statfile(void)
 {
 	char buf[128];
@@ -245,6 +259,18 @@ static void get_system_time(uuid_time_t *uuid_time)
         * (unsigned __int64) (60 * 60 * 24)       // days
         * (unsigned __int64) (17+30+31+365*18+5); // # of days
     *uuid_time = time.QuadPart;
+}
+
+FILE *process::callfile(void)
+{
+	char buf[256];
+	unsigned len;
+
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\%s\\service.calls", ident);
+	
+	return fopen(buf, "a");
 }
 
 FILE *process::statfile(void)

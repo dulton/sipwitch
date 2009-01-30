@@ -1,6 +1,7 @@
 From version 0.3.10 to 0.3.11
 - fix for garbage collection issue in registration re-use.
 - introduction of uuid's for call records.
+- new thread managed cdr system, will be needed for radius.
 
 From version 0.3.9 to 0.3.10
 - subscriber plugin provider registration management.

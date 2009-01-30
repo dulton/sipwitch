@@ -81,6 +81,7 @@ public:
 	static FILE *dumpfile(const char *uid);
 	static FILE *snapshot(const char *uid);
 	static FILE *statfile(void);
+	static FILE *callfile(void);
 	static FILE *config(const char *uid = NULL);
 	static void uuid(char *buffer, size_t size, const char *node);
 	static void uuid(char *buffer, size_t size, unsigned short seq, unsigned callid);

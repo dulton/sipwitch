@@ -147,6 +147,10 @@ bool service::callback::check(void)
 	return true;
 }
 
+void service::callback::cdrlog(cdr *cdr)
+{
+}
+
 void service::callback::reload(service *keys)
 {
 }
@@ -713,11 +717,25 @@ exit:
 	return rtn;
 }
 
+void service::cdrlog(cdr *call)
+{
+	linked_pointer<callback> sp;
+	for(unsigned int level = 0;level < (sizeof(callback::runlevels) / sizeof(LinkedObject *));++level) {
+		sp = callback::runlevels[level];
+		while(sp) {
+			sp->cdrlog(call);
+			sp.next();
+		}
+	}
+}
+
 void service::startup(void)
 {
 	linked_pointer<callback> sp;
 
 	process::errlog(NOTICE, "startup");
+
+	cdr::start();
 
 	for(unsigned int level = 0;level < (sizeof(callback::runlevels) / sizeof(LinkedObject *));++level) {
 		sp = callback::runlevels[level];
@@ -740,6 +758,8 @@ void service::shutdown(void)
 			sp.next();
 		}
 	}
+
+	cdr::stop();
 }
 
 void service::dump(FILE *fp, service::keynode *root, unsigned level)

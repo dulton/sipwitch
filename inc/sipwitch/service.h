@@ -53,8 +53,12 @@
 #include <sipwitch/mapped.h>
 #endif
 
-#ifndef	_SIPWITCH_RTPPROXY_H
+#ifndef	_SIPWITCH_RTPPROXY_H_
 #include <sipwitch/rtpproxy.h>
+#endif
+
+#ifndef	_SIPWITCH_CDR_H_
+#include <sipwitch/cdr.h>
 #endif
 
 #define	CONFIG_KEY_SIZE 177
@@ -150,6 +154,7 @@ public:
 		inline bool isActive(void) const
 			{return active_flag;};
 
+		virtual void cdrlog(cdr *call);
 		virtual bool check(void);
 		virtual void snapshot(FILE *fp);
 		virtual void start(service *cfg);
@@ -194,6 +199,7 @@ public:
 	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
 	static void startup(void);
 	static void shutdown(void);
+	static void cdrlog(cdr *call);
 	static void snmptrap(unsigned id, const char *descr);
 	static long uptime(void);
 	static bool match(const char *digits, const char *pattern, bool partial);

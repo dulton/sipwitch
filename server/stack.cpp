@@ -231,6 +231,37 @@ void stack::enableDumping(void)
 	stack::sip.dumping = true;
 }
 
+void stack::cdrlog(cdr *call)
+{
+	char buffer[256];
+	struct tm *dt;
+
+	if(call->type != cdr::STOP)
+		return;
+
+	dt = localtime(&call->starting);
+
+	if(dt->tm_year < 1900)
+		dt->tm_year += 1900;
+
+	debug(1, "call %08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s",
+		call->sequence, call->cid, call->reason,
+		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+		dt->tm_hour, dt->tm_min, dt->tm_sec, call->duration,
+		call->ident, call->dialed, call->joined, call->display);
+
+	FILE *fp = process::callfile();
+	if(!fp)
+		return;
+
+	fprintf(fp, "%08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s\n",
+		call->sequence, call->cid, call->reason,
+		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+		dt->tm_hour, dt->tm_min, dt->tm_sec, call->duration,
+		call->ident, call->dialed, call->joined, call->display);
+	fclose(fp);
+}
+
 void stack::siplog(osip_message_t *msg)
 {
     fsys_t log;
