@@ -352,8 +352,8 @@ static void calls(const char *id)
 		"Status: 200 OK\r\n"
 		"Content-Type: text/plain\r\n"
 		"\r\n");
-	callfile(fopen(DEFAULT_VARPATH "/log/sipwitch.log.0", "r"), id);
-	callfile(fopen(DEFAULT_VARPATH "/log/sipwitch.log", "r"), id);
+	callfile(fopen(DEFAULT_VARPATH "/log/sipwitch.calls.0", "r"), id);
+	callfile(fopen(DEFAULT_VARPATH "/log/sipwitch.calls", "r"), id);
 	exit(0);
 }
 
