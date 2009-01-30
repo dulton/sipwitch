@@ -329,7 +329,6 @@ private:
 		static void operator delete(void *obj);
 	};
 
-	void cdrlog(cdr *call);
 	void reload(service *cfg);
 	void start(service *cfg);
 	void stop(service *cfg);

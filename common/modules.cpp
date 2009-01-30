@@ -17,6 +17,7 @@
 #include <ucommon/ucommon.h>
 #include <ucommon/export.h>
 #include <sipwitch/modules.h>
+#include <sipwitch/process.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -77,4 +78,37 @@ char *modules::sipwitch::referRemote(MappedRegistry *rr, const char *target, cha
 {
 	return NULL;
 }
+
+void modules::cdrlog(FILE *fp, cdr *call)
+{
+	struct tm *dt = localtime(&call->starting);
+
+	if(dt->tm_year < 1900)
+		dt->tm_year += 1900;
+
+	if(call->type == cdr::STOP) {
+		debug(1, "call %08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s",
+			call->sequence, call->cid, call->reason,
+			dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+			dt->tm_hour, dt->tm_min, dt->tm_sec, call->duration,
+			call->ident, call->dialed, call->joined, call->display);
+	}
+
+	linked_pointer<service::callback> cb = service::getModules();
+
+	while(is(cb)) {
+		cb->cdrlog(call);
+		cb.next();
+	}
+
+	if(!fp || call->type != cdr::STOP)
+		return;
+
+	fprintf(fp, "%08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s\n",
+		call->sequence, call->cid, call->reason,
+		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+		dt->tm_hour, dt->tm_min, dt->tm_sec, call->duration,
+		call->ident, call->dialed, call->joined, call->display);
+}
+ 
 

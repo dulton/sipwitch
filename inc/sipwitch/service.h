@@ -128,6 +128,7 @@ public:
     {
 	protected:
 		friend class service;
+		friend class modules;
 
 		unsigned runlevel;
 		bool active_flag;
@@ -199,7 +200,6 @@ public:
 	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
 	static void startup(void);
 	static void shutdown(void);
-	static void cdrlog(cdr *call);
 	static void snmptrap(unsigned id, const char *descr);
 	static long uptime(void);
 	static bool match(const char *digits, const char *pattern, bool partial);

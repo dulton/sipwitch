@@ -717,18 +717,6 @@ exit:
 	return rtn;
 }
 
-void service::cdrlog(cdr *call)
-{
-	linked_pointer<callback> sp;
-	for(unsigned int level = 0;level < (sizeof(callback::runlevels) / sizeof(LinkedObject *));++level) {
-		sp = callback::runlevels[level];
-		while(sp) {
-			sp->cdrlog(call);
-			sp.next();
-		}
-	}
-}
-
 void service::startup(void)
 {
 	linked_pointer<callback> sp;

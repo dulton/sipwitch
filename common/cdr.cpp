@@ -19,6 +19,7 @@
 #include <sipwitch/cdr.h>
 #include <sipwitch/process.h>
 #include <sipwitch/service.h>
+#include <sipwitch/modules.h>
 
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
@@ -62,6 +63,7 @@ void thread::run(void)
 	running = true;
 	linked_pointer<cdr> cp;
 	LinkedObject *next;
+	FILE *fp;
 
 	process::errlog(DEBUG1, "starting cdr thread");
 
@@ -74,16 +76,21 @@ void thread::run(void)
 		}
 		Conditional::wait();
 		cp = runlist;
+		fp = NULL;
+		if(runlist)
+			fp = process::callfile();
 		runlist = NULL;
 		Conditional::unlock();
 		while(is(cp)) {
 			next = cp->getNext();
-			service::cdrlog(*cp);
+			modules::cdrlog(fp, *cp);
 			locking.lock();
 			cp->enlist(&freelist);
 			locking.release();
 			cp = next;
 		}
+		if(fp)
+			fclose(fp);
 	}
 }
 
