@@ -40,8 +40,6 @@ service *service::cfg = NULL;
 volatile service::dialmode_t service::dialmode = service::ALL_DIALING;
 
 static char header[80] = "- welcome";
-static socket_t trap4 = INVALID_SOCKET;
-static socket_t trap6 = INVALID_SOCKET;
 static time_t started = 0l;
 static time_t periodic = 0l;
 

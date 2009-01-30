@@ -727,7 +727,6 @@ void process::uuid(char *buffer, size_t size, unsigned short seq, unsigned calli
 	unsigned long time_low; 
 	unsigned short time_mid;
 	uuid_time_t time_now;
-	unsigned seed = 0;
 
 	static const char hex[] = "0123456789abcdef";
 		

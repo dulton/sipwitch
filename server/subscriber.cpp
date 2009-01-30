@@ -63,7 +63,6 @@ static char *identity = NULL;
 static MappedRegistry provider;	// fake provider record to be used...
 static char *volatile published = NULL;
 static unsigned short port = 9000;
-static unsigned count = 0;
 static listener *thr = NULL;
 
 listener::listener() :
