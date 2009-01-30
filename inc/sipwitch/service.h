@@ -57,6 +57,10 @@
 #include <sipwitch/rtpproxy.h>
 #endif
 
+#ifndef	_SIPWITCH_PROCESS_H_
+#include <sipwitch/process.h>
+#endif
+
 #ifndef	_SIPWITCH_CDR_H_
 #include <sipwitch/cdr.h>
 #endif
@@ -157,6 +161,7 @@ public:
 
 		virtual void period(long slice);
 		virtual void cdrlog(cdr *call);
+		virtual void errlog(errlevel_t level, const char *text);
 		virtual bool check(void);
 		virtual void snapshot(FILE *fp);
 		virtual void start(service *cfg);
@@ -201,7 +206,6 @@ public:
 	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
 	static void startup(void);
 	static void shutdown(void);
-	static void snmptrap(unsigned id, const char *descr);
 	static long uptime(void);
 	static bool match(const char *digits, const char *pattern, bool partial);
 	static keynode *get(void);
@@ -243,15 +247,6 @@ protected:
 
 private:
 	void __LOCAL addAttributes(keynode *node, char *astr);
-
-	class __LOCAL snmpserver : public LinkedObject
-	{
-	public:
-		struct sockaddr_internet server;
-	};
-
-	snmpserver *snmpservers;
-	const char *community;
 };
 
 #define	RUNLEVELS	(sizeof(callback::runlevels) / sizeof(LinkedObject *))

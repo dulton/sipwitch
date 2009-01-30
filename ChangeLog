@@ -3,6 +3,7 @@ From version 0.3.10 to 0.3.11
 - introduction of uuid's for call records.
 - new thread managed cdr system, will be needed for radius.
 - service statistical periods propogated to plugins.
+- ability to push error logging into plugins.
 
 From version 0.3.9 to 0.3.10
 - subscriber plugin provider registration management.

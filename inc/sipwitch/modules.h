@@ -33,6 +33,9 @@
 #include <sipwitch/cdr.h>
 #endif
 
+#ifndef	_SIPWITCH_PROCESS_H_
+#include <sipwitch/process.h>
+#endif
 
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
@@ -66,6 +69,7 @@ public:
 	};
 
 	static void cdrlog(FILE *fp, cdr *call);	
+	static void errlog(errlevel_t level, const char *text);
 };
 
 END_NAMESPACE

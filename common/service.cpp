@@ -147,6 +147,10 @@ bool service::callback::check(void)
 	return true;
 }
 
+void service::callback::errlog(errlevel_t level, const char *text)
+{
+}
+
 void service::callback::period(long slice)
 {
 }
@@ -190,8 +194,6 @@ memalloc(s), root()
 
 	root.setId((char *)name);
 	root.setPointer(NULL);
-	snmpservers = NULL;
-	community = "public";
 	if(!started) {
 		time(&started);
 		time(&periodic);
@@ -227,116 +229,6 @@ long service::uptime(void)
 		return 0l;
 
 	return now - started;
-}
-
-void service::snmptrap(unsigned id, const char *descr)
-{
-	assert(descr != NULL && *descr != 0);
-
-	static unsigned char header1_short[] = {
-		0x06, 0x08, 0x2b, 0x06, 0x01, 0x04, 0x01, 0x81, 0xc7, 0x42,
-		0x40, 0x04, 0xc0, 0xa8, 0x3b, 0xcd};
-
-	static unsigned char header1_long[] = {
-		0x06, 0x08, 0x2b, 0x06, 0x01, 0x04, 0x01, 0x81, 0xc7, 0x42,
-		0x40, 0x04, 0xc0, 0xa8, 0x3b, 0xcd};
-
-	static unsigned char header2[] = {
-		0x06, 0x08, 0x2b, 0x06, 0x01, 0x02, 0x01, 0x01, 0x01, 0x00, 0x04};
-
-	if(!cfg)
-		return;
-
-	linked_pointer<snmpserver> servers = cfg->snmpservers;
-	unsigned char buf[128];
-	unsigned id1 = id, id2 = 0;
-	unsigned len;
-	long timestamp = uptime() * 100l;
-	unsigned offset1 = 7 + strlen(cfg->community);
-	unsigned offset2 = offset1 + sizeof(header1_long);
-	unsigned lo1 = 1;
-	unsigned lo2 = offset1 + 1;
-
-	if(!servers)
-		return;
-
-	if(id1 > 6) {
-		id2 = id1;
-		id1 = 6;
-	}
-
-	buf[0] = 0x30;
-	buf[2] = 0x02;
-	buf[3] = 0x01;
-	buf[4] = 0x00;
-	buf[5] = 0x04;
-	buf[6] = strlen(cfg->community);
-
-	String::set((char *)(buf + 7), sizeof(buf) - 7, cfg->community);
-	buf[offset1] = 0xa4;
-
-	if(descr)
-	memcpy(buf + offset1 + 2, header1_long, sizeof(header1_long));
-	else
-	memcpy(buf + offset1 + 2, header1_short, sizeof(header1_short));
-
-	buf[offset2] = 0x02;
-	buf[offset2 + 1 ] = 0x01;
-	buf[offset2 + 2] = id1;
-	buf[offset2 + 3] = 0x02;
-	buf[offset2 + 4] = 0x01;
-	buf[offset2 + 5] = id2;
-
-	buf[offset2 + 6] = 0x43;
-	buf[offset2 + 7] = 0x04;
-	buf[offset2 + 8] = timestamp / 0x1000000l;
-	buf[offset2 + 9] = (timestamp / 0x10000l) & 0xff;
-	buf[offset2 + 10] = (timestamp / 0x100l) & 0xff;
-	buf[offset2 + 11] = timestamp & 0xff;
-	buf[offset2 + 12] = 0x30;
-
-	if(!descr) {
-		buf[offset2 + 13] = 0x00;
-		len = offset2 + 14;
-		goto send;
-	}
-
-	buf[offset2 + 13] = strlen(descr) + 14;
-	buf[offset2 + 14] = 0x30;
-	buf[offset2 + 15] = strlen(descr) + 12;
-	memcpy(buf + offset2 + 16, header2, sizeof(header2));
-	offset2 += 16 + sizeof(header2);
-	buf[offset2] = strlen(descr);
-	String::set((char *)buf + offset2 + 1, sizeof(buf) - offset2 - 1, descr);
-	len = offset2 + 1 + strlen(descr);
-
-send:
-	buf[lo1] = len - 2;
-	buf[lo2] = len - 15;
-
-	while(servers) {
-		int on = 1;
-		socklen_t alen = Socket::getlen((struct sockaddr *)&servers->server);
-		switch(Socket::getfamily(servers->server)) {
-#ifdef	AF_INET6
-		case AF_INET6:
-			if(trap6 == INVALID_SOCKET) {
-				trap6 = ::socket(AF_INET6, SOCK_DGRAM, 0);
-				setsockopt(trap6, SOL_SOCKET, SO_BROADCAST, (char *)&on, sizeof(on));
-			}
-			::sendto(trap6, (caddr_t)buf, len, 0, (struct sockaddr *)&servers->server, alen);
-			break;
-#endif
-		case AF_INET:
-			if(trap4 == INVALID_SOCKET) {
-				trap4 = ::socket(AF_INET, SOCK_DGRAM, 0);
-				setsockopt(trap4, SOL_SOCKET, SO_BROADCAST, (char *)&on, sizeof(on));
-			}
-			::sendto(trap4, (caddr_t)buf, len, 0, (struct sockaddr *)&servers->server, alen);
-			break;
-		}
-		servers.next();
-	}
 }
 
 service::keynode *service::path(const char *id)

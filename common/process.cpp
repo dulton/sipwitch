@@ -18,6 +18,7 @@
 #include <ucommon/export.h>
 #include <sipwitch/process.h>
 #include <sipwitch/service.h>
+#include <sipwitch/modules.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -226,8 +227,8 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 			else
 				fprintf(stderr, "sipw: %s\n", buf);
 		}
-		service::snmptrap(loglevel + 10, buf);
 		::syslog(level, "%s", buf);
+		modules::errlog(loglevel, buf);
 	}
 	
 	if(level == LOG_CRIT)

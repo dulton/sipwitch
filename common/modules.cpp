@@ -79,6 +79,16 @@ char *modules::sipwitch::referRemote(MappedRegistry *rr, const char *target, cha
 	return NULL;
 }
 
+void modules::errlog(errlevel_t level, const char *text)
+{
+	linked_pointer<service::callback> cb = service::getModules();
+
+	while(is(cb)) {
+		cb->errlog(level, text);
+		cb.next();
+	}
+}
+
 void modules::cdrlog(FILE *fp, cdr *call)
 {
 	struct tm *dt = localtime(&call->starting);
