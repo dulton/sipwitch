@@ -1001,7 +1001,7 @@ void server::usage(void)
 		"  -memleak              Find where leaks are with valgrind\n"
 #endif
 	);
-	printf("Report bugs to dyfet@gnutelephony.org\n");
+	printf("Report bugs to sipwitch-devel@gnu.org\n");
 	exit(0);
 }
 

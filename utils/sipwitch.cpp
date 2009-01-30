@@ -378,7 +378,7 @@ static void usage(void)
         "  verbose <level>         Server verbose logging level\n"
 	);		
 
-	printf("Report bugs to dyfet@gnutelephony.org\n");
+	printf("Report bugs to sipwitch-devel@gnu.org\n");
 	exit(0);
 }
 

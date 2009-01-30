@@ -182,7 +182,7 @@ extern "C" int main(int argc, char **argv)
 				"  -port     port-numer\n"
 				"  -timeout  seconds\n"
 				"  -verbsose\n"
-				"Report bugs to dyfet@gnutelephony.org\n");
+				"Report bugs to sipwitch-devel@gnu.org\n");
 			exit(3);
 		}
 
