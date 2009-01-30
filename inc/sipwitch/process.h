@@ -83,6 +83,7 @@ public:
 	static FILE *statfile(void);
 	static FILE *config(const char *uid = NULL);
 	static void uuid(char *buffer, size_t size, const char *node);
+	static void uuid(char *buffer, size_t size, unsigned short seq, unsigned callid);
 };
 
 #if defined(DEBUG) || defined(OLD_STDCPP) || defined(NEW_STDCPP)

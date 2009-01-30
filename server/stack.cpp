@@ -72,6 +72,11 @@ stack::segment::segment(call *cr, int cid, int did, int tid) : OrderedObject()
 	sid.sdp[0] = 0;
 	sid.reg = NULL;
 	sid.closed = false;
+
+	static unsigned short sequence = 0;
+	Mutex::protect(&sequence);
+	process::uuid(sid.uuid, sizeof(sid.uuid), ++sequence, cid);
+	Mutex::release(&sequence);
 }
 
 void *stack::segment::operator new(size_t size)

@@ -692,6 +692,55 @@ FILE *process::config(const char *uid)
 	return fopen(buf, "r");
 }
 
+void process::uuid(char *buffer, size_t size, unsigned short seq, unsigned callid)
+{
+	unsigned char uuid[16];
+	unsigned pos = 0, dest = 0;
+	unsigned hi, lo;
+	unsigned long time_low; 
+	unsigned short time_mid;
+	uuid_time_t time_now;
+	unsigned seed = 0;
+
+	static const char hex[] = "0123456789abcdef";
+		
+	get_system_time(&time_now);
+	time_now = time_now / 1024;
+
+	time_low = (unsigned long)(time_now & 0xffffffff);
+	time_mid = (unsigned short)((time_now >> 32) & 0xffff);
+
+	uuid[0] = time_low >> 24;
+	uuid[1] = (time_low >> 16) & 0xff;
+	uuid[2] = (time_low >> 8) & 0xff;
+	uuid[3] = time_low > 0xff;
+	uuid[4] = (time_mid >> 8) & 0xff;
+	uuid[5] = time_mid & 0xff;
+	uuid[6] = rand() & 0x0f;
+	uuid[7] = rand();
+	uuid[8] = 0x3f & (seq >> 8);
+	uuid[9] = seq & 0xff;
+
+	srand(callid);
+
+	for(unsigned entry = 10; entry < 16; ++entry)
+		uuid[entry] = rand();
+
+	while(pos < sizeof(uuid) && dest < (size - 3)) {
+		if(pos == 4 || pos == 6 || pos == 8 || pos == 10) {
+			buffer[dest++] = '-';
+			if(dest >= (size - 3))
+				break;
+		}
+		hi = uuid[pos] >> 4;
+		lo = uuid[pos] & 0x0f;
+		buffer[dest++] = hex[hi];
+		buffer[dest++] = hex[lo];
+		++pos;
+	}
+	buffer[dest++] = 0;
+}	
+
 void process::uuid(char *buffer, size_t size, const char *node)
 {
 	unsigned char uuid[16];

@@ -674,8 +674,8 @@ void stack::call::log(void)
 
 	dt = localtime(&starting);
 
-	process::printlog("call %08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s\n",
-		source->sequence, source->cid, reason,
+	process::printlog("call %s %08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s\n",
+		source->uuid, source->sequence, source->cid, reason,
 		dt->tm_year + 1900, dt->tm_mon + 1, dt->tm_mday,
 		dt->tm_hour, dt->tm_min, dt->tm_sec, ending - starting,
 		source->sysident, dialed, joined, source->display);		

@@ -245,6 +245,7 @@ private:
 		char sysident[MAX_IDENT_SIZE];	// ident of this session
 		char display[MAX_DISPLAY_SIZE];	// callerid reference field
 		char from[MAX_URI_SIZE + MAX_DISPLAY_SIZE];	// formatted from line for endpoint
+		char uuid[48];
 
 		char authid[MAX_USERID_SIZE];	// for authentication...
 		char secret[MAX_USERID_SIZE];
