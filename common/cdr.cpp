@@ -50,6 +50,7 @@ static memalloc heap;
 static thread run;
 static bool running = false;
 static bool down = false;
+static bool logging = false;
 
 thread::thread() : DetachedThread(), Conditional()
 {
@@ -79,9 +80,10 @@ void thread::run(void)
 		Conditional::wait();
 		cp = runlist;
 		fp = NULL;
-		if(runlist)
+		if(runlist && logging)
 			fp = process::callfile();
 		runlist = NULL;
+		logging = false;
 		Conditional::unlock();
 		while(is(cp)) {
 			next = cp->getNext();
@@ -100,6 +102,8 @@ void cdr::post(cdr *rec)
 {
 	run.lock();
 	rec->enlist(&runlist);
+	if(rec->type == STOP)
+		logging = true;
 	run.signal();
 	run.unlock();
 }
