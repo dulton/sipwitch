@@ -49,6 +49,7 @@ static Mutex locking;
 static memalloc heap;
 static thread run;
 static bool running = false;
+static bool down = false;
 
 thread::thread() : DetachedThread(), Conditional()
 {
@@ -72,6 +73,7 @@ void thread::run(void)
 		if(!running) {
 			Conditional::unlock();
 			process::errlog(DEBUG1, "stopped cdr thread");
+			down = true;
 			return;
 		}
 		Conditional::wait();
@@ -128,5 +130,8 @@ void cdr::stop(void)
 	running = false;
 	run.signal();
 	run.unlock();
+
+	while(!down)
+		Thread::sleep(20);
 }
 				
