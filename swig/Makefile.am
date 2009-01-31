@@ -15,18 +15,30 @@ PKGPATH = "org/gnutelephony/sipwitch"
 
 # official swig builds
 
+csharp-swig: swig-clean
+	mkdir build
+	swig -c++ -csharp -dllimport csharp-sipwitch -outdir build -module Server -namespace $(PKGNAME) @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
+	mcs -out:sipwitch.dll -t:library build/*.cs
+	$(CXX) -shared @SIPWITCH_FLAGS@ -fPIC -fpic -I$(top_srcdir)/inc -I$(top_srcdir) -I$(prefix)/include/mono -o wrapper.o -c wrapper.cpp  
+	$(CXX) -shared -o libcsharp-sipwitch.so wrapper.o -lucommon @UCOMMON_CLINK@
+	$(STRIP) libcsharp-sipwitch.so
+	$(mkinstalldirs) $(DESTDIR)$(libdir)/mono/gnutelephony
+	$(INSTALL) sipwitch.dll $(DESTDIR)$(libdir)/mono/gnutelephony
+	$(INSTALL) libcsharp-sipwitch.so $(DESTDIR)$(libdir)
+
 java-swig: swig-clean
 	rm -rf org/gnutelephony/sipwitch
 	rm -rf *.jar
 	mkdir -p $(PKGPATH)
 	swig -c++ -java -module Server -package $(PKGNAME) @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -outdir $(PKGPATH) -o wrapper.cpp swig.i 
 	$(CXX) -shared @SIPWITCH_FLAGS@ -fPIC -fpic -I$(top_srcdir)/inc -I$(top_srcdir) -I$(libdir)/jvm/default-java/include -o wrapper.o -c wrapper.cpp  
-	$(CXX) -shared -o libsipwitch.so wrapper.o -lucommon @UCOMMON_CLINK@
-	(cd org/gnutelephony/sipwitch ; javac *.java)
+	$(CXX) -shared -o libjava-sipwitch.so wrapper.o -lucommon @UCOMMON_CLINK@
+	(cd $(PKGPATH) ; javac *.java)
 	jar cf sipwitch.jar $(PKGPATH)/*.class
-	$(STRIP) libsipwitch.so
+	$(mkinstalldirs) $(DESTDIR)$(libdir)/java
+	$(STRIP) libjava-sipwitch.so
 	$(INSTALL) sipwitch.jar $(DESTDIR)$(libdir)/java
-	$(INSTALL) libsipwitch.so $(DESTDIR)$(libdir)/jni
+	$(INSTALL) libjava-sipwitch.so $(DESTDIR)$(libdir)
 
 python-swig: swig-clean
 	swig -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i	
@@ -57,5 +69,5 @@ python-test: swig-clean
 # general cleanup
 
 swig-clean:
-	-rm -rf *.so *.o *.lo wrapper.cpp sipwitch.py build
+	-rm -rf *.so *.o *.lo wrapper.cpp sipwitch.py sipwitch.php build
 

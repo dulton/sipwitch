@@ -25,4 +25,7 @@ swig-python:
 swig-php5:
 	(cd swig ; make php5-swig)
 
+swig-java:
+	(cd swig ; make java-swig)
+
 
