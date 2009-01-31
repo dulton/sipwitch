@@ -38,7 +38,7 @@ python-swig: swig-clean
 php5-swig: swig-clean
 	swig -c++ -php5 @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
 	$(CXX) -shared `php-config --includes` -Wno-format -fpic @SIPWITCH_FLAGS@ -o wrapper.o -c wrapper.cpp -I$(top_srcdir)/inc -I$(top_srcdir) 
-	$(CXX) -shared $(MODFLAGS) -o sipwitch.so wrapper.o -lucommon @UCOMMON_CLINK@
+	$(CXX) -shared -module $(MODFLAGS) -o sipwitch.so wrapper.o -lucommon @UCOMMON_CLINK@
 	$(mkinstalldirs) $(DESTDIR)`php-config --extension-dir`
 	$(STRIP) sipwitch.so
 	$(INSTALL) sipwitch.so $(DESTDIR)`php-config --extension-dir`
@@ -47,8 +47,8 @@ php5-swig: swig-clean
 
 php5-test: swig-clean
 	swig -c++ -php5 @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
-	g++ `php-config --includes` -Wno-format -fpic @SIPWITCH_FLAGS@ -o wrapper.o -c wrapper.cpp -I$(top_srcdir)/inc -I$(top_srcdir) 
-	g++ -shared $(MODFLAGS) -o sipwitch.so wrapper.o -L../../ucommon/src/.libs -lucommon @UCOMMON_CLINK@
+	$(CXX) `php-config --includes` -Wno-format -fpic @SIPWITCH_FLAGS@ -o wrapper.o -c wrapper.cpp -I$(top_srcdir)/inc -I$(top_srcdir) 
+	$(CXX) -shared -module $(MODFLAGS) -o sipwitch.so wrapper.o -L../../ucommon/src/.libs -lucommon @UCOMMON_CLINK@
 
 python-test: swig-clean
 	swig -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
