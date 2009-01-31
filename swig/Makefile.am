@@ -10,8 +10,23 @@
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
 EXTRA_DIST = README swig.i swig.h swig.cpp setup.py
+PKGNAME = "org.gnutelephony.sipwitch"
+PKGPATH = "org/gnutelephony/sipwitch"
 
-# official swig builds, note: does not strip...
+# official swig builds
+
+java-swig: swig-clean
+	rm -rf org/gnutelephony/sipwitch
+	rm -rf *.jar
+	mkdir -p $(PKGPATH)
+	swig -c++ -java -module Server -package $(PKGNAME) @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -outdir $(PKGPATH) -o wrapper.cpp swig.i 
+	$(CXX) -shared @SIPWITCH_FLAGS@ -fPIC -fpic -I$(top_srcdir)/inc -I$(top_srcdir) -I$(libdir)/jvm/default-java/include -o wrapper.o -c wrapper.cpp  
+	$(CXX) -shared -o libsipwitch.so wrapper.o -lucommon @UCOMMON_CLINK@
+	(cd org/gnutelephony/sipwitch ; javac *.java)
+	jar cf sipwitch.jar $(PKGPATH)/*.class
+	$(STRIP) libsipwitch.so
+	$(INSTALL) sipwitch.jar $(DESTDIR)$(libdir)/java
+	$(INSTALL) libsipwitch.so $(DESTDIR)$(libdir)/jni
 
 python-swig: swig-clean
 	swig -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i	
@@ -22,8 +37,8 @@ python-swig: swig-clean
 
 php5-swig: swig-clean
 	swig -c++ -php5 @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
-	g++ `php-config --includes` -Wno-format -fpic @SIPWITCH_FLAGS@ -o wrapper.o -c wrapper.cpp -I$(top_srcdir)/inc -I$(top_srcdir) 
-	g++ -shared $(MODFLAGS) -o sipwitch.so wrapper.o -L../../ucommon/src/.libs -lucommon @UCOMMON_CLINK@
+	$(CXX) -shared `php-config --includes` -Wno-format -fpic @SIPWITCH_FLAGS@ -o wrapper.o -c wrapper.cpp -I$(top_srcdir)/inc -I$(top_srcdir) 
+	$(CXX) -shared $(MODFLAGS) -o sipwitch.so wrapper.o -lucommon @UCOMMON_CLINK@
 	$(mkinstalldirs) $(DESTDIR)`php-config --extension-dir`
 	$(STRIP) sipwitch.so
 	$(INSTALL) sipwitch.so $(DESTDIR)`php-config --extension-dir`
@@ -42,5 +57,5 @@ python-test: swig-clean
 # general cleanup
 
 swig-clean:
-	-rm -rf *.so *.o *.lo wrapper.cpp sipwitch.py	build
+	-rm -rf *.so *.o *.lo wrapper.cpp sipwitch.py build
 
