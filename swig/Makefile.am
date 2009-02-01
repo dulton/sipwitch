@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
-EXTRA_DIST = README swig.i swig.h swig.cpp setup.py
+EXTRA_DIST = README swig.i swig.h swig.cpp setup.py setup.pl
 PKGNAME = "org.gnutelephony.sipwitch"
 PKGPATH = "org/gnutelephony/sipwitch"
 
@@ -39,6 +39,16 @@ java-swig: swig-clean
 	$(STRIP) libjava-sipwitch.so
 	$(INSTALL) sipwitch.jar $(DESTDIR)$(libdir)/java
 	$(INSTALL) libjava-sipwitch.so $(DESTDIR)$(libdir)
+
+perl5-swig: swig-clean
+	swig -c++ -perl5 @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
+	$(CXX) -shared -fpic @SIPWITCH_FLAGS@  -o wrapper.o -c wrapper.cpp -I$(top_srcdir)/inc -I$(top_srcdir) `perl setup.pl --flags`
+	$(CXX) -shared -module $(MODFLAGS) -o sipwitch.so wrapper.o -lucommon @UCOMMON_CLINK@
+	$(mkinstalldirs) $(DESTDIR)$(libdir)/perl5/auto/sipwitch
+	touch $(DESTDIR)$(libdir)/perl5/auto/sipwitch/sipwitch.bs
+	$(STRIP) sipwitch.so
+	$(INSTALL) sipwitch.so $(DESTDIR)$(libdir)/perl5/auto/sipwitch
+	$(INSTALL) sipwitch.pm $(DESTDIR)$(libdir)/perl5
 
 python-swig: swig-clean
 	swig -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i	

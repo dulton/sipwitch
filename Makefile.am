@@ -19,6 +19,9 @@ DIST_SUBDIRS = common server utils inc test swig
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsipwitch.pc
 
+swig-perl5:
+	(cd swig ; make perl5-swig)
+
 swig-python:
 	(cd swig ; make python-swig)
 
@@ -28,4 +31,6 @@ swig-php5:
 swig-java:
 	(cd swig ; make java-swig)
 
+swig-csharp:
+	(cd swig ; make csharp-swig)
 
