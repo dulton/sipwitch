@@ -246,9 +246,8 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %if %{mod_python}
 %files -n python-sipwitch
 %defattr(-,root,root,-)
-%dir %{_libdir}/python*/site-packages/sipwitch
-%{_libdir}/python*/site-packages/sipwitch/*.py
-%{_libdir}/python*/site-packages/sipwitch/*.so
+%{_libdir}/python*/site-packages/sipwitch.py
+%{_libdir}/python*/site-packages/_sipwitch.so
 %endif
 
 %if %{mod_php5}
@@ -289,17 +288,15 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %if %{mod_python}
 %post -n python-sipwitch 
 version=`python -c "import sys ; print sys.version[:3]"`
-prefix=/usr/lib/python$version/site-packages/sipwitch
-for source in $prefix/*.py ; do
-	cmd="import py_compile ; py_compile.compile('$prefix/$source')"
-	python -c "$cmd"
-	python -O -c "$cmd"
-done
+prefix=/usr/lib/python$version/site-packages
+cmd="import py_compile ; py_compile.compile('$prefix/$source')"
+python -c "$cmd"
+python -O -c "$cmd"
 
 %preun -n python-sipwitch
 version=`python -c "import sys ; print sys.version[:3]"`
-rm -f /usr/lib/python$version/site-packages/sipwitch/*.pyc
-rm -f /usr/lib/python$version/site-packages/sipwitch/*.pyo
+rm -f /usr/lib/python$version/site-packages/sipwitch.pyc
+rm -f /usr/lib/python$version/site-packages/sipwitch.pyo
 %endif
 
 %post

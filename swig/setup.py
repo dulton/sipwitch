@@ -22,8 +22,7 @@ setup (
 	author_email = 'dyfet@gnutelephony.org',
 	url = 'http://www.gnutelephony.org',
 	description = """Interface to control local instance of GNU SIP Witch""",
-	ext_modules = [Extension('sipwitch._server', ['wrapper.cpp'])],
-	py_modules = ["server"],
-	packages = ['sipwitch']
+	ext_modules = [Extension('_sipwitch', ['wrapper.cpp'])],
+	py_modules = ["sipwitch"]
 )
 

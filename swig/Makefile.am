@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
-EXTRA_DIST = README swig.i swig.h swig.cpp setup.py setup.pl __init__.py
+EXTRA_DIST = README swig.i swig.h swig.cpp setup.py setup.pl
 PKGNAME = "org.gnutelephony.sipwitch"
 PKGPATH = "org/gnutelephony/sipwitch"
 
@@ -51,14 +51,11 @@ perl5-swig: swig-clean
 	$(INSTALL) sipwitch.pm $(DESTDIR)$(libdir)/perl5
 
 python-swig: swig-clean
-	rm -rf sipwitch
-	swig -module server -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i	
-	mkdir -p sipwitch
-	cp __init__.py server.py sipwitch
+	swig -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i	
 	LDFLAGS="@LDFLAGS@ @UCOMMON_CLINK@" CFLAGS="@SIPWITCH_FLAGS@ -I$(abs_top_srcdir)/inc -I$(abs_top_srcdir)" python setup.py build_ext --inplace --swig-opts=-c++ -lucommon
 	$(mkinstalldirs) $(DESTDIR)`python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages/sipwitch" ; print path'`
-	$(STRIP) sipwitch/*.so
-	$(INSTALL) sipwitch/*.py sipwitch/*.so $(DESTDIR)`python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages/sipwitch" ; print path'`
+	$(STRIP) _sipwitch.so
+	$(INSTALL) sipwitch.py _sipwitch.so $(DESTDIR)`python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages/sipwitch" ; print path'`
 
 php5-swig: swig-clean
 	swig -c++ -php5 @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
@@ -76,10 +73,7 @@ php5-test: swig-clean
 	$(CXX) -shared -module $(MODFLAGS) -o sipwitch.so wrapper.o -L../../ucommon/src/.libs -lucommon @UCOMMON_CLINK@
 
 python-test: swig-clean
-	rm -rf sipwitch
 	swig -module server -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
-	mkdir -p sipwitch
-	cp __init__.py server.py sipwitch
 	LDFLAGS="@LDFLAGS@ @UCOMMON_CLINK@" CFLAGS="@SIPWITCH_FLAGS@ -I$(abs_top_srcdir)/inc -I$(abs_top_srcdir)" python setup.py build_ext --inplace --swig-opts=-c++ -L../../ucommon/src/.libs -lucommon
 
 # general cleanup
