@@ -1,3 +1,6 @@
+From version 0.3.11 to 0.3.12
+- python swig package layout changed.
+
 From version 0.3.10 to 0.3.11
 - fix for garbage collection issue in registration re-use.
 - introduction of uuid's for call records.
