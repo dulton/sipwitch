@@ -73,7 +73,7 @@ php5-test: swig-clean
 	$(CXX) -shared -module $(MODFLAGS) -o sipwitch.so wrapper.o -L../../ucommon/src/.libs -lucommon @UCOMMON_CLINK@
 
 python-test: swig-clean
-	swig -module server -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
+	swig -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
 	LDFLAGS="@LDFLAGS@ @UCOMMON_CLINK@" CFLAGS="@SIPWITCH_FLAGS@ -I$(abs_top_srcdir)/inc -I$(abs_top_srcdir)" python setup.py build_ext --inplace --swig-opts=-c++ -L../../ucommon/src/.libs -lucommon
 
 # general cleanup
