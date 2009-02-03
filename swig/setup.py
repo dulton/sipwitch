@@ -15,8 +15,6 @@ setup.py file for SWIG example
 
 from distutils.core import setup, Extension
 
-sipwitch_module = Extension('_sipwitch', sources=['wrapper.cpp'],)
-
 setup (
 	name = 'GNU SIP Witch',
 	version = '0.1',
