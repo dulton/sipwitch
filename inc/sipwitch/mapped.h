@@ -107,16 +107,13 @@ public:
 	};
 };
 
-class __EXPORT MappedCall : public ReusableObject
+class __EXPORT MappedCall : public LinkedObject
 {
 public:
 	time_t	created;
-	time_t	active;
+	time_t  active;
 	char	authorized[MAX_USERID_SIZE];
-	char from[MAX_URI_SIZE], to[MAX_URI_SIZE];
-	unsigned sourceext, targetext;
-	sockaddr_internet source, target;
-	unsigned count;				// active segments
+	char source[MAX_IDENT_SIZE], target[MAX_IDENT_SIZE];
 };
 
 END_NAMESPACE

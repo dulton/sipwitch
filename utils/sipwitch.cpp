@@ -93,6 +93,40 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 	printf("%s:%u\n", buf, p2);
 }
 
+static void calls(char **argv)
+{
+	char text[80];
+
+	if(argv[1]) {
+		fprintf(stderr, "*** sipwitch: calls: no arguments used\n");
+		exit(-1);
+	}
+	mapped_view<MappedCall> calls(CALL_MAP);
+	unsigned count = calls.getCount();
+	unsigned index = 0;
+	const volatile MappedCall *map;
+	time_t now;
+	
+	if(!count) {
+		fprintf(stderr, "*** sipwitch: offline\n");
+		exit(-1);
+	}
+
+	time(&now);
+	while(index < count) {
+		map = calls(index++);
+
+		if(!map->created || !map->source[0])
+			continue;
+
+		if(map->active)
+			printf("%05d %s -> %s (%ld)\n", index, map->source, map->target, now - map->active);
+		else
+			printf("%05d %s ringing (%ld)\n", index, map->source, now - map->created);
+	}
+	exit(0);
+}
+
 static void periodic(char **argv)
 {
 	char text[80];
@@ -363,6 +397,7 @@ static void usage(void)
         "  abort                   Force daemon abort\n"
 	    "  activate <ext> <ipaddr> Assign registration\n"
         "  address <ipaddr>        Set public ip address\n"
+		"  calls                   List active calls on server\n"
 		"  check                   Server deadlock check\n"
         "  concurrency <level>     Server concurrency level\n"
 		"  down                    Shut down server\n"
@@ -524,6 +559,8 @@ extern "C" int main(int argc, char **argv)
 		registry(argv);
 	else if(String::equal(*argv, "stats"))
 		dumpstats(argv);
+	else if(String::equal(*argv, "calls"))
+		calls(argv);
 	else if(String::equal(*argv, "pstats"))
 		periodic(argv);
 	else if(String::equal(*argv, "address"))

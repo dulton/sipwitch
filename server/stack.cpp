@@ -21,6 +21,7 @@ using namespace UCOMMON_NAMESPACE;
 static volatile unsigned allocated_segments = 0;
 static volatile unsigned active_segments = 0;
 static volatile unsigned allocated_calls = 0;
+static volatile unsigned allocated_maps = 0;
 static volatile unsigned active_calls = 0;
 static unsigned mapped_calls = 0;
 static LinkedObject *freesegs = NULL;
@@ -29,6 +30,7 @@ static LinkedObject *freemaps = NULL;
 static LinkedObject **hash = NULL;
 static unsigned keysize = 177;
 static condlock_t locking;
+static mutex_t mapping;
 
 stack::background *stack::background::thread = NULL;
 
@@ -190,7 +192,7 @@ void stack::background::run(void)
 }
 
 stack::stack() :
-service::callback(1), mapped_reuse<MappedCall>(), TimerQueue()
+service::callback(1), mapped_array<MappedCall>(), TimerQueue()
 {
 	stacksize = 0;
 	threading = 2;
@@ -455,6 +457,7 @@ void stack::disjoin(call *cr)
 void stack::destroy(call *cr)
 {
 	assert(cr != NULL);
+	MappedCall *map;
 
 	linked_pointer<segment> sp;
 	rtpproxy *rtp = NULL;
@@ -489,13 +492,47 @@ void stack::destroy(call *cr)
 		sp = next;
 	}
 	rtp = cr->rtp;
-	if(cr->map)
-		cr->map->enlist(&freemaps);
+	map = cr->map;
 	cr->delist();
 	delete cr;
 	locking.share();
+	release(map);
 	if(rtp)
 		rtp->release();	
+}
+
+void stack::release(MappedCall *map)
+{
+	if(map) {
+		map->created = map->active = 0;
+		mapping.lock();
+		map->enlist(&freemaps);
+		mapping.release();
+	}
+}
+
+MappedCall *stack::get(void)
+{
+	MappedCall *map = NULL;
+
+	mapping.lock();
+	if(freemaps) {
+		map = (MappedCall *)freemaps;
+		freemaps = map->getNext();
+	}
+	else if(allocated_maps < mapped_calls)
+		map = sip(allocated_maps++);
+	mapping.release();
+	if(!map)
+		return NULL;
+
+	map->active = 0;
+	map->authorized[0] = 0;
+	map->source[0] = 0;
+	map->target[0] = 0;
+
+	time(&map->created);
+	return map;
 }
 
 void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
@@ -531,6 +568,11 @@ stack::session *stack::create(int cid, int did, int tid)
 {
 	assert(cid > 0);
 
+	MappedCall *map = get();
+
+	if(!map)
+		return NULL;
+
 	call *cr;
 	segment *sp;
 
@@ -538,6 +580,7 @@ stack::session *stack::create(int cid, int did, int tid)
 	cr = new call;
 	sp = new segment(cr, cid, did, tid);	// after count set to 0!
 	cr->source = &(sp->sid);
+	cr->map = map;
 
 	locking.share();
 	return cr->source;
@@ -575,13 +618,13 @@ void stack::start(service *cfg)
 	 
 	thread *thr; 
 	unsigned thidx = 0;
-	process::errlog(DEBUG1, "sip stack starting; creating %d threads at priority %d", threading, priority); 
+	process::errlog(DEBUG1, "stack starting; %d maps and %d threads at priority %d", mapped_calls, threading, priority); 
 	eXosip_init();
 
-	MappedReuse::create(CALL_MAP, mapped_calls);
+	mapped_array<MappedCall>::create(CALL_MAP, mapped_calls);
 	if(!sip)
 		process::errlog(FAILURE, "calls could not be mapped");
-
+	initialize();
 #ifdef	AF_INET6
 	if(sip_family == AF_INET6) {
 		eXosip_enable_ipv6(1);

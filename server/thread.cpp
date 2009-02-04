@@ -702,6 +702,8 @@ noproxy:
 		break;
 	}
 
+	String::set(call->map->source, sizeof(call->map->source), session->sysident);
+
 	if(reginfo) {
 		// get rid of config ref if we are calling registry target
 		server::release(dialed);
@@ -2044,6 +2046,10 @@ void thread::run(void)
 				break;
 			expiration();
 			session = stack::create(sevent->cid, sevent->did, sevent->tid);
+			if(!session) {
+				send_reply(SIP_TEMPORARILY_UNAVAILABLE);
+				break;
+			}
 			session->closed = true;
 			if(authorize()) 
 				invite();

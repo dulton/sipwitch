@@ -193,7 +193,7 @@ public:
 	static void cleanup(time_t period); 
 };
 
-class __LOCAL stack : private service::callback, private mapped_reuse<MappedCall>, public TimerQueue
+class __LOCAL stack : private service::callback, private mapped_array<MappedCall>, public TimerQueue
 {
 private:
 	friend class proxy;
@@ -381,6 +381,8 @@ public:
 	static void infomsg(session *session, eXosip_event_t *sevent);
 	static void setDialog(session *session, int did);
 	static int getDialog(session *session);
+	static void release(MappedCall *map);
+	static MappedCall *get(void);
 
 	inline static timeout_t ringTimeout(void)
 		{return stack::sip.ring_timer;};

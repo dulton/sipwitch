@@ -53,6 +53,10 @@ void stack::call::joinLocked(session *join)
 	debug(2, "joining call %08x:%u with session %08x:%u",
 		source->sequence, source->cid, join->sequence, join->cid);
 
+	String::set(map->target, sizeof(map->target), join->sysident);
+	if(!map->active)
+		time(&map->active);
+
 	target = join;
 	while(sp) {
 		s = &(sp->sid);

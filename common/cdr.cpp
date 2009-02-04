@@ -116,7 +116,15 @@ cdr *cdr::get(void) {
 		rec = (cdr *)freelist;
 		freelist = rec->next;
 		locking.release();
-		memset(rec, 0, sizeof(cdr));
+		rec->uuid[0] = 0;
+		rec->ident[0] = 0;
+		rec->dialed[0] = 0;
+		rec->joined[0] = 0;
+		rec->display[0] = 0;
+		rec->reason[0] = 0;
+		rec->cid = rec->sequence = 0;
+		rec->starting = 0;
+		rec->duration = 0;
 		return rec;
 	}
 	locking.release();
