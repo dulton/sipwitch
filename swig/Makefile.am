@@ -53,9 +53,9 @@ perl5-swig: swig-clean
 python-swig: swig-clean
 	swig -c++ -python @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i	
 	LDFLAGS="@LDFLAGS@ @UCOMMON_CLINK@" CFLAGS="@SIPWITCH_FLAGS@ -I$(abs_top_srcdir)/inc -I$(abs_top_srcdir)" python setup.py build_ext --inplace --swig-opts=-c++ -lucommon
-	$(mkinstalldirs) $(DESTDIR)`python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages/sipwitch" ; print path'`
+	$(mkinstalldirs) $(DESTDIR)`python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages" ; print path'`
 	$(STRIP) _sipwitch.so
-	$(INSTALL) sipwitch.py _sipwitch.so $(DESTDIR)`python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages/sipwitch" ; print path'`
+	$(INSTALL) sipwitch.py _sipwitch.so $(DESTDIR)`python -c 'import sys; path = sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages" ; print path'`
 
 php5-swig: swig-clean
 	swig -c++ -php5 @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i

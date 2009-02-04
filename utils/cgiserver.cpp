@@ -65,11 +65,6 @@ static node_t nodes[] = {
 };
 
 static struct {
-	unsigned code;
-	const char *string;
-} result;
-
-static struct {
 	char *name[RPC_MAX_PARAMS];
 	char *map[RPC_MAX_PARAMS];
 	char *value[RPC_MAX_PARAMS];
@@ -112,6 +107,7 @@ static const char *getIndexed(unsigned short param, unsigned short offset = 0)
 	return NULL;
 }
 
+/*
 static const char *getNamed(unsigned short param, const char *member)
 {
 	unsigned count = 0;
@@ -162,6 +158,8 @@ static const char *getParamId(unsigned short param, unsigned short offset)
 	}
 	return NULL;
 }
+
+*/
 
 static size_t xmltext(char *dp, size_t max, const char *src)
 {
@@ -836,6 +834,7 @@ static void reply(const char *buffer)
 	exit(0);
 }
 
+/*
 static void success(void)
 {
 	char buffer[1024];
@@ -846,6 +845,7 @@ static void success(void)
 
 	reply(buffer);
 }
+*/
 
 static void fault(int code, const char *string)
 {
@@ -959,6 +959,7 @@ static void system_status(void)
 	while(nodes[count].method)
 		++count;
 
+	time(&now);
 	response(buffer, sizeof(buffer), "^(titissi)", 
 		"date", now,
 		"date_int", (rpcint_t)now,
@@ -978,7 +979,7 @@ static void dispatch(const char *method)
 		++index;
 	if(!nodes[index].method)
 		fault(1, "Unknown Method");
-	(*nodes[index].exec);
+	(*nodes[index].exec)();
 }
 
 static void post(FILE *inp = stdin)
