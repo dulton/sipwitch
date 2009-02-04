@@ -14,10 +14,28 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <sipwitch/sipwitch.h>
+#include <ctype.h>
 #include <config.h>
+#include <sys/stat.h>
 
 using namespace UCOMMON_NAMESPACE;
 using namespace SIPWITCH_NAMESPACE;
+
+#define	RPC_MAX_PARAMS 96
+
+#ifdef	_MSWINDOWS_
+typedef	DWORD	rpcint_t;
+#else
+typedef	int32_t	rpcint_t;
+#endif
+typedef	rpcint_t rpcbool_t;
+
+typedef struct {
+	const char *method;
+	void (*exec)(void);
+	const char *descr;
+	const char *parms;
+}	node_t;
 
 static char *cgi_version = NULL;
 static char *cgi_remuser = NULL;
@@ -30,6 +48,250 @@ static const char *temp_file;
 static const char *control_file;
 static const char *snapshot_file;
 static const char *dump_file;
+
+static void system_identity(void);
+static void system_methods(void);
+static void system_help(void);
+static void system_signature(void);
+static void system_status(void);
+
+static node_t nodes[] = {
+/*	{"system.identity", &system_identity, "Identify server type and version", "string"},
+	{"system.listMethods", &system_methods, "List server methods", "array"},
+	{"system.methodHelp", &system_help, "Get help text for method", "string, string"},
+	{"system.methodSignature", &system_signature, "Get parameter signature for specified method", "array, string"},
+*/	{"system.status", &system_status, "Return server status information", "struct"},
+	{NULL, NULL, NULL, NULL}
+};
+
+static struct {
+	unsigned code;
+	const char *string;
+} result;
+
+static struct {
+	char *name[RPC_MAX_PARAMS];
+	char *map[RPC_MAX_PARAMS];
+	char *value[RPC_MAX_PARAMS];
+	unsigned short param[RPC_MAX_PARAMS];
+	unsigned count;
+	short argc;
+} params;
+
+static size_t xmlformat(char *dp, size_t max, const char *fmt, ...)
+{
+	va_list args;
+
+	if(max < 0)
+		return 0;
+
+	va_start(args, fmt);
+	vsnprintf(dp, max, fmt, args);
+	va_end(args);
+	return strlen(dp);
+}
+
+static size_t xmltext(char *dp, size_t max, const char *src)
+{
+	unsigned count = 0;
+	while(*src && count < max) {
+		switch(*src) {
+		case '&':
+			snprintf(dp + count, max - count, "&amp;");
+			count += strlen(dp + count);
+			++src;
+			break;
+		case '<':
+			snprintf(dp + count, max - count, "&lt;");
+			count += strlen(dp + count);
+			++src;
+			break;
+		case '>':
+			snprintf(dp + count, max - count, "&gt;");
+			count += strlen(dp + count);
+			++src;
+			break;
+		case '\"':
+			snprintf(dp + count, max - count, "&quot;");
+			count += strlen(dp + count);
+			++src;
+			break;
+		 case '\'':
+			snprintf(dp + count, max - count, "&apos;");
+			count = strlen(dp + count);
+			++src;
+			break;
+		default:
+			dp[count++] = *(src++);
+		}
+	}
+	return count;
+}
+
+static size_t b64encode(char *dest, const unsigned char *src, size_t size, size_t max)
+{
+	static const unsigned char alphabet[65] =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+	size_t count = 0;
+	unsigned bits;
+
+	while(size >= 3 && max > 4) {
+		bits = (((unsigned)src[0])<<16) |
+			(((unsigned)src[1])<<8) | ((unsigned)src[2]);
+
+		src += 3;
+		size -= 3;
+
+			*(dest++) = alphabet[bits >> 18];
+			*(dest++) = alphabet[(bits >> 12) & 0x3f];
+			*(dest++) = alphabet[(bits >> 6) & 0x3f];
+			*(dest++) = alphabet[bits & 0x3f];
+		max -= 4;
+		count += 4;
+	}
+	*dest = 0;
+	if(!size || max < 5)
+		return count;
+
+	bits = ((unsigned)src[0])<<16;
+	*(dest++) = alphabet[bits >> 18];
+	++count;
+	if (size == 1) {
+	   		*(dest++) = alphabet[(bits >> 12) & 0x3f];
+			*(dest++) = '=';
+		count += 2;
+	}
+	else {
+			bits |= ((unsigned)src[1])<<8;
+			*(dest++) = alphabet[(bits >> 12) & 0x3f];
+			*(dest++) = alphabet[(bits >> 6) & 0x3f];
+		count += 2;
+	}
+	*(dest++) = '=';
+	++count;
+	*(dest++) = 0;
+	return count;
+}
+
+static char *parseText(char *cp)
+{
+	char *dp = cp;
+	char *rp = cp;
+
+	if(!cp)
+		return NULL;
+
+	while(*cp) {
+		if(*cp != '&') {
+			*(dp++) = *(cp++);
+			continue;
+			}
+		if(!strncmp(cp, "&amp;", 5)) {
+					*(dp++) = '&';
+			cp += 5;
+			continue;
+		}
+ 		else if(!strncmp(cp, "&gt;", 4))
+		{
+			*(dp++) = '>';
+			cp += 4;
+			continue;
+		}
+		else if(!strncmp(cp, "&lt;", 4))
+		{
+			*(dp++) = '<';
+			*cp += 4;
+			continue;
+		}
+		else if(!strncmp(cp, "&quot;", 6))
+		{
+			*(dp++) = '\"';
+			*cp += 6;
+			continue;
+		}
+		else if(!strncmp(cp, "&apos;", 6))
+		{
+			*(dp++) = '\'';
+			*cp += 6;
+			continue;
+		}
+		*(dp++) = *(cp++);
+	}
+	*dp = 0;
+	return rp;
+}
+
+static char *parseValue(char *cp, char **value, char **map)
+{
+	*value = NULL;
+	bool base64 = false;
+
+	if(map)
+		*map = NULL;
+
+	while(*cp) {
+		while(isspace(*cp))
+			++cp;
+
+		if(!strncmp(cp, "<base64>", 8)) {
+			base64 = true;
+			cp += 8;
+			continue;
+		}
+
+		if(!strncmp(cp, "<struct>", 8))
+			return cp + 8;
+		else if(!strncmp(cp, "<array>", 7))
+			return cp + 7;
+
+		if(*cp == '<' && cp[1] != '/') {
+			if(map)
+				*map = ++cp;
+			while(*cp && *cp != '>')
+				++cp;
+			if(*cp == '>')
+				*(cp++) = 0;
+			continue;
+		}
+
+		*value = cp;
+		while(*cp && *cp != '<')
+			++cp;
+
+		if(*cp)
+			*(cp++) = 0;
+
+		while(*cp && *cp != '>')
+			++cp;
+		if(!*cp)
+			return cp;
+		++cp;
+		parseText(*value);
+		return cp;
+	}
+	return cp;
+}
+
+static char *parseName(char *cp, char **value)
+{
+	char *t = NULL;
+
+	while(isspace(*cp))
+		++cp;
+
+	if(isalnum(*cp))
+		t = cp;
+	while(*cp && !isspace(*cp) && *cp != '<')
+		++cp;
+	while(isspace(*cp))
+		*(cp++) = 0;
+	if(*cp != '<')
+		t = NULL;
+	*(cp++) = 0;
+	*value = parseText(t);
+	return cp;
+}
 
 static void version(void)
 {
@@ -252,40 +514,456 @@ static void config(void)
 	exit(0);
 }
 
-static void post(void)
+static void response(char *buffer, unsigned max, const char *fmt, ...)
+{
+	rpcint_t iv;
+	time_t tv;
+	struct tm *dt, dbuf;
+	double dv;
+	const unsigned char *xp;
+	size_t xsize;
+	const char *sv;
+	const char *valtype = "string";
+	const char *name;
+	bool end_flag = false;	// end of param...
+	bool map_flag = false;
+	bool struct_flag = false;
+	bool array_flag = false;
+	size_t count = strlen(buffer);
+	va_list args;
+	va_start(args, fmt);
+
+	switch(*fmt) {
+	case '^':
+	case '(':
+	case '[':
+	case '<':
+	case '{':
+	case 's':
+	case 'i':
+	case 'd':
+	case 't':
+	case 'b':
+	case 'x':
+		count += xmlformat(buffer + count, max - count,
+			"<?xml version=\"1.0\"?>\r\n"
+			"<methodResponse>\r\n"
+			" <params><param>\r\n");
+		break;
+	case '!':
+		array_flag = true;
+		break;
+	case '+':
+		map_flag = true;
+	case '.':
+		struct_flag = true;
+	}
+
+	if(!*fmt)
+		end_flag = true;
+
+	while(*fmt && *fmt != '$' && count < max - 1 && !end_flag) {
+		switch(*fmt) {
+		case '[':
+			count += xmlformat(buffer + count, max - count,
+				" <value><array><data>\r\n");
+		case ',':
+			array_flag = true;
+			break;
+		case ']':
+			array_flag = false;
+			count += xmlformat(buffer + count, max - count,
+				" </data></array></value>\r\n");
+			end_flag = true;
+			break;
+		case '}':
+		case '>':
+			map_flag = struct_flag = false;
+			count += xmlformat(buffer + count, max - count,
+				" </struct></value></member>\r\n"
+				" </struct></value>\r\n");
+			end_flag = true;
+			break;
+		case ';':
+		case ':':
+			name = va_arg(args, const char *);
+			count += xmlformat(buffer + count, max - count,
+				" </struct></value></member>\r\n"
+				" <member><name>%s<value><struct>\r\n", name);
+			break;
+		case '{':
+		case '<':
+			name = va_arg(args, const char *);
+			count += xmlformat(buffer + count, max - count,
+				" <value><struct>\r\n"
+				" <member><name>%s</name><value><struct>\r\n", name);
+			struct_flag = map_flag = true;
+			break;
+		case '(':
+			struct_flag = true;
+			count += xmlformat(buffer + count, max - count, " <value><struct>\r\n");
+			break;
+		case ')':
+			struct_flag = false;
+			if(!map_flag && !array_flag)
+				end_flag = true;
+			count += xmlformat(buffer + count, max - count,
+				" </struct></value>\r\n");
+			break;
+		case 's':
+		case 'i':
+		case 'b':
+		case 'd':
+		case 't':
+		case 'x':
+		case 'm':
+			switch(*fmt) {
+			case 'm':
+				valtype = "string";
+				break;
+			case 'd':
+				valtype = "double";
+				break;
+			case 'b':
+				valtype = "boolean";
+				break;
+			case 'i':
+				valtype = "i4";
+				break;
+			case 's':
+				valtype = "string";
+				break;
+			case 't':
+				valtype = "dateTime.iso8601";
+				break;
+			case 'x':
+				valtype = "base64";
+			}
+			if(struct_flag && *fmt == 'm') {
+				if(count > max - 60)
+					goto skip;
+				sv = va_arg(args, const char *);
+				while(sv && *sv) {
+					count += xmlformat(buffer + count, max - count,
+						"  <member><name>");
+					while(*sv && *sv != ':' && *sv != '=' && count < max - 35) {
+						buffer[count++] = tolower(*sv);
+						++sv;
+					}
+					buffer[count] = 0;
+					count += xmlformat(buffer + count, max - count,
+						"</name>\r\n"
+						"   <value><%s>", valtype);
+					if(*sv == ':' || *sv == '=')
+						++sv;
+					else
+						sv="";
+					while(*sv && *sv != ';' && count < max - 20) {
+						switch(*sv) {
+						case '<':
+							count += xmlformat(buffer + count, max - count, "&lt;");
+							break;
+						case '>':
+							count += xmlformat(buffer + count, max - count, "&gt;");
+							break;
+						case '&':
+							count += xmlformat(buffer + count, max - count, "&amp;");
+							break;
+						case '\"':
+							count += xmlformat(buffer + count, max - count, "&quot;");
+							break;
+						case '\'':
+							count += xmlformat(buffer + count, max - count, "&apos;");
+							break;
+						default:
+							buffer[count++] = *sv;
+						}
+						++sv;
+					}
+					count += xmlformat(buffer + count, max - count,
+						"</%s></value></member>\r\n", valtype);
+				}
+				goto skip;
+			}
+			if(struct_flag) {
+				name = va_arg(args, const char *);
+				count += xmlformat(buffer + count, max - count,
+					"  <member><name>%s</name>\r\n"
+					"   <value><%s>", name, valtype);
+			}
+			else
+				count += xmlformat(buffer + count, max - count,
+					"  <value><%s>", valtype);
+
+			switch(*fmt) {
+			case 'x':
+				xp = va_arg(args, const unsigned char *);
+				xsize = va_arg(args, size_t);
+				count += b64encode(buffer + count, xp, xsize, max - count);
+				break;
+			case 's':
+				sv = va_arg(args, const char *);
+				if(!sv)
+					sv = "";
+				count += xmltext(buffer + count, max - count, sv);
+				break;
+			case 'd':
+				dv = va_arg(args, double);
+				count += xmlformat(buffer + count, max - count, "%f", dv);
+				break;
+			case 'i':
+			case 'b':
+				iv = va_arg(args, rpcint_t);
+				if(*fmt == 'b' && iv)
+					iv = 1;
+				count += xmlformat(buffer + count, max - count, "%ld", (long)iv);
+				break;
+			case 't':
+				tv = va_arg(args, time_t);
+				dt = localtime_r(&tv, &dbuf);
+				if(dt->tm_year < 1800)
+					dt->tm_year += 1900;
+				count += xmlformat(buffer + count, max - count,
+					"%04d%02d%02dT%02d:%02d:%02d",
+					dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+					dt->tm_hour, dt->tm_min, dt->tm_sec);
+				break;
+			}
+			if(struct_flag)
+				count += xmlformat(buffer + count, max - count,
+					"</%s></value></member>\r\n", valtype);
+			else
+				count += xmlformat(buffer + count, max - count,
+					"</%s></value>\r\n", valtype);
+skip:
+			if(!struct_flag && !array_flag)
+				end_flag = true;
+		}
+		++fmt;
+	}
+
+	if(*fmt == '$' || end_flag)
+		count += xmlformat(buffer + count, max - count,
+			" </param></params>\r\n"
+			"</methodResponse>\r\n");
+
+	va_end(args);
+}
+
+static void reply(const char *buffer)
+{
+	printf(
+		"Status: 200 OK\r\n"
+		"Content-Length: %ld\r\n"
+		"Content-Type: text/xml\r\n"
+		"\r\n%s", strlen(buffer), buffer);
+	exit(0);
+}
+
+static void success(void)
+{
+	char buffer[1024];
+
+	xmlformat(buffer, sizeof(buffer),
+		"<?xml version=\"1.0\"?>\r\n"
+		"<methodResponse><params></params></methodResponse>\r\n");
+
+	reply(buffer);
+}
+
+static void fault(int code, const char *string)
+{
+	char buffer[4096];
+
+	size_t count = xmlformat(buffer, sizeof(buffer),
+		"<?xml version=\"1.0\"?>\r\n"
+		"<methodResponse>\r\n"
+		" <fault><value><struct>\r\n"
+		"  <member><name>faultCode</name>\r\n"
+		"   <value><int>%d</int></value></member>\r\n"
+		"  <member><name>faultString</name>\r\n"
+		"   <value><string>", code);
+	count += xmltext(buffer + count, sizeof(buffer) - count, string);
+	count += xmlformat(buffer + count, sizeof(buffer) - count,
+		"</string></value></member>\r\n"
+		" </struct></value></fault>\r\n"
+		"</methodResponse>\r\n");
+
+	reply(buffer);
+}
+
+static void system_status(void)
+{
+	time_t now;
+	struct stat ino;
+	char buffer[512];
+	unsigned count = 0;
+
+
+	if(params.argc != 0)
+		fault(3, "Invalid Parameters");
+
+	if(stat(control_file, &ino))
+		fault(2, "Server offline");
+
+	while(nodes[count].method)
+		++count;
+
+	response(buffer, sizeof(buffer), "(titissi)", 
+		"date", now,
+		"date_int", (rpcint_t)now,
+		"started", ino.st_ctime,
+		"started_int", ino.st_ctime,
+		"name", "sipwitch",
+		"version", VERSION,
+		"methods_known", (rpcint_t)count);
+
+	reply(buffer);
+}		
+	
+static void dispatch(const char *method)
+{
+	unsigned index = 0;
+	while(nodes[index].method && !String::equal(method, nodes[index].method))
+		++index;
+	if(!nodes[index].method)
+		fault(1, "Unknown Method");
+	(*nodes[index].exec);
+}
+
+static void post(FILE *inp = stdin)
 {
 	FILE *fp;
-	char buf[257];
-	long len;
+	char *buf;
+	char *cp;
+	char *value;
+	char *map = NULL;
+	char *method;
+	bool name_flag = false;
+
+	params.argc = 0;
+	params.count = 0;
 
 	if(!cgi_length)
 		error(411, "Length required");
 	if(!cgi_content || stricmp(cgi_content, "text/xml"))
 		error(415, "Unsupported media type");
 
-	cgilock();
-	remove(temp_file);
-	fp = fopen(temp_file, "w");
-	if(!fp)
-		error(403, "Access forbidden");
+	buf = new char[cgi_length + 1];
+	if(fread(buf, cgi_length, 1, inp) < 1)
+		error(400, "Invalid read of input");
+ 
+	buf[cgi_length] = 0;
 
-	while(cgi_length > 0) {
-		if(cgi_length > sizeof(buf) - 1)
-			len = sizeof(buf) - 1;
-		else
-			len = cgi_length;
+	cp = buf;
+	while(*cp) {
+		while(isspace(*cp))
+			++cp;
 
-		if(fread(buf, len, 1, stdin) < 1)
-			error(500, "Invalid read of config");
-		if(fwrite(buf, len, 1, fp) < 1)
-			error(500, "Invalid write of config");
-		cgi_length -= len;
+		if(!strncmp(cp, "<sipwitch>", 10)) {
+			cgilock();
+			remove(temp_file);
+			fp = fopen(temp_file, "w");
+			if(!fp) {
+				cgiunlock();
+				error(403, "Access forbidden");
+			}
+	
+			if(fwrite(buf, cgi_length, 1, fp) < 1) {
+				cgiunlock();
+				error(500, "Invalid write of config");
+			}
+
+			fclose(fp);
+			rename(temp_file, save_file);
+			cgiunlock();
+			request("reload");
+			error(200, "ok");
+		}
+
+		if(!strncmp(cp, "<methodName>", 12)) {
+			cp = parseName(cp + 12, &method);
+			if(strncmp(cp, "/methodName>", 12) || !method) 
+				error(400, "Malformed request");
+
+			cp += 12;
+			break;
+
+		}
+
+		if(!strncmp(cp, "<methodCall>", 12)) {
+			cp += 12;
+			continue;
+		}
+
+		if(!strncmp(cp, "<?", 2) || !strncmp(cp, "<!", 2)) {
+			while(*cp && *cp != '>')
+				++cp;
+			if(*cp)
+				++cp;
+			continue;
+		}
+
+		error(400, "Malformed request");
 	}
-	fclose(fp);
-	rename(temp_file, save_file);
-	cgiunlock();
-	request("reload");
-	error(200, "ok");
+
+	if(!method || !*cp)
+		error(400, "Malformed request");
+
+	while(*cp && params.count < RPC_MAX_PARAMS) {
+		while(isspace(*cp))
+			++cp;
+
+		if(!*cp)
+			break;
+
+		if(!strncmp(cp, "<name>", 6)) {
+			name_flag = true;
+			cp = parseName(cp + 6, &params.name[params.count]);
+			params.map[params.count] = map;
+			if(strncmp(cp, "/name>", 6))
+				error(400, "Malformed request");
+
+			cp += 6;
+			continue;
+		}
+		if(!strncmp(cp, "</struct>", 9) && map && !name_flag) {
+			map = NULL;
+			cp += 9;
+			continue;
+		}
+		if(!strncmp(cp, "<param>", 7)) {
+			params.name[params.count] = params.value[params.count] = params.map[params.count] = NULL;
+			++params.argc;
+			cp += 7;
+			continue;
+		}
+		if(!strncmp(cp, "<value>", 7)) {
+			params.param[params.count] = params.argc;
+			cp = parseValue(cp, &value, NULL);
+			if(value)
+				params.value[params.count++] = value;
+			else if(name_flag)
+				map = params.name[params.count];
+			name_flag = false;
+			params.name[params.count] = params.map[params.count] = params.value[params.count] = NULL;
+			continue;
+		}
+		if(!strncmp(cp, "</params>", 9))
+			dispatch(method);
+
+		if(*cp == '<') {
+			while(*cp && *cp != '>')
+				++cp;
+			if(*cp)
+				++cp;
+			else
+				error(400, "Malformed request");
+			continue;
+		}
+		error(400, "Malformed request");
+	}
+	error(400, "Malformed request");
 }
 
 static void callfile(FILE *fp, const char *id)
@@ -401,7 +1079,7 @@ static void info(void)
 #endif		
 	printf(" <state>%s</state>\n", buf);
 	printf("</serviceInfo>\n");
-	error(200, "ok");
+	exit(0);
 }
 
 static void dumpstats(const char *id)
