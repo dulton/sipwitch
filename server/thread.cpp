@@ -702,6 +702,8 @@ noproxy:
 		break;
 	}
 
+	call->map->sequence = session->sequence;
+	call->map->cid = session->cid;
 	String::set(call->map->source, sizeof(call->map->source), session->sysident);
 
 	if(reginfo) {

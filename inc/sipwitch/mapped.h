@@ -114,6 +114,8 @@ public:
 	time_t  active;
 	char	authorized[MAX_USERID_SIZE];
 	char source[MAX_IDENT_SIZE], target[MAX_IDENT_SIZE];
+	uint32_t sequence;
+	int cid;
 };
 
 END_NAMESPACE

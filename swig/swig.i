@@ -19,6 +19,31 @@ offered."
 
 %include swig.h
 
+%extend Calls {
+#ifdef  SWIGPYTHON
+    char *__str__() {
+        static char temp[256];
+        if(self->active)
+            snprintf(temp, sizeof(temp), "%08lx:%d %s %s %ld",
+                self->sequence, self->cid, self->source, self->target, self->active);
+        else
+            snprintf(temp, sizeof(temp), "%08lx:%d %s %ld",
+                self->sequence, self->cid, self->source, self->started);
+        return temp;
+    }
+#endif
+    Calls(unsigned index) {
+        Calls *c;
+        c = (Calls *)malloc(sizeof(Calls));
+        getcalls(c, index);
+        return c;
+    }
+
+    ~Calls() {
+        free($self);
+    }
+}
+
 %extend Stats {
 #ifdef  SWIGPYTHON
     char *__str__() {
@@ -94,6 +119,9 @@ offered."
     case ERR_INVSTATS:
         SWIG_exception(SWIG_IndexError, "invalid stats index");
         break;
+    case ERR_INVCALLS:
+        SWIG_exception(SWIG_IndexError, "invalid calls index");
+        break;
     case ERR_NOTFOUND:
         SWIG_exception(SWIG_ValueError, "user not found");
         break;
@@ -124,4 +152,7 @@ bool check();
    
 // call generic control interface with a command
 int control(char *command); 
+
+// count active calls
+unsigned count();
 

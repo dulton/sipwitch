@@ -120,9 +120,9 @@ static void calls(char **argv)
 			continue;
 
 		if(map->active)
-			printf("%05d %s -> %s (%ld)\n", index, map->source, map->target, now - map->active);
+			printf("%08x:%d %s -> %s (%ld)\n", map->sequence, map->cid, map->source, map->target, now - map->active);
 		else
-			printf("%05d %s ringing (%ld)\n", index, map->source, now - map->created);
+			printf("%08x:%d %s ringing (%ld)\n", map->sequence, map->cid, map->source, now - map->created);
 	}
 	exit(0);
 }

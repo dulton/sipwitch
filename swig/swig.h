@@ -13,6 +13,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+// Transitional object for call information
+
+struct Calls {
+	char source[96];
+	char target[96];
+	unsigned long started, active;
+	unsigned long sequence;
+	int cid;
+};
+
 // Transitional object for primary server statistics
 
 struct Stats {

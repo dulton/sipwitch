@@ -17,6 +17,7 @@ using namespace UCOMMON_NAMESPACE;
 using namespace SIPWITCH_NAMESPACE;
 
 #include <ucommon/ucommon.h>
+#include <sipwitch/mapped.h>
 #include <config.h>
 #ifndef	_MSWINDOWS_
 #include <signal.h>
@@ -29,13 +30,15 @@ static enum {
 	ERR_TIMEOUT,
 	ERR_NOATTACH,
 	ERR_NOTFOUND,
-	ERR_INVSTATS
+	ERR_INVSTATS,
+	ERR_INVCALLS
 } error_code;
 
 static bool initial = false;
 static fsys	fifo;
 
 static mapped_view<stats> *statmap = NULL;
+static mapped_view<MappedCall> *callmap = NULL;
 
 static void lock(void)
 {
@@ -80,7 +83,46 @@ failed:
 		error_code = ERR_NOATTACH;
 		return;
 	}
+
+	callmap = new mapped_view<MappedCall>(CALL_MAP);
+	if(!callmap || !callmap->getCount())
+		goto failed;
+
 	initial = true;
+}
+
+static void getcalls(struct Calls *copy, unsigned index)
+{
+	MappedCall buffer;
+	memset(copy, 0, sizeof(MappedCall));
+	attach();
+	if(error_code)
+		return;
+
+	if(index >= callmap->getCount()) {
+invalid:
+		error_code = ERR_INVCALLS;
+		return;
+	}
+
+	time_t now;
+	const MappedCall *map = const_cast<const MappedCall *>((*callmap)(index));
+	if(!map->source[0])
+		goto invalid;
+
+	do {
+		memcpy(&buffer, map, sizeof(buffer));
+	} while(memcmp(&buffer, map, sizeof(buffer)));
+	map = &buffer;
+
+	time(&now);
+
+	String::set(copy->source, sizeof(copy->source), map->source);
+	String::set(copy->target, sizeof(copy->target), map->target);
+	copy->sequence = map->sequence;
+	copy->cid = map->cid;
+	copy->started = now - map->created;
+	copy->active = now - map->active;
 }
 
 static void getstats(struct Stats *copy, unsigned index)
@@ -168,6 +210,10 @@ static void release(void)
 		delete statmap;
 		statmap = NULL;
 	}
+	if(callmap) {
+		delete callmap;
+		callmap = NULL;
+	}
 	initial = false;
 }
 
@@ -225,3 +271,13 @@ static int control(const char *string)
 	return error_code;
 }
 
+unsigned count(void)
+{
+	attach();
+	if(error_code)
+		return 0;
+
+	if(callmap)
+		return callmap->getCount();
+	return 0;
+}
