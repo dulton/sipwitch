@@ -33,8 +33,8 @@ typedef	rpcint_t rpcbool_t;
 typedef struct {
 	const char *method;
 	void (*exec)(void);
-	const char *descr;
-	const char *parms;
+	const char *help;
+	const char *signature;
 }	node_t;
 
 static char *cgi_version = NULL;
@@ -56,11 +56,11 @@ static void system_signature(void);
 static void system_status(void);
 
 static node_t nodes[] = {
-/*	{"system.identity", &system_identity, "Identify server type and version", "string"},
+	{"system.identity", &system_identity, "Identify server type and version", "string"},
 	{"system.listMethods", &system_methods, "List server methods", "array"},
 	{"system.methodHelp", &system_help, "Get help text for method", "string, string"},
 	{"system.methodSignature", &system_signature, "Get parameter signature for specified method", "array, string"},
-*/	{"system.status", &system_status, "Return server status information", "struct"},
+	{"system.status", &system_status, "Return server status information", "struct"},
 	{NULL, NULL, NULL, NULL}
 };
 
@@ -89,6 +89,78 @@ static size_t xmlformat(char *dp, size_t max, const char *fmt, ...)
 	vsnprintf(dp, max, fmt, args);
 	va_end(args);
 	return strlen(dp);
+}
+
+static const char *getIndexed(unsigned short param, unsigned short offset = 0)
+{
+	unsigned count = 0;
+	unsigned member = 1;
+
+	if(!offset)
+		offset = 1;
+
+	while(count < params.count) {
+		if(params.param[count] > param)
+			break;
+
+		if(params.param[count] == param)
+			if(member++ == offset)
+				return (const char *)params.value[count];
+
+		++count;
+	}
+	return NULL;
+}
+
+static const char *getNamed(unsigned short param, const char *member)
+{
+	unsigned count = 0;
+
+	while(count < params.count) {
+		if(params.param[count] > param)
+			break;
+
+		if(params.param[count] == param)
+			if(!strcmp(params.name[count], member))
+				return (const char *)params.value[count];
+
+		++count;
+	}
+	return NULL;
+}
+
+static const char *getMapped(const char *map, const char *member)
+{
+	unsigned count = 0;
+
+	while(count < params.count) {
+		if(!strcmp(params.map[count], map))
+			if(!strcmp(params.name[count], member))
+				return (const char *)params.value[count];
+		++count;
+	}
+	return NULL;
+}
+
+static const char *getParamId(unsigned short param, unsigned short offset)
+{
+	unsigned count = 0;
+	unsigned member = 1;
+
+	if(!offset)
+	offset = 1;
+
+	while(count < params.count) {
+		if(params.param[count] > param)
+			break;
+
+		if(params.param[count] == param)
+			if(member++ == offset)
+				return (const char *)params.name[count];
+
+		++count;
+	}
+	return NULL;
 }
 
 static size_t xmltext(char *dp, size_t max, const char *src)
@@ -533,8 +605,12 @@ static void response(char *buffer, unsigned max, const char *fmt, ...)
 	va_list args;
 	va_start(args, fmt);
 
+	if(*fmt == '^') {
+		count = 0;
+		++fmt;
+	}
+
 	switch(*fmt) {
-	case '^':
 	case '(':
 	case '[':
 	case '<':
@@ -792,6 +868,80 @@ static void fault(int code, const char *string)
 	reply(buffer);
 }
 
+static void system_methods(void)
+{
+	char buffer[2048];
+	unsigned index = 0;
+
+	if(params.argc)
+		fault(3, "Invalid Parameters");
+
+	response(buffer, sizeof(buffer), "^[");
+
+	while(nodes[index].method) {
+		response(buffer, sizeof(buffer), "!s", nodes[index].method);
+		++index;
+	}
+
+	response(buffer, sizeof(buffer), "]");
+	reply(buffer);
+}
+
+static void system_help(void)
+{
+	char buffer[1024];
+	unsigned index = 0;
+
+	if(params.argc != 1)
+		fault(3, "Invalid Parameters");
+
+	const char *method = getIndexed(1);
+	if(!method || !*method)
+		fault(4, "Invalid Method Argument");
+
+	while(nodes[index].method && !String::equal(nodes[index].method, method))
+		++index;
+
+	if(!nodes[index].help)
+		fault(4, "Unknown Method");
+
+	response(buffer, sizeof(buffer), "^s", nodes[index].help);
+	reply(buffer);
+}
+
+static void system_signature(void)
+{
+	char buffer[1024];
+	unsigned index = 0;
+
+	if(params.argc != 1)
+		fault(3, "Invalid Parameters");
+
+	const char *method = getIndexed(1);
+	if(!method || !*method)
+		fault(4, "Invalid Method Argument");
+
+	while(nodes[index].method && !String::equal(nodes[index].method, method))
+		++index;
+
+	if(!nodes[index].signature)
+		fault(4, "Unknown Method");
+
+	response(buffer, sizeof(buffer), "^[!s]", nodes[index].signature);
+	reply(buffer);
+}
+
+static void system_identity(void)
+{
+	char buffer[512];
+
+	if(params.argc != 0)
+		fault(3, "Invalid Parameters");
+
+	response(buffer, sizeof(buffer), "^s", "sipwitch/" VERSION);
+	reply(buffer);
+}
+
 static void system_status(void)
 {
 	time_t now;
@@ -809,7 +959,7 @@ static void system_status(void)
 	while(nodes[count].method)
 		++count;
 
-	response(buffer, sizeof(buffer), "(titissi)", 
+	response(buffer, sizeof(buffer), "^(titissi)", 
 		"date", now,
 		"date_int", (rpcint_t)now,
 		"started", ino.st_ctime,
