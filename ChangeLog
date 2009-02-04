@@ -1,5 +1,5 @@
 From version 0.3.11 to 0.3.12
-- xmlrpc support in cgi util.
+- initial xmlrpc support in cgi util.
 - proper cdr initialization.
 - call maps and display of active calls in progress added.
 

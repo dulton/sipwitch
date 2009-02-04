@@ -16,11 +16,10 @@
 // Transitional object for call information
 
 struct Calls {
+	char sid[32];
 	char source[96];
 	char target[96];
-	unsigned long started, active;
-	unsigned long sequence;
-	int cid;
+	unsigned started, active;
 };
 
 // Transitional object for primary server statistics

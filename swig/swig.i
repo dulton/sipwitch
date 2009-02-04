@@ -24,11 +24,11 @@ offered."
     char *__str__() {
         static char temp[256];
         if(self->active)
-            snprintf(temp, sizeof(temp), "%08lx:%d %s %s %ld",
-                self->sequence, self->cid, self->source, self->target, self->active);
+            snprintf(temp, sizeof(temp), "%s %s %s %u",
+                self->sid, self->source, self->target, self->active);
         else
-            snprintf(temp, sizeof(temp), "%08lx:%d %s %ld",
-                self->sequence, self->cid, self->source, self->started);
+            snprintf(temp, sizeof(temp), "%s %s %u",
+                self->sid, self->source, self->started);
         return temp;
     }
 #endif
@@ -36,6 +36,13 @@ offered."
         Calls *c;
         c = (Calls *)malloc(sizeof(Calls));
         getcalls(c, index);
+        return c;
+    }
+
+    Calls(const char *sid) {
+        Calls *c;
+        c = (Calls *)malloc(sizeof(Calls));
+        getcallsbyid(c, sid);
         return c;
     }
 

@@ -91,6 +91,55 @@ failed:
 	initial = true;
 }
 
+static void getcallsbyid(struct Calls *copy, const char *sid)
+{
+	unsigned index = 0;
+	MappedCall buffer;
+	memset(copy, 0, sizeof(MappedCall));
+	attach();
+	if(error_code)
+		return;
+
+	if(!callmap->getCount()) {
+invalid:
+		error_code = ERR_INVCALLS;
+		return;
+	}
+
+	const MappedCall *map;
+	time_t now;
+
+	time(&now);
+
+	while(index < callmap->getCount()) {
+		map = const_cast<const MappedCall *>((*callmap)(index));
+		if(!map->created) {
+			++index;
+			continue;
+		}
+
+		do {
+			memcpy(&buffer, map, sizeof(buffer));
+		} while(memcmp(&buffer, map, sizeof(buffer)));
+		map = &buffer;
+		snprintf(copy->sid, sizeof(copy->sid), "%08x:%d", map->sequence, map->cid);
+		if(String::equal(copy->sid, sid))
+			break;
+		++index;
+	}
+
+	if(index >= callmap->getCount())
+		goto invalid;
+	
+	String::set(copy->source, sizeof(copy->source), map->source);
+	String::set(copy->target, sizeof(copy->target), map->target);
+	copy->started = now - map->created;
+	if(map->active)
+		copy->active = now - map->active;
+	else
+		copy->active = 0;
+}
+
 static void getcalls(struct Calls *copy, unsigned index)
 {
 	MappedCall buffer;
@@ -107,7 +156,7 @@ invalid:
 
 	time_t now;
 	const MappedCall *map = const_cast<const MappedCall *>((*callmap)(index));
-	if(!map->source[0])
+	if(!map->created)
 		goto invalid;
 
 	do {
@@ -117,12 +166,14 @@ invalid:
 
 	time(&now);
 
+	snprintf(copy->sid, sizeof(copy->sid), "%08x:%d", map->sequence, map->cid);
 	String::set(copy->source, sizeof(copy->source), map->source);
 	String::set(copy->target, sizeof(copy->target), map->target);
-	copy->sequence = map->sequence;
-	copy->cid = map->cid;
 	copy->started = now - map->created;
-	copy->active = now - map->active;
+	if(map->active)
+		copy->active = now - map->active;
+	else
+		copy->active = 0;
 }
 
 static void getstats(struct Stats *copy, unsigned index)
