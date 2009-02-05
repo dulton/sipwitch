@@ -95,8 +95,6 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 
 static void calls(char **argv)
 {
-	char text[80];
-
 	if(argv[1]) {
 		fprintf(stderr, "*** sipwitch: calls: no arguments used\n");
 		exit(-1);
