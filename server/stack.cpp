@@ -504,6 +504,7 @@ void stack::destroy(call *cr)
 void stack::release(MappedCall *map)
 {
 	if(map) {
+		String::set(map->state, sizeof(map->state), "-");
 		map->created = map->active = 0;
 		mapping.lock();
 		map->enlist(&freemaps);
@@ -526,6 +527,7 @@ MappedCall *stack::get(void)
 	if(!map)
 		return NULL;
 
+	String::set(map->state, sizeof(map->state), "iinit");
 	map->active = 0;
 	map->authorized[0] = 0;
 	map->source[0] = 0;

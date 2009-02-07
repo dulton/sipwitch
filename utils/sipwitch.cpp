@@ -93,6 +93,35 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 	printf("%s:%u\n", buf, p2);
 }
 
+static void status(char **argv)
+{
+	if(argv[1]) {
+		fprintf(stderr, "*** sipwitch: calls: no arguments used\n");
+		exit(-1);
+	}
+
+	mapped_view<MappedCall> calls(CALL_MAP);
+	unsigned count = calls.getCount();
+	unsigned index = 0;
+	const volatile MappedCall *map;
+
+	if(!count) {
+		fprintf(stderr, "*** sipwitch: offline\n");
+		exit(-1);
+	}
+
+	while(index < count) {
+		map = calls(index++);
+		if(map->state[0])
+			fputc(map->state[0], stdout);
+		else
+			fputc(' ', stdout);
+	}
+	fputc('\n', stdout);
+	fflush(stdout);
+	exit(0);
+}
+
 static void calls(char **argv)
 {
 	if(argv[1]) {
@@ -118,9 +147,9 @@ static void calls(char **argv)
 			continue;
 
 		if(map->active)
-			printf("%08x:%d %s -> %s (%ld)\n", map->sequence, map->cid, map->source, map->target, now - map->active);
+			printf("%08x:%d %s %s -> %s; %ld sec(s)\n", map->sequence, map->cid, map->state + 1, map->source, map->target, now - map->active);
 		else
-			printf("%08x:%d %s ringing (%ld)\n", map->sequence, map->cid, map->source, now - map->created);
+			printf("%08x:%d %s %s; %ld secs\n", map->sequence, map->cid, map->state + 1, map->source, now - map->created);
 	}
 	exit(0);
 }
@@ -409,6 +438,7 @@ static void usage(void)
         "  snapshot                Server snapshot\n"
         "  stats                   Dump server statistics\n"
         "  state <selection>       Change server state\n"
+		"  status                  Dump status string\n"
         "  verbose <level>         Server verbose logging level\n"
 	);		
 
@@ -571,7 +601,8 @@ extern "C" int main(int argc, char **argv)
 		release(argv);
 	else if(String::equal(*argv, "state"))
 		state(argv);
-
+	else if(String::equal(*argv, "status"))
+		status(argv);
 	if(!argv[1])
 		fprintf(stderr, "use: sipwitch command [arguments...]\n");
 	else

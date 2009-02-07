@@ -131,6 +131,7 @@ invalid:
 	if(index >= callmap->getCount())
 		goto invalid;
 	
+	String::set(copy->state, sizeof(copy->state), map->state + 1);
 	String::set(copy->source, sizeof(copy->source), map->source);
 	String::set(copy->target, sizeof(copy->target), map->target);
 	copy->started = now - map->created;
@@ -167,6 +168,7 @@ invalid:
 	time(&now);
 
 	snprintf(copy->sid, sizeof(copy->sid), "%08x:%d", map->sequence, map->cid);
+	String::set(copy->state, sizeof(copy->state), map->state + 1);
 	String::set(copy->source, sizeof(copy->source), map->source);
 	String::set(copy->target, sizeof(copy->target), map->target);
 	copy->started = now - map->created;

@@ -112,7 +112,8 @@ class __EXPORT MappedCall : public LinkedObject
 public:
 	time_t	created;
 	time_t  active;
-	char	authorized[MAX_USERID_SIZE];
+	char state[16];
+	char authorized[MAX_USERID_SIZE];
 	char source[MAX_IDENT_SIZE], target[MAX_IDENT_SIZE];
 	uint32_t sequence;
 	int cid;

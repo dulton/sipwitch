@@ -275,14 +275,15 @@ private:
 	class __LOCAL call : public TimerQueue::event
 	{
 	public:
+		typedef enum {INITIAL, TRYING, RINGING, RINGBACK, REORDER, HOLDING, ANSWERED, JOINED, TRANSFER, REDIRECT, BUSY, TERMINATE, FAILED, FINAL} state_t;
+
 		enum {DIRECTED, CIRCULAR, TERMINAL, REDIRECTED, DISTRIBUTED} mode;
 
 		enum {LOCAL, INCOMING, OUTGOING, REFER} type;
 
-		enum {INITIAL, TRYING, RINGING, RINGBACK, REORDER, HOLDING, ANSWERED, JOINED, TRANSFER, REDIRECT, BUSY, TERMINATE, FAILED, FINAL} state;
-
 		call();
 
+		state_t state;
 		unsigned fwdmask;				// forwarding mask in effect...
 		char forward[MAX_IDENT_SIZE];	// ref id for forwarding...
 		char dialed[MAX_IDENT_SIZE];	// user or ip address...
@@ -307,6 +308,7 @@ private:
 		void joinLocked(session *s);
 		void log(void);
 		void bye(thread *thread, session *s);
+		void set(state_t state, char id, const char *text);
 
 		OrderedIndex segments;
 		const char *reason;

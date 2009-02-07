@@ -16,6 +16,7 @@
 // Transitional object for call information
 
 struct Calls {
+	char state[16];
 	char sid[32];
 	char source[96];
 	char target[96];

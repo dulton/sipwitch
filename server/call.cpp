@@ -33,12 +33,13 @@ stack::call::call() : TimerQueue::event(Timer::reset), segments()
 	starting = ending = 0l;
 	reason = joined = NULL;
 	rtp = NULL;
+	map = NULL;
 }
 
 void stack::call::terminateLocked(void)
 {
 	if(state != INITIAL)
-		state = TERMINATE;
+		set(TERMINATE, 'h', "bye");
 	disconnectLocked();
 }
 
@@ -141,7 +142,7 @@ void stack::call::disconnectLocked(void)
 
 	if(state != INITIAL && state != FINAL) {
 		time(&ending);
-		state = FINAL;
+		set(FINAL, 'h', "exit");
 	}
 	
 	arm(stack::resetTimeout());
@@ -170,6 +171,16 @@ void stack::call::reply_source(int error)
 	else
 		eXosip_call_send_answer(source->tid, SIP_BAD_REQUEST, NULL);
 	eXosip_unlock();
+}
+
+void stack::call::set(state_t flag, char id, const char *text)
+{
+	state = flag;
+	if(!map)
+		return;
+
+	map->state[0] = id;
+	String::set(map->state + 1, sizeof(map->state) - 1, text);
 }
 
 void stack::call::bye(thread *thread, session *s)
@@ -220,7 +231,7 @@ void stack::call::ring(thread *thread, session *s)
 		// example).  Also, we might get a 200 OK accept from another
 		// invited ua, and so we do not want to start a partial ring
 		// followed by a connect...
-		state = RINGING;
+		set(RINGING, 'r', "ringin");
 		arm(1000);
 	case RINGING:
 		if(s && s != source && s->state != session::RING) {
@@ -262,20 +273,20 @@ void stack::call::failed(thread *thread, session *s)
 	switch(state) {
 	case RINGING:
 		if(!ringing && ringbusy)
-			state = BUSY;
+			set(BUSY, 'b', "busy");
 		else if(!ringing) {
 			arm(stack::resetTimeout());
-			state = FAILED;
+			set(FAILED, '*', "failed");
 		}
 		break;
 	case INITIAL:
 	case ANSWERED:
-		state = FAILED;	
+		set(FAILED, '*', "failed");
 		arm(stack::resetTimeout());
 		break;
 	case BUSY:
 		if(!ringbusy) {
-			state = FAILED;
+			set(FAILED, '*', "failed");
 			arm(stack::resetTimeout());
 		}
 	default:
@@ -332,7 +343,7 @@ unconnected:
 		if(state != ANSWERED && state != RINGBACK) {
 			joinLocked(s);
 			if(state != ANSWERED)
-				state = RINGBACK;
+				set(RINGBACK, 'r', "ringback");
 		}
 		time(&expires);
 		expires += thread->header_expires;
@@ -354,7 +365,7 @@ unconnected:
 		return;
 	case HOLDING:
 	case JOINED:
-		state = JOINED;
+		set(JOINED, 'j', "joined");
 		time(&expires);
 		expires += thread->header_expires;
 		arm((timeout_t)(thread->header_expires * 1000l));
@@ -401,7 +412,7 @@ void stack::call::answer(thread *thread, session *s)
 	case RINGBACK:
 	case TRYING:
 		joinLocked(s);
-		state = ANSWERED;
+		set(ANSWERED, 'a', "answered");
 		arm(16000l);
 	case ANSWERED:
 		if(thread->sevent->did > -1)
@@ -514,7 +525,7 @@ void stack::call::confirm(thread *thread, session *s)
 	{
 	case ANSWERED:
 	case JOINED:
-		state = JOINED;
+		set(JOINED, 'j', "joined");
 		source->state = target->state = session::OPEN;
 		if(thread->sevent->did > -1)
 			s->did = thread->sevent->did;
@@ -555,7 +566,7 @@ void stack::call::busy(thread *thread, session *s)
 	switch(state) {
 	case INITIAL:
 		if(!s) {
-			state = BUSY;
+			set(BUSY, 'b', "busy");
 			disconnectLocked();
 			Mutex::release(this);
 			return;
@@ -587,7 +598,7 @@ void stack::call::busy(thread *thread, session *s)
 	case RINGING:
 	case RINGBACK:
 		if(!ringing && ringbusy) {
-			state = BUSY;
+			set(BUSY, 'b', "busy");
 			disconnectLocked();
 		}
 	default:
@@ -612,7 +623,7 @@ void stack::call::trying(thread *thread)
 		eXosip_call_send_answer(source->tid, SIP_TRYING, NULL);
 
 	Mutex::protect(this);
-	state = TRYING;
+	set(TRYING, 't', "trying");
 	arm(stack::ringTimeout());
 	Mutex::release(this);
 }
