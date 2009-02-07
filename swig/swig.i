@@ -19,16 +19,42 @@ offered."
 
 %include swig.h
 
+%extend Users {
+#ifdef  SWIGPYTHON
+    char *__str__() {
+        static char temp[512];
+        snprintf(temp, sizeof(temp), "%s,%s,%s,%s,%s,%u,%u",
+            self->status, self->userid, self->extension, self->display, self->service, self->trs, self->active);
+        return temp;
+    }
+#endif
+    Users(unsigned ext) {
+        Users *u;
+        u = (Users *)malloc(sizeof(Users));
+        getextension(u, ext);
+        return u;
+    }
+    Users(const char *id) {
+        Users *u;
+        u = (Users *)malloc(sizeof(Users));
+        getuserid(u, id);
+        return u;
+    }
+    ~Users() {
+        free($self);
+    }
+}
+
 %extend Calls {
 #ifdef  SWIGPYTHON
     char *__str__() {
         static char temp[256];
         if(self->active)
-            snprintf(temp, sizeof(temp), "%s %s %s %u",
-                self->sid, self->source, self->target, self->active);
+            snprintf(temp, sizeof(temp), "%s,%s,%s,%s,%u",
+                self->sid, self->state, self->source, self->target, self->active);
         else
-            snprintf(temp, sizeof(temp), "%s %s %u",
-                self->sid, self->source, self->started);
+            snprintf(temp, sizeof(temp), "%s,%s,%s,,%u",
+                self->sid, self->state, self->source, self->started);
         return temp;
     }
 #endif
@@ -56,14 +82,14 @@ offered."
     char *__str__() {
         static char temp[256];
         size_t len;
-        snprintf(temp, sizeof(temp), "%s %d", self->id, self->members);
+        snprintf(temp, sizeof(temp), "%s,%d", self->id, self->members);
         for(unsigned entry = 0; entry < 2; ++entry) {
             len = strlen(temp);
-            snprintf(temp + len, sizeof(temp) - len, " %lu %hu %hu",
+            snprintf(temp + len, sizeof(temp) - len, ",%lu,%hu,%hu",
                 self->data[entry].total, self->data[entry].peak, self->data[entry].current);
         }
         len = strlen(temp);
-        snprintf(temp + len, sizeof(temp) - len, " %lu", self->lastcall);
+        snprintf(temp + len, sizeof(temp) - len, ",%lu", self->lastcall);
         return temp;
     }
 #endif
@@ -88,14 +114,14 @@ offered."
     char *__str__() {
         static char temp[256];
         size_t len;
-        snprintf(temp, sizeof(temp), "%s %d", self->id, self->members);
+        snprintf(temp, sizeof(temp), "%s,%d", self->id, self->members);
         for(unsigned entry = 0; entry < 2; ++entry) {
             len = strlen(temp);
-            snprintf(temp + len, sizeof(temp) - len, " %lu %hu %hu",
+            snprintf(temp + len, sizeof(temp) - len, ",%lu,%hu,%hu",
                 self->period[entry].total, self->period[entry].min, self->period[entry].max);
         }
         len = strlen(temp);
-        snprintf(temp + len, sizeof(temp) - len, " %lu", self->lastcall);
+        snprintf(temp + len, sizeof(temp) - len, ",%lu", self->lastcall);
         return temp;
     }
 #endif

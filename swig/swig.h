@@ -23,6 +23,15 @@ struct Calls {
 	unsigned started, active;
 };
 
+struct Users {
+	char status[16];
+	char userid[48];
+	char service[16];
+	char extension[48];
+	char display[64];
+	unsigned active, trs;
+};
+	
 // Transitional object for primary server statistics
 
 struct Stats {

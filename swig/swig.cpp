@@ -39,6 +39,7 @@ static fsys	fifo;
 
 static mapped_view<stats> *statmap = NULL;
 static mapped_view<MappedCall> *callmap = NULL;
+static mapped_view<MappedRegistry> *regmap = NULL;
 
 static void lock(void)
 {
@@ -88,7 +89,148 @@ failed:
 	if(!callmap || !callmap->getCount())
 		goto failed;
 
+	regmap = new mapped_view<MappedRegistry>(REGISTRY_MAP);
+	if(!regmap || !regmap->getCount())
+		goto failed;
+
 	initial = true;
+}
+
+static void regcopy(const MappedRegistry *reg, struct Users *copy)
+{
+	const char *status = "idle";
+
+	String::set(copy->userid, sizeof(copy->userid), reg->userid);
+	if(reg->ext)
+		snprintf(copy->extension, sizeof(copy->extension), "%u", reg->ext);
+	else
+		String::set(copy->extension, sizeof(copy->extension), reg->userid);
+	String::set(copy->display, sizeof(copy->display), reg->display);
+	String::set(copy->service, sizeof(copy->service), reg->profile.id);
+	if(reg->inuse)
+		status = "busy";
+	else
+		switch(reg->status) {
+		case MappedRegistry::AWAY:
+			status = "away";
+			break;
+		case MappedRegistry::DND:
+			status = "dnd";
+			break;
+		case MappedRegistry::BUSY:
+			status = "busy";
+			break;
+		default:
+			break;
+		}
+
+	String::set(copy->status, sizeof(copy->status), status);
+	copy->active = reg->inuse;
+	copy->trs = reg->profile.level;
+}
+
+static void getextension(struct Users *copy, unsigned ext)
+{
+	unsigned index = 0;
+	MappedRegistry buffer;
+	memset(copy, 0, sizeof(MappedRegistry));
+	attach();
+	if(error_code)
+		return;
+
+	if(!regmap->getCount()) {
+invalid:
+		error_code = ERR_NOTFOUND;
+		return;
+	}
+
+	const MappedRegistry *map;
+	time_t now;
+
+	time(&now);
+
+	while(index < regmap->getCount()) {
+		map = const_cast<const MappedRegistry *>((*regmap)(index));
+		if(map->status == MappedRegistry::OFFLINE) {
+			++index;
+			continue;
+		}
+
+		if(map->type != MappedRegistry::USER && map->type != MappedRegistry::SERVICE) {
+			++index;
+			continue;
+		}
+
+		if(map->expires < now) {
+			++index;
+			continue;
+		}
+
+		do {
+			memcpy(&buffer, map, sizeof(buffer));
+		} while(memcmp(&buffer, map, sizeof(buffer)));
+		map = &buffer;
+		if(map->ext == ext)
+			break;
+		++index;
+	}
+
+	if(index >= regmap->getCount())
+		goto invalid;
+	
+	regcopy(map, copy);
+}
+
+static void getuserid(struct Users *copy, const char *userid)
+{
+	unsigned index = 0;
+	MappedRegistry buffer;
+	memset(copy, 0, sizeof(MappedRegistry));
+	attach();
+	if(error_code)
+		return;
+
+	if(!regmap->getCount()) {
+invalid:
+		error_code = ERR_NOTFOUND;
+		return;
+	}
+
+	const MappedRegistry *map;
+	time_t now;
+
+	time(&now);
+
+	while(index < regmap->getCount()) {
+		map = const_cast<const MappedRegistry *>((*regmap)(index));
+		if(map->status == MappedRegistry::OFFLINE) {
+			++index;
+			continue;
+		}
+
+		if(map->type != MappedRegistry::USER && map->type != MappedRegistry::SERVICE) {
+			++index;
+			continue;
+		}
+
+		if(map->expires < now) {
+			++index;
+			continue;
+		}
+
+		do {
+			memcpy(&buffer, map, sizeof(buffer));
+		} while(memcmp(&buffer, map, sizeof(buffer)));
+		map = &buffer;
+		if(String::equal(map->userid, userid))
+			break;
+		++index;
+	}
+
+	if(index >= regmap->getCount())
+		goto invalid;
+	
+	regcopy(map, copy);
 }
 
 static void getcallsbyid(struct Calls *copy, const char *sid)
@@ -266,6 +408,10 @@ static void release(void)
 	if(callmap) {
 		delete callmap;
 		callmap = NULL;
+	}
+	if(regmap) {
+		delete regmap;
+		regmap = NULL;
 	}
 	initial = false;
 }
