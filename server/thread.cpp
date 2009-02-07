@@ -705,6 +705,7 @@ noproxy:
 	call->map->sequence = session->sequence;
 	call->map->cid = session->cid;
 	String::set(call->map->source, sizeof(call->map->source), session->sysident);
+	String::set(call->map->display, sizeof(call->map->display), session->display);
 
 	if(reginfo) {
 		// get rid of config ref if we are calling registry target

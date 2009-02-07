@@ -50,11 +50,11 @@ offered."
     char *__str__() {
         static char temp[256];
         if(self->active)
-            snprintf(temp, sizeof(temp), "%s,%s,%s,%s,%u",
-                self->sid, self->state, self->source, self->target, self->active);
+            snprintf(temp, sizeof(temp), "%s,%s,%s,%s,%s,%u",
+                self->sid, self->state, self->source, self->display, self->target, self->active);
         else
-            snprintf(temp, sizeof(temp), "%s,%s,%s,,%u",
-                self->sid, self->state, self->source, self->started);
+            snprintf(temp, sizeof(temp), "%s,%s,%s,%s,,%u",
+                self->sid, self->state, self->source, self->display, self->started);
         return temp;
     }
 #endif

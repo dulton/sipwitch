@@ -275,6 +275,7 @@ invalid:
 	
 	String::set(copy->state, sizeof(copy->state), map->state + 1);
 	String::set(copy->source, sizeof(copy->source), map->source);
+	String::set(copy->display, sizeof(copy->display), map->display);
 	String::set(copy->target, sizeof(copy->target), map->target);
 	copy->started = now - map->created;
 	if(map->active)
