@@ -134,7 +134,7 @@ static char *realm(void)
 
 	memset(buffer, 0, sizeof(buffer));
 
-	fsys::open(fd, DEFAULT_VARPATH "/run/sipwitch/realm", fsys::ACCESS_RDONLY);
+	fsys::open(fd, "/tmp/siprealm", fsys::ACCESS_RDONLY);
 	if(is(fd)) {
 		fsys::read(fd, buffer, sizeof(buffer) - 1);
 		fsys::close(fd);

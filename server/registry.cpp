@@ -501,11 +501,10 @@ void registry::reload(service *cfg)
 		process::errlog(INFO, "realm is %s", realm);
 		oldrealm = realm;
 #ifndef	_MSWINDOWS_
-		fsys::create(fd, DEFAULT_VARPATH "/run/sipwitch/.realm", fsys::ACCESS_WRONLY, 0664);
+		fsys::open(fd, "/tmp/siprealm", fsys::ACCESS_WRONLY);
 		if(is(fd)) {
 			fsys::write(fd, realm, strlen(realm));		
 			fsys::close(fd);
-			::rename(DEFAULT_VARPATH "/run/sipwitch/.realm", DEFAULT_VARPATH "/run/sipwitch/realm");
 		}
 #endif
 	}

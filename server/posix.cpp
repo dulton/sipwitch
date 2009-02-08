@@ -252,7 +252,8 @@ static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 	char buf[128];
 	struct stat ino;
 	const char *cp;
-	
+	fsys_t fs;
+		
 	if(!cfgfile || !*cfgfile) 
 		setenv("CFG", "", 1);
 	else if(*cfgfile == '/')
@@ -262,6 +263,13 @@ static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 		String::add(buf, sizeof(buf), "/");
 		String::add(buf, sizeof(buf), cfgfile);
 		setenv("CFG", buf, 1);
+	}
+
+	::remove("/tmp/siprealm");
+	fsys::create(fs, "/tmp/siprealm", fsys::ACCESS_WRONLY, 0644);
+	if(is(fs)) {
+		fsys::write(fs, "none", 4);
+		fsys::close(fs);
 	}
 
 	if(uid) {

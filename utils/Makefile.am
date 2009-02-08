@@ -15,7 +15,7 @@ EXTRA_DIST = sipwitch.8
 man8_MANS = sipwitch.8
 man_MANS = sipwitch.8
 
-bin_PROGRAMS = sipquery sipwitch
+bin_PROGRAMS = sipquery sipwitch sipdigest
 sbin_PROGRAMS = sipwitch.cgi
 
 sipwitch_SOURCES = sipwitch.cpp
@@ -23,6 +23,9 @@ sipwitch_LDADD = @SIPWITCH_LIBS@
 
 sipquery_SOURCES = sipquery.cpp
 sipquery_LDADD = @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@
+
+sipdigest_SOURCES = sipdigest.cpp
+sipdigest_LDADD = ../common/libsipwitch.la @SIPWITCH_LIBS@
 
 sipwitch_cgi_SOURCES = cgiserver.cpp
 sipwitch_cgi_LDADD = @SIPWITCH_LIBS@
