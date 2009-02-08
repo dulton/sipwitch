@@ -666,7 +666,7 @@ void stack::stop(service *cfg)
 {
 	assert(cfg != NULL);
 
-	process::errlog(DEBUG1, "sip stack stopping");
+	process::errlog(DEBUG1, "stopping sip stack");
 	background::cancel();
 	thread::shutdown();
 	Thread::yield();
