@@ -25,7 +25,7 @@ sipquery_SOURCES = sipquery.cpp
 sipquery_LDADD = @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@
 
 sipdigest_SOURCES = sipdigest.cpp
-sipdigest_LDADD = ../common/libsipwitch.la @SIPWITCH_LIBS@
+sipdigest_LDADD = @SIPWITCH_LIBS@
 
 sipwitch_cgi_SOURCES = cgiserver.cpp
 sipwitch_cgi_LDADD = @SIPWITCH_LIBS@
