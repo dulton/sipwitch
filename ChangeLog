@@ -1,6 +1,7 @@
 From version 0.3.12 to 0.3.13
 - mapped call state property added, needed for telephony management protocol.
 - added registry info to swig.
+- support for using /etc/sipwitch.d as default xml directory.
 
 From version 0.3.11 to 0.3.12
 - initial xmlrpc support in cgi util.

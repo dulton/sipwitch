@@ -610,7 +610,7 @@ bool process::state(const char *state)
 #ifdef	_MSWINDOWS_
 	return false;
 #else
-	snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s/%s.xml", ident, state);
+	snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s-states/%s.xml", ident, state);
 	if(!fsys::isfile(buf))
 		return false;
 	snprintf(buf1, sizeof(buf1), DEFAULT_VARPATH "/run/%s/state.xml", ident);

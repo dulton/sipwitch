@@ -15,7 +15,7 @@ EXTRA_DIST = *.xml *.conf *.log *.defaults *.init GNUTelephony-MIB.txt
 EXTRA_LTLIBRARIES =
 
 sbin_PROGRAMS = sipw
-pkgstatedir=$(localstatedir)/lib/sipwitch
+pkgxmldir=$(sysconfdir)/sipwitch.d
 pkglibdir=$(libdir)/sipwitch
 logrotatedir=$(sysconfdir)/logrotate.d
 noinst_HEADERS = server.h
@@ -33,7 +33,7 @@ sipw_LDADD = $(LDADD) $(DLOPEN)
 
 sysconf_DATA = sipwitch.conf
 
-pkgstate_DATA = *.xml 
+pkgxml_DATA = *.xml 
 
 forward_la_SOURCES = forward.cpp 
 forward_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)
