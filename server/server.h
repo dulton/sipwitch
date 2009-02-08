@@ -102,7 +102,8 @@ public:
 			target *getTarget(void);
 		} index;
 		struct sockaddr_internet address;
-		struct sockaddr_internet iface; 
+		struct sockaddr_internet iface;
+		time_t created; 
 		volatile time_t expires;
 		enum {READY, BUSY, AWAY, DND} status;
 		char contact[MAX_URI_SIZE]; 

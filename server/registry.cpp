@@ -1003,6 +1003,7 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 
 	if(!tp) {
 		tp = new target;
+		time(&tp->created);
 		tp->enlist(&internal.targets);
 		count = 1;
 		tp->status = registry::target::READY;
@@ -1184,7 +1185,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 	len = Socket::getlen(ai);
 	time(&now);
 	while(tp) {
-		if(expires < now)
+		if(tp->expires < now)
 			expired = *tp;
 		if(Socket::equal((struct sockaddr *)(&tp->address), ai))
 			break;
@@ -1201,6 +1202,8 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 			--count;
 			delete expired;
 		}
+		if(tp->expires < now)
+			time(&tp->created);
 		tp->expires = lease;
 		String::set(tp->contact, sizeof(tp->contact), target_contact);
 		locking.share();
@@ -1222,6 +1225,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 			delete origin;
 		++count;
 	}
+	time(&expired->created);
 	expired->expires = lease;
 	memcpy(&expired->address, ai, len);
 	stack::getInterface((struct sockaddr *)(&expired->iface), (struct sockaddr *)(&expired->address));
@@ -1262,6 +1266,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
 		len = Socket::getlen(al->ai_addr);
 
 		tp = new target;
+		time(&tp->created);
 		memcpy(&tp->address, al->ai_addr, len);
 		memcpy(&contact, &tp->address, len);
 		remote[0] = 0;
