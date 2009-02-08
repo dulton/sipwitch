@@ -326,7 +326,7 @@ void server::confirm(const char *user)
 	process::errlog(DEBUG1, "scanning config from %s", dirpath);
 	while(is(dir) && fsys::read(dir, filename, sizeof(filename)) > 0) {
 		ext = strrchr(filename, '.');
-		if(!ext || stricmp(ext, ".xml"))
+		if(ext && stricmp(ext, ".xml"))
 			continue;
 		snprintf(buf, sizeof(buf), "%s/%s", dirpath, filename);
 		fp = fopen(buf, "r");
