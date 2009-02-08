@@ -313,8 +313,10 @@ void server::confirm(const char *user)
 	if(user) {
 		dirpath = DEFAULT_CFGPATH "/sipwitch.d";
 		fsys::open(dir, dirpath, fsys::ACCESS_DIRECTORY);
-		if(!dir)
+		if(!dir && fsys::isdir(DEFAULT_VARPATH "/lib/sipwitch"))
 			dirpath = DEFAULT_VARPATH "/lib/sipwitch";
+		else
+			dirpath = ".";
 	}		
 	if(!is(dir))
 		fsys::open(dir, dirpath, fsys::ACCESS_DIRECTORY);
