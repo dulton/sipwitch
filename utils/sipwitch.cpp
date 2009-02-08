@@ -147,9 +147,9 @@ static void calls(char **argv)
 			continue;
 
 		if(map->active)
-			printf("%08x:%d %s %s %s -> %s; %ld sec(s)\n", map->sequence, map->cid, map->state + 1, map->source, map->display, map->target, now - map->active);
+			printf("%08x:%d %s %s \"%s\" -> %s; %ld sec(s)\n", map->sequence, map->cid, map->state + 1, map->source, map->display, map->target, now - map->active);
 		else
-			printf("%08x:%d %s %s %s; %ld secs\n", map->sequence, map->cid, map->state + 1, map->source, map->display, now - map->created);
+			printf("%08x:%d %s %s \"%s\" -> none; %ld secs\n", map->sequence, map->cid, map->state + 1, map->source, map->display, now - map->created);
 	}
 	exit(0);
 }

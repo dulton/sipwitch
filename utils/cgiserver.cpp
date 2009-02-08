@@ -62,7 +62,7 @@ static void stat_range(void);
 static void stat_instance(void);
 static void stat_periodic(void);
 static void user_range(void);
-//static void user_instance(void);
+static void user_instance(void);
 
 static node_t nodes[] = {
 	{"system.identity", &system_identity, "Identify server type and version", "string"},
@@ -78,7 +78,7 @@ static node_t nodes[] = {
 	{"stat.instance", &stat_instance, "return specific statistic node", "struct, string"},
 	{"stat.periodic", &stat_periodic, "return periodic statistics of node", "struct, string"},
 	{"user.range", &user_range, "Return list of user registrations", "array"},
-//	{"user.instance", &user_instance, "Return specific user registration", "struct, string"},
+	{"user.instance", &user_instance, "Return specific user registration", "struct, string"},
 	{NULL, NULL, NULL, NULL}
 };
 
@@ -1022,7 +1022,6 @@ static void server_control(void)
 static void call_instance(void)
 {
 	mapped_view<MappedCall> cr(REGISTRY_MAP);
-	unsigned size;
 	unsigned index = 0;
 	char id[32];
 	MappedCall copy;
@@ -1111,13 +1110,9 @@ static void call_range(void)
 static void stat_periodic(void)
 {
 	mapped_view<stats> sta(STAT_MAP);
-	unsigned size;
 	unsigned index = 0;
-	char id[32];
 	stats copy;
 	char buffer[1024];
-	rpcint_t diff = 0;
-	time_t now;
 
 	if(params.argc != 1)
 		fault(3, "Invalid Parameters");
@@ -1153,13 +1148,9 @@ static void stat_periodic(void)
 static void stat_instance(void)
 {
 	mapped_view<stats> sta(STAT_MAP);
-	unsigned size;
 	unsigned index = 0;
-	char id[32];
 	stats copy;
 	char buffer[1024];
-	rpcint_t diff = 0;
-	time_t now;
 
 	if(params.argc != 1)
 		fault(3, "Invalid Parameters");
@@ -1230,7 +1221,6 @@ static void stat_range(void)
 static void user_instance(void)
 {
 	mapped_view<MappedRegistry> reg(REGISTRY_MAP);
-	unsigned size;
 	unsigned index = 0;
 	char ext[48];
 	MappedRegistry copy;
@@ -1249,6 +1239,7 @@ static void user_instance(void)
 	if(!count)
 		fault(2, "Server Offline");
 
+	time(&now);
 	while(index < count) {
 		const MappedRegistry *map = const_cast<const MappedRegistry *>(reg(index++));
 	
