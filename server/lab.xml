@@ -23,7 +23,8 @@
  </user>
  <!-- Used to dock testing apps/softphones "multi-docked" -->
  <user id="testing">
-  <secret>xxx</secret>
+  <!-- sipdigest for testing for realm = "GNU Telephony", secret = "xxx" -->
+  <digest>92528744b1fbef79095af90584dedaca</digest>
   <extension>210</extension>
   <display>Testing</display>
  </user>
