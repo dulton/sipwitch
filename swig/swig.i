@@ -137,6 +137,17 @@ offered."
     }
 };
 
+#ifdef  SWIGPYTHON
+%typemap(out) char ** {
+  int len,i;
+  len = 0;
+  while ($1[len]) len++;
+  $result = PyList_New(len);
+  for (i = 0; i < len; i++) {
+    PyList_SetItem($result,i,PyString_FromString($1[i]));
+  }
+}
+#endif
 
 %include exception.i
 
@@ -189,3 +200,11 @@ int control(char *command);
 // count active calls
 unsigned count();
 
+// get range of stat nodes, for python loops...
+char **statrange();
+
+// get list of users, for python loops...
+char **users();
+
+// get list of calls, for python loops...
+char **calls();

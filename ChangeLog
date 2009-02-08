@@ -3,6 +3,7 @@ From version 0.3.12 to 0.3.13
 - added registry info to swig.
 - support for using /etc/sipwitch.d as default xml directory.
 - more xmlrpc functions.
+- swig range lists for python iteration loops.
 
 From version 0.3.11 to 0.3.12
 - initial xmlrpc support in cgi util.

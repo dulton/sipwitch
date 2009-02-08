@@ -37,6 +37,9 @@ static enum {
 static bool initial = false;
 static fsys	fifo;
 
+static char **userindex;
+static char **callindex, *callkeys;
+static char **statindex, *statkeys;
 static mapped_view<stats> *statmap = NULL;
 static mapped_view<MappedCall> *callmap = NULL;
 static mapped_view<MappedRegistry> *regmap = NULL;
@@ -59,6 +62,7 @@ static int error(void)
 
 static void attach(void)
 {
+	unsigned count, index;
 	if(error_code || initial)
 		return;
 
@@ -79,22 +83,107 @@ static void attach(void)
 		goto failed;
 
 	statmap = new mapped_view<stats>(STAT_MAP);
-	if(!statmap || !statmap->getCount()) {
+	count = statmap->getCount();
+	if(!count) {
+		delete statmap;
+		statmap = NULL;
 failed:
 		error_code = ERR_NOATTACH;
 		return;
 	}
 
+	statindex = new char *[count + 1];
+	statkeys = new char[count * 8];
+	for(index = 0; index < count; ++index) {
+		statindex[index] = &statkeys[index * 8];
+		snprintf(&statkeys[index * 8], 8, "%d", index);
+	}
+	statindex[index] = 0;
+	
 	callmap = new mapped_view<MappedCall>(CALL_MAP);
-	if(!callmap || !callmap->getCount())
+	count = callmap->getCount();
+	if(!count) {
+		delete callmap;
+		callmap = NULL;
 		goto failed;
+	}
+
+	callindex = new char *[count + 1];
+	callkeys = new char[count * 20];
 
 	regmap = new mapped_view<MappedRegistry>(REGISTRY_MAP);
-	if(!regmap || !regmap->getCount())
+	count = regmap->getCount();
+	if(!count) {
+		delete regmap;
+		regmap = NULL;
 		goto failed;
+	}
 
+	userindex = new char *[regmap->getCount() + 1];
 	initial = true;
 }
+
+static char **statrange(void)
+{
+	attach();
+	if(error_code)
+		return NULL;
+
+	return statindex;
+}
+
+static char **calls(void)
+{
+	unsigned index = 0, mapped = 0;
+	volatile const MappedCall *map;
+
+	attach();
+	if(error_code)
+		return NULL;
+
+	time_t now;
+	time(&now);
+
+	while(index < callmap->getCount()) {
+		map = (*callmap)(index++);
+
+		if(!map->created)
+			continue;
+
+		snprintf(&callkeys[mapped * 20], 20, "%08x:%d", map->sequence, map->cid);
+		callindex[mapped] = &callkeys[mapped * 20];
+		++mapped;
+	}
+	callindex[mapped] = NULL;
+	return callindex;
+}
+
+static char **users(void)
+{
+	unsigned index = 0, mapped = 0;
+	volatile const MappedRegistry *map;
+
+	attach();
+	if(error_code)
+		return NULL;
+
+	time_t now;
+	time(&now);
+
+	while(index < regmap->getCount()) {
+		map = (*regmap)(index++);
+
+		if(map->status == MappedRegistry::OFFLINE)
+			continue;
+
+		if(map->type != MappedRegistry::USER && map->type != MappedRegistry::SERVICE) 
+			continue;
+
+		userindex[mapped++] = const_cast<char *>(map->userid);		
+	}
+	userindex[mapped] = NULL;
+	return userindex;
+}		
 
 static void regcopy(const MappedRegistry *reg, struct Users *copy)
 {
@@ -403,15 +492,20 @@ static void release(void)
 	if(is(fifo))
 		fifo.close();
 	if(statmap) {
+		delete[] statindex;
+		delete[] statkeys;
 		delete statmap;
 		statmap = NULL;
 	}
 	if(callmap) {
 		delete callmap;
+		delete[] callindex;
+		delete[] callkeys;
 		callmap = NULL;
 	}
 	if(regmap) {
 		delete regmap;
+		delete[] userindex;
 		regmap = NULL;
 	}
 	initial = false;

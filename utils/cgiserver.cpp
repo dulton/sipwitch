@@ -61,7 +61,7 @@ static void call_instance(void);
 static void stat_range(void);
 static void stat_instance(void);
 static void stat_periodic(void);
-//static void user_range(void);
+static void user_range(void);
 //static void user_instance(void);
 
 static node_t nodes[] = {
@@ -77,7 +77,7 @@ static node_t nodes[] = {
 	{"stat.range", &stat_range, "Return list of call stat nodes", "array"},
 	{"stat.instance", &stat_instance, "return specific statistic node", "struct, string"},
 	{"stat.periodic", &stat_periodic, "return periodic statistics of node", "struct, string"},
-//	{"user.range", &user_range, "Return list of user registrations", "array"},
+	{"user.range", &user_range, "Return list of user registrations", "array"},
 //	{"user.instance", &user_instance, "Return specific user registration", "struct, string"},
 	{NULL, NULL, NULL, NULL}
 };
@@ -1147,7 +1147,7 @@ static void stat_periodic(void)
 			(rpcint_t)map->data[1].pperiod, (rpcint_t)map->data[1].pmin, (rpcint_t)map->data[1].pmax);
 		reply(buffer);
 	}
-	fault(6, "Unknown Call");
+	fault(7, "Unknown Stat");
 }
 
 static void stat_instance(void)
@@ -1189,7 +1189,7 @@ static void stat_instance(void)
 			(rpcint_t)map->data[1].total, (rpcint_t)map->data[1].current, (rpcint_t)map->data[1].peak);
 		reply(buffer);
 	}
-	fault(6, "Unknown Call");
+	fault(7, "Unknown Stat");
 }
 
 static void stat_range(void)
@@ -1222,6 +1222,115 @@ static void stat_range(void)
 			continue;
 
 		response(buffer, size, "!s", map->id);
+	}
+	response(buffer, size, "]");
+	reply(buffer);
+}
+
+static void user_instance(void)
+{
+	mapped_view<MappedRegistry> reg(REGISTRY_MAP);
+	unsigned size;
+	unsigned index = 0;
+	char ext[48];
+	MappedRegistry copy;
+	char buffer[2048];
+	time_t now;
+	const char *status = "idle";
+
+	if(params.argc != 1)
+		fault(3, "Invalid Parameters");
+
+	const char *id = getIndexed(1);
+	if(!id || !*id)
+		fault(5, "Invalid Command Argument");	
+
+	unsigned count = reg.getCount();
+	if(!count)
+		fault(2, "Server Offline");
+
+	while(index < count) {
+		const MappedRegistry *map = const_cast<const MappedRegistry *>(reg(index++));
+	
+		do {
+			memcpy(&copy, map, sizeof(copy));
+		} while(memcmp(&copy, map, sizeof(copy)));
+		map = &copy;
+
+		if(map->type != MappedRegistry::USER && map->type != MappedRegistry::SERVICE) 
+			continue;
+
+		if(map->expires < now)
+			continue;
+
+		if(!String::equal(map->userid, id))
+			continue;
+	
+		if(map->ext)
+			snprintf(ext, sizeof(ext), "%u", map->ext);
+		else
+			String::set(ext, sizeof(ext), map->userid);
+
+		if(map->inuse)
+			status = "busy";
+		else
+			switch(map->status) {
+			case MappedRegistry::AWAY:
+				status = "away";
+				break;
+			case MappedRegistry::DND:
+				status = "dnd";
+				break;
+			case MappedRegistry::BUSY:
+				status = "busy";
+				break;
+			default:
+				break;
+			}
+
+		response(buffer, sizeof(buffer), "^(ssssii)",
+			ext, map->display, map->profile.id, status,
+			(rpcint_t)map->inuse, (rpcint_t)map->profile.level);
+		reply(buffer);
+	}
+	fault(8, "Unknown User");
+}
+
+static void user_range(void)
+{
+	mapped_view<MappedRegistry> reg(REGISTRY_MAP);
+	unsigned size;
+	unsigned index = 0;
+	MappedRegistry copy;
+
+	if(params.argc != 0)
+		fault(3, "Invalid Parameters");
+
+	unsigned count = reg.getCount();
+	if(!count)
+		fault(2, "Server Offline");
+
+	size = count * 48 + 128;
+	char *buffer = (char *)malloc(size);
+	response(buffer, size, "^[");
+	time_t now;
+	time(&now);
+
+	while(index < count) {
+		const MappedRegistry *map = const_cast<const MappedRegistry *>(reg(index++));
+	
+		do {
+			memcpy(&copy, map, sizeof(copy));
+		} while(memcmp(&copy, map, sizeof(copy)));
+		map = &copy;
+
+		if(map->type != MappedRegistry::USER && map->type != MappedRegistry::SERVICE) 
+			continue;
+
+		if(map->expires < now)
+			continue;
+
+		response(buffer, size, "!s", map->userid);
 	}
 	response(buffer, size, "]");
 	reply(buffer);
