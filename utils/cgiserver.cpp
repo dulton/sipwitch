@@ -54,6 +54,8 @@ static void system_methods(void);
 static void system_help(void);
 static void system_signature(void);
 static void system_status(void);
+static void server_status(void);
+static void server_control(void);
 
 static node_t nodes[] = {
 	{"system.identity", &system_identity, "Identify server type and version", "string"},
@@ -61,6 +63,8 @@ static node_t nodes[] = {
 	{"system.methodHelp", &system_help, "Get help text for method", "string, string"},
 	{"system.methodSignature", &system_signature, "Get parameter signature for specified method", "array, string"},
 	{"system.status", &system_status, "Return server status information", "struct"},
+	{"server.status", &server_status, "Return server status string", "string"}, 
+	{"server.control", &server_control, "Return control request", "boolean, string"},
 	{NULL, NULL, NULL, NULL}
 };
 
@@ -942,6 +946,92 @@ static void system_identity(void)
 	reply(buffer);
 }
 
+static bool iocontrol(const char *cmd)
+{
+	char buffer[512];
+	FILE *fp;
+#ifdef	_MSWINDOWS_
+	snprintf(buffer, sizeof(buffer), "%s\n", cmd);
+#else
+	snprintf(buffer, sizeof(buffer), "%d %s\n", getpid(), cmd);
+#endif
+	char *ep = strchr(buffer, '\n');
+	if(ep)
+		*(++ep) = 0;
+
+#ifndef	_MSWINDOWS_
+	int signo;
+	sigset_t sigs;
+	sigemptyset(&sigs);
+	sigaddset(&sigs, SIGUSR1);
+	sigaddset(&sigs, SIGUSR2);
+	sigaddset(&sigs, SIGALRM);
+	sigprocmask(SIG_BLOCK, &sigs, NULL);
+#endif	
+
+	fp = fopen(control_file, "w");
+	if(!fp)
+		fault(2, "Server Offline");
+
+	fputs(buffer, fp);
+	fclose(fp);
+#ifndef	_MSWINDOWS_
+	alarm(60);
+#ifdef	HAVE_SIGWAIT2
+	sigwait(&sigs, &signo);
+#else
+	signo = sigwait(&sigs);
+#endif
+	if(signo == SIGUSR2)
+		return false;
+	if(signo == SIGALRM)
+		fault(6, "Request Timed Out");
+#endif
+	return true;
+}
+
+static void server_control(void)
+{
+	char buffer[512];
+
+	if(params.argc != 1)
+		fault(3, "Invalid Parameters");
+
+	const char *command = getIndexed(1);
+	if(!command || !*command)
+		fault(5, "Invalid Command Argument");	
+
+	response(buffer, sizeof(buffer), "^(b)", iocontrol(command));
+	reply(buffer);
+}
+
+static void server_status(void)
+{
+	mapped_view<MappedCall> cr(REGISTRY_MAP);
+	char *cp;
+	unsigned index = 0;
+	volatile const MappedCall *map;
+
+	if(params.argc != 0)
+		fault(3, "Invalid Parameters");
+
+	unsigned count = cr.getCount();
+	if(!count)
+		fault(2, "Server Offline");
+
+	cp = (char *)malloc(count + 1);
+	cp[count] = 0;
+	memset(cp, ' ', count);
+	while(index < count) {
+		map = cr(index++);
+		if(map->state[0])
+			cp[index - 1] = map->state[0];
+	}
+	char *buffer = (char *)malloc(count + 512);
+	response(buffer, count + 512, "^(s)", cp);
+	reply(buffer);
+}
+	
 static void system_status(void)
 {
 	time_t now;
@@ -954,7 +1044,7 @@ static void system_status(void)
 		fault(3, "Invalid Parameters");
 
 	if(stat(control_file, &ino))
-		fault(2, "Server offline");
+		fault(2, "Server Offline");
 
 	while(nodes[count].method)
 		++count;
