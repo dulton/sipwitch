@@ -447,8 +447,10 @@ void registry::reload(service *cfg)
 {
 	assert(cfg != NULL);
 
+	static const char *oldrealm = "-";
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("registry");
+	fsys_t fd;
 
 	while(is(sp)) {
 		key = sp->getId();
@@ -493,7 +495,21 @@ void registry::reload(service *cfg)
 	memset(contacts, 0, sizeof(LinkedObject *) * keysize);
 	memset(publishing, 0, sizeof(LinkedObject *) * keysize);
 	memset(addresses, 0, sizeof(LinkedObject *) * keysize);
-	process::errlog(INFO, "realm %s", realm);
+
+	Mutex::protect(&oldrealm);
+	if(!String::equal(realm, oldrealm)) {
+		process::errlog(INFO, "realm is %s", realm);
+		oldrealm = realm;
+#ifndef	_MSWINDOWS_
+		fsys::create(fd, DEFAULT_VARPATH "/run/sipwitch/.realm", fsys::ACCESS_WRONLY, 0664);
+		if(is(fd)) {
+			fsys::write(fd, realm, strlen(realm));		
+			fsys::close(fd);
+			::rename(DEFAULT_VARPATH "/run/sipwitch/.realm", DEFAULT_VARPATH "/run/sipwitch/realm");
+		}
+#endif
+	}
+	Mutex::release(&oldrealm);
 }
 
 unsigned registry::getEntries(void)

@@ -214,6 +214,12 @@ void release();
 
 // initialize and check if online without throwing an exception
 bool check();
+
+// return status string for server
+char *status();
+
+// return server realm identity
+char *realm();
    
 // call generic control interface with a command
 int control(char *command); 

@@ -54,6 +54,7 @@ static void system_methods(void);
 static void system_help(void);
 static void system_signature(void);
 static void system_status(void);
+static void server_realm(void);
 static void server_status(void);
 static void server_control(void);
 static void call_range(void);
@@ -72,6 +73,7 @@ static node_t nodes[] = {
 	{"system.status", &system_status, "Return server status information", "struct"},
 	{"server.status", &server_status, "Return server status string", "string"}, 
 	{"server.control", &server_control, "Return control request", "boolean, string"},
+	{"server.realm", &server_realm, "Return server realm", "string"},
 	{"call.range", &call_range, "Return list of active calls", "array"},
 	{"call.instance", &call_instance, "Return specific call instance", "struct, string"},
 	{"stat.range", &stat_range, "Return list of call stat nodes", "array"},
@@ -1327,6 +1329,28 @@ static void user_range(void)
 	reply(buffer);
 }
 
+static void server_realm(void)
+{
+	fsys fd;
+	char realm[128];
+	char buffer[256];
+
+	if(params.argc != 0)
+		fault(3, "Invalid Parameters");
+
+	fsys::open(fd, DEFAULT_VARPATH "/run/sipwitch/realm", fsys::ACCESS_RDONLY);
+	if(is(fd)) {
+		memset(realm, 0, sizeof(realm));
+		fsys::read(fd, realm, sizeof(realm) - 1);
+		fsys::close(fd);
+	}
+	else
+		fault(2, "Server Offline");
+
+	response(buffer, sizeof(buffer), "^s", realm);
+	reply(buffer);
+}
+
 static void server_status(void)
 {
 	mapped_view<MappedCall> cr(REGISTRY_MAP);
@@ -1350,7 +1374,7 @@ static void server_status(void)
 			cp[index - 1] = map->state[0];
 	}
 	char *buffer = (char *)malloc(count + 512);
-	response(buffer, count + 512, "^(s)", cp);
+	response(buffer, count + 512, "^s", cp);
 	reply(buffer);
 }
 	

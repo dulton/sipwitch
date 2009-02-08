@@ -39,7 +39,7 @@ static fsys	fifo;
 
 static char **userindex;
 static char **callindex, *callkeys;
-static char **statindex, *statkeys;
+static char **statindex, *statkeys, *statlist;
 static mapped_view<stats> *statmap = NULL;
 static mapped_view<MappedCall> *callmap = NULL;
 static mapped_view<MappedRegistry> *regmap = NULL;
@@ -94,6 +94,10 @@ failed:
 
 	statindex = new char *[count + 1];
 	statkeys = new char[count * 8];
+	statlist = new char[count + 1];
+	memset(statlist, 0, count);
+	statlist[count] = 0;
+
 	for(index = 0; index < count; ++index) {
 		statindex[index] = &statkeys[index * 8];
 		snprintf(&statkeys[index * 8], 8, "%d", index);
@@ -121,6 +125,42 @@ failed:
 
 	userindex = new char *[regmap->getCount() + 1];
 	initial = true;
+}
+
+static char *realm(void)
+{
+	static char buffer[128];
+	fsys_t fd;
+
+	memset(buffer, 0, sizeof(buffer));
+
+	fsys::open(fd, DEFAULT_VARPATH "/run/sipwitch/realm", fsys::ACCESS_RDONLY);
+	if(is(fd)) {
+		fsys::read(fd, buffer, sizeof(buffer) - 1);
+		fsys::close(fd);
+		return buffer;
+	}
+
+	error_code = ERR_NOATTACH;
+	return NULL;
+}
+
+static char *status(void)
+{
+	unsigned index = 0;
+	unsigned count;
+	const volatile MappedCall *map;
+
+	attach();
+	if(error_code)
+		return NULL;
+
+	count = statmap->getCount();
+	while(index < count) {
+		map = (*callmap)(index);
+		statlist[index++] = map->state[0];
+	}
+	return statlist;
 }
 
 static char **statrange(void)
@@ -494,6 +534,7 @@ static void release(void)
 	if(statmap) {
 		delete[] statindex;
 		delete[] statkeys;
+		delete[] statlist;
 		delete statmap;
 		statmap = NULL;
 	}
