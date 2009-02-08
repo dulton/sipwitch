@@ -137,6 +137,27 @@ offered."
     }
 };
 
+#ifdef  SWIGPERL
+%typemap(out) char ** {
+	AV *myav;
+	SV **svs;
+	int i = 0,len = 0;
+	/* Figure out how many elements we have */
+	while ($1[len])
+	   len++;
+	svs = (SV **) malloc(len*sizeof(SV *));
+	for (i = 0; i < len ; i++) {
+	    svs[i] = sv_newmortal();
+	    sv_setpv((SV*)svs[i],$1[i]);
+	};
+	myav =	av_make(len,svs);
+	free(svs);
+        $result = newRV((SV*)myav);
+        sv_2mortal($result);
+        argvi++;
+}
+#endif
+
 #ifdef  SWIGPYTHON
 %typemap(out) char ** {
   int len,i;
