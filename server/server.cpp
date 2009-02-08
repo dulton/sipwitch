@@ -257,6 +257,7 @@ void server::confirm(const char *user)
 	char filename[65];
 	caddr_t mp;
 	profile *pp, *ppd;
+	const char *state = root.getPointer();
 	const char *realm = registry::getRealm();
 	unsigned prefix = registry::getPrefix();
 	unsigned range = registry::getRange();
@@ -326,10 +327,18 @@ void server::confirm(const char *user)
 	process::errlog(DEBUG1, "scanning config from %s", dirpath);
 	while(is(dir) && fsys::read(dir, filename, sizeof(filename)) > 0) {
 		ext = strrchr(filename, '.');
-		if(ext && stricmp(ext, ".xml"))
+		if(!ext || !String::equal(ext, ".xml"))
 			continue;
-		snprintf(buf, sizeof(buf), "%s/%s", dirpath, filename);
-		fp = fopen(buf, "r");
+		if(state) {
+			snprintf(buf, sizeof(buf), "%s/%s/%s", dirpath, state, filename);
+			fp = fopen(buf, "r");
+		}
+		else
+			fp = NULL;
+		if(!fp) {
+			snprintf(buf, sizeof(buf), "%s/%s", dirpath, filename);
+			fp = fopen(buf, "r");
+		}
 		fn = strrchr(buf, '/');
 		if(fn)
 			++fn;
