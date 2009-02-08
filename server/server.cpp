@@ -685,6 +685,7 @@ void server::reload(const char *uid)
 
 	char buf[256];
 	FILE *state = NULL;
+	const char *cp;
 
 #ifdef _MSWINDOWS_
 	GetEnvironmentVariable("APPDATA", buf, 192);
@@ -713,6 +714,10 @@ void server::reload(const char *uid)
 			delete cfgp;
 			return;
 		}
+
+	cp = cfgp->root.getPointer();
+	if(cp)
+		process::errlog(INFO, "activating for state \"%s\"", cp);
 
 	cfgp->commit(uid);
 	if(!cfg) {
