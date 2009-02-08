@@ -56,6 +56,13 @@ static void system_signature(void);
 static void system_status(void);
 static void server_status(void);
 static void server_control(void);
+static void call_range(void);
+static void call_instance(void);
+static void stat_range(void);
+static void stat_instance(void);
+static void stat_periodic(void);
+//static void user_range(void);
+//static void user_instance(void);
 
 static node_t nodes[] = {
 	{"system.identity", &system_identity, "Identify server type and version", "string"},
@@ -65,6 +72,13 @@ static node_t nodes[] = {
 	{"system.status", &system_status, "Return server status information", "struct"},
 	{"server.status", &server_status, "Return server status string", "string"}, 
 	{"server.control", &server_control, "Return control request", "boolean, string"},
+	{"call.range", &call_range, "Return list of active calls", "array"},
+	{"call.instance", &call_instance, "Return specific call instance", "struct, string"},
+	{"stat.range", &stat_range, "Return list of call stat nodes", "array"},
+	{"stat.instance", &stat_instance, "return specific statistic node", "struct, string"},
+	{"stat.periodic", &stat_periodic, "return periodic statistics of node", "struct, string"},
+//	{"user.range", &user_range, "Return list of user registrations", "array"},
+//	{"user.instance", &user_instance, "Return specific user registration", "struct, string"},
 	{NULL, NULL, NULL, NULL}
 };
 
@@ -1002,6 +1016,214 @@ static void server_control(void)
 		fault(5, "Invalid Command Argument");	
 
 	response(buffer, sizeof(buffer), "^(b)", iocontrol(command));
+	reply(buffer);
+}
+
+static void call_instance(void)
+{
+	mapped_view<MappedCall> cr(REGISTRY_MAP);
+	unsigned size;
+	unsigned index = 0;
+	char id[32];
+	MappedCall copy;
+	char buffer[1024];
+	rpcint_t diff = 0;
+	time_t now;
+
+	if(params.argc != 1)
+		fault(3, "Invalid Parameters");
+
+	const char *cid = getIndexed(1);
+	if(!cid || !*cid)
+		fault(5, "Invalid Command Argument");	
+
+
+	unsigned count = cr.getCount();
+	if(!count)
+		fault(2, "Server Offline");
+
+	time(&now);
+	while(index < count) {
+		const MappedCall *map = const_cast<const MappedCall *>(cr(index++));
+	
+		do {
+			memcpy(&copy, map, sizeof(copy));
+		} while(memcmp(&copy, map, sizeof(copy)));
+		map = &copy;
+
+		if(!map->created)
+			continue;
+
+		snprintf(id, sizeof(id), "%08x:%d", map->sequence, map->cid);
+		if(!String::equal(id, cid))
+			continue;
+	
+		if(map->active) {
+			time(&now);
+			diff = (rpcint_t)(now - map->active);
+		}
+
+		response(buffer, sizeof(buffer), "^(tsssssi)",
+			map->created, map->state + 1, map->authorized,
+			map->source, map->target, map->display, diff);
+		reply(buffer);
+	}
+	fault(6, "Unknown Call");
+}
+
+static void call_range(void)
+{
+	mapped_view<MappedCall> cr(REGISTRY_MAP);
+	unsigned size;
+	unsigned index = 0;
+	char id[32];
+	MappedCall copy;
+
+	if(params.argc != 0)
+		fault(3, "Invalid Parameters");
+
+	unsigned count = cr.getCount();
+	if(!count)
+		fault(2, "Server Offline");
+
+	size = count * 64 + 128;
+	char *buffer = (char *)malloc(size);
+	response(buffer, size, "^[");
+
+	while(index < count) {
+		const MappedCall *map = const_cast<const MappedCall *>(cr(index++));
+	
+		do {
+			memcpy(&copy, map, sizeof(copy));
+		} while(memcmp(&copy, map, sizeof(copy)));
+		map = &copy;
+
+		if(!map->created)
+			continue;
+	
+		snprintf(id, sizeof(id), "%08x:%d", map->sequence, map->cid);
+		response(buffer, size, "!s", buffer);
+	}
+	response(buffer, size, "]");
+	reply(buffer);
+}
+
+static void stat_periodic(void)
+{
+	mapped_view<stats> sta(STAT_MAP);
+	unsigned size;
+	unsigned index = 0;
+	char id[32];
+	stats copy;
+	char buffer[1024];
+	rpcint_t diff = 0;
+	time_t now;
+
+	if(params.argc != 1)
+		fault(3, "Invalid Parameters");
+
+	const char *cid = getIndexed(1);
+	if(!cid || !*cid)
+		fault(5, "Invalid Command Argument");	
+
+	unsigned count = sta.getCount();
+	if(!count)
+		fault(2, "Server Offline");
+
+	while(index < count) {
+		const stats *map = const_cast<const stats *>(sta(index++));
+	
+		do {
+			memcpy(&copy, map, sizeof(copy));
+		} while(memcmp(&copy, map, sizeof(copy)));
+		map = &copy;
+
+		if(!String::equal(map->id, cid))
+			continue;
+	
+		response(buffer, sizeof(buffer), "^(itiiiiii)",
+			(rpcint_t)map->limit, map->lastcall,
+			(rpcint_t)map->data[0].pperiod, (rpcint_t)map->data[0].pmin, (rpcint_t)map->data[0].pmax,
+			(rpcint_t)map->data[1].pperiod, (rpcint_t)map->data[1].pmin, (rpcint_t)map->data[1].pmax);
+		reply(buffer);
+	}
+	fault(6, "Unknown Call");
+}
+
+static void stat_instance(void)
+{
+	mapped_view<stats> sta(STAT_MAP);
+	unsigned size;
+	unsigned index = 0;
+	char id[32];
+	stats copy;
+	char buffer[1024];
+	rpcint_t diff = 0;
+	time_t now;
+
+	if(params.argc != 1)
+		fault(3, "Invalid Parameters");
+
+	const char *cid = getIndexed(1);
+	if(!cid || !*cid)
+		fault(5, "Invalid Command Argument");	
+
+	unsigned count = sta.getCount();
+	if(!count)
+		fault(2, "Server Offline");
+
+	while(index < count) {
+		const stats *map = const_cast<const stats *>(sta(index++));
+	
+		do {
+			memcpy(&copy, map, sizeof(copy));
+		} while(memcmp(&copy, map, sizeof(copy)));
+		map = &copy;
+
+		if(!String::equal(map->id, cid))
+			continue;
+	
+		response(buffer, sizeof(buffer), "^(itiiiiii)",
+			(rpcint_t)map->limit, map->lastcall,
+			(rpcint_t)map->data[0].total, (rpcint_t)map->data[0].current, (rpcint_t)map->data[0].peak,
+			(rpcint_t)map->data[1].total, (rpcint_t)map->data[1].current, (rpcint_t)map->data[1].peak);
+		reply(buffer);
+	}
+	fault(6, "Unknown Call");
+}
+
+static void stat_range(void)
+{
+	mapped_view<stats> sta(STAT_MAP);
+	unsigned size;
+	unsigned index = 0;
+	stats copy;
+
+	if(params.argc != 0)
+		fault(3, "Invalid Parameters");
+
+	unsigned count = sta.getCount();
+	if(!count)
+		fault(2, "Server Offline");
+
+	size = count * 48 + 128;
+	char *buffer = (char *)malloc(size);
+	response(buffer, size, "^[");
+
+	while(index < count) {
+		const stats *map = const_cast<const stats *>(sta(index++));
+	
+		do {
+			memcpy(&copy, map, sizeof(copy));
+		} while(memcmp(&copy, map, sizeof(copy)));
+		map = &copy;
+
+		if(!map->id[0])
+			continue;
+
+		response(buffer, size, "!s", map->id);
+	}
+	response(buffer, size, "]");
 	reply(buffer);
 }
 
