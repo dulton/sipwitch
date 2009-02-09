@@ -81,6 +81,9 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 	char seqid[64];
 	int cid;
 	unsigned count = 0;
+	time_t now;
+
+	time(&now);
 
 	// make sure we do not re-invite an existing active member again
 	while(is(sp)) {
@@ -138,7 +141,7 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 	osip_message_set_supported(invite, "100rel,replaces,timer");
 
 	if(call->expires) {
-		snprintf(expheader, sizeof(expheader), "%ld", call->expires);
+		snprintf(expheader, sizeof(expheader), "%ld", call->expires - now);
 		osip_message_set_header(invite, SESSION_EXPIRES, expheader);
 	}
 
@@ -342,7 +345,7 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 		osip_message_set_supported(invite, "100rel,replaces,timer");
 
 		if(call->expires) {
-			snprintf(expheader, sizeof(expheader), "%ld", call->expires);
+			snprintf(expheader, sizeof(expheader), "%ld", call->expires - now);
 			osip_message_set_header(invite, SESSION_EXPIRES, expheader);
 		}
 

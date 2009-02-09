@@ -162,14 +162,19 @@ void stack::call::closingLocked(session *s)
 void stack::call::reply_source(int error)
 {
 	osip_message_t *reply = NULL;
+
+	debug(3, "sip: sending source reply %d", error);
+
 	eXosip_lock();
 	eXosip_call_build_answer(source->tid, error, &reply);
 	if(reply != NULL) {
 		stack::siplog(reply);
 		eXosip_call_send_answer(source->tid, error, reply);
 	}
-	else
+	else {
+		debug(3, "sip: source reply %d failed", error);
 		eXosip_call_send_answer(source->tid, SIP_BAD_REQUEST, NULL);
+	}
 	eXosip_unlock();
 }
 
@@ -618,9 +623,13 @@ void stack::call::trying(thread *thread)
 	// turn-over state and set timer to wait for all invites to become
 	// busy or one or more to start ringing...
 	//
-	if(state == INITIAL) 
-		// we cannot reply_source because build always fails!
+	if(state == INITIAL) {
+		debug(3, "sip: sending source reply %d", SIP_TRYING);
+		// we cannot use reply_source because build always fails!
+		eXosip_lock();
 		eXosip_call_send_answer(source->tid, SIP_TRYING, NULL);
+		eXosip_unlock();
+	}
 
 	Mutex::protect(this);
 	set(TRYING, 't', "trying");
