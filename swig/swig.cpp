@@ -38,8 +38,8 @@ static bool initial = false;
 static fsys	fifo;
 
 static char **userindex;
-static char **callindex, *callkeys;
-static char **statindex, *statkeys, *statlist;
+static char **callindex, *callkeys, *calllist;
+static char **statindex, *statkeys;
 static mapped_view<stats> *statmap = NULL;
 static mapped_view<MappedCall> *callmap = NULL;
 static mapped_view<MappedRegistry> *regmap = NULL;
@@ -94,10 +94,7 @@ failed:
 
 	statindex = new char *[count + 1];
 	statkeys = new char[count * 8];
-	statlist = new char[count + 1];
-	memset(statlist, 0, count);
-	statlist[count] = 0;
-
+	
 	for(index = 0; index < count; ++index) {
 		statindex[index] = &statkeys[index * 8];
 		snprintf(&statkeys[index * 8], 8, "%d", index);
@@ -114,6 +111,9 @@ failed:
 
 	callindex = new char *[count + 1];
 	callkeys = new char[count * 20];
+	calllist = new char[count + 1];
+	memset(calllist, 0, count);
+	calllist[count] = 0;
 
 	regmap = new mapped_view<MappedRegistry>(REGISTRY_MAP);
 	count = regmap->getCount();
@@ -155,12 +155,12 @@ static char *status(void)
 	if(error_code)
 		return NULL;
 
-	count = statmap->getCount();
+	count = callmap->getCount();
 	while(index < count) {
 		map = (*callmap)(index);
-		statlist[index++] = map->state[0];
+		calllist[index++] = map->state[0];
 	}
-	return statlist;
+	return calllist;
 }
 
 static char **statrange(void)
@@ -534,7 +534,6 @@ static void release(void)
 	if(statmap) {
 		delete[] statindex;
 		delete[] statkeys;
-		delete[] statlist;
 		delete statmap;
 		statmap = NULL;
 	}
@@ -542,6 +541,7 @@ static void release(void)
 		delete callmap;
 		delete[] callindex;
 		delete[] callkeys;
+		delete[] calllist;
 		callmap = NULL;
 	}
 	if(regmap) {
