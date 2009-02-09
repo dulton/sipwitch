@@ -370,8 +370,7 @@ void stack::setDialog(session *s, int did)
 {
 	assert(s != NULL && s->parent != NULL);
 	Mutex::protect(s->parent);
-	if(did > -1)
-		s->did = did;
+	s->did = did;
 	Mutex::release(s->parent);
 }
 
