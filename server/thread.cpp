@@ -1856,6 +1856,7 @@ void thread::run(void)
 		switch(sevent->type) {
 		case EXOSIP_REGISTRATION_FAILURE:
 			stack::siplog(sevent->response);
+			debug(4, "sip: registration response %d", sevent->response->status_code); 
 			if(sevent->response && sevent->response->status_code == 401) {
 				sip_realm = NULL;
 				proxy_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->proxy_authenticates, 0);
@@ -1953,6 +1954,7 @@ void thread::run(void)
 			session = stack::access(sevent->cid);
 			if(!session)
 				break;
+			debug(4, "sip: call response %d\n", sevent->response->status_code);
 			switch(sevent->response->status_code) {
 			case SIP_DECLINE:
 			case SIP_MOVED_PERMANENTLY:
