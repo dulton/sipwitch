@@ -48,6 +48,8 @@ using namespace UCOMMON_NAMESPACE;
 
 class thread;
 
+typedef enum {EXTERNAL, LOCAL, PUBLIC, ROUTED, FORWARDED} destination_t;
+
 class __LOCAL registry : private service::callback, private mapped_array<MappedRegistry> 
 { 
 public: 
@@ -285,6 +287,7 @@ private:
 		call();
 
 		state_t state;
+		struct sockaddr_internet iface;	// source interface...
 		char forward[MAX_USERID_SIZE];	// ref id for forwarding...
 		char divert[MAX_USERID_SIZE];	// used in forward management
 		char dialed[MAX_IDENT_SIZE];	// user or ip address...
@@ -341,6 +344,8 @@ private:
 	void update(void);
 	void modify(void);
 
+	static void divert(stack::call *cr, struct sockaddr_internet *addr, osip_message_t *msg);
+
 	unsigned threading, priority;
 	size_t stacksize;
 
@@ -387,6 +392,10 @@ public:
 	static int getDialog(session *session);
 	static void release(MappedCall *map);
 	static MappedCall *get(void);
+	static bool forward(stack::call *cr);
+	static bool assign(stack::call *cr, unsigned count);
+	static void inviteRemote(stack::session *session, const char *uri);
+	static void inviteLocal(stack::session *session, registry::mapped *rr, destination_t dest);
 
 	inline static timeout_t ringTimeout(void)
 		{return stack::sip.ring_timer;};
@@ -523,13 +532,12 @@ private:
 	const char *via_host;
 	unsigned via_hops;
 	unsigned via_port;
-	rtpproxy::session proxyinfo;
+	destination_t destination;
 
 	char *sip_realm;
 	osip_proxy_authenticate_t *proxy_auth;
 	osip_www_authenticate_t *www_auth;
 
-	enum {EXTERNAL, LOCAL, PUBLIC, ROUTED, FORWARDED} destination;
 	enum {CALL, MESSAGE, REGISTRAR, NONE} authorizing;
 
 	thread();
@@ -538,8 +546,6 @@ private:
 
 	void send_reply(int error);
 	void expiration(void);
-	void inviteRemote(stack::session *session, const char *uri);
-	void inviteLocal(stack::session *session, registry::mapped *rr);
 	void invite(void);
 	void identify(void);
 	bool getsource(void);
@@ -556,12 +562,10 @@ private:
 	void options(void);
 	void run(void);
 	void getDevice(registry::mapped *rr);
-	void divert(stack::call *cr, struct sockaddr_internet *addr, osip_message_t *msg);
 	const char *getIdent(void);
 
 public:
 	static void shutdown(void);
-	static bool assign(stack::call *cr, unsigned count);
 };
 
 END_NAMESPACE

@@ -157,8 +157,14 @@ void stack::call::closingLocked(session *s)
 	if(invited)
 		--invited;
 
-	if(!invited) 
-		disconnectLocked();
+	if(!invited) {
+		if(!stack::forward(this))	
+			disconnectLocked();
+		if(state == RINGING) {
+			arm(stack::ringTimeout());
+			reply_source(SIP_CALL_IS_BEING_FORWARDED);
+		}
+	}
 }
 
 void stack::call::reply_source(int error)
@@ -166,6 +172,9 @@ void stack::call::reply_source(int error)
 	osip_message_t *reply = NULL;
 
 	debug(3, "sip: sending source reply %d", error);
+
+	if(error == SIP_CALL_IS_BEING_FORWARDED && answering)
+		answering = 4;
 
 	eXosip_lock();
 	eXosip_call_build_answer(source->tid, error, &reply);
@@ -604,16 +613,23 @@ void stack::call::busy(thread *thread, session *s)
 	case INITIAL:
 	case RINGING:
 	case RINGBACK:
-		if(!ringing && ringbusy) {
-			if(forwarding)
+		// we goto busy in this special case, otherwise stack::close handles na
+		if(!ringing && ringbusy && invited == 1) {
+			if(forwarding) {
 				forwarding = "busy";
-			if(forwarding)
-				debug(3, "call forward <%s> using %s", forwarding, forward);		
+				if(stack::forward(this)) {
+					ringbusy = 0;
+					if(state == RINGING)
+						arm(stack::ringTimeout());
+					Mutex::release(this);
+					if(state == RINGING)
+						reply_source(SIP_CALL_IS_BEING_FORWARDED);
+					return;
+				}
+			}
 			set(BUSY, 'b', "busy");
 			disconnectLocked();
 		}
-		else if(!ringing && forwarding)
-			debug(3, "call forward <%s> using %s", forwarding, forward);
 	default:
 		break;
 	}
@@ -658,9 +674,14 @@ void stack::call::expired(void)
 					// also controls call-forward no-answer timing...
 			if(answering == 1 && forwarding) {
 				forwarding = "na";
-				debug(3, "call forward <%s> using %s", forwarding, forward);
-//				disconnectLocked();
-//				break;
+				if(stack::forward(this)) {
+					arm(stack::ringTimeout());
+					Mutex::release(this);
+					reply_source(SIP_CALL_IS_BEING_FORWARDED);
+					return;
+				}
+				disconnectLocked();
+				break;
 			}
 			if(answering)
 				--answering;

@@ -10,6 +10,13 @@
   <secret>xxx</secret>
   <extension>201</extension>
   <display>Tycho</display>
+  <!-- Here we have an example of optional call forwarding entries -->
+  <forwarding>
+    <na>no-answer-target (often voicemail ext#)</na>
+    <busy>busy-target (often voicemail ext#)</na>
+    <dnd>do-not-disturb-target</dnd>
+	<away>away-target (uses simple status)</away>
+  </forwarding>
  </user>
  <user id="tycho2">
   <secret>xxx</secret>

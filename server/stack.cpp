@@ -303,11 +303,8 @@ void stack::close(session *s)
 		s->state = session::CLOSED;
 		if(s == cr->source)
 			cr->terminateLocked();
-		else {
-			if(cr->invited == 1 && cr->forwarding)
-				debug(3, "call forwarding <%s> using %s", cr->forwarding, cr->forward);
+		else 
 			cr->closingLocked(s);
-		}
 	}
 	Mutex::release(cr);
 }
@@ -1019,6 +1016,412 @@ set:
 		ap = NULL;
 	}
 	return ap;
+}
+
+void stack::divert(stack::call *call, struct sockaddr_internet *iface, osip_message_t *invite)
+{
+	char route[MAX_URI_SIZE];
+	char touri[MAX_URI_SIZE];
+
+	if(!call->diverting)
+		return;
+
+	if(String::equal(call->diverting, "all")) {
+		stack::sipPublish(iface, route, call->divert, sizeof(route));
+		snprintf(touri, sizeof(touri), "<%s>;reason=unconditional", route);
+		osip_message_set_header(invite, "Diversion", touri);
+	}
+	else if(String::equal(call->diverting, "na")) {
+		stack::sipPublish(iface, route, call->divert, sizeof(route));
+		snprintf(touri, sizeof(touri), "<%s>;reason=no-answer", route);
+		osip_message_set_header(invite, "Diversion", touri);
+	}
+	else if(String::equal(call->diverting, "busy")) {
+		stack::sipPublish(iface, route, call->divert, sizeof(route));
+		snprintf(touri, sizeof(touri), "<%s>;reason=user-busy", route);
+		osip_message_set_header(invite, "Diversion", touri);
+	}
+	else if(String::equal(call->diverting, "dnd")) {
+		stack::sipPublish(iface, route, call->divert, sizeof(route));
+		snprintf(touri, sizeof(touri), "<%s>;reason=do-not-disturb", route);
+		osip_message_set_header(invite, "Diversion", touri);
+	}
+	else if(String::equal(call->diverting, "away")) {
+		stack::sipPublish(iface, route, call->divert, sizeof(route));
+		snprintf(touri, sizeof(touri), "<%s>;reason=away", route);
+		osip_message_set_header(invite, "Diversion", touri);
+	}
+}
+
+void stack::inviteRemote(stack::session *s, const char *uri_target)
+{
+	assert(s != NULL && s->parent != NULL);
+	assert(uri_target != NULL);
+
+	rtpproxy::session proxyinfo;
+	Socket::address resolve;
+	stack::session *invited;
+	stack::call *call = s->parent;
+	linked_pointer<stack::segment> sp = call->segments.begin();
+	char username[MAX_USERID_SIZE];
+	char touri[MAX_URI_SIZE];
+	char route[MAX_URI_SIZE];
+	osip_message_t *invite = NULL;
+	char expheader[32];
+	char seqid[64];
+	int cid;
+	unsigned count = 0;
+	time_t now;
+
+	time(&now);
+
+	// make sure we do not re-invite an existing active member again
+	while(is(sp)) {
+		if(!stricmp(sp->sid.identity, uri_target) && sp->sid.state == stack::session::OPEN)
+			return;
+		sp.next();
+	}
+	
+	snprintf(touri, sizeof(touri), "<%s>", uri_target);
+
+	proxyinfo.clear();
+	server::classify(&proxyinfo, &call->source->proxy, NULL);
+	invite = NULL;
+
+	eXosip_lock();
+	if(eXosip_call_build_initial_invite(&invite, touri, s->from, NULL, call->subject)) {
+		process::errlog(ERRLOG, "cannot invite %s; build failed", uri_target);
+		eXosip_unlock();
+		return;
+	}
+
+	divert(call, &call->iface, invite);
+
+	osip_message_set_header(invite, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+	osip_message_set_header(invite, ALLOW_EVENTS, "talk, hold, refer");
+	osip_message_set_supported(invite, "100rel,replaces,timer");
+
+	if(call->expires) {
+		snprintf(expheader, sizeof(expheader), "%ld", call->expires - now);
+		osip_message_set_header(invite, SESSION_EXPIRES, expheader);
+	}
+
+	osip_message_set_body(invite, s->sdp, strlen(s->sdp));
+	osip_message_set_content_type(invite, "application/sdp");
+	stack::siplog(invite);
+	cid = eXosip_call_send_initial_invite(invite);
+	if(cid > 0) {
+		snprintf(seqid, sizeof(seqid), "%08x-%d", s->sequence, s->cid);
+		stack::sipAddress(&call->iface, route, seqid, sizeof(route));
+		eXosip_call_set_reference(cid, route);
+		++count;
+	}
+	else {
+		process::errlog(ERRLOG, "invite failed for %s", uri_target);
+		eXosip_unlock();
+		return;
+	}
+		
+	eXosip_unlock();
+	invited = stack::create(call, cid);
+	registry::incUse(NULL, stats::OUTGOING);
+	rtpproxy::copy(&invited->proxy, &proxyinfo);
+	uri::userid(uri_target, username, sizeof(username));
+	uri::hostid(uri_target, route, sizeof(route));
+	String::set(invited->identity, sizeof(invited->identity), uri_target);
+	String::set(invited->display, sizeof(invited->display), username);
+	snprintf(invited->from, sizeof(invited->from), "<%s>", uri_target);
+	resolve.set(route, 5060);
+	if(resolve.getAddr())
+		uri::identity(resolve.getAddr(), invited->sysident, username, sizeof(invited->sysident));
+	else
+		snprintf(invited->sysident, sizeof(invited->sysident), "%s@unknown", username);
+
+	debug(3, "inviting %s\n", uri_target);
+}
+
+bool stack::forward(stack::call *cr)
+{
+	unsigned count = cr->invited;
+
+repeat:
+	service::usernode user;
+	service::keynode *fwd;
+	const char *forwarding = cr->forwarding;
+	const char *target;
+	char buffer[MAX_URI_SIZE];
+	registry::mapped *rr = NULL;
+
+	String::set(cr->divert, sizeof(cr->divert), cr->forward);
+	cr->forwarding = NULL;
+	cr->diverting = NULL;
+
+	if(!forwarding)
+		return false;
+
+	server::getProvision(cr->forward, user);
+	if(!user.keys) 
+		return false;
+
+	fwd = user.keys->getChild("forwarding");
+	if(!fwd)
+		goto failed;
+
+	target = server::getValue(fwd, forwarding);
+	if(!target || !*target)
+		goto failed;
+
+	cr->diverting = forwarding;	
+
+	if(strchr(target, '@'))
+		goto remote;
+
+	String::set(cr->forward, sizeof(cr->forward), target);
+	target = cr->forward;
+	server::release(user);
+
+	debug(3, "call forward <%s> to %s", forwarding, target);
+
+	rr = registry::access(target);
+	if(rr) {
+		cr->forwarding = "na";
+		inviteLocal(cr->source, rr, FORWARDED); 
+		if(cr->forwarding && !String::equal("na", cr->forwarding) && cr->invited == count) {
+			registry::detach(rr);
+			goto repeat;
+		}
+		registry::detach(rr);
+	}
+		
+	goto test;
+
+remote:
+	if(!String::equal(target, "sip:", 4) && !String::equal(target, "sips:", 5))
+		snprintf(buffer, sizeof(buffer), "%s:%s", getScheme(), target);
+	else
+		String::set(buffer, sizeof(buffer), target);
+	target = buffer;
+	server::release(user);
+	debug(3, "call forward <%s> to %s", forwarding, target);
+	inviteRemote(cr->source, target);
+	goto test;
+
+failed:
+	server::release(user);
+	return false;
+
+test:
+	if(cr->invited > count)
+		return true;
+
+	return false;
+}
+
+void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t dest)
+{
+	assert(s != NULL && s->parent != NULL);
+	assert(rr != NULL);
+
+	rtpproxy::session proxyinfo;
+	linked_pointer<registry::target> tp = rr->internal.targets;
+	stack::session *invited;
+	stack::call *call = s->parent;
+	linked_pointer<stack::segment> sp = call->segments.begin();
+	unsigned away_count = 0, dnd_count = 0, busy_count = 0;
+
+	time_t now;
+	osip_message_t *invite;
+	char expheader[32];
+	char seqid[64];
+	char route[MAX_URI_SIZE];
+	char touri[MAX_URI_SIZE];
+	int cid;
+	unsigned count = 0;
+
+	time(&now);
+
+	if(rr->expires && rr->expires < now + 1)
+		return;
+
+	// make sure we do not re-invite an existing active member again
+	while(is(sp)) {
+		if(sp->sid.reg == rr && sp->sid.state == stack::session::OPEN) {
+			return;
+		}
+		sp.next();
+	}
+
+	switch(rr->status) {
+	case MappedRegistry::IDLE:
+		break;
+	case MappedRegistry::BUSY:
+		if(!call->count && call->forwarding)
+			call->forwarding = "busy";
+		return;
+	case MappedRegistry::DND:
+		if(!call->count && call->forwarding)
+			call->forwarding = "dnd";
+		return;
+	case MappedRegistry::AWAY:
+		if(!call->count && call->forwarding)
+			call->forwarding = "away";
+		return;
+	default:
+		return;
+	}
+	
+	while(is(tp)) {
+		invited = NULL;
+		if(tp->expires && tp->expires < now + 1)
+			goto next;
+
+		switch(tp->status) {
+		case registry::target::READY:
+			break;
+
+		case registry::target::AWAY:
+			++away_count;
+			goto next;
+		case registry::target::DND:
+			++dnd_count;
+			goto next;
+		case registry::target::BUSY:
+			++busy_count;
+			goto next;
+		default:
+			goto next;
+		}
+
+		proxyinfo.clear();
+
+		// if proxy required, but not available, then we must skip this
+		// invite...
+		if(server::classify(&proxyinfo, &call->source->proxy, (struct sockaddr *)&tp->address) && !assign(call, 4))
+			goto next;
+
+		invite = NULL;
+		eXosip_lock();
+
+		if(dest == ROUTED) {
+			stack::sipPublish(&tp->address, route, call->dialed, sizeof(route));
+			snprintf(touri, sizeof(touri), "\"%s\" <%s;user=phone>", call->dialed, route);
+		}
+		else if(call->phone)
+			snprintf(touri, sizeof(touri), "<%s;user=phone>", tp->contact);
+		else
+			snprintf(touri, sizeof(touri), "<%s>", tp->contact);
+
+		stack::sipPublish(&tp->address, route + 1, NULL, sizeof(route) - 5);
+		route[0] = '<';
+		String::add(route, sizeof(route), ";lr>");
+		if(eXosip_call_build_initial_invite(&invite, touri, s->from, route, call->subject)) {
+			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
+			process::errlog(ERRLOG, "cannot invite %s; build failed", route);
+			goto unlock;
+		}
+
+		// if not routing, then separate to from request-uri for forwarding
+		if(dest != ROUTED) {
+			stack::sipPublish(&tp->address, route, call->dialed, sizeof(route));
+			if(call->phone)
+				String::add(route, sizeof(route), ";user=phone");
+			snprintf(touri, sizeof(touri), "\"%s\" <%s>", call->dialed, route);
+			if(invite->to) {
+				osip_to_free(invite->to);
+				invite->to = NULL;
+			}
+			osip_message_set_to(invite, touri);
+		}
+
+		divert(call, &tp->iface, invite);
+
+		osip_message_set_header(invite, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+		osip_message_set_header(invite, ALLOW_EVENTS, "talk, hold, refer");
+		osip_message_set_supported(invite, "100rel,replaces,timer");
+
+		if(call->expires) {
+			snprintf(expheader, sizeof(expheader), "%ld", call->expires - now);
+			osip_message_set_header(invite, SESSION_EXPIRES, expheader);
+		}
+
+		osip_message_set_body(invite, s->sdp, strlen(s->sdp));
+		osip_message_set_content_type(invite, "application/sdp");
+		stack::siplog(invite);
+		cid = eXosip_call_send_initial_invite(invite);
+		if(cid > 0) {
+			snprintf(seqid, sizeof(seqid), "%08x-%d", s->sequence, s->cid);
+			stack::sipAddress(&tp->iface, route, seqid, sizeof(route));
+			eXosip_call_set_reference(cid, route);
+			++count;
+		}
+		else {
+			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
+			process::errlog(ERRLOG, "invite failed for %s", route);
+			goto unlock;
+		}
+		
+		eXosip_unlock();
+
+		invited = stack::create(call, cid);
+		rtpproxy::copy(&invited->proxy, &proxyinfo);
+		
+		if(rr->ext) 
+			snprintf(invited->sysident, sizeof(invited->sysident), "%u", rr->ext);
+		else
+			String::set(invited->sysident, sizeof(invited->sysident), rr->userid);
+		if(rr->display[0])
+			String::set(invited->display, sizeof(invited->display), rr->display);
+		else
+			String::set(invited->display, sizeof(invited->display), invited->sysident);
+		stack::sipPublish(&tp->iface, invited->identity, invited->sysident, sizeof(invited->identity));
+		if(rr->ext && !rr->display[0])
+			snprintf(invited->from, sizeof(invited->from), 
+				"\"%s\" <%s;user=phone>", invited->sysident, invited->identity);
+		else if(rr->display[0])
+			snprintf(invited->from, sizeof(invited->from),
+				"\"%s\" <%s>", rr->display, invited->identity);
+		else
+			snprintf(invited->from, sizeof(invited->from),
+				"<%s>", invited->identity);
+		registry::incUse(rr, stats::OUTGOING);
+		invited->reg = rr;
+
+		stack::sipPublish(&tp->address, route, NULL, sizeof(route));
+		switch(dest) {
+		case ROUTED:
+			debug(3, "routing to %s\n", route);
+			break;
+		default:
+			debug(3, "inviting %s\n", route);
+		}
+		goto next;	 
+unlock:
+		eXosip_unlock();
+next:
+		tp.next();
+	}
+
+	if(!count && call->forwarding) {
+		if(busy_count)
+			call->forwarding = "busy";
+		else if(dnd_count)
+			call->forwarding = "dnd";
+		else if(away_count)
+			call->forwarding = "away";
+		return;
+	}
+}
+
+bool stack::assign(stack::call *cr, unsigned count)
+{
+	if(cr->rtp)
+		return true;
+
+	cr->rtp = rtpproxy::create(count);
+	if(cr->rtp)
+		return true;
+
+	return false;
 }
 
 END_NAMESPACE
