@@ -23,6 +23,7 @@ stack::call::call() : TimerQueue::event(Timer::reset), segments()
 	arm(stack::resetTimeout());
 	count = 0;
 	forwarding = diverting = NULL;
+	answering = 4;	// should set from cfna timer...
 	invited = ringing = ringbusy = unreachable = 0;
 	phone = false;
 	expires = 0l;
@@ -654,11 +655,19 @@ void stack::call::expired(void)
 	case HOLDING:	// hold-recall timer expired...
 
 	case RINGING:	// re-generate ring event to origination...
+					// also controls call-forward no-answer timing...
+			if(answering == 1 && forwarding) {
+				forwarding = "na";
+				debug(3, "call forward <%s> using %s", forwarding, forward);
+//				disconnectLocked();
+//				break;
+			}
+			if(answering)
+				--answering;
 			arm(stack::ringTimeout());	
 			Mutex::release(this);
 			reply_source(SIP_RINGING);
 			return;
-			
 	case REDIRECT:	// FIXME: add refer select of next segment if list....
 	
 	case RINGBACK:

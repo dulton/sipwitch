@@ -319,6 +319,7 @@ private:
 		MappedCall *map;
 		const char *forwarding;
 		const char *diverting;
+		unsigned answering;		// answer ring supervision...
 		unsigned count;			// total open segments
 		unsigned invited;		// pending segments with invites
 		unsigned ringing;		// number of ringing segments
