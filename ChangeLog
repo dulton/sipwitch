@@ -2,6 +2,7 @@ From version 0.3.13 to 0.4.0
 - conditional provisioning possible based on server "state".
 - realm handling including sipdigest utility, xmlrpc, and swig.
 - correct setting of dialog id for multipath calls.
+- start of new and simpler model for computing call forwarding.
 
 From version 0.3.12 to 0.3.13
 - mapped call state property added, needed for telephony management protocol.

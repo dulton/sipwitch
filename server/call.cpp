@@ -22,8 +22,7 @@ stack::call::call() : TimerQueue::event(Timer::reset), segments()
 {
 	arm(stack::resetTimeout());
 	count = 0;
-	fwdmask = 0;
-	forwarding = FWD_IGNORE;
+	forwarding = diverting = NULL;
 	invited = ringing = ringbusy = unreachable = 0;
 	phone = false;
 	expires = 0l;
@@ -58,6 +57,8 @@ void stack::call::joinLocked(session *join)
 	if(!map->active)
 		time(&map->active);
 
+	// once we have joined, there is no more forwarding...
+	forwarding = diverting = NULL;
 	target = join;
 	while(sp) {
 		s = &(sp->sid);
@@ -155,7 +156,7 @@ void stack::call::closingLocked(session *s)
 	if(invited)
 		--invited;
 
-	if(!invited)
+	if(!invited) 
 		disconnectLocked();
 }
 
@@ -603,9 +604,15 @@ void stack::call::busy(thread *thread, session *s)
 	case RINGING:
 	case RINGBACK:
 		if(!ringing && ringbusy) {
+			if(forwarding)
+				forwarding = "busy";
+			if(forwarding)
+				debug(3, "call forward <%s> using %s", forwarding, forward);		
 			set(BUSY, 'b', "busy");
 			disconnectLocked();
 		}
+		else if(!ringing && forwarding)
+			debug(3, "call forward <%s> using %s", forwarding, forward);
 	default:
 		break;
 	}

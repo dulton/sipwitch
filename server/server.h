@@ -285,11 +285,10 @@ private:
 		call();
 
 		state_t state;
-		unsigned fwdmask;				// forwarding mask in effect...
-		char forward[MAX_IDENT_SIZE];	// ref id for forwarding...
+		char forward[MAX_USERID_SIZE];	// ref id for forwarding...
+		char divert[MAX_USERID_SIZE];	// used in forward management
 		char dialed[MAX_IDENT_SIZE];	// user or ip address...
 		char subject[MAX_URI_SIZE];		// call subject
-		char refer[MAX_IDENT_SIZE];		// used in forward management
 		rtpproxy *rtp;
 
 		void reply_source(int error);
@@ -318,7 +317,8 @@ private:
 		session *target;
 		segment *select;
 		MappedCall *map;
-		enum {FWD_IGNORE, FWD_NA, FWD_BUSY, FWD_DND, FWD_AWAY, FWD_ALL} forwarding;
+		const char *forwarding;
+		const char *diverting;
 		unsigned count;			// total open segments
 		unsigned invited;		// pending segments with invites
 		unsigned ringing;		// number of ringing segments
@@ -425,7 +425,6 @@ public:
 	static void getProvision(const char *id, usernode& user);
 	static void getDialing(const char *id, usernode& user);
 	static keynode *getConfig(void);
-	static unsigned getForwarding(const char *id);
 	static cidr *getPolicy(struct sockaddr *addr);
 	static bool isLocal(struct sockaddr *addr);
 	static void release(cidr *access);
@@ -433,7 +432,6 @@ public:
 	static void release(usernode& user);
 	static void reload(const char *uid);
 	static Socket::address *getContact(const char *id);
-	static unsigned forwarding(keynode *node);
 	static void plugins(const char *argv0, const char *names);
 	static void usage(void);
 	static void version(void);
@@ -557,6 +555,7 @@ private:
 	void options(void);
 	void run(void);
 	void getDevice(registry::mapped *rr);
+	void divert(stack::call *cr, struct sockaddr_internet *addr, osip_message_t *msg);
 	const char *getIdent(void);
 
 public:

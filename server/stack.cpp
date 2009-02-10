@@ -169,7 +169,7 @@ void stack::background::run(void)
 			// release lock in case expire calls update timer methods...
 			Conditional::unlock();
 			if(!timeout)
-				debug(4, "background timer signalled, %d remaining\n", timeout);
+				debug(4, "background timer signalled, %ld remaining\n", timeout);
 			// expire() must be in the shared session lock, and may be made
 			// exclusive when an expired call is destroyed.  This cannot
 			// be in the conditional::lock because the event dispatch may
@@ -303,8 +303,11 @@ void stack::close(session *s)
 		s->state = session::CLOSED;
 		if(s == cr->source)
 			cr->terminateLocked();
-		else
+		else {
+			if(cr->invited == 1 && cr->forwarding)
+				debug(3, "call forwarding <%s> using %s", cr->forwarding, cr->forward);
 			cr->closingLocked(s);
+		}
 	}
 	Mutex::release(cr);
 }

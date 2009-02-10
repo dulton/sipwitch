@@ -180,36 +180,6 @@ bool server::classify(rtpproxy::session *sid, rtpproxy::session *src, struct soc
 	return rtn;
 }
 
-unsigned server::forwarding(keynode *leaf)
-{
-	unsigned mask = 0;
-	const char *cp;
-
-	if(!leaf)
-		return 0;
-
-	cp = service::getValue(leaf, "all");
-	if(cp && *cp)
-		mask |= FWD_ALL_ENABLED;
-	cp = service::getValue(leaf, "busy");
-	if(cp && *cp)
-		mask |= FWD_BUSY_ENABLED;
-	cp = service::getValue(leaf, "bna");
-	if(cp && *cp)
-		mask |= FWD_BNA_ENABLED;
-	cp = service::getValue(leaf, "dnd");
-	if(cp && *cp)
-		mask |= FWD_DND_ENABLED;
-	cp = service::getValue(leaf, "away");
-	if(cp && *cp)
-		mask |= FWD_AWAY_ENABLED;
-	cp = service::getValue(leaf, "public");
-	if(cp && *cp)
-		mask |= FWD_PUBLIC_ENABLED;
-
-	return mask;
-}
-
 service::keynode *server::find(const char *id)
 {
 	assert(id != NULL && *id != 0);
@@ -578,18 +548,6 @@ service::keynode *server::getRouting(const char *id)
 	}
 	locking.release();
 	return NULL;
-}
-	
-unsigned server::getForwarding(const char *uid)
-{
-	assert(uid != NULL);
-
-	usernode user;
-	getProvision(uid, user);
-	unsigned mask = forwarding(user.keys);
-	
-	server::release(user);
-	return mask;
 }
 
 void server::getDialing(const char *uid, usernode& user)

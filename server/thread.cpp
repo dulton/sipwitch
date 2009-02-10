@@ -64,6 +64,41 @@ bool thread::assign(stack::call *cr, unsigned count)
 	return false;
 }
 
+void thread::divert(stack::call *call, struct sockaddr_internet *iface, osip_message_t *invite)
+{
+	char route[MAX_URI_SIZE];
+	char touri[MAX_URI_SIZE];
+
+	if(!call->diverting)
+		return;
+
+	if(String::equal(call->diverting, "all")) {
+		stack::sipPublish(iface, route, call->divert, sizeof(route));
+		snprintf(touri, sizeof(touri), "<%s>;reason=unconditional", route);
+		osip_message_set_header(invite, "Diversion", touri);
+	}
+	else if(String::equal(call->diverting, "na")) {
+		stack::sipPublish(iface, route, call->divert, sizeof(route));
+		snprintf(touri, sizeof(touri), "<%s>;reason=no-answer", route);
+		osip_message_set_header(invite, "Diversion", touri);
+	}
+	else if(String::equal(call->diverting, "busy")) {
+		stack::sipPublish(iface, route, call->divert, sizeof(route));
+		snprintf(touri, sizeof(touri), "<%s>;reason=user-busy", route);
+		osip_message_set_header(invite, "Diversion", touri);
+	}
+	else if(String::equal(call->diverting, "dnd")) {
+		stack::sipPublish(iface, route, call->divert, sizeof(route));
+		snprintf(touri, sizeof(touri), "<%s>;reason=do-not-disturb", route);
+		osip_message_set_header(invite, "Diversion", touri);
+	}
+	else if(String::equal(call->diverting, "away")) {
+		stack::sipPublish(iface, route, call->divert, sizeof(route));
+		snprintf(touri, sizeof(touri), "<%s>;reason=away", route);
+		osip_message_set_header(invite, "Diversion", touri);
+	}
+}
+
 void thread::inviteRemote(stack::session *s, const char *uri_target)
 {
 	assert(s != NULL && s->parent != NULL);
@@ -105,36 +140,7 @@ void thread::inviteRemote(stack::session *s, const char *uri_target)
 		return;
 	}
 
-	if(destination == FORWARDED)
-		switch(call->forwarding) {
-		case stack::call::FWD_ALL:
-			stack::sipPublish(&iface, route, call->refer, sizeof(route));
-			snprintf(touri, sizeof(touri), "<%s>;reason=unconditional", route);
-			osip_message_set_header(invite, "Diversion", touri);
-			break;
-		case stack::call::FWD_NA:
-			stack::sipPublish(&iface, route, call->refer, sizeof(route));
-			snprintf(touri, sizeof(touri), "<%s>;reason=no-answer", route);
-			osip_message_set_header(invite, "Diversion", touri);
-			break;
-		case stack::call::FWD_BUSY:
-			stack::sipPublish(&iface, route, call->refer, sizeof(route));
-			snprintf(touri, sizeof(touri), "<%s>;reason=user-busy", route);
-			osip_message_set_header(invite, "Diversion", touri);
-			break;
-		case stack::call::FWD_DND:
-			stack::sipPublish(&iface, route, call->refer, sizeof(route));
-			snprintf(touri, sizeof(touri), "<%s>;reason=do-not-disturb", route);
-			osip_message_set_header(invite, "Diversion", touri);
-			break;
-		case stack::call::FWD_AWAY:
-			stack::sipPublish(&iface, route, call->refer, sizeof(route));
-			snprintf(touri, sizeof(touri), "<%s>;reason=away", route);
-			osip_message_set_header(invite, "Diversion", touri);
-			break;
-		default:
-			break;
-		}
+	divert(call, &iface, invite);
 
 	osip_message_set_header(invite, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
 	osip_message_set_header(invite, ALLOW_EVENTS, "talk, hold, refer");
@@ -194,6 +200,7 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 	stack::session *invited;
 	stack::call *call = s->parent;
 	linked_pointer<stack::segment> sp = call->segments.begin();
+	unsigned away_count = 0, dnd_count = 0, busy_count = 0;
 
 	time_t now;
 	osip_message_t *invite;
@@ -221,16 +228,16 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 	case MappedRegistry::IDLE:
 		break;
 	case MappedRegistry::BUSY:
-		if(!call->count && call->forwarding == stack::call::FWD_NA)
-			call->forwarding = stack::call::FWD_BUSY;
+		if(!call->count && call->forwarding)
+			call->forwarding = "busy";
 		return;
 	case MappedRegistry::DND:
-		if(!call->count && call->forwarding == stack::call::FWD_NA)
-			call->forwarding = stack::call::FWD_DND;
+		if(!call->count && call->forwarding)
+			call->forwarding = "dnd";
 		return;
 	case MappedRegistry::AWAY:
-		if(!call->count && call->forwarding == stack::call::FWD_NA)
-			call->forwarding = stack::call::FWD_AWAY;
+		if(!call->count && call->forwarding)
+			call->forwarding = "away";
 		return;
 	default:
 		return;
@@ -246,22 +253,13 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 			break;
 
 		case registry::target::AWAY:
-			if(call->count)
-				goto next;
-			if(call->forwarding == stack::call::FWD_NA)
-				call->forwarding = stack::call::FWD_AWAY;
+			++away_count;
 			goto next;
 		case registry::target::DND:
-			if(call->count)
-				goto next;
-			if(call->forwarding == stack::call::FWD_NA || call->forwarding == stack::call::FWD_AWAY)
-				call->forwarding = stack::call::FWD_DND;
+			++dnd_count;
 			goto next;
 		case registry::target::BUSY:
-			if(call->count)
-				goto next;
-			if(call->forwarding != stack::call::FWD_IGNORE)
-				call->forwarding = stack::call::FWD_BUSY;
+			++busy_count;
 			goto next;
 		default:
 			goto next;
@@ -308,37 +306,7 @@ void thread::inviteLocal(stack::session *s, registry::mapped *rr)
 			osip_message_set_to(invite, touri);
 		}
 
-		if(destination == FORWARDED) {
-			switch(call->forwarding) {
-			case stack::call::FWD_ALL:
-				stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
-				snprintf(touri, sizeof(touri), "<%s>;reason=unconditional", route);
-				osip_message_set_header(invite, "Diversion", touri);
-				break;
-			case stack::call::FWD_NA:
-                stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
-                snprintf(touri, sizeof(touri), "<%s>;reason=no-answer", route);
-                osip_message_set_header(invite, "Diversion", touri);
-                break;
-			case stack::call::FWD_BUSY:
-                stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
-                snprintf(touri, sizeof(touri), "<%s>;reason=user-busy", route);
-                osip_message_set_header(invite, "Diversion", touri);
-                break;
-			case stack::call::FWD_DND:
-                stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
-                snprintf(touri, sizeof(touri), "<%s>;reason=do-not-disturb", route);
-                osip_message_set_header(invite, "Diversion", touri);
-                break;
-			case stack::call::FWD_AWAY:
-                stack::sipPublish(&tp->iface, route, call->refer, sizeof(route));
-                snprintf(touri, sizeof(touri), "<%s>;reason=away", route);
-                osip_message_set_header(invite, "Diversion", touri);
-                break;
-			default:
-				break;
-			}
-		}
+		divert(call, &tp->iface, invite);
 
 		osip_message_set_header(invite, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
 		osip_message_set_header(invite, ALLOW_EVENTS, "talk, hold, refer");
@@ -408,8 +376,16 @@ unlock:
 next:
 		tp.next();
 	}
-	if(count && destination == FORWARDED)
-		String::set(call->refer, sizeof(call->refer), rr->userid);		
+
+	if(!count && call->forwarding) {
+		if(busy_count)
+			call->forwarding = "busy";
+		else if(dnd_count)
+			call->forwarding = "dnd";
+		else if(away_count)
+			call->forwarding = "away";
+		return;
+	}
 }
 
 void thread::message(void)
@@ -539,8 +515,6 @@ noproxy:
 	else if(reginfo) {
 		target = reginfo->userid;
 		toext = reginfo->ext;
-		call->fwdmask = server::getForwarding(reginfo->userid);
-		String::set(call->refer, sizeof(call->refer), reginfo->userid);
 	}
 
 	time(&call->starting);
@@ -715,7 +689,7 @@ noproxy:
 		server::release(dialed);
 
 		String::set(session->parent->forward, MAX_USERID_SIZE, reginfo->userid);
-		session->parent->forwarding = stack::call::FWD_NA;
+		session->parent->forwarding = "na";
 		inviteLocal(session, reginfo);
 	}
 
@@ -725,6 +699,8 @@ noproxy:
 
 exit:
 	if(!call->invited) {
+		if(session->parent->forwarding)
+			debug(3, "call forwarding <%s> using %s", session->parent->forwarding, session->parent->forward);
 		call->busy(this);
 		return;
 	}
