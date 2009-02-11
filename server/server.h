@@ -309,10 +309,11 @@ private:
 		void terminateLocked(void);
 		void disconnectLocked(void);
 		void joinLocked(session *s);
+		void cancelLocked(void);
 		void log(void);
 		void bye(thread *thread, session *s);
 		void set(state_t state, char id, const char *text);
-
+		
 		OrderedIndex segments;
 		const char *reason;
 		const char *joined;

@@ -43,6 +43,33 @@ void stack::call::terminateLocked(void)
 	disconnectLocked();
 }
 
+void stack::call::cancelLocked(void)
+{
+	linked_pointer<segment> sp = segments.begin();
+	session *s;
+
+	debug(2, "cancelling call %08x:%u", source->sequence, source->cid);
+	while(sp) {
+		s = &(sp->sid);
+		if(s != source) {
+			if(!s->closed) {
+				registry::decUse(s->reg, stats::OUTGOING);
+				s->closed = true;
+			}
+			if(s->state == session::REFER)
+				s->state = session::CLOSED;
+			else if(s->cid > 0 && s->state != session::CLOSED) {
+				s->state = session::CLOSED;
+				eXosip_lock();
+				eXosip_call_terminate(s->cid, s->did);
+				eXosip_unlock();
+			}
+		}
+		sp.next();
+	}
+	invited = ringing = ringbusy = 0;
+}
+
 void stack::call::joinLocked(session *join)
 {
 	linked_pointer<segment> sp = segments.begin();
@@ -614,11 +641,17 @@ void stack::call::busy(thread *thread, session *s)
 	case RINGING:
 	case RINGBACK:
 		// we goto busy in this special case, otherwise stack::close handles na
-		if(!ringing && ringbusy && invited == 1) {
+		if(!ringing && ringbusy && invited == 1 && s != source) {
 			if(forwarding) {
 				forwarding = "busy";
+				if(s)
+					s->state = session::CLOSED;
+				if(s && !s->closed) {
+					registry::decUse(s->reg, stats::OUTGOING);
+					s->closed = true;
+				}
+				ringbusy = invited = 0;
 				if(stack::forward(this)) {
-					ringbusy = 0;
 					if(state == RINGING)
 						arm(stack::ringTimeout());
 					Mutex::release(this);
@@ -674,6 +707,7 @@ void stack::call::expired(void)
 					// also controls call-forward no-answer timing...
 			if(answering == 1 && forwarding) {
 				forwarding = "na";
+				cancelLocked();
 				if(stack::forward(this)) {
 					arm(stack::ringTimeout());
 					Mutex::release(this);
