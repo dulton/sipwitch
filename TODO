@@ -1,18 +1,43 @@
-Only the most basic call processing for ring/busy/answer states of direct
-targetted extensions is supported initially.  Distributed calling by multi-
-registration on a single id is supported.
+Call forwarding now supported, but only either to registered destinations
+or external uri's.  There is no forwarding yet to/from hunt or call groups.
+Call forwarding includes busy, no answer, dnd, and away, though support is
+still needed to receive ua status changes for dnd and away.  Meet-me/follow-
+me operations are now handled by multipath registration.
 
-While call forwarding information is processed from config, and diversion
-headers in invites are coded, it is not acted upon in any way.  In theory, we
-will forward to registry entries, and other types of references to call groups
-and/or external entries will be done by refer.
+The subscriber module supports clean provider registration management, however 
+it still needs generation and introduction of fake registry for subscriber 
+call legs.  This involves some new patch methods as part of invite handling.
 
-Subscriber module with actual registration to tethered service provider and
-rewrite rules support to set "identity" in outgoing provider calls, and
-rewrite callback for when authentication pushback happens
+Hunt groups, Call Coverage, Delayed ringing, and distribution models outside of
+multipath registration.
 
-Hunt groups, Call Coverage and distribution models, day/night/state mode
-processing.
+Cleaner cancel in multi-path calling so answered calls do not become "missed
+calls" to cancelled ua's.
+
+Setable logging properties to disable logging files (or optionally move into
+a generic logging plugin).
+
+Explicit SWIG and xmlrpc interfaces for specific server control methods rather
+than using the generic "control" interface??
+
+SIP Witch "DO" support with embedded xmlrpc.
+
+Telecenter plugin to track hotelled registrations and route calls from
+telecenter providers to ua.
+
+Generic SIP service provider module (an enhanced version of subscriber).
+
+What does cf mean/operate with respect to secure calling domains?
+
+"ref:" uri of a call forward target to force refer method.
+
+User (from ua & fifo) setable call forward and speed dial tables.
+
+Feature code processing.
+
+Global and per user Speed dial tables.
+
+Inbound uri request rewrite and aliasing rules.
 
 actual sdp rewrite support in rtp proxying, only classification implemented
 
@@ -20,11 +45,9 @@ authentication handling for b2b outside dialing of arbitrary sip uri's.
 
 Messaging and presense.
 
-Routing and gateway operations including forced join on first ringer.
+Routing and gateway operations.
 
 Ring mode for 183 ringback/preconnect.
-
-Feature codes and dynamic setting of forwarding.
 
 Message waiting notification.
 
@@ -33,7 +56,11 @@ destinations.
 
 Routing plans and inter-node refers.
 
-Smarter management of no answer processing.
+Call forward no answer timer support may need to be improved; we cf at
+start of next ring cycle...maybe we should send 180 ringing every second?
+Need configurable master timer and per user settings for cfna timer.
+
+Call forward "all" calls mode.
 
 Call hold and recall.
 
@@ -43,11 +70,31 @@ Mysql db module plugin.
 
 Packet forward plugin.
 
-Radius auth plugin.
+Radius plugin.
+
+Telephony Management Protocol plugin (based on Bayonne tmp).
+
+More Temporarily unavailable possibilities based on configurable server
+"limits" for allocating call legs (sessions) and other resources to prevent
+memory exhaustion/denial of service attacks on deeply embedded deployments.
+
+Admin setting of server state from a ua.
 
 Stun plugin.
 
-shell utility to server auth method.
+shell utility to server auth method?
 
-shell utility to manage sipuser auth file.
+shell utility to manage sipuser auth file?
+
+User/auth verify method from control fifo.
+
+Sunrpc or corba interfaces?
+
+Web based TMS?  
+
+Any other interesting and common pbx or key system calling features, including
+hold/park/recall, call transfer with recall timers, etc.  Support for attendant
+console and blf keys over SIP?  SIP ACD call queues, agent positions, and 
+statistics.
+
 

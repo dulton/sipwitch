@@ -9,3 +9,14 @@ querying of user agents, basic call processing between registered user agents
 including call distribution for multi-target registrations, and basic SIP
 instant messaging support.
 
+sipwitch 0.4 represents the first minimally deployable baseline sipwitch
+server.  This release includes multipath calling, and basic call forwarding.
+Also important with this release is stablization of core management api's,
+including SWIG interfaces for local scripting languages, and xmlrpc cgi.
+Basic management and administration services can now be built for sipwitch.
+Support for changing server state is also complete, such as for "day"/"night"
+modes, holidays, etc.  Basic server call statistics and call detail record
+processing is completed.
+
+
+  
