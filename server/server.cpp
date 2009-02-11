@@ -633,7 +633,7 @@ void server::dump(FILE *fp)
 	fprintf(fp, "Server:\n");
 	fprintf(fp, "  allocated pages: %d\n", server::allocate());
 	fprintf(fp, "  configure pages: %d\n", cfg->getPages());
-	fprintf(fp, "  memory paging:   %ld\n", PAGING_SIZE);
+	fprintf(fp, "  memory paging:   %ld\n", (long)PAGING_SIZE);
 	keynode *reg = getPath("registry");
 	if(reg && reg->getFirst()) {
 		fprintf(fp, "  registry keys:\n");

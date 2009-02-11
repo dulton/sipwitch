@@ -850,7 +850,7 @@ static void reply(const char *buffer)
 		"Status: 200 OK\r\n"
 		"Content-Length: %ld\r\n"
 		"Content-Type: text/xml\r\n"
-		"\r\n%s", strlen(buffer), buffer);
+		"\r\n%s", (long)strlen(buffer), buffer);
 	exit(0);
 }
 

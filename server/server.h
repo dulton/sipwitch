@@ -33,7 +33,7 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-#define	PAGING_SIZE	(2048 * sizeof(void *))
+#define	PAGING_SIZE	(2048l * sizeof(void *))
 
 #define	ENABLE_ALLOW_INVITE		0x0001
 #define	ENABLE_ALLOW_ACK		0x0002
