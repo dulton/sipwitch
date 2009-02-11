@@ -555,6 +555,7 @@ registry::mapped *registry::invite(const char *id, stats::stat_t stat)
 	rr->ext = 0;
 	rr->enlist(&keys[path]);
 	rr->status = MappedRegistry::OFFLINE;
+	incUse(rr, stat);
 
 	locking.commit();
 	return rr;
