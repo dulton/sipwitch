@@ -237,14 +237,15 @@ void stack::siplog(osip_message_t *msg)
 {
     fsys_t log;
     const char *uid;
-    service::keynode *env = service::getEnviron();
+    service::keynode *env;
 	char buf[128];
 	char *text = NULL;
 	size_t tlen;
 
-	if(!msg || !stack::sip.dumping)
+	if(!msg || !stack::sip.dumping) 
 		return;
 
+	env = service::getEnviron();
 	osip_message_to_str(msg, &text, &tlen);
 	if(text) {
 	
@@ -267,6 +268,8 @@ void stack::siplog(osip_message_t *msg)
 		}
 		osip_free(text);
 	}
+	else
+		service::release(env);
 }
 
 void stack::modify(void)

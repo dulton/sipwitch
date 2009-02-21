@@ -67,6 +67,8 @@ void scripting::start(service *cfg)
 			dirpath = buf;
 	}
 
+	service::release(env);
+
 	if(dirpath)
 		process::errlog(INFO, "scripting plugin path %s", dirpath);
 	else
