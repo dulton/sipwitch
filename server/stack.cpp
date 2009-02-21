@@ -245,10 +245,9 @@ void stack::siplog(osip_message_t *msg)
 	if(!msg || !stack::sip.dumping) 
 		return;
 
-	env = service::getEnviron();
 	osip_message_to_str(msg, &text, &tlen);
 	if(text) {
-	
+		env = service::getEnviron();
 		uid = service::getValue(env, "USER");
 
 		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/sipdump.log");
@@ -268,8 +267,6 @@ void stack::siplog(osip_message_t *msg)
 		}
 		osip_free(text);
 	}
-	else
-		service::release(env);
 }
 
 void stack::modify(void)
