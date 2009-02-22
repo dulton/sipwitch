@@ -83,6 +83,7 @@ start)
 		exit 1
 	fi
 
+	echo -n "Starting $DESC: "
 	$DAEMON $OPTIONS
 	echo "$NAME."
 	;;
