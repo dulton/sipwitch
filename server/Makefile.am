@@ -66,9 +66,7 @@ install-exec-local:
 	fi
 	$(mkinstalldirs) $(DESTDIR)/$(sysconfdir)/init.d
 	$(INSTALL) -m 0755 sipwitch.init $(DESTDIR)/$(sysconfdir)/init.d/sipwitch
-	if test -d /etc/cron.hourly ; then \
-		$(mkinstalldirs) $(DESTDIR)/$(sysconfdir)/cron.hourly ; \
-		$(INSTALL_DATA) sipwitch.cron $(DESTDIR)/$(sysconfdir)/cron.hourly/sipwitch ; \
-	fi
+	$(mkinstalldirs) $(DESTDIR)/$(sysconfdir)/cron.hourly 
+	$(INSTALL_DATA) sipwitch.cron $(DESTDIR)/$(sysconfdir)/cron.hourly/sipwitch 
 
 
