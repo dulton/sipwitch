@@ -458,11 +458,11 @@ void registry::reload(service *cfg)
 		if(key && value) {
 			if(!stricmp(key, "mapped") && !isConfigured()) 
 				mapped_entries = atoi(value);
-			else if(!stricmp(key, "digest") && !isConfigured()) {
+			else if(!stricmp(key, "digest")) {
 				digest = cfg->dup(value);
 				String::upper((char *)digest);
 			}
-			else if(!stricmp(key, "realm") && !isConfigured())
+			else if(!stricmp(key, "realm"))
 				realm = cfg->dup(value);
 			else if(!stricmp(key, "prefix") && !isConfigured())
 				prefix = atoi(value);

@@ -2,6 +2,7 @@ From version 0.4.2 to 0.4.3
 - fix in init script.
 - fix in sample lab.xml file.
 - added hourly cron script for sipwitch stats.
+- more fixups for "live" config reload.
 
 From version 0.4.1 to 0.4.2
 - locking violations in sip message logging and scripting startup fixed.
