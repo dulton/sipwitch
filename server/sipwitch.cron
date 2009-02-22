@@ -1,0 +1,4 @@
+#!/bin/sh
+if test -p /var/run/sipwitch/control ; then
+        sipwitch period 60 ; fi
+
