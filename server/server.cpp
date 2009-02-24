@@ -809,6 +809,13 @@ void server::run(const char *user)
 		debug(9, "received request %s\n", cp);
 
         if(!stricmp(cp, "reload")) {
+			time(&now);
+			dt = localtime_r(&now, &hold);
+			if(dt->tm_year < 1900)
+				dt->tm_year += 1900;
+			process::printlog("server reloading %04d-%02d-%02d %02d:%02d:%02d\n",
+				dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+				dt->tm_hour, dt->tm_min, dt->tm_sec);
             reload(user);
             continue;
         }
@@ -864,7 +871,15 @@ invalid:
 		if(!stricmp(argv[0], "period")) {
 			if(argc != 2)
 				goto invalid;
-			service::period(atol(argv[1]));
+			if(service::period(atol(argv[1]))) {
+				time(&now);
+				dt = localtime_r(&now, &hold);
+				if(dt->tm_year < 1900)
+					dt->tm_year += 1900;
+				process::printlog("server period %04d-%02d-%02d %02d:%02d:%02d\n",
+					dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+					dt->tm_hour, dt->tm_min, dt->tm_sec);
+			}
 			continue;
 		}
 

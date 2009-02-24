@@ -201,7 +201,7 @@ public:
 	static void dump(FILE *fp, keynode *node, unsigned level);
 	static void snapshot(const char *uid);
 	static void dumpfile(const char *uid);
-	static void period(long slice);
+	static bool period(long slice);
 	static void result(const char *value);
 	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
 	static void startup(void);

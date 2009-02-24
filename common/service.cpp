@@ -709,7 +709,7 @@ void service::dumpfile(const char *uid)
 	fclose(fp);
 }
 
-void service::period(long slice)
+bool service::period(long slice)
 {
 	assert(slice > 0);
 
@@ -720,7 +720,7 @@ void service::period(long slice)
 	time(&now);
 	next = ((periodic / slice) + 1l) * slice;
 	if(now < next)
-		return;
+		return false;
 
 	next = (now / slice) * slice;
 
@@ -746,6 +746,7 @@ void service::period(long slice)
 		cb->period(slice);
 		cb.next();
 	}
+	return true;
 }
 
 void service::snapshot(const char *uid)
