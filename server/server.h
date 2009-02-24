@@ -454,6 +454,7 @@ public:
 	static bool classify(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
 	static void activate(MappedRegistry *rr);
 	static void expire(MappedRegistry *rr);
+	static void logging(MappedRegistry *rr, const char *reason);
 	static void registration(int id, modules::regmode_t mode);
 	static bool authenticate(int id, const char *realm);
 	static MappedRegistry *redirect(const char *target);

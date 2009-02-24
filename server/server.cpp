@@ -151,6 +151,7 @@ void server::registration(int id, modules::regmode_t mode)
 void server::activate(MappedRegistry *rr)
 {
 	linked_pointer<modules::sipwitch> cb = getModules();
+	logging(rr, "activating");
 
 	while(is(cb)) {
 		cb->activating(rr);
@@ -162,10 +163,29 @@ void server::expire(MappedRegistry *rr)
 {
 	linked_pointer<modules::sipwitch> cb = getModules();
 
+	logging(rr, "releasing");
+
 	while(is(cb)) {
 		cb->expiring(rr);
 		cb.next();
 	}
+}
+
+void server::logging(MappedRegistry *rr, const char *reason)
+{
+	time_t now;
+	struct tm *dt, hold;
+	const char *type = NULL;
+
+	time(&now);
+	dt = localtime_r(&now, &hold);
+	if(dt->tm_year < 1900)
+		dt->tm_year += 1900;
+
+	process::printlog("%s %s %04d-%02d-%02d %02d:%02d:%02d\n",
+		reason, rr->userid, 
+		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+		dt->tm_hour, dt->tm_min, dt->tm_sec);
 }
 
 bool server::classify(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
