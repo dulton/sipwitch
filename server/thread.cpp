@@ -529,7 +529,10 @@ bool thread::authorize(void)
 */
 	// bypass request address processing if local domain call....
 
-	if(stack::sip.domain && String::equal(stack::sip.domain, uri_host))
+	if(String::equal(stack::sip.domain, uri_host))
+		goto local;
+
+	if(String::equal("localdomain", uri_host))
 		goto local;
 
 	request_address.set(uri_host, local_port);

@@ -705,7 +705,7 @@ void stack::reload(service *cfg)
 {
 	assert(cfg != NULL);	
 
-	const char *new_domain = NULL;
+	const char *new_domain = "localdomain";
 	const char *new_proxy = NULL;
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("stack");
