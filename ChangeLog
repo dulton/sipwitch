@@ -1,6 +1,10 @@
 From version 0.4.3 to 0.4.4
-- logging of period and reload requests.
+- logging of state change, period and reload requests.
 - logging of registry activation and releases.
+- corrected use of xml comments nesting xml statements.
+- clarification of stack <domain>xxx</domain> setting vs localnames.
+- auto domain insertion if no uri request host (should fix gizmo agent).
+- streamlined address handling on inbound calls.
 
 From version 0.4.2 to 0.4.3
 - fix in init script.

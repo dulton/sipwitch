@@ -246,7 +246,7 @@ noproxy:
 		String::set(call->dialed, sizeof(call->dialed), target);
 		snprintf(session->identity, sizeof(session->identity), "%s:%s@%s:%s",
 			from->url->scheme, from->url->username, from->url->host, from->url->port);
-		uri::identity(from_address.getAddr(), session->sysident, from->url->username,  sizeof(session->sysident));
+		snprintf(session->sysident, sizeof(session->sysident), "%s@%s", from->url->username, from->url->host);
 		if(from->displayname) {
 			String::set(session->display, sizeof(session->display), from->displayname);
 			snprintf(session->from, sizeof(session->from),
@@ -452,23 +452,29 @@ bool thread::authorize(void)
 	const char *target;
 	char dbuf[MAX_USERID_SIZE];
 	registry::pattern *pp;
-	unsigned from_port = 5060, to_port = stack::sip_port, local_port = stack::sip_port;
+	unsigned to_port = stack::sip_port, local_port = stack::sip_port;
 	const char *sep1 = "", *sep2 = "";
 	const char *refer = NULL;
+	const char *uri_host;
 
 	if(!sevent->request || !sevent->request->to || !sevent->request->from || !sevent->request->req_uri)
 		goto invalid;
 
+	from_port = 5060;
 	from = sevent->request->from;
 	uri = sevent->request->req_uri;
 	to = sevent->request->to;
+	uri_host = uri->host;
 
 	error = SIP_ADDRESS_INCOMPLETE;
 
 	if(stack::sip_tlsmode)
 		scheme = "sips";
 
-	if(!from->url->host || !uri->host)
+	if(!uri_host && stack::sip.domain)
+		uri_host = (char *)stack::sip.domain;
+
+	if(!from->url->host || !uri_host)
 		goto invalid;
 
 	if(!from->url->username || !uri->username)
@@ -481,7 +487,7 @@ bool thread::authorize(void)
 	if(stricmp(from->url->scheme, scheme) || stricmp(uri->scheme, scheme))
 		goto invalid;
 
-	if(strchr(uri->host, ':') != NULL && uri->host[0] != '[') {
+	if(strchr(uri_host, ':') != NULL && uri_host[0] != '[') {
 		sep1 = "[";
 		sep2 = "]";
 	}
@@ -489,18 +495,18 @@ bool thread::authorize(void)
 	if(uri->username && uri->username[0]) {
 		if(uri->port && uri->port[0])
 			snprintf(requesting, sizeof(requesting), "%s:%s@%s%s%s:%s",
-				uri->scheme, uri->username, sep1, uri->host, sep2, uri->port);
+				uri->scheme, uri->username, sep1, uri_host, sep2, uri->port);
 		else
 			snprintf(requesting, sizeof(requesting), "%s:%s@%s%s%s",
-				uri->scheme, uri->username, sep1, uri->host, sep2);
+				uri->scheme, uri->username, sep1, uri_host, sep2);
 	}
 	else {
 		if(uri->port && uri->port[0])
 			snprintf(requesting, sizeof(requesting), "%s:%s%s%s:%s",
-				uri->scheme, sep1, uri->host, sep2, uri->port);
+				uri->scheme, sep1, uri_host, sep2, uri->port);
 		else
 			snprintf(requesting, sizeof(requesting), "%s:%s%s%s",
-				uri->scheme, sep1, uri->host, sep2);
+				uri->scheme, sep1, uri_host, sep2);
 	}
 
 	if(uri->port && uri->port[0])
@@ -518,11 +524,15 @@ bool thread::authorize(void)
 
 /*	debug(3, "request from=%s:%s@%s:%d, uri=%s:%s@%s:%d, to=%s:%s@%s:%d\n",
 		from->url->scheme, from->url->username, from->url->host, from_port,
-		uri->scheme, uri->username, uri->host, local_port,
+		uri->scheme, uri->username, uri_host, local_port,
 		to->url->scheme, to->url->username, to->url->host, to_port);
 */
-	from_address.set(from->url->host, from_port);
-	request_address.set(uri->host, local_port);
+	// bypass request address processing if local domain call....
+
+	if(stack::sip.domain && String::equal(stack::sip.domain, uri_host))
+		goto local;
+
+	request_address.set(uri_host, local_port);
 
 	if(request_address.getAddr() == NULL) {
 		error = SIP_ADDRESS_INCOMPLETE;
@@ -532,7 +542,7 @@ bool thread::authorize(void)
 	if(local_port != stack::sip_port)
 		goto remote;
 
-	if(String::ifind(stack::sip.localnames, uri->host, " ,;:\t\n"))
+	if(String::ifind(stack::sip.localnames, uri_host, " ,;:\t\n"))
 		goto local;
 
 	stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
@@ -747,7 +757,7 @@ anonymous:
 		goto invalid;
 	}
 
-	if(from_address.getAddr() == NULL) {
+	if(from->url->host == NULL) {
 		error = SIP_ADDRESS_INCOMPLETE;
 		goto invalid;
 	}
@@ -1800,7 +1810,6 @@ void thread::run(void)
 		}
 
 		via_address.clear();
-		from_address.clear();
 		request_address.clear();
 
 		// release config access lock(s)...

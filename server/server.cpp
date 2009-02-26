@@ -923,6 +923,14 @@ invalid:
 				fputs(state, fp);
 				fclose(fp);
 			}
+			time(&now);
+			dt = localtime_r(&now, &hold);
+			if(dt->tm_year < 1900)
+				dt->tm_year += 1900;
+			process::printlog("state %s %04d-%02d-%02d %02d:%02d:%02d\n",
+				state, dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+				dt->tm_hour, dt->tm_min, dt->tm_sec);
+
 			process::errlog(NOTICE, "state changed to %s", state);
 			reload(user);
 			continue;

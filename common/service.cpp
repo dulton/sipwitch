@@ -531,7 +531,15 @@ bool service::load(FILE *fp, keynode *node)
 				goto exit;
 
 			bp = strchr(cp, '<');
-			ep = strchr(cp, '>');
+			if(bp == cp && String::equal(bp, "<!--", 4)) {
+				ep = strstr(cp, "-->");
+				if(ep) {
+					cp = ep + 3;
+					break;
+				}
+			}
+			else
+				ep = strchr(cp, '>');
 			if(!ep && bp == cp)
 				break;
 			if(!bp ) {

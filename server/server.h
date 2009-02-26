@@ -352,6 +352,7 @@ private:
 
 	volatile int timing;
 
+	const char *volatile domain;
 	const char *volatile localnames;
 	const char *volatile restricted;
 	const char *volatile trusted;
@@ -523,7 +524,7 @@ private:
 	char display[MAX_DISPLAY_SIZE];
 	char requesting[MAX_URI_SIZE];
 	struct sockaddr_internet iface;
-	Socket::address via_address, from_address, request_address;
+	Socket::address via_address, request_address;
 	stack::session *session;
 	osip_header_t *header;
 	long header_expires;
@@ -533,7 +534,7 @@ private:
 	osip_uri_t *uri;
 	const char *via_host;
 	unsigned via_hops;
-	unsigned via_port;
+	unsigned via_port, from_port;
 	destination_t destination;
 
 	char *sip_realm;
