@@ -45,6 +45,10 @@ void modules::sipwitch::expiring(MappedRegistry *rr)
 {
 }
 
+void modules::sipwitch::period(long slice)
+{
+}
+
 bool modules::sipwitch::classifier(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
 {
 	return false;

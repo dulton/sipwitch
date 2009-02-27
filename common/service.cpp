@@ -18,6 +18,7 @@
 #include <ucommon/export.h>
 #include <sipwitch/process.h>
 #include <sipwitch/service.h>
+#include <sipwitch/modules.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -146,10 +147,6 @@ bool service::callback::check(void)
 }
 
 void service::callback::errlog(errlevel_t level, const char *text)
-{
-}
-
-void service::callback::period(long slice)
 {
 }
 
@@ -749,7 +746,7 @@ bool service::period(long slice)
 	if(fp)
 		fclose(fp);
 
-	linked_pointer<service::callback> cb = getModules();
+	linked_pointer<modules::sipwitch> cb = service::getModules();
 	while(is(cb)) {
 		cb->period(slice);
 		cb.next();

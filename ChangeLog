@@ -5,6 +5,7 @@ From version 0.4.3 to 0.4.4
 - clarification of stack <domain>xxx</domain> setting vs localnames.
 - auto domain insertion if no uri request host (should fix gizmo agent).
 - streamlined address handling on inbound calls.
+- state change part of scripting plugin.
 
 From version 0.4.2 to 0.4.3
 - fix in init script.

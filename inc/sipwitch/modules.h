@@ -51,6 +51,7 @@ public:
 		sipwitch();
 
 	public:
+		virtual void period(long slice);
 		virtual bool classifier(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr); 
 		virtual void activating(MappedRegistry *rr);
 		virtual void expiring(MappedRegistry *rr);

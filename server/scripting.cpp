@@ -20,6 +20,7 @@ NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
 static const char *dirpath = NULL;
+static char prior[65] = "down";
 
 class __LOCAL scripting : public modules::sipwitch
 {
@@ -47,6 +48,20 @@ void scripting::reload(service *cfg)
 
 	if(dirpath == NULL)
 		start(cfg);
+
+	if(!dirpath)
+		return;
+
+	const char *state = cfg->getRoot()->getPointer();
+	if(!state)
+		state = "up";
+
+	if(String::equal(state, prior))
+		return;
+
+	process::system("%s/sipstate %s", dirpath, state); 
+
+	String::set(prior, sizeof(prior), state);
 }
 
 void scripting::start(service *cfg)

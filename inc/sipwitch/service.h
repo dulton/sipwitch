@@ -159,7 +159,6 @@ public:
 		inline bool isActive(void) const
 			{return active_flag;};
 
-		virtual void period(long slice);
 		virtual void cdrlog(cdr *call);
 		virtual void errlog(errlevel_t level, const char *text);
 		virtual bool check(void);
@@ -217,6 +216,9 @@ public:
 
 	inline static keynode *getEnviron(void)
 		{return getProtected("environ");};
+
+	inline keynode *getRoot(void)
+		{return &root;};
 
 	virtual void dump(FILE *fp);
 	virtual void confirm(const char *user);
