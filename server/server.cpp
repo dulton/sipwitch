@@ -175,7 +175,6 @@ void server::logging(MappedRegistry *rr, const char *reason)
 {
 	time_t now;
 	struct tm *dt, hold;
-	const char *type = NULL;
 
 	time(&now);
 	dt = localtime_r(&now, &hold);
