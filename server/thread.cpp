@@ -534,6 +534,8 @@ bool thread::authorize(void)
 */
 	// bypass request address processing if local domain call....
 
+	memset(&iface, 0, sizeof(iface));
+
 	if(String::equal(stack::sip.domain, uri_host))
 		goto local;
 
@@ -550,11 +552,11 @@ bool thread::authorize(void)
 	if(local_port != stack::sip_port)
 		goto remote;
 
-	if(String::ifind(stack::sip.localnames, uri_host, " ,;:\t\n"))
-		goto local;
-
 	stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
 	if(Socket::equalhost((struct sockaddr *)&iface, request_address.getAddr()))
+		goto local;
+
+	if(String::ifind(stack::sip.localnames, uri_host, " ,;:\t\n"))
 		goto local;
 
 	goto remote;

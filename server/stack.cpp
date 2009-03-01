@@ -899,6 +899,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 	char pbuf[10];
 	unsigned port;
 	bool ipv6 = false;
+	const char *defaddr = NULL;
 
 	*buf = 0;
 	size_t len;
@@ -920,7 +921,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 		break;
 #endif
 	default:
-		return NULL;
+		defaddr = stack::sip.domain;
 	}
 	if(!port)
 		port = sip_port;
@@ -939,6 +940,11 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 	}
 	else if(ipv6)
 		String::add(buf, size, "[");
+
+	if(defaddr) {
+		String::add(buf, sizeof(buf), defaddr);
+		return buf;
+	}
 
 	len = strlen(buf);
 	Socket::getaddress((struct sockaddr *)addr, buf + len, size - len);
