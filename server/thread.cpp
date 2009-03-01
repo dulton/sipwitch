@@ -716,6 +716,7 @@ static_routing:
 		registry::mapped *idmap = registry::access(identity);
 		refer = server::referLocal(idmap, target, buffer, sizeof(buffer));
 		registry::detach(idmap);
+		refer = "sip:m101@server.local";
 		if(refer)
 			goto redirect;
 	}
