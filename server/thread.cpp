@@ -141,7 +141,7 @@ noproxy:
 			return;
 		}
 	}
-	else if(destination == EXTERNAL && server::isProxied() && !stack::assign(call, 4))
+	else if((destination == REDIRECTED || destination == EXTERNAL) && server::isProxied() && !stack::assign(call, 4))
 		goto noproxy;
 		
 	if(extension)
@@ -268,13 +268,14 @@ noproxy:
 		session->closed = false;
 		registry::incUse(NULL, stats::INCOMING);	// external...
 		break;
+	case REDIRECTED:
 	case EXTERNAL:
 		call->type = stack::call::OUTGOING;
 		if(extension)
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
 			String::set(session->sysident, sizeof(session->sysident), identity);
-		session->reg = registry::invite(identity, stats::OUTGOING);
+		session->reg = registry::invite(identity, stats::INCOMING);
 		if(display[0])
 			String::set(session->display, sizeof(session->display), display);
 		else
@@ -300,7 +301,11 @@ noproxy:
 		String::set(cdrnode->display, sizeof(cdrnode->display), session->display);
 		cdr::post(cdrnode);
 
-		stack::inviteRemote(session, requesting);
+		if(destination == REDIRECTED)
+			stack::inviteRemote(session, requesting, server::getValue(authorized.keys, "digest"));
+		else
+			stack::inviteRemote(session, requesting);
+
 		session->closed = false;
 		goto exit;
 	case ROUTED:
@@ -449,7 +454,7 @@ bool thread::authorize(void)
 	time_t now;
 	unsigned level;
 	profile_t *pro;
-	const char *target;
+	const char *target = dialing;
 	char dbuf[MAX_USERID_SIZE];
 	registry::pattern *pp;
 	unsigned to_port = stack::sip_port, local_port = stack::sip_port;
@@ -804,22 +809,9 @@ invalid:
 	return false;
 
 redirect:
-	osip_message_t *msg = NULL;
-
-	assert(refer != NULL && *refer != 0);
-
-	send_reply(SIP_TRYING);
-
-	Thread::yield();
-
-	eXosip_lock();
-	eXosip_call_build_refer(sevent->did, refer, &msg);
-	if(msg) {
-		osip_message_set_header(msg, "Referred-By", dbuf);
-		eXosip_call_send_request(sevent->did, msg);
-	}
-	eXosip_unlock();
-	return false;
+	destination = REDIRECTED;
+	String::set(requesting, sizeof(requesting), refer);
+	return true;	
 }
 
 void thread::send_reply(int error)
@@ -1603,6 +1595,7 @@ void thread::run(void)
 		case EXOSIP_CALL_REQUESTFAILURE:
 		case EXOSIP_CALL_GLOBALFAILURE:
 		case EXOSIP_CALL_MESSAGE_REQUESTFAILURE:
+		case EXOSIP_CALL_MESSAGE_SERVERFAILURE:
 			stack::siplog(sevent->response);
 			authorizing = CALL;
 			if(!sevent->response || sevent->cid <= 0)

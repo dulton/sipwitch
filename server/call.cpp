@@ -23,7 +23,7 @@ stack::call::call() : TimerQueue::event(Timer::reset), segments()
 	arm(stack::resetTimeout());
 	count = 0;
 	forwarding = diverting = NULL;
-	answering = 4;	// should set from cfna timer...
+	answering = 16;	// should set from cfna timer...
 	invited = ringing = ringbusy = unreachable = 0;
 	phone = false;
 	expires = 0l;
@@ -188,7 +188,7 @@ void stack::call::closingLocked(session *s)
 		if(!stack::forward(this))	
 			disconnectLocked();
 		if(state == RINGING) {
-			arm(stack::ringTimeout());
+			arm(1000);
 			reply_source(SIP_CALL_IS_BEING_FORWARDED);
 		}
 	}
@@ -201,7 +201,7 @@ void stack::call::reply_source(int error)
 	debug(3, "sip: sending source reply %d", error);
 
 	if(error == SIP_CALL_IS_BEING_FORWARDED && answering)
-		answering = 4;
+		answering = 16;
 
 	eXosip_lock();
 	eXosip_call_build_answer(source->tid, error, &reply);
@@ -653,7 +653,7 @@ void stack::call::busy(thread *thread, session *s)
 				ringbusy = invited = 0;
 				if(stack::forward(this)) {
 					if(state == RINGING)
-						arm(stack::ringTimeout());
+						arm(1000);
 					Mutex::release(this);
 					if(state == RINGING)
 						reply_source(SIP_CALL_IS_BEING_FORWARDED);
@@ -681,16 +681,15 @@ void stack::call::trying(thread *thread)
 	// busy or one or more to start ringing...
 	//
 	if(state == INITIAL) {
-		debug(3, "sip: sending source reply %d", SIP_TRYING);
-		// we cannot use reply_source because build always fails!
-		eXosip_lock();
-		eXosip_call_send_answer(source->tid, SIP_TRYING, NULL);
-		eXosip_unlock();
+		debug(3, "sip: sending initial ring %d", SIP_RINGING);
+		reply_source(SIP_RINGING);
+		if(answering)
+			--answering;
 	}
 
 	Mutex::protect(this);
 	set(TRYING, 't', "trying");
-	arm(stack::ringTimeout());
+	arm(1000);
 	Mutex::release(this);
 }
 
@@ -705,11 +704,12 @@ void stack::call::expired(void)
 
 	case RINGING:	// re-generate ring event to origination...
 					// also controls call-forward no-answer timing...
+
 			if(answering == 1 && forwarding) {
 				forwarding = "na";
 				cancelLocked();
 				if(stack::forward(this)) {
-					arm(stack::ringTimeout());
+					arm(1000);
 					Mutex::release(this);
 					reply_source(SIP_CALL_IS_BEING_FORWARDED);
 					return;
@@ -719,7 +719,7 @@ void stack::call::expired(void)
 			}
 			if(answering)
 				--answering;
-			arm(stack::ringTimeout());	
+			arm(1000);	
 			Mutex::release(this);
 			reply_source(SIP_RINGING);
 			return;

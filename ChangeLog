@@ -1,3 +1,8 @@
+From version 0.4.4 to 0.4.5
+- change in call handling for ringing.
+- remote call connection stats counted as incoming for near leg.
+- inviteRemote can pre-stuff authentication header on redirection.
+
 From version 0.4.3 to 0.4.4
 - logging of state change, period and reload requests.
 - logging of registry activation and releases.

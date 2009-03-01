@@ -48,7 +48,7 @@ using namespace UCOMMON_NAMESPACE;
 
 class thread;
 
-typedef enum {EXTERNAL, LOCAL, PUBLIC, ROUTED, FORWARDED} destination_t;
+typedef enum {EXTERNAL, LOCAL, PUBLIC, ROUTED, FORWARDED, REDIRECTED} destination_t;
 
 class __LOCAL registry : private service::callback, private mapped_array<MappedRegistry> 
 { 
@@ -396,7 +396,7 @@ public:
 	static MappedCall *get(void);
 	static bool forward(stack::call *cr);
 	static bool assign(stack::call *cr, unsigned count);
-	static void inviteRemote(stack::session *session, const char *uri);
+	static void inviteRemote(stack::session *session, const char *uri, const char *digest = NULL);
 	static void inviteLocal(stack::session *session, registry::mapped *rr, destination_t dest);
 
 	inline static timeout_t ringTimeout(void)

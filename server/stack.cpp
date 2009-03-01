@@ -292,7 +292,7 @@ void stack::close(session *s)
 	cr = s->parent;
 
 	if(!s->closed) {
-		if(s == cr->source)
+		if(s == cr->source) 
 			registry::decUse(s->reg, stats::INCOMING);
 		else
 			registry::decUse(s->reg, stats::OUTGOING);
@@ -322,7 +322,7 @@ void stack::clear(session *s)
 	cr = s->parent;
 
 	if(!s->closed) {
-		if(s == cr->source)
+		if(s == cr->source) 
 			registry::decUse(s->reg, stats::INCOMING);
 		else
 			registry::decUse(s->reg, stats::OUTGOING);
@@ -1058,7 +1058,7 @@ void stack::divert(stack::call *call, struct sockaddr_internet *iface, osip_mess
 	}
 }
 
-void stack::inviteRemote(stack::session *s, const char *uri_target)
+void stack::inviteRemote(stack::session *s, const char *uri_target, const char *digest)
 {
 	assert(s != NULL && s->parent != NULL);
 	assert(uri_target != NULL);
@@ -1105,6 +1105,42 @@ void stack::inviteRemote(stack::session *s, const char *uri_target)
 	osip_message_set_header(invite, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
 	osip_message_set_header(invite, ALLOW_EVENTS, "talk, hold, refer");
 	osip_message_set_supported(invite, "100rel,replaces,timer");
+
+	if(digest && s->reg) {
+		stringbuf<64> response;
+		stringbuf<64> once;
+		char nounce[256];
+		char auth[1024];
+		char *req = NULL;
+		osip_uri_to_str(invite->req_uri, &req); 
+		snprintf(auth, sizeof(auth), "%s:%s", invite->sip_method, req);
+		osip_free(req); 
+		process::uuid(nounce, sizeof(nounce), "auth");
+		digest::md5(once, nounce);
+		if(!stricmp(registry::getDigest(), "sha1"))
+			digest::sha1(response, auth);
+		else if(!stricmp(registry::getDigest(), "rmd160"))
+			digest::rmd160(response, auth);
+		else
+			digest::md5(response, auth);
+		snprintf(auth, sizeof(auth), "%s:%s:%s", digest, *once, *response);
+		if(!stricmp(registry::getDigest(), "sha1"))
+			digest::sha1(response, auth);
+		else if(!stricmp(registry::getDigest(), "rmd160"))
+			digest::rmd160(response, auth);
+		else
+			digest::md5(response, auth);
+
+		snprintf(auth, sizeof(auth), 
+			"Digest username=\"%s\""
+			",realm=\"%s\""
+			",uri=\"%s\""
+			",response=\"%s\""
+			",nonce=\"%s\""
+			",algorithm=%s"
+			,s->reg->userid, registry::getRealm(), uri_target, *response, *once, registry::getDigest());
+		osip_message_set_header(invite, AUTHORIZATION, auth);
+	}
 
 	if(call->expires) {
 		snprintf(expheader, sizeof(expheader), "%ld", call->expires - now);

@@ -113,6 +113,8 @@ const char *server::referLocal(MappedRegistry *rr, const char *target, char *buf
 	assert(buffer != NULL);
 	assert(size > 0);
 
+	printf("REF TARGET %s\n", target);
+
 	const char *refer = NULL;
 	linked_pointer<modules::sipwitch> cb = getModules();
 
