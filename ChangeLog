@@ -1,3 +1,6 @@
+From version 0.4.6 to 0.4.7
+- get interface in arriving call before checking port id.
+
 From version 0.4.5 to 0.4.6
 - 4 second call setup window.
 

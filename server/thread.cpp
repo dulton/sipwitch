@@ -543,6 +543,7 @@ bool thread::authorize(void)
 		goto local;
 
 	request_address.set(uri_host, local_port);
+	stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
 
 	if(request_address.getAddr() == NULL) {
 		error = SIP_ADDRESS_INCOMPLETE;
@@ -552,7 +553,6 @@ bool thread::authorize(void)
 	if(local_port != stack::sip_port)
 		goto remote;
 
-	stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
 	if(Socket::equalhost((struct sockaddr *)&iface, request_address.getAddr()))
 		goto local;
 
