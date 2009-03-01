@@ -1,3 +1,6 @@
+From version 0.4.5 to 0.4.6
+- 4 second call setup window.
+
 From version 0.4.4 to 0.4.5
 - change in call handling for ringing.
 - remote call connection stats counted as incoming for near leg.

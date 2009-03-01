@@ -40,7 +40,7 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-class __EXPORT uri
+class __EXPORT uri 
 {
 public:
 	static bool resolve(const char *sipuri, char *buffer, size_t size);

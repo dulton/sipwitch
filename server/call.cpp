@@ -555,7 +555,7 @@ void stack::call::confirm(thread *thread, session *s)
 
 	osip_message_t *ack = NULL;
 	time_t now;
-	int did;
+	int did = -1;
 
 	Mutex::protect(this);
 	if(s != source || target == NULL) {
@@ -683,13 +683,15 @@ void stack::call::trying(thread *thread)
 	if(state == INITIAL) {
 		debug(3, "sip: sending initial ring %d", SIP_RINGING);
 		reply_source(SIP_RINGING);
+		time_t now;
+		time(&now);
 		if(answering)
-			--answering;
+			answering -= (now - starting);
 	}
 
 	Mutex::protect(this);
 	set(TRYING, 't', "trying");
-	arm(1000);
+	arm(4000);
 	Mutex::release(this);
 }
 
