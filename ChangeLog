@@ -1,6 +1,7 @@
 From version 0.4.7 to 0.5.0
 - static routing tables with re-write rules and inter-node call support.
 - get interface in arriving call before checking port id.
+- new temporary records no longer double inced at invite.
 
 From version 0.4.5 to 0.4.6
 - 4 second call setup window.
