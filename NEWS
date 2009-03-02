@@ -18,5 +18,14 @@ Support for changing server state is also complete, such as for "day"/"night"
 modes, holidays, etc.  Basic server call statistics and call detail record
 processing is completed.
 
-
+sipwitch 0.5 introduces the concept of internodal calling and allows sipwitch
+to transform itself into a sip redirection server for certain local call
+destinations.  Internodal calling differs from dialing to remote uri's in that
+the authentication record is pre-stuffed into the remote invite, hence, all
+nodes must share the same sip realm.  This allows one sipwitch server to call a
+"local" extension number that actually appears on a remote switch rather than
+the one the user agent is registered to. Internodal references are generated
+using pattern rules through the static <routing> table <redirect> entries.  The
+forward secure calling domain plugin also makes use of internodal calling to
+connect with the insecure domain.
   
