@@ -492,15 +492,15 @@ private:
 	void cleanup(void);
 	void snapshot(FILE *fp);
 
-	static bool deliver(message *msg);
+	static int deliver(message *msg);
 
 public:
 	messages();
 
 	static void automatic(void);
 	static void update(const char *userid);
-	static bool publish(const char *to, const char *reply, const char *from, caddr_t body, size_t size, const char *msgtype);
-	static bool system(const char *to, const char *message);
+	static int publish(const char *to, const char *reply, const char *from, caddr_t body, size_t size, const char *msgtype);
+	static int system(const char *to, const char *message);
 };
 
 

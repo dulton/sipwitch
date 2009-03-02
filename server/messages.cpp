@@ -20,10 +20,10 @@ using namespace UCOMMON_NAMESPACE;
 
 static mutex_t msglock;
 static unsigned keysize = 177;
+static unsigned pending = 0;
 static LinkedObject **msgs = NULL;
 static LinkedObject *sending = NULL;
 static LinkedObject *freelist = NULL;
-static unsigned volatile pending = 0;
 static unsigned volatile allocated = 0;
 static time_t volatile duration = 900;
 
@@ -143,7 +143,7 @@ void messages::update(const char *uid)
 	msglock.unlock();
 }
 
-bool messages::publish(const char *to, const char *reply, const char *from, caddr_t text, size_t len, const char *msgtype)
+int messages::publish(const char *to, const char *reply, const char *from, caddr_t text, size_t len, const char *msgtype)
 {
 	message *msg;
 
@@ -151,7 +151,7 @@ bool messages::publish(const char *to, const char *reply, const char *from, cadd
 		msgtype = "text/plain";
 
 	if(len > sizeof(msg->body))
-		return false;
+		return SIP_MESSAGE_TOO_LARGE;
 
 	msglock.lock();
 	msg = static_cast<message *>(freelist);
@@ -171,11 +171,10 @@ bool messages::publish(const char *to, const char *reply, const char *from, cadd
 	if(len)
 		memcpy(msg->body, text, len);
 	msg->msglen = len;
-	deliver(msg);
-	return true;
+	return deliver(msg);
 }
 
-bool messages::system(const char *to, const char *text)
+int messages::system(const char *to, const char *text)
 {
 	char from[MAX_URI_SIZE];
 	const char *scheme;
@@ -206,8 +205,7 @@ bool messages::system(const char *to, const char *text)
 	return publish(to, sysid, from, (caddr_t)text, strlen(text), "text/plain");
 }
 
-
-bool messages::deliver(message *msg)
+int messages::deliver(message *msg)
 {
 	assert(msg != NULL);
 
@@ -217,18 +215,16 @@ bool messages::deliver(message *msg)
 	time_t now;
 	unsigned msgcount = 0;
 	char to[MAX_URI_SIZE];
+	int error = SIP_GONE;
 
 	time(&now);
+	if(!rr)
+		error = SIP_NOT_FOUND;
+
 	if(!rr || (rr->expires && rr->expires < now)) {
 delay:
-		debug(3, "instant message pending for %s from %s", msg->user, msg->reply);
+		debug(3, "instant message failed for %s from %s; error=%d", msg->user, msg->reply, error);
 		goto final;
-/*		registry::detach(rr);
-		msglock.lock();
-		++pending;
-		msg->enlist(&msgs[path]);
-		msglock.unlock();
-*/		return false;
 	}
 
 	debug(3, "instant message delivered to %s from %s", msg->user, msg->reply);
@@ -261,15 +257,16 @@ delay:
 		tp.next();
 	}
 
-	if(!msgcount)
-		goto delay;
+	// as long as we sent to one extension, we are ok...
+	if(msgcount)
+		error = SIP_OK;
 
 final:
 	registry::detach(rr);
 	msglock.lock();
 	msg->enlist(&freelist);
 	msglock.release();
-	return true;
+	return error;
 }
 
 void messages::automatic(void)

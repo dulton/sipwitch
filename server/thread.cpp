@@ -110,10 +110,7 @@ void thread::message(void)
 		send_reply(SIP_BAD_REQUEST);
 		return;
 	}
-	if(messages::publish(id, sysid, fromhdr, body->body, atoi(msglen), msgtype))		
-		send_reply(SIP_OK);
-	else
-		send_reply(SIP_MESSAGE_TOO_LARGE);
+	send_reply(messages::publish(id, sysid, fromhdr, body->body, atoi(msglen), msgtype));
 	osip_free(msglen);
 }
 

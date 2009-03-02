@@ -942,7 +942,8 @@ invalid:
 		if(!stricmp(argv[0], "message")) {
 			if(argc != 3)
 				goto invalid;
-			messages::system(argv[1], argv[2]);
+			if(messages::system(argv[1], argv[2]) != SIP_OK)
+				process::reply("cannot message");
 			continue;
 		}
 
