@@ -716,7 +716,6 @@ static_routing:
 		registry::mapped *idmap = registry::access(identity);
 		refer = server::referLocal(idmap, target, buffer, sizeof(buffer));
 		registry::detach(idmap);
-//		refer = "sip:m101@server.local";
 		if(refer)
 			goto redirect;
 	}
@@ -730,26 +729,62 @@ static_routing:
 		goto invalid;
 	}
 
-	// adjust dialing & processing based on routing properties
-	dialing[0] = 0;
-	cp = service::getValue(routed, "prefix");
-	if(cp && *cp == '-') {
-		--cp;
-		if(!strnicmp(target, cp, strlen(cp)))
-			target += strlen(cp);
-	} else if(cp) {
-		if(strnicmp(target, cp, strlen(cp)))
-			String::set(dialing, sizeof(dialing), cp);
+	if(!stricmp(routed->getId(), "redirect") || !stricmp(routed->getId(), "refer")) {
+		cp = service::getValue(routed, "server");
+		if(!cp)
+			cp = service::getValue(routed, "target");
+		if(cp && !strchr(cp, '@')) {
+			if(String::equal(cp, "sip:", 4) || String::equal(cp, "sips:", 5))
+				snprintf(buffer, sizeof(buffer), "%s@%s", target, cp);
+			else
+				snprintf(buffer, sizeof(buffer), "sip:%s@%s", target, cp);
+			refer = buffer;
+			goto redirect;
+		}
+		if(!cp)
+			goto invalid;
+		if(String::equal(cp, "sip:", 4) || String::equal(cp, "sips:"))
+			snprintf(buffer, sizeof(buffer), "%s", cp);
+		else
+			snprintf(buffer, sizeof(buffer), "sip:%s", cp);
+		refer = buffer;
+		goto redirect;
 	}
-	String::add(dialing, sizeof(dialing), target);
-	cp = service::getValue(routed, "suffix");
-	if(cp && *cp == '-') {
-		--cp;
-		if(strlen(dialing) >= strlen(cp) && !stricmp(dialing + strlen(dialing) - strlen(cp), cp))	
-			dialing[strlen(dialing) - strlen(cp)] = 0;
-	} else if(cp)
-		String::add(dialing, sizeof(dialing), cp);
+
+	// adjust dialing & processing based on routing properties
+
+	cp = service::getValue(routed, "replace");
+	if(cp) 
+		String::set(dialing, sizeof(dialing), cp);
+	else {
+		dialing[0] = 0;
+		cp = service::getValue(routed, "prefix");
+		if(cp && *cp == '-') {
+			--cp;
+			if(!strnicmp(target, cp, strlen(cp)))
+				target += strlen(cp);
+		} else if(cp) {
+			if(strnicmp(target, cp, strlen(cp)))
+				String::set(dialing, sizeof(dialing), cp);
+		}
+		String::add(dialing, sizeof(dialing), target);
+		cp = service::getValue(routed, "suffix");
+		if(cp && *cp == '-') {
+			--cp;
+			if(strlen(dialing) >= strlen(cp) && !stricmp(dialing + strlen(dialing) - strlen(cp), cp))	
+				dialing[strlen(dialing) - strlen(cp)] = 0;
+		} else if(cp)
+			String::add(dialing, sizeof(dialing), cp);
+	}
 	if(!stricmp(routed->getId(), "rewrite")) {
+		if(strchr(dialing, '@')) {
+			if(String::equal(dialing, "sips:", 5) || String::equal("sip:", dialing, 4)) 
+				snprintf(dbuf, sizeof(dbuf), "%s", dialing);
+			else
+				snprintf(dbuf, sizeof(dbuf), "sip:%s", dialing);
+			refer = dbuf;
+			goto redirect;
+		}	
 		String::set(dbuf, sizeof(dbuf), dialing);
 		target = dbuf;
 		server::release(routed);
@@ -760,7 +795,7 @@ static_routing:
 		destination = LOCAL;
 		goto rewrite;
 	}
-	return true;
+	goto invalid;
 		
 anonymous:
 	if(!stack::sip.published) {

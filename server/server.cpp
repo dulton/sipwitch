@@ -540,22 +540,19 @@ service::keynode *server::getRouting(const char *id)
 
 	linked_pointer<keynode> node;
 	keynode *routing;
-	server *cfgp;
 	const char *cp;
+
+	// never re-route in-dialing nodes...
+
+	if(registry::isExtension(id))
+		return NULL;
 
 	if(!cfg)
 		return NULL;
 
 	locking.access();
-	cfgp = static_cast<server*>(cfg);
-	routing = cfgp->root.getLeaf("routing");
-	if(!routing) {
-		locking.release();
-		return NULL;
-	}
-
-	node = routing->getFirst();
-	while(node) {
+	node = cfg->getList("routing");
+	while(is(node)) {
 		cp = getValue(*node, "pattern");
 		if(cp && match(id, cp, false))
 			return *node;
