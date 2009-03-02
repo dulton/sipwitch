@@ -18,7 +18,7 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-stack::call::call() : TimerQueue::event(Timer::reset), segments()
+stack::call::call() : LinkedList(), segments()
 {
 	arm(stack::resetTimeout());
 	count = 0;
@@ -34,6 +34,18 @@ stack::call::call() : TimerQueue::event(Timer::reset), segments()
 	reason = joined = NULL;
 	rtp = NULL;
 	map = NULL;
+	timer = Timer::inf;
+}
+
+void stack::call::arm(timeout_t timeout)
+{
+	timer = timeout;
+	stack::background::notify();
+}
+
+void stack::call::disarm(void)
+{
+	timer = Timer::inf;
 }
 
 void stack::call::terminateLocked(void)
@@ -695,11 +707,23 @@ void stack::call::trying(thread *thread)
 	Mutex::release(this);
 }
 
+timeout_t stack::call::getTimeout(void)
+{
+	timeout_t current;
+	Mutex::protect(this);
+	current = timer.get();
+	if(current < 2) {
+		timer = Timer::inf;
+		expired();
+	}
+	Mutex::release(this);
+	return current;
+}	
+
 void stack::call::expired(void)
 {
 	linked_pointer<segment> sp;
 
-	Mutex::protect(this);
 	switch(state) {
 	case TRANSFER:
 	case HOLDING:	// hold-recall timer expired...
@@ -712,7 +736,6 @@ void stack::call::expired(void)
 				cancelLocked();
 				if(stack::forward(this)) {
 					arm(1000);
-					Mutex::release(this);
 					reply_source(SIP_CALL_IS_BEING_FORWARDED);
 					return;
 				}
@@ -722,7 +745,6 @@ void stack::call::expired(void)
 			if(answering)
 				--answering;
 			arm(1000);	
-			Mutex::release(this);
 			reply_source(SIP_RINGING);
 			return;
 	case REDIRECT:	// FIXME: add refer select of next segment if list....
@@ -740,14 +762,11 @@ void stack::call::expired(void)
 	case INITIAL:	// never used session recycled.
 		// The call record is garbage collected
 		debug(4, "expiring call %08x:%u\n", source->sequence, source->cid);
-		Mutex::release(this);
 		stack::destroy(this);
 		return;
 	default:
 		break;
 	}
-
-	Mutex::release(this);
 }
 
 void stack::call::log(void)

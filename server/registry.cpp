@@ -408,7 +408,7 @@ void registry::expire(mapped *rr)
 	rr->count = 0;
 	rr->inuse = 0;
 	rr->status = MappedRegistry::OFFLINE;
-	if(rr->ext && extmap[rr->ext - reg.prefix] == rr)
+	if(rr->ext && rr->ext >= reg.prefix && rr->ext < (reg.prefix + reg.range) && extmap[rr->ext - reg.prefix] == rr)
 		extmap[rr->ext - reg.prefix] = NULL;
 	process::errlog(INFO, "expiring %s; extension=%d", rr->userid, rr->ext);
 	path = NamedObject::keyindex(rr->userid, keysize);
@@ -522,6 +522,9 @@ registry::mapped *registry::invite(const char *id, stats::stat_t stat)
 
 	mapped *rr = NULL;
 	unsigned path = NamedObject::keyindex(id, keysize);
+	service::usernode user;
+	service::keynode *leaf = NULL;
+	unsigned ext = 0;
 
 	locking.access();
 	rr = find(id);
@@ -551,8 +554,27 @@ registry::mapped *registry::invite(const char *id, stats::stat_t stat)
 	rr->inuse = 0;
 	rr->rid = -1;
 
+	// in case inter-nodel temporary, create properties for call use...
+
+	server::getProvision(id, user);
+	service::keynode *node = user.keys;
+	if(node)
+		leaf = node->leaf("extension");
+	if(leaf && leaf->getPointer())
+		ext = atoi(leaf->getPointer());
+	if(ext && (ext < reg.prefix || ext >= (reg.prefix + reg.range))) {
+		rr->ext = ext;
+	}
+	else
+		ext = 0;
+	leaf = node->leaf("display");
+	if(leaf && leaf->getPointer())
+		String::set(rr->display, sizeof(rr->display), leaf->getPointer());
+
+	server::release(user);
+
 	String::set(rr->userid, sizeof(rr->userid), id);
-	rr->ext = 0;
+	rr->ext = ext;
 	rr->enlist(&keys[path]);
 	rr->status = MappedRegistry::OFFLINE;
 	incUse(rr, stat);
@@ -728,7 +750,7 @@ registry::mapped *registry::allocate(const char *id)
 		rr->enlist(&keys[path]);
 	}
 
-	if(ext >= reg.prefix && ext < reg.prefix + reg.range) {
+	if(ext >= reg.prefix && ext < (reg.prefix + reg.range)) {
 		prior = extmap[ext - reg.prefix];
 		if(prior && prior != rr) {
 			process::errlog(INFO, "releasing %s from extension %d", prior->userid, ext);
@@ -866,7 +888,7 @@ bool registry::isExtension(const char *id)
 	if(!reg.range)
 		return false;
 
-	if(ext >= reg.prefix && ext < reg.prefix + reg.range)
+	if(ext >= reg.prefix && ext < (reg.prefix + reg.range))
 		return true;
 
 	return false;
@@ -952,7 +974,7 @@ registry::mapped *registry::dialing(const char *id)
 		rr = NULL;
 
 	// assuming not user id exclusive dialing, then we can try ext...
-	if(!rr && service::dialmode != service::USER_DIALING && reg.range && ext >= reg.prefix && ext < reg.prefix + reg.range)
+	if(!rr && service::dialmode != service::USER_DIALING && reg.range && ext >= reg.prefix && ext < (reg.prefix + reg.range))
 		rr = extmap[ext - reg.prefix];
 	if(!rr)
 		locking.release();
@@ -972,7 +994,7 @@ registry::mapped *registry::access(const char *id)
 
 	locking.access();
 	rr = find(id);
-	if(!rr && reg.range && ext >= reg.prefix && ext < reg.prefix + reg.range)
+	if(!rr && reg.range && ext >= reg.prefix && ext < (reg.prefix + reg.range))
 		rr = extmap[ext - reg.prefix];
 	if(!rr)
 		locking.release();

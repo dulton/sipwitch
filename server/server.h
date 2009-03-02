@@ -196,7 +196,7 @@ public:
 	static void cleanup(time_t period); 
 };
 
-class __LOCAL stack : private service::callback, private mapped_array<MappedCall>, public TimerQueue
+class __LOCAL stack : private service::callback, private mapped_array<MappedCall>, public OrderedIndex
 {
 private:
 	friend class proxy;
@@ -213,9 +213,7 @@ private:
 
 		static background *thread;
 
-		static void modify(void);
-		static void signal(void);
-	
+		static void notify(void);	
 
 	private:
 		bool cancelled;
@@ -275,7 +273,7 @@ private:
 			{return &sid;};
 	};
 
-	class __LOCAL call : public TimerQueue::event
+	class __LOCAL call : public LinkedList
 	{
 	public:
 		typedef enum {INITIAL, TRYING, RINGING, RINGBACK, REORDER, HOLDING, ANSWERED, JOINED, TRANSFER, REDIRECT, BUSY, TERMINATE, FAILED, FINAL} state_t;
@@ -286,6 +284,7 @@ private:
 
 		call();
 
+		Timer timer;
 		state_t state;
 		struct sockaddr_internet iface;	// source interface...
 		char forward[MAX_USERID_SIZE];	// ref id for forwarding...
@@ -294,6 +293,8 @@ private:
 		char subject[MAX_URI_SIZE];		// call subject
 		rtpproxy *rtp;
 
+		void disarm(void);
+		void arm(timeout_t timeout);
 		void reply_source(int error);
 		void ring(thread *thread, session *s = NULL);
 		void busy(thread *thread, session *s = NULL);
@@ -304,7 +305,7 @@ private:
 		void reinvite(thread *thread, session *s);
 		void trying(thread *thread);
 		void confirm(thread *thread, session *s);
-		void expired(void);
+		timeout_t getTimeout(void);
 		void closingLocked(session *s);
 		void terminateLocked(void);
 		void disconnectLocked(void);
@@ -335,6 +336,9 @@ private:
 
 		static void *operator new(size_t size);
 		static void operator delete(void *obj);
+
+	private:
+		void expired(void);
 	};
 
 	void reload(service *cfg);
@@ -342,8 +346,6 @@ private:
 	void stop(service *cfg);
 	void snapshot(FILE *fp);
 	bool check(void);
-	void update(void);
-	void modify(void);
 
 	static void divert(stack::call *cr, struct sockaddr_internet *addr, osip_message_t *msg);
 
@@ -517,6 +519,7 @@ private:
 	registry::mapped *reginfo;
 	MappedRegistry *accepted;
 	eXosip_event_t *sevent;
+	char authbuf[1024];
 	char buffer[MAX_URI_SIZE];	
 	char identbuf[MAX_USERID_SIZE + 12];
 	char identity[MAX_USERID_SIZE];

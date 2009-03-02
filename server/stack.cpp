@@ -132,13 +132,9 @@ void stack::background::cancel(void)
 	thread->Conditional::unlock();
 }
 
-void stack::background::modify(void)
+void stack::background::notify(void)
 {
 	thread->Conditional::lock();
-}
-
-void stack::background::signal(void)
-{
 	thread->signalled = true;
 	thread->Conditional::signal();
 	thread->Conditional::unlock();
@@ -147,7 +143,9 @@ void stack::background::signal(void)
 void stack::background::run(void)
 {
 	process::errlog(DEBUG1, "starting background thread");
-	timeout_t timeout;
+	timeout_t timeout, current;
+	Timer expires = interval;
+	stack::call *next;
 
 	for(;;) {
 		Conditional::lock();
@@ -168,17 +166,18 @@ void stack::background::run(void)
 			signalled = false;
 			// release lock in case expire calls update timer methods...
 			Conditional::unlock();
-			if(!timeout)
-				debug(4, "background timer signalled, %ld remaining\n", timeout);
-			// expire() must be in the shared session lock, and may be made
-			// exclusive when an expired call is destroyed.  This cannot
-			// be in the conditional::lock because the event dispatch may
-			// call something that arms or clears a timer and doing so
-			// will callback modify to acquire the conditional mutex, 
-			// otherwise the conditional mutex will be accessed recursivily...
+			timeout = interval;
 			locking.access();
-			expires = stack::sip.expire();
-			locking.release();
+			linked_pointer<stack::call> cp = stack::sip.begin();
+			while(cp) {
+				next = (stack::call *)cp->getNext();
+				current = cp->getTimeout();
+				if(current && current < timeout)
+					timeout = current;
+				cp = next;
+			}
+			locking.release();	
+			expires = timeout;
 		}
 		else {
 			signalled = false;
@@ -192,7 +191,7 @@ void stack::background::run(void)
 }
 
 stack::stack() :
-service::callback(1), mapped_array<MappedCall>(), TimerQueue()
+service::callback(1), mapped_array<MappedCall>(), OrderedIndex()
 {
 	stacksize = 0;
 	threading = 2;
@@ -268,16 +267,6 @@ void stack::siplog(osip_message_t *msg)
 		}
 		osip_free(text);
 	}
-}
-
-void stack::modify(void)
-{
-	background::modify();
-}
-
-void stack::update(void)
-{
-	background::signal();
 }
 
 void stack::close(session *s)
@@ -1113,31 +1102,31 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	osip_message_set_supported(invite, "100rel,replaces,timer");
 
 	if(digest && s->reg) {
+		char *authbuf = new char[1024];
 		stringbuf<64> response;
 		stringbuf<64> once;
-		char nounce[256];
-		char auth[1024];
+		char nounce[64];
 		char *req = NULL;
 		osip_uri_to_str(invite->req_uri, &req); 
-		snprintf(auth, sizeof(auth), "%s:%s", invite->sip_method, req);
+		snprintf(authbuf, 1024, "%s:%s", invite->sip_method, req);
 		osip_free(req); 
 		process::uuid(nounce, sizeof(nounce), "auth");
 		digest::md5(once, nounce);
 		if(!stricmp(registry::getDigest(), "sha1"))
-			digest::sha1(response, auth);
+			digest::sha1(response, authbuf);
 		else if(!stricmp(registry::getDigest(), "rmd160"))
-			digest::rmd160(response, auth);
+			digest::rmd160(response, authbuf);
 		else
-			digest::md5(response, auth);
-		snprintf(auth, sizeof(auth), "%s:%s:%s", digest, *once, *response);
+			digest::md5(response, authbuf);
+		snprintf(authbuf, 1024, "%s:%s:%s", digest, *once, *response);
 		if(!stricmp(registry::getDigest(), "sha1"))
-			digest::sha1(response, auth);
+			digest::sha1(response, authbuf);
 		else if(!stricmp(registry::getDigest(), "rmd160"))
-			digest::rmd160(response, auth);
+			digest::rmd160(response, authbuf);
 		else
-			digest::md5(response, auth);
+			digest::md5(response, authbuf);
 
-		snprintf(auth, sizeof(auth), 
+		snprintf(authbuf, 1024, 
 			"Digest username=\"%s\""
 			",realm=\"%s\""
 			",uri=\"%s\""
@@ -1145,7 +1134,8 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 			",nonce=\"%s\""
 			",algorithm=%s"
 			,s->reg->userid, registry::getRealm(), uri_target, *response, *once, registry::getDigest());
-		osip_message_set_header(invite, AUTHORIZATION, auth);
+		osip_message_set_header(invite, AUTHORIZATION, authbuf);
+		delete[] authbuf;
 	}
 
 	if(call->expires) {
