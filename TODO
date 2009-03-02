@@ -29,7 +29,7 @@ Generic SIP service provider module (an enhanced version of subscriber).
 
 What does cf mean/operate with respect to secure calling domains?
 
-"ref:" uri of a call forward target to force refer method.
+"ref:" uri of a call forward target to force refer method??
 
 User (from ua & fifo) setable call forward and speed dial tables.
 
@@ -37,7 +37,7 @@ Feature code processing.
 
 Global and per user Speed dial tables.
 
-Inbound uri request rewrite and aliasing rules.
+Inbound uri request aliasing.
 
 actual sdp rewrite support in rtp proxying, only classification implemented
 
@@ -45,7 +45,7 @@ authentication handling for b2b outside dialing of arbitrary sip uri's.
 
 Messaging and presense.
 
-Routing and gateway operations.
+Full routing and gateway operations.
 
 Ring mode for 183 ringback/preconnect.
 
@@ -54,13 +54,9 @@ Message waiting notification.
 More complete instant messaging support with offline queuing and offsite
 destinations.
 
-Routing plans and inter-node refers.
-
-Call forward no answer timer support may need to be improved; we cf at
-start of next ring cycle...maybe we should send 180 ringing every second?
 Need configurable master timer and per user settings for cfna timer.
 
-Call forward "all" calls mode.
+Call forward "all" calls and "gone" mode.
 
 Call hold and recall.
 
@@ -80,7 +76,7 @@ memory exhaustion/denial of service attacks on deeply embedded deployments.
 
 Admin setting of server state from a ua.
 
-Stun plugin.
+Stun server plugin.
 
 shell utility to server auth method?
 
