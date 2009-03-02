@@ -886,7 +886,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 	assert(size > 0);
 
 	char pbuf[10];
-	unsigned port;
+	unsigned port = 0;
 	bool ipv6 = false;
 	const char *defaddr = NULL;
 

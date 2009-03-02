@@ -539,7 +539,6 @@ service::keynode *server::getRouting(const char *id)
 	assert(cfg != NULL);
 
 	linked_pointer<keynode> node;
-	keynode *routing;
 	const char *cp;
 
 	// never re-route in-dialing nodes...

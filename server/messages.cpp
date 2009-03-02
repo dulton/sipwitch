@@ -222,7 +222,6 @@ int messages::deliver(message *msg)
 		error = SIP_NOT_FOUND;
 
 	if(!rr || (rr->expires && rr->expires < now)) {
-delay:
 		debug(3, "instant message failed for %s from %s; error=%d", msg->user, msg->reply, error);
 		goto final;
 	}
