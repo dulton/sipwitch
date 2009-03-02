@@ -548,7 +548,7 @@ registry::mapped *registry::invite(const char *id, stats::stat_t stat)
 	rr->expires = 0;
 	rr->created = 0;
 	rr->display[0] = 0;
-	rr->inuse = 1;
+	rr->inuse = 0;
 	rr->rid = -1;
 
 	String::set(rr->userid, sizeof(rr->userid), id);
