@@ -32,19 +32,27 @@ the first target ua to respond with a 200 OK to accept a call and offers it's
 sdp, then any other invited targets are released and a single joined session is
 formed passing the sdp back up the originating call leg.
 
-There is a lot of code to process call forwarding information, but none of it
-is used to perform actual call forwarding operations yet.
-
 Unanswered calls, when all targets have refused to answer, are reported to the
 originating ua as "declined" calls.  If all invited targets report busy, then
 the originating ua is notified "busy here".  We do not distinguish between
 temporary busy, busy everywhere, etc, but report a consolidated busy state to
 the target.
 
-At present only registered ua's can be dialed, either by ext# if they have one
-or by uri name.  Display management is part of the server, and the display is
-regenerated with a custom "from" message for each call leg as needed by the
-server. 
+At present both registered ua's and "remote" uri's can be dialed, either by
+ext# if they have one or by uri name.  Display management is part of the
+server, and the display is regenerated with a custom "from" message for each
+call leg as needed by the server. 
+
+Routing rules and plugins can also be used to push local "uri's" onto remote
+servers in multi-nodal calling.  When a call is redirected to another sipwitch
+node, the authentication field is pre-set.  This means all nodes must share
+both common authentication information and the "same" SIP realm. When a
+registerable user agent appears on a different switch than the one it is
+registered for, a complete temporary registry entry is created on the target
+switch.  This allows correct line appearence (ua display of the from line) 
+for internodal calls as if they were local extensions.  At present, outbound
+redirections are counted as "external" calls, but inbound internodals are
+treated as if local (temporary) extensions.
 
 Messaging:
 
