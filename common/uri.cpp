@@ -21,6 +21,22 @@
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
+void uri::serviceid(const char *addr, char *buf, size_t size)
+{
+	const char *cp = strchr(addr, '@');
+	if(addr) {
+		String::set(buf, size, ++cp);
+		return;
+	}
+
+	if(String::equal(addr, "sip:", 4))
+		addr += 4;
+	else if(String::equal(addr, "sips:", 5))
+		addr += 5;
+
+	String::set(buf, size, addr);
+}
+
 bool uri::hostid(const char *addr, char *buf, size_t size)
 {
 	assert(buf != NULL);
@@ -172,6 +188,35 @@ bool uri::resolve(const char *sipuri, char *buffer, size_t size)
 	if(port)
 		snprintf(buffer + len, size - len, ":%u", port);
 	return true;	
+}
+
+void uri::publish(const char *uri, char *buf, const char *user, size_t size)
+{
+	assert(uri != NULL);
+	assert(buf != NULL);
+	assert(user == NULL || *user != 0);
+	assert(size > 0);
+
+	const char *schema = "sip";
+	const char *cp;
+
+	if(String::equal(uri, "sip:", 4)) {
+		uri += 4;
+		schema = "sip";
+	}
+	else if(String::equal(uri, "sips:", 5)) {
+		uri += 5;
+		schema = "sips";
+	}
+
+	cp = strchr(uri, '@');
+	if(cp && user != NULL)
+		uri = ++cp;
+
+	if(user)
+		snprintf(buf, size, "%s:%s@%s", schema, user, uri);
+	else
+		snprintf(buf, size, "%s:%s", schema, uri);
 }
 
 void uri::identity(struct sockaddr *addr, char *buf, const char *user, size_t size)

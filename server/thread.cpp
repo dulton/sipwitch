@@ -124,7 +124,7 @@ void thread::invite(void)
 	char fromext[32];
 	cdr *cdrnode;
 
-	memcpy(&session->parent->iface, &iface, sizeof(iface));
+	uri::serviceid(requesting, call->request, sizeof(call->request));
 
 	// FIXME: we should get proxy count extimate from sdp into global thread object...
 

@@ -1018,7 +1018,7 @@ set:
 	return ap;
 }
 
-void stack::divert(stack::call *call, struct sockaddr_internet *iface, osip_message_t *invite)
+void stack::divert(stack::call *call, osip_message_t *invite)
 {
 	char route[MAX_URI_SIZE];
 	char touri[MAX_URI_SIZE];
@@ -1026,28 +1026,25 @@ void stack::divert(stack::call *call, struct sockaddr_internet *iface, osip_mess
 	if(!call->diverting)
 		return;
 
+	uri::publish(call->request, route, call->divert, sizeof(route));
+
 	if(String::equal(call->diverting, "all")) {
-		stack::sipPublish(iface, route, call->divert, sizeof(route));
 		snprintf(touri, sizeof(touri), "<%s>;reason=unconditional", route);
 		osip_message_set_header(invite, "Diversion", touri);
 	}
 	else if(String::equal(call->diverting, "na")) {
-		stack::sipPublish(iface, route, call->divert, sizeof(route));
 		snprintf(touri, sizeof(touri), "<%s>;reason=no-answer", route);
 		osip_message_set_header(invite, "Diversion", touri);
 	}
 	else if(String::equal(call->diverting, "busy")) {
-		stack::sipPublish(iface, route, call->divert, sizeof(route));
 		snprintf(touri, sizeof(touri), "<%s>;reason=user-busy", route);
 		osip_message_set_header(invite, "Diversion", touri);
 	}
 	else if(String::equal(call->diverting, "dnd")) {
-		stack::sipPublish(iface, route, call->divert, sizeof(route));
 		snprintf(touri, sizeof(touri), "<%s>;reason=do-not-disturb", route);
 		osip_message_set_header(invite, "Diversion", touri);
 	}
 	else if(String::equal(call->diverting, "away")) {
-		stack::sipPublish(iface, route, call->divert, sizeof(route));
 		snprintf(touri, sizeof(touri), "<%s>;reason=away", route);
 		osip_message_set_header(invite, "Diversion", touri);
 	}
@@ -1095,7 +1092,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 		return;
 	}
 
-	divert(call, &call->iface, invite);
+	divert(call, invite);
 
 	osip_message_set_header(invite, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
 	osip_message_set_header(invite, ALLOW_EVENTS, "talk, hold, refer");
@@ -1149,7 +1146,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	cid = eXosip_call_send_initial_invite(invite);
 	if(cid > 0) {
 		snprintf(seqid, sizeof(seqid), "%08x-%d", s->sequence, s->cid);
-		stack::sipAddress(&call->iface, route, seqid, sizeof(route));
+		uri::publish(call->request, route, seqid, sizeof(route));
 		eXosip_call_set_reference(cid, route);
 		++count;
 	}
@@ -1370,7 +1367,7 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 			osip_message_set_to(invite, touri);
 		}
 
-		divert(call, &tp->iface, invite);
+		divert(call, invite);
 
 		osip_message_set_header(invite, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
 		osip_message_set_header(invite, ALLOW_EVENTS, "talk, hold, refer");

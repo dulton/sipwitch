@@ -286,11 +286,11 @@ private:
 
 		Timer timer;
 		state_t state;
-		struct sockaddr_internet iface;	// source interface...
 		char forward[MAX_USERID_SIZE];	// ref id for forwarding...
 		char divert[MAX_USERID_SIZE];	// used in forward management
 		char dialed[MAX_IDENT_SIZE];	// user or ip address...
 		char subject[MAX_URI_SIZE];		// call subject
+		char request[MAX_URI_SIZE];		// requesting identity for refer flip
 		rtpproxy *rtp;
 
 		void disarm(void);
@@ -347,7 +347,7 @@ private:
 	void snapshot(FILE *fp);
 	bool check(void);
 
-	static void divert(stack::call *cr, struct sockaddr_internet *addr, osip_message_t *msg);
+	static void divert(stack::call *cr, osip_message_t *msg);
 
 	unsigned threading, priority;
 	size_t stacksize;
