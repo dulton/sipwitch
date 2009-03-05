@@ -280,7 +280,7 @@ private:
 
 		enum {DIRECTED, CIRCULAR, TERMINAL, REDIRECTED, DISTRIBUTED} mode;
 
-		enum {LOCAL, INCOMING, OUTGOING, REFER} type;
+		destination_t type;
 
 		call();
 

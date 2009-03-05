@@ -187,10 +187,10 @@ noproxy:
 	cdrnode->sequence = session->sequence;
 	cdrnode->cid = session->cid;
 	String::set(cdrnode->uuid, sizeof(cdrnode->uuid), session->uuid);	
-
+	
+	call->type = destination;
 	switch(destination) {
 	case LOCAL:
-		call->type = stack::call::LOCAL;
 		if(extension)
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
@@ -239,7 +239,6 @@ noproxy:
 			session->sequence, session->cid, call->dialed, session->sysident);
 		break;
 	case PUBLIC:
-		call->type = stack::call::INCOMING;
 		String::set(call->dialed, sizeof(call->dialed), target);
 		snprintf(session->identity, sizeof(session->identity), "%s:%s@%s:%s",
 			from->url->scheme, from->url->username, from->url->host, from->url->port);
@@ -267,7 +266,6 @@ noproxy:
 		break;
 	case REDIRECTED:
 	case EXTERNAL:
-		call->type = stack::call::OUTGOING;
 		if(extension)
 			snprintf(session->sysident, sizeof(session->sysident), "%u", extension);
 		else
@@ -306,7 +304,6 @@ noproxy:
 		session->closed = false;
 		goto exit;
 	case ROUTED:
-		call->type = stack::call::OUTGOING;
 		call->phone = true;
 
 		if(extension)
