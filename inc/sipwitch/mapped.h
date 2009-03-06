@@ -72,10 +72,12 @@ typedef struct {
 class __EXPORT MappedRegistry : public LinkedObject
 {
 public:
+	typedef enum {OFFLINE = 0, IDLE, BUSY, AWAY, DND} status_t;
+
 	char	userid[MAX_USERID_SIZE];
 	char	display[MAX_DISPLAY_SIZE];
 	char	remote[MAX_USERID_SIZE];
-	enum {OFFLINE = 0, IDLE, BUSY, AWAY, DND} status;
+	status_t status;
 	enum {EXPIRED = 0, USER, GATEWAY, SERVICE, REJECT, REFER, TEMPORARY, EXTERNAL} type;
 	bool hidden;
 	int rid;					// registry remap or peer id 

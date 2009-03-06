@@ -52,6 +52,77 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
 	session = NULL;
 }
 
+void thread::publish(void)
+{
+	int error = SIP_BAD_REQUEST;
+	osip_body_t *mbody = NULL;
+	const char *tmp;
+	registry::target::status_t status = registry::target::UNKNOWN;
+	bool presence = false;
+
+	if(destination != LOCAL)
+		goto final;
+	
+	if(!reginfo || reginfo->type != MappedRegistry::USER)
+		goto final;
+
+	osip_message_get_body(sevent->request, 0, &mbody);
+	if(!mbody) {
+		error = SIP_OK;
+		goto final;
+	}
+
+	tmp = mbody->body;
+	while(*tmp)
+	{
+		if(!strnicmp(tmp, "<presence", 9))
+			presence = true; 
+
+		if(!strnicmp(tmp, "</status>", 9))
+			break; 
+
+		if(!strnicmp(tmp, "<basic>open", 11) && presence) {
+			status = registry::target::READY;
+			tmp += 10;
+		}
+
+		if(!strnicmp(tmp, "<show>dnd", 9) && presence) {
+			status = registry::target::DND;
+			break;
+		} 
+
+		if(!strnicmp(tmp, "<basic>closed", 13) && presence) {
+			status = registry::target::OFFLINE;
+			break;
+		}
+
+		if(!strnicmp(tmp, "online", 6) && presence) {
+			tmp += 5;
+			status = registry::target::READY;
+		}
+		else if(!strnicmp(tmp, "busy", 4) && presence) {
+			status = registry::target::BUSY;
+			break;
+		}
+		else if(!strnicmp(tmp, "dnd", 3) && presence) {
+			status = registry::target::DND;
+			break;
+		}
+		else if(!strnicmp(tmp, "away", 4) && presence)
+		{
+			status = registry::target::AWAY;
+			break;
+		}
+		++tmp;
+	}
+
+	reginfo->update(via_address, status);
+	error = SIP_OK;
+
+final:
+	send_reply(error);
+}
+
 void thread::message(void)
 {
 	osip_content_type_t *ct;
@@ -1824,6 +1895,10 @@ void thread::run(void)
 				if(authorize())
 					message();
 				break;
+			}
+			else if(MSG_IS_PUBLISH(sevent->request)) {
+				if(authorize())
+					publish();
 			}
 			else if(!MSG_IS_INFO(sevent->request)) {
 				debug(2, "unsupported %s in dialog", sevent->request->sip_method);

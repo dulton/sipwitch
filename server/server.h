@@ -56,6 +56,8 @@ public:
 	class __LOCAL mapped : public MappedRegistry
 	{
 	public:
+		void update(Socket::address& addr, int changed);
+		void update(void);
 		bool expire(Socket::address& addr);
 		bool refresh(Socket::address& addr, time_t expires, const char *target_contact);
 		unsigned setTargets(Socket::address& addr);
@@ -95,6 +97,7 @@ public:
 	class __LOCAL target : public LinkedObject 
 	{ 
 	public: 
+		typedef enum {READY, BUSY, AWAY, DND, OFFLINE, UNKNOWN} status_t;
 		// internal hidden address indexing object
 		class indexing : public LinkedObject
 		{
@@ -106,8 +109,8 @@ public:
 		struct sockaddr_internet address;
 		struct sockaddr_internet iface;
 		time_t created; 
+		status_t status;
 		volatile time_t expires;
-		enum {READY, BUSY, AWAY, DND} status;
 		char contact[MAX_URI_SIZE]; 
 
 		static void *operator new(size_t size);
@@ -562,6 +565,7 @@ private:
 	void registration(void);
 	void validate(void);
 	void message(void);
+	void publish(void);
 	void reregister(const char *contact, time_t interval);
 	void deregister(void);
 	void challenge(void);

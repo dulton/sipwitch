@@ -164,7 +164,7 @@ void registry::decUse(mapped *rr, stats::stat_t stat)
 			break;
 		default:
 			statmap[1].release(stat);
-		} 
+		}
 	}
 	else
 		statmap[4].release(stat);
@@ -1133,6 +1133,65 @@ void registry::mapped::addContact(const char *contact_id)
 	locking.share();
 }
 
+void registry::mapped::update(void)
+{
+	linked_pointer<target> tp = internal.targets;
+	time_t now;
+	status_t prior = status;
+	const char *text;
+
+	unsigned total = 0, busy = 0, away = 0, dnd = 0, offline = 0;
+
+	time(&now);
+
+	if(type != USER)
+		return;
+
+	if(type == EXPIRED || !is(tp)) {
+		offline = total = 1;
+	}
+	else while(is(tp)) {
+		++total;
+		if(tp->expires < now || tp->status == registry::target::OFFLINE)
+			++offline;
+		else if(tp->status == registry::target::AWAY)
+			++away;
+		else if(tp->status == registry::target::DND)
+			++dnd;
+		else if(tp->status == registry::target::BUSY)
+			++busy;
+		else if(tp->status == registry::target::UNKNOWN)
+			--total;
+		tp.next();
+	}
+
+	if(offline == total) {
+		status = OFFLINE;
+		text = "offline";
+	}
+	else if(away + offline == total) {
+		status = AWAY;
+		text = "away";
+	}
+	else if(away + dnd + offline == total) {
+		status = DND;
+		text = "dnd";
+	}
+	else if(busy + dnd + offline + away == total) {
+		status = BUSY;
+		text = "busy";
+	}
+	else {
+		status = IDLE;
+		text = "ready";
+	}
+
+	if(status == prior)
+		return;
+
+	debug(3, "update: %s changed to %s", userid, text);	
+}
+		
 bool registry::mapped::expire(Socket::address& saddr)
 {
 	unsigned active_count = 0;
@@ -1162,6 +1221,29 @@ bool registry::mapped::expire(Socket::address& saddr)
 		return true;
 
 	return false;
+}
+
+void registry::mapped::update(Socket::address& saddr, int changed)
+{
+	time_t now;
+	linked_pointer<target> tp;
+
+	time(&now);
+
+	if(changed == registry::target::UNKNOWN || !saddr.getAddr() || !expires || expires < now || type != MappedRegistry::USER)
+		return;
+
+	tp = internal.targets;
+	while(tp) {
+		if(Socket::equal(saddr.getAddr(), (struct sockaddr *)(&tp->address))) {
+			if(tp->status != changed) {
+				tp->status = (registry::target::status_t)changed;
+				update();
+				return;
+			}
+		}
+		tp.next();
+	}
 }
 
 bool registry::mapped::refresh(Socket::address& saddr, time_t lease, const char *target_contact)
@@ -1272,6 +1354,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 	expired->index.address = (struct sockaddr *)(&expired->address);
 	expired->index.enlist(&addresses[Socket::keyindex(expired->index.address, keysize)]); 
 	locking.share();
+	update();
 	return count;
 }
 
@@ -1318,6 +1401,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
 	}
 	expires = 0;
 	locking.share();
+	update();
 	return count;
 }
 

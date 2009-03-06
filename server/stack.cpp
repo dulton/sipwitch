@@ -1202,7 +1202,11 @@ repeat:
 		goto failed;
 
 	target = server::getValue(fwd, forwarding);
-	if(!target || !*target)
+
+	if((!target || !*target) && (String::equal(forwarding, "away") || String::equal(forwarding, "dnd")))
+		target = server::getValue(fwd, "busy");
+
+	if(!target || !*target) 
 		goto failed;
 
 	cr->diverting = forwarding;	
