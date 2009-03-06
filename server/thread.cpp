@@ -59,6 +59,7 @@ void thread::publish(void)
 	const char *tmp;
 	registry::target::status_t status = registry::target::UNKNOWN;
 	bool presence = false;
+	bool basic = true;
 
 	if(destination != LOCAL)
 		goto final;
@@ -77,26 +78,35 @@ void thread::publish(void)
 	{
 		if(!strnicmp(tmp, "<presence", 9))
 			presence = true; 
-
-		if(!strnicmp(tmp, "</status>", 9))
+		else if(!strnicmp(tmp, "</basic", 7))
+			basic = false; 
+		else if(!strnicmp(tmp, "</status>", 9))
 			break; 
-
-		if(!strnicmp(tmp, "<basic>open", 11) && presence) {
+		else if(!strnicmp(tmp, "<basic>open", 11) && basic) {
 			status = registry::target::READY;
 			tmp += 10;
 		}
-
-		if(!strnicmp(tmp, "<show>dnd", 9) && presence) {
+		else if(!strnicmp(tmp, "<show>dnd", 9) && presence) {
 			status = registry::target::DND;
 			break;
 		} 
-
-		if(!strnicmp(tmp, "<basic>closed", 13) && presence) {
+		else if(!strnicmp(tmp, "<basic>closed", 13) && basic) {
 			status = registry::target::OFFLINE;
 			break;
 		}
-
-		if(!strnicmp(tmp, "online", 6) && presence) {
+		else if(!strnicmp(tmp, "available", 9) && presence) {
+			status = registry::target::READY;
+			break;
+		}
+		else if(!strnicmp(tmp, "unavailable", 11) && presence) {
+			status = registry::target::OFFLINE;
+			break;
+		}
+		else if(!strnicmp(tmp, "on-the-phone", 12) && presence) {
+			status = registry::target::BUSY;
+			break;
+		}
+		else if(!strnicmp(tmp, "online", 6) && presence) {
 			tmp += 5;
 			status = registry::target::READY;
 		}
@@ -106,6 +116,11 @@ void thread::publish(void)
 		}
 		else if(!strnicmp(tmp, "dnd", 3) && presence) {
 			status = registry::target::DND;
+			break;
+		}
+		else if(!strnicmp(tmp, "vacation", 8) && presence)
+		{
+			status = registry::target::AWAY;
 			break;
 		}
 		else if(!strnicmp(tmp, "away", 4) && presence)
