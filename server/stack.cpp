@@ -1106,7 +1106,6 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 		char *req = NULL;
 		osip_uri_to_str(invite->req_uri, &req); 
 		snprintf(authbuf, 1024, "%s:%s", invite->sip_method, req);
-		osip_free(req); 
 		process::uuid(nounce, sizeof(nounce), "auth");
 		digest::md5(once, nounce);
 		if(!stricmp(registry::getDigest(), "sha1"))
@@ -1130,9 +1129,10 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 			",response=\"%s\""
 			",nonce=\"%s\""
 			",algorithm=%s"
-			,s->reg->userid, registry::getRealm(), uri_target, *response, *once, registry::getDigest());
+			,s->reg->userid, registry::getRealm(), req, *response, *once, registry::getDigest());
 		osip_message_set_header(invite, AUTHORIZATION, authbuf);
 		delete[] authbuf;
+		osip_free(req); 
 	}
 
 	if(call->expires) {

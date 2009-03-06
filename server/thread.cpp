@@ -58,13 +58,37 @@ void thread::message(void)
 	osip_body_t *body = NULL;
 	char address[MAX_URI_SIZE];
 	char fromhdr[MAX_URI_SIZE];
+	char target[MAX_URI_SIZE];
 	char msgtype[64];
 	char sysid[64];
 	char *msglen = NULL;
-	const char *id;
+	const char *id = NULL;
+	const char *digest = NULL;
 
-	if(!dialed.keys || destination != LOCAL) {
-		debug(3, "cannot send message for %s", dialing);
+	switch(destination) {
+	case LOCAL:
+		if(!dialed.keys) {
+			send_reply(SIP_DECLINE);
+			return;
+		}
+		id = service::getValue(dialed.keys, "extension");
+		if(!id)
+			id = service::getValue(dialed.keys, "id");
+		String::set(target, sizeof(target), id);
+		break;
+	case EXTERNAL:
+		String::set(target, sizeof(target), requesting);
+		break;
+	case REDIRECTED:
+		if(authorized.keys)
+			digest = server::getValue(authorized.keys, "digest");
+		if(!digest) {
+			send_reply(SIP_DECLINE);
+			return;
+		}
+		String::set(target, sizeof(target), requesting);	
+		break;
+	default:
 		send_reply(SIP_DECLINE);
 		return;
 	}
@@ -83,12 +107,12 @@ void thread::message(void)
 		snprintf(msgtype, sizeof(msgtype), "%s",
 			ct->type);
 
-	if(extension)
+	if(extension && !digest)
 		snprintf(sysid, sizeof(sysid), "%u", extension);
 	else
 		String::set(sysid, sizeof(sysid), identity);
 
-	stack::sipPublish(&iface, address, sysid, sizeof(address));
+	uri::publish(requesting, address, sysid, sizeof(address));
 	if(extension && !display[0])
 		snprintf(fromhdr, sizeof(fromhdr), 
 			"\"%u\" <%s;user=phone>", extension, address);
@@ -99,18 +123,13 @@ void thread::message(void)
 		snprintf(fromhdr, sizeof(fromhdr),
 			"<%s>", address);
 
-
-	id = service::getValue(dialed.keys, "extension");
-	if(!id)
-		id = service::getValue(dialed.keys, "id");
-
-	debug(3, "sending message from %s to %s\n", sysid, id);
+	debug(3, "sending message from %s to %s\n", sysid, target);
 	osip_content_length_to_str(sevent->request->content_length, &msglen);
 	if(!msglen) {
 		send_reply(SIP_BAD_REQUEST);
 		return;
 	}
-	send_reply(messages::publish(id, sysid, fromhdr, body->body, atoi(msglen), msgtype));
+	send_reply(messages::publish(target, sysid, fromhdr, body->body, atoi(msglen), msgtype, digest));
 	osip_free(msglen);
 }
 

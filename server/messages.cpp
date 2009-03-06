@@ -143,7 +143,7 @@ void messages::update(const char *uid)
 	msglock.unlock();
 }
 
-int messages::publish(const char *to, const char *reply, const char *from, caddr_t text, size_t len, const char *msgtype)
+int messages::publish(const char *to, const char *reply, const char *from, caddr_t text, size_t len, const char *msgtype, const char *digest)
 {
 	message *msg;
 
@@ -164,14 +164,18 @@ int messages::publish(const char *to, const char *reply, const char *from, caddr
 	}
 	msg->create();
 	String::set(msg->reply, sizeof(msg->reply), reply);
-	String::set(msg->user, sizeof(msg->user), to);
 	String::set(msg->from, sizeof(msg->from), from);
 	String::set(msg->type, sizeof(msg->type), msgtype);	
 	memset(msg->body, 0, sizeof(msg->body));
 	if(len)
 		memcpy(msg->body, text, len);
 	msg->msglen = len;
-	return deliver(msg);
+
+	if(!strchr(to, '@')) {
+		String::set(msg->user, sizeof(msg->user), to);
+		return deliver(msg);
+	}
+	return remote(to, msg, digest);
 }
 
 int messages::system(const char *to, const char *text)
@@ -203,6 +207,62 @@ int messages::system(const char *to, const char *text)
 			scheme, sysid, host, port);
 
 	return publish(to, sysid, from, (caddr_t)text, strlen(text), "text/plain");
+}
+
+int messages::remote(const char *to, message *msg, const char *digest)
+{
+	debug(3, "instant message delivered to %s from %s", to, msg->reply);
+
+	osip_message_t *im = NULL;
+	int error = SIP_BAD_REQUEST;
+	
+	eXosip_lock();
+	eXosip_message_build_request(&im, "MESSAGE", to, msg->from, NULL); 
+	if(im && digest) {
+		char *authbuf = new char[1024];
+		stringbuf<64> response;
+		stringbuf<64> once;
+		char nounce[64];
+		char *req = NULL;
+		osip_uri_to_str(im->req_uri, &req); 
+		snprintf(authbuf, 1024, "%s:%s", im->sip_method, req);
+		process::uuid(nounce, sizeof(nounce), "auth");
+		digest::md5(once, nounce);
+		if(!stricmp(registry::getDigest(), "sha1"))
+			digest::sha1(response, authbuf);
+		else if(!stricmp(registry::getDigest(), "rmd160"))
+			digest::rmd160(response, authbuf);
+		else
+			digest::md5(response, authbuf);
+		snprintf(authbuf, 1024, "%s:%s:%s", digest, *once, *response);
+		if(!stricmp(registry::getDigest(), "sha1"))
+			digest::sha1(response, authbuf);
+		else if(!stricmp(registry::getDigest(), "rmd160"))
+			digest::rmd160(response, authbuf);
+		else
+			digest::md5(response, authbuf);
+
+		snprintf(authbuf, 1024, 
+			"Digest username=\"%s\""
+			",realm=\"%s\""
+			",uri=\"%s\""
+			",response=\"%s\""
+			",nonce=\"%s\""
+			",algorithm=%s"
+			,msg->reply, registry::getRealm(), req, *response, *once, registry::getDigest());
+		osip_message_set_header(im, AUTHORIZATION, authbuf);
+		delete[] authbuf;
+		osip_free(req); 
+	}
+	if(im) {
+		osip_message_set_body(im, msg->body, msg->msglen);
+		osip_message_set_content_type(im, msg->type);				
+		stack::siplog(im);
+		if(!eXosip_message_send_request(im))
+			error = SIP_OK;
+	}
+	eXosip_unlock();
+	return error;
 }
 
 int messages::deliver(message *msg)

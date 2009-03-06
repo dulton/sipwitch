@@ -493,13 +493,14 @@ private:
 	void snapshot(FILE *fp);
 
 	static int deliver(message *msg);
+	static int remote(const char *to, message *msg, const char *digest = NULL);
 
 public:
 	messages();
 
 	static void automatic(void);
 	static void update(const char *userid);
-	static int publish(const char *to, const char *reply, const char *from, caddr_t body, size_t size, const char *msgtype);
+	static int publish(const char *to, const char *reply, const char *from, caddr_t body, size_t size, const char *msgtype, const char *digest = NULL);
 	static int system(const char *to, const char *message);
 };
 
@@ -519,7 +520,6 @@ private:
 	registry::mapped *reginfo;
 	MappedRegistry *accepted;
 	eXosip_event_t *sevent;
-	char authbuf[1024];
 	char buffer[MAX_URI_SIZE];	
 	char identbuf[MAX_USERID_SIZE + 12];
 	char identity[MAX_USERID_SIZE];
