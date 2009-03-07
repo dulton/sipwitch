@@ -1265,7 +1265,6 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 	stack::session *invited;
 	stack::call *call = s->parent;
 	linked_pointer<stack::segment> sp = call->segments.begin();
-	unsigned away_count = 0, dnd_count = 0, busy_count = 0;
 
 	time_t now;
 	osip_message_t *invite;
@@ -1291,10 +1290,11 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 
 	switch(rr->status) {
 	case MappedRegistry::IDLE:
+	case MappedRegistry::BUSY:	// appearence alone does not mean blocks invites
 		break;
-	case MappedRegistry::BUSY:
+	case MappedRegistry::OFFLINE:
 		if(!call->count && call->forwarding)
-			call->forwarding = "busy";
+			call->forwarding = "gone";
 		return;
 	case MappedRegistry::DND:
 		if(!call->count && call->forwarding)
@@ -1314,18 +1314,9 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 			goto next;
 
 		switch(tp->status) {
+		case registry::target::BUSY:		// can still try invite...
 		case registry::target::READY:
 			break;
-
-		case registry::target::AWAY:
-			++away_count;
-			goto next;
-		case registry::target::DND:
-			++dnd_count;
-			goto next;
-		case registry::target::BUSY:
-			++busy_count;
-			goto next;
 		default:
 			goto next;
 		}
@@ -1437,16 +1428,6 @@ unlock:
 		eXosip_unlock();
 next:
 		tp.next();
-	}
-
-	if(!count && call->forwarding) {
-		if(busy_count)
-			call->forwarding = "busy";
-		else if(dnd_count)
-			call->forwarding = "dnd";
-		else if(away_count)
-			call->forwarding = "away";
-		return;
 	}
 }
 
