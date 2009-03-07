@@ -60,9 +60,23 @@ void thread::publish(void)
 	registry::target::status_t status = registry::target::UNKNOWN;
 	bool presence = false;
 	bool basic = true;
+	const char *id = NULL;
+	registry::mapped *rr = NULL;
 
 	if(destination != LOCAL)
 		goto final;
+
+	if(dialed.keys)
+		id = service::getValue(dialed.keys, "extension");
+
+	if(id)
+		rr = registry::access(id);
+
+	if(!rr || rr != reginfo)
+		goto final;
+
+	registry::detach(rr);
+	rr = NULL;
 	
 	if(!reginfo || reginfo->type != MappedRegistry::USER)
 		goto final;
@@ -135,6 +149,7 @@ void thread::publish(void)
 	error = SIP_OK;
 
 final:
+	registry::detach(rr);
 	send_reply(error);
 }
 
