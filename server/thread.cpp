@@ -67,7 +67,7 @@ void thread::publish(void)
 		goto final;
 
 	if(dialed.keys)
-		id = service::getValue(dialed.keys, "extension");
+		id = service::getValue(dialed.keys, "id");
 
 	if(id)
 		rr = registry::access(id);
