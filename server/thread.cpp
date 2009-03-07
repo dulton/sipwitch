@@ -60,25 +60,14 @@ void thread::publish(void)
 	registry::target::status_t status = registry::target::UNKNOWN;
 	bool presence = false;
 	bool basic = true;
-	const char *id = NULL;
-	registry::mapped *rr = NULL;
 
 	if(destination != LOCAL)
 		goto final;
 
-	if(dialed.keys)
-		id = service::getValue(dialed.keys, "id");
-
-	if(id)
-		rr = registry::access(id);
-
-	if(!rr || rr != reginfo)
+	if(!reginfo || reginfo->type != MappedRegistry::USER)
 		goto final;
 
-	registry::detach(rr);
-	rr = NULL;
-	
-	if(!reginfo || reginfo->type != MappedRegistry::USER)
+	if(!String::equal(reginfo->userid, identity))
 		goto final;
 
 	osip_message_get_body(sevent->request, 0, &mbody);
@@ -149,7 +138,6 @@ void thread::publish(void)
 	error = SIP_OK;
 
 final:
-	registry::detach(rr);
 	send_reply(error);
 }
 
@@ -473,8 +461,8 @@ noproxy:
 		// get rid of config ref if we are calling registry target
 		server::release(dialed);
 
-		String::set(session->parent->forward, MAX_USERID_SIZE, reginfo->userid);
-		session->parent->forwarding = "na";
+		String::set(call->forward, MAX_USERID_SIZE, reginfo->userid);
+		call->forwarding = "na";
 		stack::inviteLocal(session, reginfo, destination);
 	}
 
@@ -483,7 +471,7 @@ noproxy:
 	}
 
 exit:
-	if(!call->invited && !stack::forward(session->parent)) {
+	if(!call->invited && !stack::forward(call)) {
 		call->busy(this);
 		return;
 	}

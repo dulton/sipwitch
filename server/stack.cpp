@@ -1287,26 +1287,6 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 		}
 		sp.next();
 	}
-
-	switch(rr->status) {
-	case MappedRegistry::IDLE:
-	case MappedRegistry::BUSY:	// appearence alone does not mean blocks invites
-		break;
-	case MappedRegistry::OFFLINE:
-		if(!call->count && call->forwarding)
-			call->forwarding = "gone";
-		return;
-	case MappedRegistry::DND:
-		if(!call->count && call->forwarding)
-			call->forwarding = "dnd";
-		return;
-	case MappedRegistry::AWAY:
-		if(!call->count && call->forwarding)
-			call->forwarding = "away";
-		return;
-	default:
-		return;
-	}
 	
 	while(is(tp)) {
 		invited = NULL;
@@ -1428,6 +1408,24 @@ unlock:
 		eXosip_unlock();
 next:
 		tp.next();
+	}
+
+	if(call->count > 0 || call->forwarding == NULL)
+		return;
+
+	switch(rr->status) {
+	case MappedRegistry::BUSY:
+		call->forwarding = "busy";
+		return;
+	case MappedRegistry::OFFLINE:
+		call->forwarding = "gone";
+		return;
+	case MappedRegistry::DND:
+		call->forwarding = "dnd";
+		return;
+	case MappedRegistry::AWAY:
+		call->forwarding = "away";
+		return;
 	}
 }
 
