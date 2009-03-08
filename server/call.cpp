@@ -51,7 +51,7 @@ void stack::call::disarm(void)
 void stack::call::terminateLocked(void)
 {
 	if(state != INITIAL)
-		set(TERMINATE, 'h', "bye");
+		set(TERMINATE, 'q', "bye");
 	disconnectLocked();
 }
 
@@ -183,7 +183,7 @@ void stack::call::disconnectLocked(void)
 
 	if(state != INITIAL && state != FINAL) {
 		time(&ending);
-		set(FINAL, 'h', "exit");
+		set(FINAL, 'q', "exit");
 	}
 	
 	arm(stack::resetTimeout());
@@ -357,6 +357,7 @@ void stack::call::reinvite(thread *thread, session *s)
 	osip_body_t *body = NULL;
 	int did = source->did;
 	session *update = source;
+	bool holding = false;
 
 	assert(thread != NULL);
 	assert(s != NULL);
@@ -420,7 +421,10 @@ unconnected:
 		return;
 	case HOLDING:
 	case JOINED:
-		set(JOINED, 'j', "joined");
+		if(holding)
+			set(HOLDING, 'h', "holding");
+		else
+			set(JOINED, 'j', "joined");
 		if(thread->header_expires) {
 			time(&expires);
 			expires += thread->header_expires;
