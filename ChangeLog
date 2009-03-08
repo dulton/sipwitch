@@ -1,3 +1,6 @@
+From version 0.5.1 to 0.5.2
+- rebuilt ack and proper in-dialog re-invite handling, now works.
+
 From version 0.5.0 to 0.5.1
 - call source referencing by request uri rather than resolved interface.
 - sms instant messaging multi-nodal and remote uri support.

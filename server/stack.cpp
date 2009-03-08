@@ -1074,7 +1074,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 
 	// make sure we do not re-invite an existing active member again
 	while(is(sp)) {
-		if(!stricmp(sp->sid.identity, uri_target) && sp->sid.state == stack::session::OPEN)
+		if(!stricmp(sp->sid.identity, uri_target) && sp->sid.state != stack::session::CLOSED)
 			return;
 		sp.next();
 	}

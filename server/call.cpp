@@ -355,27 +355,25 @@ void stack::call::reinvite(thread *thread, session *s)
 {
 	osip_message_t *reply = NULL;
 	osip_body_t *body = NULL;
-	int did;
+	int did = source->did;
+	session *update = source;
 
 	assert(thread != NULL);
 	assert(s != NULL);
 
 	Mutex::protect(this);
-	s->did = thread->sevent->did;
 	if(s == source) {
-		if(target)
+		update = target;
+		if(target) 
 			did = target->did;
 		else
 			goto unconnected;
 	}
-	else
-		did = source->did;
 
 	s->tid = thread->sevent->tid;
+
 	body = NULL;
 	osip_message_get_body(thread->sevent->request, 0, &body);
-	if(body && body->body)
-		String::set(s->sdp, sizeof(s->sdp), body->body);
 
 	switch(state) {
 	case RINGING:
@@ -400,9 +398,11 @@ unconnected:
 			if(state != ANSWERED)
 				set(RINGBACK, 'r', "ringback");
 		}
-		time(&expires);
-		expires += thread->header_expires;
-		arm((timeout_t)(thread->header_expires * 1000l));
+		if(thread->header_expires) {
+			time(&expires);
+			expires += thread->header_expires;
+			arm((timeout_t)(thread->header_expires * 1000l));
+		}
 		Mutex::release(this);
 		eXosip_lock();
 		eXosip_call_build_answer(source->tid, 200, &reply);
@@ -421,10 +421,13 @@ unconnected:
 	case HOLDING:
 	case JOINED:
 		set(JOINED, 'j', "joined");
-		time(&expires);
-		expires += thread->header_expires;
-		arm((timeout_t)(thread->header_expires * 1000l));
+		if(thread->header_expires) {
+			time(&expires);
+			expires += thread->header_expires;
+			arm((timeout_t)(thread->header_expires * 1000l));
+		}
 		Mutex::release(this);
+
 		eXosip_lock();
 		eXosip_call_build_request(did, "INVITE", &reply);
 		if(reply != NULL) {
@@ -435,13 +438,17 @@ unconnected:
 			}
 			stack::siplog(reply);
 			eXosip_call_send_request(did, reply);
+			update->state = session::REINVITE;
 		}
 		eXosip_unlock();
+		if(!reply)
+			goto failed;
 		return;
 	default:
 		break;
 	}
 	Mutex::release(this);
+failed:
 	debug(2, "reinvite failed for call %08x:%u",
 			source->sequence, source->cid);
 		failed(thread, s);
@@ -531,23 +538,37 @@ void stack::call::message_reply(thread *thread, session *s)
 }
 
 
-void stack::call::call_reply(thread *thread, session *s)
+void stack::call::relay(thread *thread, session *s)
 {
 	assert(thread != NULL);
 	assert(s != NULL);
 
-	int tid;
+	int status = thread->sevent->response->status_code;
+	int tid = -1;
 	osip_body_t *body = NULL;
 	osip_message_t *reply = NULL;
 
 	Mutex::protect(this);
-	tid = s->tid;
+	if(s == source && target)
+		tid = target->tid;
+	else if(s == target)
+		tid = source->tid;
+
+	osip_message_get_body(thread->sevent->response, 0, &body);
+
+	switch(s->state) {
+	case session::REINVITE:
+		if(status != SIP_ACCEPTED)
+			s->state = session::OPEN;
+	default:
+		break;
+	}
 	Mutex::release(this);
 	if(tid < 1)
 		return;
 
 	eXosip_lock();
-	eXosip_call_build_answer(tid, thread->sevent->response->status_code, &reply);
+	eXosip_call_build_answer(tid, status, &reply);
 	if(reply) {
 		osip_message_set_require(reply, "100rel");
 		osip_message_set_header(reply, "RSeq", "1");
@@ -555,7 +576,7 @@ void stack::call::call_reply(thread *thread, session *s)
 			osip_message_set_body(reply, body->body, strlen(body->body));
 			osip_message_set_content_type(reply, "application/sdp");
 		}
-		eXosip_call_send_answer(tid, thread->sevent->response->status_code, reply);
+		eXosip_call_send_answer(tid, status, reply);
 	}
 	eXosip_unlock();
 }
@@ -570,7 +591,7 @@ void stack::call::confirm(thread *thread, session *s)
 	int did = -1;
 
 	Mutex::protect(this);
-	if(s != source || target == NULL) {
+	if(target == NULL) {
 		Mutex::release(this);
 		debug(2, "cannot confirm call %08x:%u from session %08x:%u\n", 
 			source->sequence, source->cid, s->sequence, s->cid); 
@@ -591,7 +612,10 @@ void stack::call::confirm(thread *thread, session *s)
 		else
 			arm((timeout_t)DAY_TIMEOUT);
 	case HOLDING:
-		did = target->did;
+		if(s == source)
+			did = target->did;
+		else if(s == target)
+			did = source->did;
 		break;
 	default:
 		Mutex::release(this);

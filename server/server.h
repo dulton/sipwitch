@@ -240,7 +240,7 @@ private:
 		time_t ringing;					// ring no-answer timer...
 		bool closed;
 
-		enum {OPEN, CLOSED, RING, BUSY, REORDER, REFER} state;
+		enum {OPEN, CLOSED, RING, BUSY, REORDER, REFER, REINVITE} state;
 
 		rtpproxy::session proxy;
 
@@ -303,7 +303,7 @@ private:
 		void busy(thread *thread, session *s = NULL);
 		void failed(thread *thread, session *s);
 		void answer(thread *thread, session *s);
-		void call_reply(thread *thread, session *s);
+		void relay(thread *thread, session *s);
 		void message_reply(thread *thread, session *s);
 		void reinvite(thread *thread, session *s);
 		void trying(thread *thread);

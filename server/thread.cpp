@@ -1724,6 +1724,11 @@ void thread::run(void)
 			session = stack::access(sevent->cid);
 			if(!session)
 				break;
+
+			if(session->state == stack::session::REINVITE) {
+				session->parent->relay(this, session);
+				break;
+			}
 			// copy target sdp into session object...
 			body = NULL;
 			osip_message_get_body(sevent->response, 0, &body);
@@ -1821,7 +1826,6 @@ void thread::run(void)
 				send_reply(SIP_NOT_FOUND);
 				break;
 			}
-
 			expiration();
 			session = stack::access(sevent->cid);
 			if(!session) {
@@ -1857,7 +1861,7 @@ void thread::run(void)
 				break;
 			session = stack::access(sevent->cid);
 			if(session)
-				session->parent->call_reply(this, session);
+				session->parent->relay(this, session);
 			break;
 		case EXOSIP_MESSAGE_ANSWERED:
 			stack::siplog(sevent->response);
