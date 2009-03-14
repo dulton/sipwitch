@@ -1,3 +1,21 @@
+# spec file for sipwitch, used for official builds for GNU Telephony.
+#
+# Copyright (c) 2008 David Sugar, Tycho Softworks.
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without
+# modifications, as long as this notice is preserved.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+%define is_mandriva %(test -e /etc/mandriva-release && echo 1 || echo 0)
+%define is_mandrake %(test -e /etc/mandrake-release && echo 1 || echo 0)
+%define is_suse %(test -e /etc/SuSE-release && echo 1 || echo 0)
+%define is_fedora %(test -e /etc/fedora-release && echo 1 || echo 0)
+%define is_redhat %(test -e /etc/redhat-release && echo 1 || echo 0
+
 %{!?release: %define release 0}
 %{!?version: %define version @VERSION@}
 
@@ -5,7 +23,7 @@
 %{!?uses_openssl:  %define uses_openssl 1}
 %{!?uses_gcrypt: %define uses_gcrypt 0}
 %{!?uses_python: %define uses_python 1}
-%{!?uses_php5: %define uses_php5 1}
+%{!?uses_php: %define uses_php 1}
 
 %define _libname libsipwitch@LT_MAJOR@
 %define _devname libsipwitch-devel
@@ -21,16 +39,16 @@
 
 %define req_swig 0
 %define mod_python 0
-%define mod_php5 0
+%define mod_php 0
 
 %if %{uses_python}
 %define	req_swig 1
 %define mod_python 1
 %endif
 
-%if %{uses_php5}
+%if %{uses_php}
 %define	req_swig 1
-%define mod_php5 1
+%define mod_php 1
 %endif
 
 Name: sipwitch
@@ -49,10 +67,10 @@ BuildRequires: gcc-c++ pkgconfig
 BuildRequires: swig >= 1.3.0
 %endif
 %if %{mod_python}
-BuildRequires: python-dev
+BuildRequires: python-devel
 %endif
-%if %{mod_php5}
-BuildRequires: php5-dev
+%if %{mod_php}
+BuildRequires: php-devel
 %endif
 %if %uses_openssl
 BuildRequires: openssl-devel
@@ -64,6 +82,7 @@ BuildRequires: libgcrypt-devel
 BuildRequires: avahi-devel
 %endif
 Requires: %{_libname} = %{version}
+Packager: David Sugar <dyfet@gnutelephony.org>
 
 %package -n %{_libname}
 Group: System/Libraries
@@ -90,11 +109,11 @@ Group: Networking/Telephony
 Summary: Python package to control sipwitch server
 %endif
 
-%if %{mod_php5}
-%package -n php5-sipwitch
-Requires: php5
+%if %{mod_php}
+%package -n php-sipwitch
+Requires: php
 Group: Networking/Telephony
-Summary: PHP5 package to control sipwitch server
+Summary: PHP package to control sipwitch server
 %endif
 
 %package plugin-scripting
@@ -151,11 +170,11 @@ create sipwitch admininstration scripts or python web services that
 interact with the locally running instance of sipwitch.
 %endif
 
-%if %{mod_php5}
-%description -n php5-sipwitch
+%if %{mod_php}
+%description -n php-sipwitch
 This extension allows one to interact with and control a locally running 
-instance of the GNU SIP Witch daemon using php5.  This can be used to
-create sipwitch admininstration scripts or php5 web services that
+instance of the GNU SIP Witch daemon using php.  This can be used to
+create sipwitch admininstration scripts or php web services that
 interact with the locally running instance of sipwitch.
 %endif
 
@@ -207,7 +226,7 @@ remote voip service provider.
 %{__make} DESTDIR=%{buildroot} swig-python
 %endif
 
-%if %{mod_php5}
+%if %{mod_php}
 %{__make} DESTDIR=%{buildroot} swig-php5
 %endif
 
@@ -251,10 +270,10 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %{_libdir}/python*/site-packages/_sipwitch.so
 %endif
 
-%if %{mod_php5}
-%files -n php5-sipwitch
+%if %{mod_php}
+%files -n php-sipwitch
 %defattr(-,root,root,-)
-%{_libdir}/php5/*/sipwitch.so
+%{_libdir}/php*/*/sipwitch.so
 %endif
 
 %files plugin-forward
