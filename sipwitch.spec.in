@@ -10,12 +10,6 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-%define is_mandriva %(test -e /etc/mandriva-release && echo 1 || echo 0)
-%define is_mandrake %(test -e /etc/mandrake-release && echo 1 || echo 0)
-%define is_suse %(test -e /etc/SuSE-release && echo 1 || echo 0)
-%define is_fedora %(test -e /etc/fedora-release && echo 1 || echo 0)
-%define is_redhat %(test -e /etc/redhat-release && echo 1 || echo 0
-
 %{!?release: %define release 0}
 %{!?version: %define version @VERSION@}
 
@@ -70,7 +64,7 @@ BuildRequires: swig >= 1.3.0
 BuildRequires: python-devel
 %endif
 %if %{mod_php}
-BuildRequires: php-devel
+BuildRequires: php-devel >= 5.0.0
 %endif
 %if %uses_openssl
 BuildRequires: openssl-devel
@@ -266,8 +260,8 @@ echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 %if %{mod_python}
 %files -n python-sipwitch
 %defattr(-,root,root,-)
-%{_libdir}/python*/site-packages/sipwitch.py
-%{_libdir}/python*/site-packages/_sipwitch.so
+%{_prefix}/lib/python*/site-packages/sipwitch.py
+%{_prefix}/lib/python*/site-packages/_sipwitch.so
 %endif
 
 %if %{mod_php}
