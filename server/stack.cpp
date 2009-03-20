@@ -1426,6 +1426,8 @@ next:
 	case MappedRegistry::AWAY:
 		call->forwarding = "away";
 		return;
+	default:
+		return;
 	}
 }
 
