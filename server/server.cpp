@@ -187,6 +187,18 @@ void server::logging(MappedRegistry *rr, const char *reason)
 		dt->tm_hour, dt->tm_min, dt->tm_sec);
 }
 
+bool server::publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body)
+{
+	linked_pointer<modules::sipwitch> cb = getModules();
+	bool rtn = false;
+
+	while(!rtn && is(cb)) {
+		rtn = cb->publish(rr, msgtype, event, expires, body);
+		cb.next();
+	}
+	return rtn;
+}
+
 bool server::classify(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
 {
 	linked_pointer<modules::sipwitch> cb = getModules();

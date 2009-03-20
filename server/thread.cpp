@@ -56,10 +56,16 @@ void thread::publish(void)
 {
 	int error = SIP_BAD_REQUEST;
 	osip_body_t *mbody = NULL;
-	const char *tmp;
+	const char *tmp = NULL;
 	registry::target::status_t status = registry::target::UNKNOWN;
 	bool presence = false;
 	bool basic = true;
+	osip_content_type_t *ct;
+	char msgtype[128];
+	const char *content = msgtype;
+	const char *expires = NULL;
+	const char *event = NULL;
+	osip_header_t *msgheader;
 
 	if(destination != LOCAL)
 		goto final;
@@ -71,13 +77,37 @@ void thread::publish(void)
 		goto final;
 
 	osip_message_get_body(sevent->request, 0, &mbody);
-	if(!mbody) {
+	ct = sevent->request->content_type;
+	if(mbody)
+		tmp = mbody->body;
+
+	msgheader = NULL;
+	osip_message_header_get_byname(sevent->request, SESSION_EXPIRES, 0, &msgheader);
+	if(msgheader && msgheader->hvalue) 
+		expires = msgheader->hvalue;
+
+	msgheader = NULL;
+	osip_message_header_get_byname(sevent->request, SESSION_EVENT, 0, &msgheader);
+	if(msgheader && msgheader->hvalue) 
+		event = msgheader->hvalue;
+
+	if(ct && ct->subtype)
+		snprintf(msgtype, sizeof(msgtype), "%s/%s", ct->type, ct->subtype);
+	else if(ct && ct->type)
+		String::set(msgtype, sizeof(msgtype), ct->type);
+	else
+		content = NULL;
+
+	// publish event to forwarders...
+	server::publish(reginfo, content, event, expires, tmp);
+
+	// if not presence event, then skip local parsing...
+	if(event && stricmp(event, "presence")) {
 		error = SIP_OK;
 		goto final;
 	}
 
-	tmp = mbody->body;
-	while(*tmp)
+	while(tmp && *tmp)
 	{
 		if(!strnicmp(tmp, "<presence", 9))
 			presence = true; 

@@ -21,6 +21,10 @@
 #define	SESSION_EXPIRES	"session-expires"
 #endif
 
+#ifndef	SESSION_EVENT
+#define	SESSION_EVENT	"event"
+#endif
+
 #ifndef	ALLOW_EVENTS
 #define	ALLOW_EVENTS	"allow-events"
 #endif
@@ -457,6 +461,7 @@ public:
 	static caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
 	static unsigned allocate(void);
 
+	static bool publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body);
 	static bool classify(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
 	static void activate(MappedRegistry *rr);
 	static void expire(MappedRegistry *rr);

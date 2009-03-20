@@ -1,3 +1,7 @@
+From version 0.5.2 to 0.5.3
+- SIP publish can be forwarded through plugins. Forward plugin publishes
+  status to insecure calling domain.
+
 From version 0.5.1 to 0.5.2
 - rebuilt ack and proper in-dialog re-invite handling, now works.
 

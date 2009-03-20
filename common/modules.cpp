@@ -49,6 +49,11 @@ void modules::sipwitch::period(long slice)
 {
 }
 
+bool modules::sipwitch::publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *msgbody)
+{
+	return false;
+}
+
 bool modules::sipwitch::classifier(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
 {
 	return false;

@@ -62,6 +62,7 @@ private:
 	void activating(MappedRegistry *rr);
 	void expiring(MappedRegistry *rr);
 	void registration(int id, modules::regmode_t mode);
+	bool publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body);
 	bool authenticate(int id, const char *remote_realm);
 	char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
 };
@@ -317,6 +318,32 @@ void forward::activating(MappedRegistry *rr)
 			rr->rid = -1;
 		eXosip_unlock();
 	}
+}
+
+bool forward::publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body)
+{
+	char uri_to[MAX_URI_SIZE];
+	char contact[MAX_URI_SIZE];
+	osip_message_t *msg = NULL;
+	size_t len;
+
+	if(!isActive(rr->rid) || !rr->remote[0])
+		return false;
+
+	snprintf(uri_to, sizeof(uri_to), "sip:%s@%s", rr->userid, server);
+	snprintf(contact, sizeof(contact), "sip:%s@", rr->remote);	
+	len = strlen(contact);
+	Socket::getaddress((struct sockaddr *)&rr->contact, contact + len, sizeof(contact) - len);
+	len = strlen(contact);
+	snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::getservice((struct sockaddr *)&rr->contact));
+	debug(3, "publishing %s with %s", contact, server);
+
+	eXosip_lock();
+	eXosip_build_publish(&msg, uri_to, contact, NULL, event, expires, msgtype, body);
+	if(msg) 
+		eXosip_publish(msg, uri_to);
+	eXosip_unlock();
+	return true;
 }
 
 void forward::expiring(MappedRegistry *rr)
