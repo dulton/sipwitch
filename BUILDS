@@ -1,0 +1,43 @@
+Generic & Emebedded Targets:
+
+GNU SIP Witch should compile for any posix target with full support for C++ and
+optionally the C++ ansi standard library.  For deeply embedded targets, the
+ansi c++ library (libstdc++ for gcc) can be disabled when the dependent ucommon
+is built, and sipwitch will then similarly be build without requiring
+exception handling or c++ library features.  
+
+GNU SIP Witch can also be built either with dynamic linking to support runtime
+plugin loading, or with pure static linking.  When statically linked, all
+selected plugins have to be defined at configure time and are compiled
+statically linked to the server.
+
+Microsoft Windows & MingW32 specific notes:
+
+GNU SIP Witch has been successfully built using mingw32 on a Debian GNU/Linux 
+hosted system.  However, this environment really only supports static linking.
+It should be possible to build sipwitch using Microsoft native compilers, and
+perhaps with native runtime library support from ucommon for loading plugins.
+
+If people wish to submit patches for code changes based on using native
+Microsoft compilers, they will be accepted so long as they do not break other
+build environments.  We do not recommend or even suggest the use of proprietary
+compilers on proprietary operating systems, and we will continue to work to
+make the debian hosted mingw build environment as effective for building our
+packages as we can.
+
+FreeBSD specific notes:
+
+For FreeBSD, eXosip2 (and sipwitch) require the Posix semaphore library.  This
+can be installed with a kldload sem, or by adding sem_load="YES" to
+/boot/loader.conf.  Without the semaphore driver, you will get an "unknown
+system call 12" when you try to start sipwitch.
+
+Platforms sipwitch has been known to build on:
+
+GNU/Linux, various distros, gcc 2.95 or later
+OpenSolaris (0408 or later)
+FreeBSD (6, 7, maybe older ones...)
+OpenBSD (4.x)
+OS/X (10.4 or later)
+MingW32 cross-compiler
+

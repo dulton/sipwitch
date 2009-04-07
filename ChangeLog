@@ -1,3 +1,6 @@
+From version 0.5.3 to 0.5.4
+- some build notes.
+
 From version 0.5.2 to 0.5.3
 - SIP publish can be forwarded through plugins. Forward plugin publishes
   status to insecure calling domain.

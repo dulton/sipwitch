@@ -306,10 +306,10 @@ export CXXFLAGS="$COMPILER_FLAGS"
 SIPWITCH_FLAGS="$EXPORT_FLAGS $UCOMMON_CFLAGS"
 SIPWITCH_LIBS="$EXPORT_LIBS $UCOMMON_LIBS $ac_with_malloc $UCOMMON_CLINK"
 
-if test "$localstatedir" == '${prefix}/var' ; then
+if test "$localstatedir" = '${prefix}/var' ; then
 	localstatedir="/var" ; fi
 
-if test "$sysconfdir" == '${prefix}/etc' ; then
+if test "$sysconfdir" = '${prefix}/etc' ; then
 	sysconfdir="/etc" 
 fi
 

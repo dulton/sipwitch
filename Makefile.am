@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 AUTOMAKE_OPTIONS = no-dependencies dist-shar dist-zip
-EXTRA_DIST = autogen.sh README *.pc.in FEATURES  TODO Doxyfile \
+EXTRA_DIST = autogen.sh README *.pc.in FEATURES  TODO Doxyfile BUILDS \
 	SUPPORT NOTES MODULES cmodel.sh sipwitch.spec.in sipwitch.spec
 #  *.pc.in *.spec.in *.spec
 
