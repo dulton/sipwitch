@@ -385,7 +385,7 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 			fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
 		else
 			fprintf(stderr, "%s: %s\n", getenv("IDENT"), buf);
-		service::snmptrap(loglevel + 10, buf);
+		modules::errlog(loglevel, buf);
 	}
 	
 	if(loglevel == FAILURE)
