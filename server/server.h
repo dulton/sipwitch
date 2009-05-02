@@ -534,7 +534,6 @@ private:
 	char dialing[MAX_USERID_SIZE];
 	char display[MAX_DISPLAY_SIZE];
 	char requesting[MAX_URI_SIZE];
-	struct sockaddr_internet iface;
 	Socket::address via_address, request_address;
 	stack::session *session;
 	osip_header_t *header;

@@ -1323,6 +1323,7 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 		stack::sipPublish(&tp->address, route + 1, NULL, sizeof(route) - 5);
 		route[0] = '<';
 		String::add(route, sizeof(route), ";lr>");
+
 		if(eXosip_call_build_initial_invite(&invite, touri, s->from, route, call->subject)) {
 			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
 			process::errlog(ERRLOG, "cannot invite %s; build failed", route);

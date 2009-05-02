@@ -261,8 +261,12 @@ void thread::invite(void)
 	osip_header_t *msgheader = NULL;
 	char fromext[32];
 	cdr *cdrnode;
+	const char *domain = stack::sip.domain;
 
 	uri::serviceid(requesting, call->request, sizeof(call->request));
+
+	if(!domain)
+		domain = requesting;
 
 	// FIXME: we should get proxy count extimate from sdp into global thread object...
 
@@ -343,7 +347,8 @@ noproxy:
 		String::set(cdrnode->dialed, sizeof(cdrnode->dialed), call->dialed);
 		String::set(cdrnode->display, sizeof(cdrnode->display), session->display);
 		cdr::post(cdrnode);
-		stack::sipPublish(&iface, session->identity, session->sysident, sizeof(session->identity));
+		snprintf(session->identity, sizeof(session->identity), "%s:%s@%s",
+			stack::sip.getScheme(), session->sysident, domain);
 
 		if(toext) {
 			call->phone = true;
@@ -413,7 +418,10 @@ noproxy:
 			String::set(session->display, sizeof(session->display), display);
 		else
 			String::set(session->display, sizeof(session->display), identity);
-		stack::sipPublish(&iface, session->identity, session->sysident, sizeof(session->identity));
+
+		snprintf(session->identity, sizeof(session->identity), "%s:%s@%s",
+			stack::sip.getScheme(), session->sysident, domain);
+
 		uri::identity(request_address.getAddr(), call->dialed, uri->username, sizeof(call->dialed));
 
 		if(extension && !display[0])
@@ -452,7 +460,10 @@ noproxy:
 			String::set(session->display, sizeof(session->display), display);
 		else
 			String::set(session->display, sizeof(session->display), session->sysident);
-		stack::sipPublish(&iface, session->identity, session->sysident, sizeof(session->identity));
+
+		snprintf(session->identity, sizeof(session->identity), "%s:%s@%s",
+			stack::sip.getScheme(), session->sysident, domain);
+
 		if(extension)
 			snprintf(session->from, sizeof(session->from), 
 				"\"%s\" <%s;user=phone>", session->display, session->identity);
@@ -593,6 +604,7 @@ bool thread::authorize(void)
 	const char *sep1 = "", *sep2 = "";
 	const char *refer = NULL;
 	const char *uri_host;
+	struct sockaddr_internet iface;
 
 	if(!sevent->request || !sevent->request->to || !sevent->request->from || !sevent->request->req_uri)
 		goto invalid;
@@ -674,6 +686,9 @@ bool thread::authorize(void)
 	if(String::equal("localdomain", uri_host))
 		goto local;
 
+	if(String::ifind(stack::sip.localnames, uri_host, " ,;:\t\n"))
+		goto local;
+
 	request_address.set(uri_host, local_port);
 	stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
 
@@ -686,9 +701,6 @@ bool thread::authorize(void)
 		goto remote;
 
 	if(Socket::equalhost((struct sockaddr *)&iface, request_address.getAddr()))
-		goto local;
-
-	if(String::ifind(stack::sip.localnames, uri_host, " ,;:\t\n"))
 		goto local;
 
 	goto remote;
@@ -1359,6 +1371,7 @@ void thread::registration(void)
 	int error = SIP_ADDRESS_INCOMPLETE;
 	char temp[MAX_URI_SIZE];
 	osip_message_t *reply = NULL;
+	struct sockaddr_internet iface;
 
 	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
 		contact = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
@@ -1410,11 +1423,11 @@ void thread::registration(void)
 			goto reply;
 
 		error = SIP_NOT_FOUND;
-		if(!String::ifind(stack::sip.localnames, reguri->host, " ,;:\t\n")) {
+//		if(!String::ifind(stack::sip.localnames, reguri->host, " ,;:\t\n")) {
 			stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
 			if(!Socket::equalhost((struct sockaddr *)&iface, request_address.getAddr()) && atoi(port) == stack::sip_port)
 				goto reply;
-		}
+//		}
 
 		if(registry::exists(reguri->username))
 			error = SIP_OK;
