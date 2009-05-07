@@ -12,7 +12,7 @@
 # sipwitch        This shell script takes care of starting and stopping
 #                 a sipwitch server running as a system service.
 #
-# chkconfig: 2345 95 15
+# chkconfig: - 95 15
 # description: GNU SIP Witch telephony service.
 
 DAEMON="/usr/sbin/sipw"
@@ -86,6 +86,7 @@ start)
 	echo -n "Starting $DESC: "
 	$DAEMON $OPTIONS
 	echo "$NAME."
+	touch /var/lock/subsys/sipwitch
 	;;
 stop)
 	if [ ! -p $FIFO ] ; then
@@ -94,6 +95,10 @@ stop)
 	echo -n "Stopping $DESC: "
 	echo "down" >$FIFO
 	echo "$NAME."
+	rm -f /var/lock/subsys/sipwitch
+	;;
+status)
+	sipwitch status
 	;;
 reload)
 	if [ ! -p $FIFO ] ; then

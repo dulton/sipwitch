@@ -1,3 +1,7 @@
+From verison 0.5.4 to 0.5.5
+- python swig binaries now placed correctly.
+- init script has locking and status.
+
 From version 0.5.3 to 0.5.4
 - some build notes.
 - bugfix for setting domain identities in "from" 
