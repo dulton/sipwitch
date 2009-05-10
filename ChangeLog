@@ -3,6 +3,7 @@ From verison 0.5.4 to 0.5.5
 - new init script has locking.  Status and condrestart added.
 - new spec file for rpm builds.
 - new --with-initrddir and default for /etc/rc.d/init.d.
+- better python and php support for packaging.
 
 From version 0.5.3 to 0.5.4
 - some build notes.

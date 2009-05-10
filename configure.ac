@@ -84,7 +84,35 @@ AC_DEFUN([AC_SUBST_DIR], [
 AC_ARG_WITH(initrddir,
 	AC_HELP_STRING([--with-initrddir=path], [specify /etc/init.d path]),[
 		INITRDDIR="$with_initrddir"
-	],[INITRDDIR=""])
+])
+
+# php lib
+AC_ARG_WITH(php-extdir,
+	AC_HELP_STRING([--with-php-extdir=dir], [specify php extensions dir]),[
+		PHP_EXTDIR="$with_php_execdir"
+])
+
+# check python
+
+AC_ARG_WITH(python,
+	AC_HELP_STRING([--with-python=exec], [specify python interpreter]), 
+	[PYTHON="$with_python"],
+	[AC_PATH_PROG(PYTHON, python, no)]
+)	
+
+AC_ARG_WITH(python-sitearch,
+	AC_HELP_STRING([--with-python-sitearch=dir], [specify arch directory]),[
+		PYTHON_SITEARCH="$with_python_sitearch"
+])
+
+AC_ARG_WITH(python-sitelib,
+	AC_HELP_STRING([--with-python-sitelib=dir], [specify python lib directory]),[
+		PYTHON_SITELIB="$with_python_sitelib"
+])
+
+if test -z "$PYTHON_SITEARCH" ; then
+	PYTHON_SITEARCH="$PYTHON_SITELIB"
+fi
 
 # make list that is parsed...
 
@@ -319,9 +347,34 @@ AC_SUBST_DIR(default_varpath, localstatedir)
 AC_SUBST_DIR(default_libpath, plugindir)
 AC_SUBST_DIR(default_incpath, includedir)
 AC_SUBST_DIR(default_libexec, libexecdir)
+AC_SUBST_DIR(prefix_libdir, libdir)
 
 if test -z "$INITRDDIR" ; then
 	INITRDDIR="$default_cfgpath/init.d" ; fi
+
+if test "$PYTHON" = "no" ; then
+	if test -z "$PYTHON_SITEARCH" ; then
+		PYTHON_SITEARCH="$prefix_libdir/python/site-packages"
+		PYTHON_SITELIB="$prefix_libdir/python/site-packages"
+	fi
+fi
+
+if test -z "$PYTHON_SITEARCH" ; then
+	PYTHON_SITEARCH=`$PYTHON -c 'from distutils.sysconfig import get_python_lib; print get_python_lib(1)'`
+fi
+
+if test -z "$PYTHON_SITELIB" ; then
+	PYTHON_SITELIB=`$PYTHON -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'`
+fi
+
+if test -z "$PHP_EXTDIR" ; then
+	AC_PATH_PROG(PHP_CONFIG, php-config, no)
+	if test "$PHP_CONFIG" = "no" ; then
+		PHP_EXTDIR="$prefix_libdir/php"
+	else
+		PHP_EXTDIR=`$PHP_CONFIG --extension-dir`
+	fi	 
+fi
 
 case "$SIPWITCH_FLAGS -I/usr/include" in
 *-I${default_incpath}*)
@@ -377,6 +430,11 @@ fi
 
 AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
 
+AC_SUBST(PYTHON)
+AC_SUBST(PYTHON_SITEARCH)
+AC_SUBST(PYTHON_SITELIB)
+AC_SUBST(PHP_EXTDIR)
+AC_SUBST(PHP_CONFIG)
 AC_SUBST(LT_VERSION)
 AC_SUBST(INITRDDIR)
 AC_SUBST(plugindir)
