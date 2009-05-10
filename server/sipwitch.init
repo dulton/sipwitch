@@ -103,7 +103,7 @@ status)
 condrestart|try-restart)
 	if [ -p $FIFO ] ; then
 		echo "down" >$FIFO
-		sleep 1
+		sleep 3
 		$DAEMON $OPTIONS
 	fi
 	;;
@@ -118,8 +118,8 @@ restart|force-reload)
 	echo -n "Restarting $DESC: "
 	if [ -p $FIFO ] ; then
 		echo "down" >$FIFO
+		sleep 3
 	fi
-	sleep 1
 	$DAEMON $OPTIONS
 	echo "$NAME."
 	;;
