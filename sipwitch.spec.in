@@ -147,7 +147,13 @@ sed -i.rpath -e \
   configure
 
 %build
-%configure --with-pkg-config --disable-static --with-initrddir=%{_initrddir}
+%configure --with-pkg-config --disable-static \
+	--with-initrddir=%{_initrddir} \
+	--with-python=%{__python} \
+	--with-python-sitearch=%{python_sitearch} \
+	--with-python-sitelib=%{python_sitelib} \
+	--with-php-extdir=%{php_extdir}
+
 %{__make} %{?_smp_mflags} 
 
 %install
