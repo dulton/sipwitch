@@ -321,7 +321,7 @@ AC_SUBST_DIR(default_incpath, includedir)
 AC_SUBST_DIR(default_libexec, libexecdir)
 
 if test -z "$INITRDDIR" ; then
-	INITRDDIR="$default_cfgpath/rc.d/init.d" ; fi
+	INITRDDIR="$default_cfgpath/init.d" ; fi
 
 case "$SIPWITCH_FLAGS -I/usr/include" in
 *-I${default_incpath}*)
