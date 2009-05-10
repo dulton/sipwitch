@@ -58,6 +58,15 @@ if [ ! -z "$CONCURRENCY" ] ; then
 if [ ! -z "$PRIORITY" ] ; then
 	export PRIORITY ; fi
 
+if [ ! -z "$PRELOAD" ] ; then		
+	if [ -z "$LD_PRELOAD" ] ; then
+		LD_PRELOAD="$PRELOAD"
+	else
+		LD_PRELOAD="$LD_PRELOAD:$PRELOAD"
+	fi
+	export LD_PRELOAD
+fi
+
 case "$1" in
 start)
 	if [ "$START" = "0" ] ; then
@@ -67,15 +76,6 @@ start)
 			echo "You have to modify config and START in $DEFAULT before running"
 		fi
 		exit 0
-	fi
-
-	if [ ! -z "$PRELOAD" ] ; then		
-		if [ -z "$LD_PRELOAD" ] ; then
-			LD_PRELOAD="$PRELOAD"
-		else
-			LD_PRELOAD="$LD_PRELOAD:$PRELOAD"
-		fi
-		export LD_PRELOAD
 	fi
 	
 	if [ -p $FIFO ] ; then
@@ -101,8 +101,11 @@ status)
 	sipwitch status
 	;;
 condrestart|try-restart)
-	if [ -f /var/lock/subsys/sipwitch ] ; then
-		$0 restart ; fi
+	if [ -p $FIFO ] ; then
+		echo "down" >$FIFO
+		sleep 1
+		$DAEMON $OPTIONS
+	fi
 	;;
 reload)
 	if [ ! -p $FIFO ] ; then
@@ -113,9 +116,11 @@ reload)
 	;;
 restart|force-reload)
 	echo -n "Restarting $DESC: "
-	start-stop-daemon --stop --quiet --exec $DAEMON
-	sleep 3
-	start-stop-daemon --start --quiet --exec $DAEMON -- $OPTIONS
+	if [ -p $FIFO ] ; then
+		echo "down" >$FIFO
+	fi
+	sleep 1
+	$DAEMON $OPTIONS
 	echo "$NAME."
 	;;
 *)
