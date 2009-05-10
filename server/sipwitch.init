@@ -100,6 +100,10 @@ stop)
 status)
 	sipwitch status
 	;;
+condrestart|try-restart)
+	if [ -f /var/lock/subsys/sipwitch ] ; then
+		$0 restart ; fi
+	;;
 reload)
 	if [ ! -p $FIFO ] ; then
 		exit 0 ; fi

@@ -1,6 +1,8 @@
 From verison 0.5.4 to 0.5.5
 - python swig binaries now placed correctly.
 - init script has locking and status.
+- new spec file for rpm builds.
+- new --with-initrddir and default for /etc/rc.d/init.d.
 
 From version 0.5.3 to 0.5.4
 - some build notes.

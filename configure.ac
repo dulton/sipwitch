@@ -12,7 +12,6 @@ AC_INIT(autogen.sh)
 
 VERSION="0.5.4"
 LT_VERSION="0:25:0"
-
 UCOMMON_REQUIRES="2.0.0"
 
 AC_CONFIG_AUX_DIR(autoconf)
@@ -26,10 +25,6 @@ AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
 AM_INIT_AUTOMAKE(sipwitch, [$VERSION])
 AM_CONFIG_HEADER(config.h)
-
-LT_MAJOR="`echo $LT_VERSION | sed s/:.*$//`"
-AC_SUBST(LT_VERSION)
-AC_SUBST(LT_MAJOR)
 
 AC_C_RESTRICT
 AC_C_VOLATILE
@@ -84,6 +79,12 @@ AC_DEFUN([AC_SUBST_DIR], [
 	done
 	AC_SUBST($1)
 ])
+
+# lets check init path
+AC_ARG_WITH(initrddir,
+	AC_HELP_STRING([--with-initrddir=path], [specify /etc/init.d path]),[
+		INITRDDIR="$with_initrddir"
+	],[INITRDDIR=""])
 
 # make list that is parsed...
 
@@ -319,6 +320,9 @@ AC_SUBST_DIR(default_libpath, plugindir)
 AC_SUBST_DIR(default_incpath, includedir)
 AC_SUBST_DIR(default_libexec, libexecdir)
 
+if test -z "$INITRDDIR" ; then
+	INITRDDIR="$default_cfgpath/rc.d/init.d" ; fi
+
 case "$SIPWITCH_FLAGS -I/usr/include" in
 *-I${default_incpath}*)
 	;;
@@ -373,6 +377,8 @@ fi
 
 AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
 
+AC_SUBST(LT_VERSION)
+AC_SUBST(INITRDDIR)
 AC_SUBST(plugindir)
 AC_SUBST(UCOMMON_REQUIRES)
 AC_SUBST(UCOMMON_MODEL)

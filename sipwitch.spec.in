@@ -1,6 +1,4 @@
-# spec file for sipwitch, used for official builds for GNU Telephony.
-#
-# Copyright (c) 2008 David Sugar, Tycho Softworks.
+# Copyright (c) 2008, 2009 David Sugar, Tycho Softworks.
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without
 # modifications, as long as this notice is preserved.
@@ -10,124 +8,70 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-%{!?release: %define release 0}
-%{!?version: %define version @VERSION@}
-
-%{!?uses_avahi:  %define uses_avahi 1}
-%{!?uses_openssl:  %define uses_openssl 1}
-%{!?uses_gcrypt: %define uses_gcrypt 0}
-%{!?uses_python: %define uses_python 1}
-%{!?uses_php: %define uses_php 1}
-
-%define _libname libsipwitch@LT_MAJOR@
-%define _devname libsipwitch-devel
-
-%if %{uses_gcrypt}
-%define	uses_openssl 0
-%endif
-
-%define mod_zeroconf 0
-%if %{uses_avahi}
-%define	mod_zeroconf 1
-%endif
-
-%define req_swig 0
-%define mod_python 0
-%define mod_php 0
-
-%if %{uses_python}
-%define	req_swig 1
-%define mod_python 1
-%endif
-
-%if %{uses_php}
-%define	req_swig 1
-%define mod_php 1
-%endif
+%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
 Name: sipwitch
-Summary: "sipwitch" - SIP telephony server for secure phone systems
-Version: %{version}
-Release: %{release}%{?dist}
-License: GPL v3 or later
+Summary: SIP telephony server for secure phone systems
+Version: @VERSION@
+Release: 0%{?dist}
+License: GPLv3+
 URL: http://www.gnu.org/software/sipwitch
-Group: Networking/Telephony
-Source0: http://www.gnutelephony.org/dist/tarballs/sipwitch-%{version}.tar.gz
+Group: Applications/Communications
+Source: http://www.gnutelephony.org/dist/tarballs/sipwitch-%{version}.tar.gz
+Patch: sipwitch.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildRequires: ucommon-devel >= @UCOMMON_REQUIRES@
+BuildRequires: ucommon-devel >= 2.0.0
 BuildRequires: libeXosip2-devel >= 3.0.0
-BuildRequires: gcc-c++ pkgconfig
-%if %{req_swig}
 BuildRequires: swig >= 1.3.30
-%endif
-%if %{mod_python}
 BuildRequires: python-devel
-%endif
-%if %{mod_php}
 BuildRequires: php-devel >= 5.0.0
-%endif
-%if %uses_openssl
-BuildRequires: openssl-devel
-%endif
-%if %uses_gcrypt
-BuildRequires: libgcrypt-devel
-%endif
-%if %uses_avahi
 BuildRequires: avahi-devel
-%endif
-Requires: %{_libname} = %{version}
-Packager: David Sugar <dyfet@gnutelephony.org>
+BuildRequires: libgcrypt-devel
+Requires(post): chkconfig
+Requires(preun): chkconfig
+Requires(preun): initscripts
+Requires(postun): initscripts
 
-%package -n %{_libname}
-Group: System/Libraries
-Summary: Runtime library for sipwitch server and plugins
-
-%package -n %{_devname}
-Requires: libucommon-devel >= 1.9.5
-Requires: %{_libname} = %{version}
+%package devel
+Requires: ucommon-devel >= 2.0.0
+Requires: %{name} = %{version}-%{release}
 Group: Development/Libraries
-Summary: Headers and static link library
-Provides: %{name}-devel = %{version}-%{release}
+Summary: Headers for building sipwitch plugins
 
-%if %{mod_zeroconf}
+%package snmp
+Requires: net-snmp
+Group: Applications/Internet
+Summary: Standard MIB for GNU Telephony
+
 %package plugin-zeroconf
-Requires: sipwitch = %{version}
-Group: Networking/Telephony
+Requires: %{name} = %{version}-%{release}
 Summary: Zeroconf plugin for sipwitch
-%endif
 
-%if %{mod_python}
-%package -n python-sipwitch
+%package python-swig
 Requires: python
-Group: Networking/Telephony
+Requires: %{name} = %{version}-%{release}
 Summary: Python package to control sipwitch server
-%endif
 
-%if %{mod_php}
-%package -n php-sipwitch
+%package php-swig
 Requires: php
-Group: Networking/Telephony
+Requires: %{name} = %{version}-%{release}
 Summary: PHP package to control sipwitch server
-%endif
 
 %package plugin-scripting
-Requires: sipwitch = %{version}
-Group: Networking/Telephony
+Requires: %{name} = %{version}-%{release}
 Summary: Scripting plugin for sipwitch
 
 %package plugin-forward
-Requires: sipwitch = %{version}
-Group: Networking/Telephony
+Requires: %{name} = %{version}-%{release}
 Summary: Forward registration and routing plugin
 
 %package plugin-rtpproxy
-Requires: sipwitch = %{version}
-Group: Networking/Telephony
+Requires: %{name} = %{version}-%{release}
 Summary: Generic rtp proxy plugin for sipwitch
 
 %package plugin-subscriber
-Requires: sipwitch = %{version}
-Group: Networking/Telephony
+Requires: %{name} = %{version}-%{release}
 Summary: Subscriber gateway plugin for sipwitch
 
 %description
@@ -136,44 +80,40 @@ generic phone system features like call forwarding, hunt groups and call
 distribution, call coverage and ring groups, holding, and call transfer, as
 well as offering SIP specific capabilities such as presence and messaging. It
 supports secure telephone extensions for making calls over the Internet, and
-intercept/decrypt-free peer-to-peer audio and video extensions. It is not a SIP
-proxy, a multi-protocol telephone server, or an IP-PBX, and does not try to
-emulate Asterisk, FreeSWITCH, or Yate. 
+intercept/decrypt-free peer-to-peer audio and video extensions. It is not a 
+SIP proxy, a multi-protocol telephone server, or an IP-PBX, and does not try 
+to emulate Asterisk, FreeSWITCH, or Yate. 
 
-%description -n %{_libname}
-Runtime library needed for GNU SIP Witch server and plugins.
+%description devel
+Header files for building plugins that interface with sipwitch. This might be 
+used for externally creating sipwitch modules, though normally modules are 
+found or added to the core distribution directly.  This may also be for 
+developing external application services which need to communicate with a 
+running sipwitch daemon instance.
 
-%description -n %{_devname}
-Static link and header files for building plugins that interface with sipwitch.
-This might be used for externally creating sipwitch modules, though normally
-modules are found or added to the core distribution directly.  This may also
-be for developing external application services which need to communicate with 
-a running sipwitch daemon instance.
+%description snmp
+This is the standard GNU Telephony MIB.  It can be used to monitor sipwitch
+servers from a snmp management station when we add snmp support.
 
-%if %{mod_zeroconf}
 %description plugin-zeroconf
 This plugin activates zeroconf network services for sipwitch and publishes
 sipwitch as a sip server.
-%endif
 
-%if %{mod_python}
-%description -n python-sipwitch
+%description python-swig
 This module allows one to interact with and control a locally running 
 instance of the GNU SIP Witch daemon using python.  This can be used to
 create sipwitch admininstration scripts or python web services that
 interact with the locally running instance of sipwitch.
-%endif
 
-%if %{mod_php}
-%description -n php-sipwitch
+%description php-swig
 This extension allows one to interact with and control a locally running 
 instance of the GNU SIP Witch daemon using php.  This can be used to
 create sipwitch admininstration scripts or php web services that
 interact with the locally running instance of sipwitch.
-%endif
 
 %description plugin-scripting
-This plugin enables shell scripting in connection with specific sipwitch events.
+This plugin enables shell scripting in connection with specific sipwitch 
+events.
 
 %description plugin-forward
 This plugin enables forwarding of registration requests and destination routes
@@ -200,130 +140,114 @@ local user to subscribe a series of local softphone/sip devices with a
 remote voip service provider.
 
 %prep
-%setup
-%build
+%setup -q
+%patch 
+sed -i.rpath -e \
+  '/sys_lib_dlsearch_path_spec/s|/usr/lib |/usr/lib /usr/lib64 /lib /lib64 |' \
+  configure
 
-%configure --with-pkg-config CXXFLAGS="$RPM_OPT_FLAGS" 
+%build
+# Temporary hack until resolved upstream
+export STRIP=/bin/true
+
+%configure --with-pkg-config --disable-static --with-initrddir=%{_initrddir}
 %{__make} %{?_smp_mflags} 
 
 %install
-
-%makeinstall
-%{__strip} %{buildroot}/%{_libdir}/lib*.so.*.*
-%{__strip} %{buildroot}/%{_libdir}/sipwitch/*.so
-%{__strip} %{buildroot}/%{_sbindir}/*
-%{__strip} %{buildroot}/%{_bindir}/*
-%{__rm} -f %{buildroot}/%{_libdir}/sipwitch/*.a
+%{__rm} -rf %{buildroot}
+%{__make} DESTDIR=%{buildroot} INSTALL="install -p" install
+%{__make} DESTDIR=%{buildroot} INSTALL="install -p" swig-python
+%{__make} DESTDIR=%{buildroot} INSTALL="install -p" swig-php5
+%{__rm} -f %{buildroot}/%{_libdir}/*.la
 %{__rm} -f %{buildroot}/%{_libdir}/sipwitch/*.la
-
-%if %{mod_python}
-%{__make} DESTDIR=%{buildroot} swig-python
-%endif
-
-%if %{mod_php}
-%{__make} DESTDIR=%{buildroot} swig-php5
-%endif
-
-# setup for automatic plugin loading.  
-# Plugins selected by packages admin has installed.
-echo "PLUGINS=auto" >>%{buildroot}/etc/sysconfig/sipwitch
 
 %clean
 %{__rm} -rf %{buildroot}
 
 %files 
 %defattr(-,root,root,-)
-%doc README COPYING INSTALL NEWS FEATURES SUPPORT TODO NOTES AUTHORS MODULES ChangeLog
-%doc %{_mandir}/man8/*.8*
+%doc README COPYING NEWS FEATURES SUPPORT TODO NOTES AUTHORS MODULES ChangeLog
+%{_mandir}/man8/*.8*
 %{_sbindir}/*
 %{_bindir}/*
-%{_datadir}/snmp/mibs/GNUTelephony-MIB.txt
+%{_libdir}/*.so.*
 %dir %{_libdir}/sipwitch
-%config %{_sysconfdir}/logrotate.d/sipwitch
-%attr(0755,root,root) %{_sysconfdir}/init.d/sipwitch
+%config(noreplace) %{_sysconfdir}/logrotate.d/sipwitch
+%attr(0755,root,root) %{_initrddir}/sipwitch
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/sipwitch
 %attr(0770,root,root) %dir %{_sysconfdir}/sipwitch.d
-%attr(0660,root,root) %config %{_sysconfdir}/sipwitch.conf
-%attr(0660,root,root) %config %{_sysconfdir}/sysconfig/sipwitch
-%attr(0660,root,root) %config %{_sysconfdir}/sipwitch.d/*.xml
+%attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
+%attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sysconfig/sipwitch
+%attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.d/*.xml
 
-%files -n %{_libname}
+%files snmp
 %defattr(-,root,root,-)
-%{_libdir}/lib*.so.*
+%{_datadir}/snmp/mibs/GNUTelephony-MIB.txt
 
-%if %{mod_zeroconf}
 %files plugin-zeroconf
 %defattr(-,root,root,-)
-%{_libdir}/sipwitch/zeroconf.*
-%endif
+%{_libdir}/sipwitch/zeroconf.so
 
-%if %{mod_python}
-%files -n python-sipwitch
+%files python-swig
 %defattr(-,root,root,-)
-%{_prefix}/lib/python*/site-packages/sipwitch.py
-%{_prefix}/lib/python*/site-packages/_sipwitch.so
-%endif
+%{python_sitelib}/sipwitch.py*
+%{python_sitearch}/_sipwitch.so
 
-%if %{mod_php}
-%files -n php-sipwitch
+%files php-swig
 %defattr(-,root,root,-)
-%{_libdir}/php*/*/sipwitch.so
-%endif
+%{php_extdir}/sipwitch.so
 
 %files plugin-forward
 %defattr(-,root,root,-)
-%{_libdir}/sipwitch/forward.*
+%{_libdir}/sipwitch/forward.so
 
 %files plugin-scripting
 %defattr(-,root,root,-)
-%{_libdir}/sipwitch/scripting.*
+%{_libdir}/sipwitch/scripting.so
 
 %files plugin-rtpproxy
 %defattr(-,root,root,-)
-%{_libdir}/sipwitch/rtpproxy.*
+%{_libdir}/sipwitch/rtpproxy.so
 
 %files plugin-subscriber
 %defattr(-,root,root,-)
-%{_libdir}/sipwitch/subscriber.*
+%{_libdir}/sipwitch/subscriber.so
 
-%files -n %{_devname}
+%files devel
 %defattr(-,root,root,-)
-%{_libdir}/lib*.a
-%{_libdir}/lib*.so
-%{_libdir}/lib*.la
-%dir %{_includedir}/sipwitch
-%{_includedir}/sipwitch/*.h
+%{_libdir}/*.so
+%{_includedir}/sipwitch/
 %{_libdir}/pkgconfig/*.pc
 
-%post -n %{_libname} -p /sbin/ldconfig
-
-%postun -n %{_libname} -p /sbin/ldconfig
-
-%if %{mod_python}
-%post -n python-sipwitch 
-version=`python -c "import sys ; print sys.version[:3]"`
-prefix=/usr/lib/python$version/site-packages
-cmd="import py_compile ; py_compile.compile('$prefix/$source')"
-python -c "$cmd"
-python -O -c "$cmd"
-
-%preun -n python-sipwitch
-version=`python -c "import sys ; print sys.version[:3]"`
-rm -f /usr/lib/python$version/site-packages/sipwitch.pyc
-rm -f /usr/lib/python$version/site-packages/sipwitch.pyo
-%endif
-
 %post
-if [ -x /sbin/chkconfig ] ; then /sbin/chkconfig --add sipwitch ; fi
+/sbin/ldconfig
+/sbin/chkconfig --add sipwitch
 
 %preun
-if [ -x /sbin/chkconfig ] ; then /sbin/chkconfig --del sipwitch ; fi
+if [ $1 = 0 ] ; then
+    /sbin/service sipwitch stop >/dev/null 2>&1
+    /sbin/chkconfig --del sipwitch
+fi
+
+%postun 
+if [ "$1" -ge "1" ] ; then
+    /sbin/service sipwitch condrestart >/dev/null 2>&1 || :
+fi
+/sbin/ldconfig
 
 %changelog
-* Fri Jul 25 2008 - dyfet@gnutelephony.org
+* Fri May 08 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.4-2
+- some fixups until upstream is changed, and new init scriptlets.
+
+* Wed May 06 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.4-1
+- temporary patch file added until upstream catches up, other cleanup.
+
+* Sat May 02 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.4-0
+- spec file updated for redhat/fedora submission.
+
+* Fri Jul 25 2008 - David Sugar <dyfet@gnutelephony.org> - 0.2.0-0
 - spec file updated for plugins and new library naming.
 
-* Mon Jul 21 2008 - dyfet@gnutelephony.org
+* Mon Jul 21 2008 - David Sugar <dyfet@gnutelephony.org> - 0.1.0-0
 - initial spec file distribution.
-
 
