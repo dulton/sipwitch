@@ -21,7 +21,6 @@ csharp-swig: swig-clean
 	mcs -out:sipwitch.dll -t:library build/*.cs
 	$(CXX) -shared @SIPWITCH_FLAGS@ -fPIC -fpic -I$(top_srcdir)/inc -I$(top_srcdir) -I$(prefix)/include/mono -o wrapper.o -c wrapper.cpp  
 	$(CXX) -shared -o libcsharp-sipwitch.so wrapper.o -lucommon @UCOMMON_CLINK@
-	$(STRIP) libcsharp-sipwitch.so
 	$(mkinstalldirs) $(DESTDIR)$(libdir)/mono/gnutelephony
 	$(INSTALL) sipwitch.dll $(DESTDIR)$(libdir)/mono/gnutelephony
 	$(INSTALL) libcsharp-sipwitch.so $(DESTDIR)$(libdir)
@@ -36,7 +35,6 @@ java-swig: swig-clean
 	(cd $(PKGPATH) ; javac *.java)
 	jar cf sipwitch.jar $(PKGPATH)/*.class
 	$(mkinstalldirs) $(DESTDIR)$(libdir)/java
-	$(STRIP) libjava-sipwitch.so
 	$(INSTALL) sipwitch.jar $(DESTDIR)$(libdir)/java
 	$(INSTALL) libjava-sipwitch.so $(DESTDIR)$(libdir)
 
@@ -46,7 +44,6 @@ perl5-swig: swig-clean
 	$(CXX) -shared -module $(MODFLAGS) -o sipwitch.so wrapper.o -lucommon @UCOMMON_CLINK@
 	$(mkinstalldirs) $(DESTDIR)$(libdir)/perl5/auto/sipwitch
 	touch $(DESTDIR)$(libdir)/perl5/auto/sipwitch/sipwitch.bs
-	$(STRIP) sipwitch.so
 	$(INSTALL) sipwitch.so $(DESTDIR)$(libdir)/perl5/auto/sipwitch
 	$(INSTALL) sipwitch.pm $(DESTDIR)$(libdir)/perl5
 
@@ -55,8 +52,7 @@ python-swig: swig-clean
 	LDFLAGS="@LDFLAGS@ @UCOMMON_CLINK@" CFLAGS="@SIPWITCH_FLAGS@ -I$(abs_top_srcdir)/inc -I$(abs_top_srcdir)" python setup.py build_ext --inplace --swig-opts=-c++ -lucommon
 	$(mkinstalldirs) $(DESTDIR)`python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'`
 	$(mkinstalldirs) $(DESTDIR)`python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib(1)'`
-	$(STRIP) _sipwitch.so
-	$(INSTALL) sipwitch.py $(DESTDIR)`python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'`
+	$(INSTALL_DATA) sipwitch.py $(DESTDIR)`python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'`
 	$(INSTALL) _sipwitch.so $(DESTDIR)`python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib(1)'`
 
 php5-swig: swig-clean
@@ -64,7 +60,6 @@ php5-swig: swig-clean
 	$(CXX) -shared `php-config --includes` -Wno-format -fpic @SIPWITCH_FLAGS@ -o wrapper.o -c wrapper.cpp -I$(top_srcdir)/inc -I$(top_srcdir) 
 	$(CXX) -shared -module $(MODFLAGS) -o sipwitch.so wrapper.o -lucommon @UCOMMON_CLINK@
 	$(mkinstalldirs) $(DESTDIR)`php-config --extension-dir`
-	$(STRIP) sipwitch.so
 	$(INSTALL) sipwitch.so $(DESTDIR)`php-config --extension-dir`
 
 # my internal use testing targets...

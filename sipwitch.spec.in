@@ -147,9 +147,6 @@ sed -i.rpath -e \
   configure
 
 %build
-# Temporary hack until resolved upstream
-export STRIP=/bin/true
-
 %configure --with-pkg-config --disable-static --with-initrddir=%{_initrddir}
 %{__make} %{?_smp_mflags} 
 
