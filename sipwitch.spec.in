@@ -20,7 +20,6 @@ License: GPLv3+
 URL: http://www.gnu.org/software/sipwitch
 Group: Applications/Communications
 Source: http://www.gnutelephony.org/dist/tarballs/sipwitch-%{version}.tar.gz
-Patch: sipwitch.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: ucommon-devel >= 2.0.0
 BuildRequires: libeXosip2-devel >= 3.0.0
@@ -142,11 +141,6 @@ remote voip service provider.
 
 %prep
 %setup -q
-%patch 
-sed -i.rpath -e \
-  '/sys_lib_dlsearch_path_spec/s|/usr/lib |/usr/lib /usr/lib64 /lib /lib64 |' \
-  configure
-
 %build
 %configure --with-pkg-config --disable-static \
 	--with-initrddir=%{_initrddir} \
