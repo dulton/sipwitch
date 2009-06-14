@@ -1,3 +1,6 @@
+From version 0.5.5 to 0.5.6
+- java packaging policies can be passed through configure.
+
 From verison 0.5.4 to 0.5.5
 - python swig binaries now placed correctly.
 - new init script has locking.  Status and condrestart added.

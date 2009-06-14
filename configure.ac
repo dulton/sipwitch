@@ -86,6 +86,25 @@ AC_ARG_WITH(initrddir,
 		INITRDDIR="$with_initrddir"
 ])
 
+# java paths
+AC_ARG_WITH(java-classpath,
+	AC_ARG_WITH([--with-java-classpath=dir], [specify java class dir]),
+		[JAVA_CLASSPATH="$with_java_classpath"],
+		[JAVA_CLASSPATH="/usr/share/java"]
+)
+
+AC_ARG_WITH(java-classarch,
+	AC_ARG_WITH([--with-java-classarch=dir], [architecture specific java classes]),
+		[JAVA_CLASSARCH="$with_java_classarch"],
+		[JAVA_CLASSARCH='${libdir}/java']
+)
+
+AC_ARG_WITH(java-jni,
+	AC_ARG_WITH([--with-java-jni=dir], [specify java jni directory]),
+		[JAVA_JNI="$with_java_jni"],
+		[JAVA_JNI='${libdir}/jni']
+)
+
 # php lib
 AC_ARG_WITH(php-extdir,
 	AC_HELP_STRING([--with-php-extdir=dir], [specify php extensions dir]),[
@@ -430,6 +449,9 @@ fi
 
 AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
 
+AC_SUBST(JAVA_CLASSPATH)
+AC_SUBST(JAVA_CLASSARCH)
+AC_SUBST(JAVA_JNI)
 AC_SUBST(PYTHON)
 AC_SUBST(PYTHON_SITEARCH)
 AC_SUBST(PYTHON_SITELIB)

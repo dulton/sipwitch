@@ -34,9 +34,9 @@ java-swig: swig-clean
 	$(CXX) -shared -o libjava-sipwitch.so wrapper.o -lucommon @UCOMMON_CLINK@
 	(cd $(PKGPATH) ; javac *.java)
 	jar cf sipwitch.jar $(PKGPATH)/*.class
-	$(mkinstalldirs) $(DESTDIR)$(libdir)/java
-	$(INSTALL) sipwitch.jar $(DESTDIR)$(libdir)/java
-	$(INSTALL) libjava-sipwitch.so $(DESTDIR)$(libdir)
+	$(mkinstalldirs) $(DESTDIR)$(JAVA_CLASSPATH) $(DESTDIR)$(JAVA_JNI)
+	$(INSTALL) sipwitch.jar $(DESTDIR)$(JAVA_CLASSPATH)
+	$(INSTALL) libjava-sipwitch.so $(DESTDIR)$(JAVA_JNI)
 
 perl5-swig: swig-clean
 	swig -c++ -perl5 @INCLUDE_FLAGS@ -I$(top_srcdir)/inc -o wrapper.cpp swig.i
