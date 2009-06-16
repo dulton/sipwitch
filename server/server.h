@@ -65,8 +65,8 @@ public:
 		bool expire(Socket::address& addr);
 		bool refresh(Socket::address& addr, time_t expires, const char *target_contact);
 		unsigned setTargets(Socket::address& addr);
-		unsigned addTarget(Socket::address& via, time_t expires, const char *contact);
-		unsigned setTarget(Socket::address& via, time_t expires, const char *contact);
+		unsigned addTarget(Socket::address& via, time_t expires, const char *contact, const char *policy);
+		unsigned setTarget(Socket::address& via, time_t expires, const char *contact, const char *policy);
 		void addContact(const char *id);
 		void addPublished(const char *id);
 		void addRoute(const char *pat, unsigned pri, const char *prefix, const char *suffix);
@@ -116,6 +116,7 @@ public:
 		status_t status;
 		volatile time_t expires;
 		char contact[MAX_URI_SIZE]; 
+		char policy[MAX_POLICY_SIZE];
 
 		static void *operator new(size_t size);
 		static void operator delete(void *ptr);
@@ -522,6 +523,7 @@ private:
 	unsigned instance;
 	unsigned extension;
 	cidr *access;
+	char policy[MAX_POLICY_SIZE];
 	service::usernode authorized;
 	service::usernode dialed;
 	service::keynode *routed;

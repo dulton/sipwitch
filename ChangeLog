@@ -1,5 +1,7 @@
 From version 0.5.5 to 0.5.6
 - java packaging policies can be passed through configure.
+- unneeded patches removed from rpm spec file.
+- network access policy saved in registry to make it easier to calculate nat.
 
 From verison 0.5.4 to 0.5.5
 - python swig binaries now placed correctly.

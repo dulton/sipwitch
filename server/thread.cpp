@@ -1267,6 +1267,10 @@ bool thread::getsource(void)
 		
 	via_address.set(via_host, via_port);
 	access = server::getPolicy(via_address.getAddr());
+	if(access)
+		String::set(policy, sizeof(policy), access->getName());
+	else
+		String::set(policy, sizeof(policy), "*");
 	return true;
 }
 
@@ -1510,9 +1514,9 @@ void thread::reregister(const char *contact, time_t interval)
 	refresh = reginfo->refresh(via_address, expire, contact);
 	if(!refresh) {
 		if(reginfo->type == MappedRegistry::USER && (reginfo->profile.features & USER_PROFILE_MULTITARGET))
-			count = reginfo->addTarget(via_address, expire, contact);
+			count = reginfo->addTarget(via_address, expire, contact, policy);
 		else
-			count = reginfo->setTarget(via_address, expire, contact);
+			count = reginfo->setTarget(via_address, expire, contact, policy);
 	}
 	if(refresh) 
 		debug(2, "refreshing %s for %ld seconds from %s:%u", getIdent(), interval, via_host, via_port);

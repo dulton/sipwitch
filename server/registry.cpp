@@ -1014,7 +1014,7 @@ void registry::detach(mapped *rr)
 	locking.release();
 }
 
-unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease, const char *target_contact)
+unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease, const char *target_contact, const char *target_policy)
 {
 	assert(!isnull(target_addr));
 	assert(target_contact != NULL && *target_contact != 0);
@@ -1073,7 +1073,9 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 		if(origin) 
 			delete origin;
 	}
+	String::set(tp->policy, sizeof(tp->policy), target_policy);
 	String::set(tp->contact, sizeof(tp->contact), target_contact);
+	String::set(policy, sizeof(policy), target_policy);
 	uri::userid(target_contact, remote, sizeof(remote));
 	locking.share();
 	return 1;
@@ -1280,7 +1282,7 @@ bool registry::mapped::refresh(Socket::address& saddr, time_t lease, const char 
 	return false;
 }
 
-unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease, const char *target_contact)
+unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease, const char *target_contact, const char *target_policy)
 {
 	assert(!isnull(target_addr));
 	assert(target_contact != NULL && *target_contact != 0);
@@ -1326,6 +1328,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 			time(&tp->created);
 		tp->expires = lease;
 		String::set(tp->contact, sizeof(tp->contact), target_contact);
+		String::set(tp->policy, sizeof(tp->policy), target_policy);
 		locking.share();
 		return count;
 	}
@@ -1340,6 +1343,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 		expired->enlist(&internal.targets);
 		expired->status = registry::target::READY;
 		memcpy(&contact, oi, len);
+		String::set(policy, sizeof(policy), target_policy);
 		uri::userid(target_contact, remote, sizeof(remote));
 		if(origin)
 			delete origin;
@@ -1350,6 +1354,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 	memcpy(&expired->address, ai, len);
 	stack::getInterface((struct sockaddr *)(&expired->iface), (struct sockaddr *)(&expired->address));
 	String::set(expired->contact, sizeof(expired->contact), target_contact);
+	String::set(expired->policy, sizeof(expired->policy), target_policy);
 	expired->index.registry = this;
 	expired->index.address = (struct sockaddr *)(&expired->address);
 	expired->index.enlist(&addresses[Socket::keyindex(expired->index.address, keysize)]); 
@@ -1362,6 +1367,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
 {
 	assert(!isnull(target_addr));
 
+	cidr *access = NULL;
 	struct addrinfo *al;
 	linked_pointer<target> tp;
 	socklen_t len;
@@ -1388,11 +1394,18 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
 
 		tp = new target;
 		time(&tp->created);
+		access = server::getPolicy(al->ai_addr);
+		if(access)
+			String::set(tp->policy, sizeof(tp->policy), access->getName());
+		else
+			String::set(tp->policy, sizeof(tp->policy), "*");
+		String::set(policy, sizeof(policy), tp->policy);
 		memcpy(&tp->address, al->ai_addr, len);
 		memcpy(&contact, &tp->address, len);
 		remote[0] = 0;
 		stack::getInterface((struct sockaddr *)(&tp->iface), (struct sockaddr *)(&tp->address));
 		stack::sipAddress(&tp->address, tp->contact, userid);
+
 		tp->expires = 0l;
 		tp->status = registry::target::READY;
 		tp->enlist(&internal.targets);

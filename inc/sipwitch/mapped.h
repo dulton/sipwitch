@@ -51,6 +51,7 @@
 #define	USER_PROFILE_DEFAULT		0x0fff
 #define	USER_PROFILE_RESTRICTED	(0)
 
+#define	MAX_POLICY_SIZE		32
 #define	MAX_PATTERN_SIZE	16
 #define	MAX_DISPLAY_SIZE	64
 #define	MAX_USERID_SIZE		48
@@ -77,6 +78,7 @@ public:
 	char	userid[MAX_USERID_SIZE];
 	char	display[MAX_DISPLAY_SIZE];
 	char	remote[MAX_USERID_SIZE];
+	char	policy[MAX_POLICY_SIZE];
 	status_t status;
 	enum {EXPIRED = 0, USER, GATEWAY, SERVICE, REJECT, REFER, TEMPORARY, EXTERNAL} type;
 	bool hidden;
