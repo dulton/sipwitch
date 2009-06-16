@@ -1399,6 +1399,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
 			String::set(tp->policy, sizeof(tp->policy), access->getName());
 		else
 			String::set(tp->policy, sizeof(tp->policy), "*");
+		server::release(access);
 		String::set(policy, sizeof(policy), tp->policy);
 		memcpy(&tp->address, al->ai_addr, len);
 		memcpy(&contact, &tp->address, len);
