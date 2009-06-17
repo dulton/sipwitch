@@ -36,6 +36,18 @@ Non-deterministic blocking operations must never be performed while holding
 	a modify lock.  To avoid writer starvation, they probably should be
 	avoided while holding an access lock as well outside of config.
 
-RTP proxy assumes that the access policy the user agent appears from is the 
-	same as the access policy for the media stream being offered in invite.
+About media proxy:
+
+It is assumed that we can reflect (transparently) rtp media for sessions that
+	do not appear from the same network.  This may be either because the user
+	agents are on different subnets, or one or more ua's are on an "external" 
+	(public) entity outside of the local routing entirely, which is 
+	characteristic of the server being behind a NAT.
+	  
+The server caches the network policy the user agent appears from at user agent
+	registration, uses the source network policy at invite from the source/acl 
+	policy detection.  This avoids lots of expensive and complex nat detection
+	and redundant operations.  This always assumes the sdp will refer to
+	media endpoints that always fall under the same network as the user agent
+	appears to be from in SIP.
 
