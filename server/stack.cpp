@@ -63,6 +63,7 @@ cidr(acl, addr, id)
 	unsigned char *lp;
 	unsigned bits = getMask();
 
+	String::set(netname, sizeof(netname), id);
 	memset(&dest, 0, sizeof(dest));
 	sin->sin_family = family;
 	memcpy(&sin->sin_addr, &network, sizeof(network));
@@ -88,12 +89,15 @@ cidr(acl, addr, id)
 		memset(&iface, 0, sizeof(iface));
 	// gateway special rule to specify a gateway public interface...
 	else if(String::equal(id, "gateway")) {
+		String::set(netname, sizeof(netname), "*");
 		char buf[256];
 		Socket::getaddress((struct sockaddr *)&iface, buf, sizeof(buf));
 		service::publish(buf);
 	}
-	else if(!isMember((struct sockaddr *)&iface))
+	else if(!isMember((struct sockaddr *)&iface)) {
+		String::set(netname, sizeof(netname), "*");
 		service::published(&iface);
+	}
 }
 
 stack::segment::segment(call *cr, int cid, int did, int tid) : OrderedObject()
@@ -418,6 +422,68 @@ int stack::getDialog(session *s)
 		Mutex::release(s->parent);
 	}
 	return did;
+}
+
+void stack::refer(session *source, eXosip_event_t *sevent)
+{
+	assert(source);
+	assert(sevent);
+
+	osip_header_t *header = NULL;
+	osip_to_t *to = NULL;
+	char uri[MAX_URI_SIZE];
+	osip_message_t *msg = NULL;
+	session *target = NULL;
+	call *cr = source->parent;
+	int did;
+
+	if(cr->source == source)
+		target = cr->target;
+	else if(cr->target == source)
+		target = cr->source;
+
+	osip_message_header_get_byname(sevent->request, "Refer-To", 0, &header);
+	if(!header || !header->hvalue)
+		goto norefer;
+
+    osip_to_init(&to);
+    osip_to_parse(to, header->hvalue);
+	if(!to || !to->url)
+		goto norefer;
+
+	if(to->url->port && *to->url->port)
+		snprintf(uri, sizeof(uri), "%s:%s@%s:%s",
+			to->url->scheme, to->url->username, to->url->host, to->url->port);
+	else if(to->url->host && *to->url->host)
+		snprintf(uri, sizeof(uri), "%s:%s@%s",
+			to->url->scheme, to->url->username, to->url->host);
+	else
+		goto norefer;
+
+	did = getDialog(target);
+	if(did < 1) {
+norefer:
+		eXosip_lock();
+		goto failed;
+	}
+
+	eXosip_lock();
+	eXosip_call_build_refer(did, uri, &msg);
+	if(!msg) {
+failed:
+		eXosip_call_build_answer(sevent->tid, SIP_SERVICE_UNAVAILABLE, &msg);
+		if(msg)
+			eXosip_call_send_answer(sevent->tid, SIP_SERVICE_UNAVAILABLE, msg);
+		eXosip_unlock();
+		return;
+	}
+	osip_message_set_header(msg, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
+	osip_message_set_header(msg, ALLOW_EVENTS, "talk, hold, refer");
+	osip_message_set_header(msg, "Referred-By", source->identity);
+	eXosip_call_send_request(did, msg);
+	target->state = session::REFER;
+	target->tid = sevent->tid;
+	eXosip_unlock();		
 }
 
 void stack::infomsg(session *source, eXosip_event_t *sevent)
@@ -1217,7 +1283,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 		stack::subnet *subnet = server::getPolicy(target);
 		if(subnet) {
 			invited->peering = subnet->iface;
-			String::set(invited->network, sizeof(invited->network), subnet->getName());
+			String::set(invited->network, sizeof(invited->network), subnet->netname);
 		}
 		server::release(subnet);
 	}

@@ -561,6 +561,15 @@ void stack::call::relay(thread *thread, session *s)
 	osip_message_get_body(thread->sevent->response, 0, &body);
 
 	switch(s->state) {
+	case session::REFER:
+		if(status == SIP_ACCEPTED) {
+			set(TRANSFER, 'x', "transfer");
+			disconnectLocked();
+			Mutex::release(this);
+			return;
+		}
+		s->state = session::OPEN;
+		break;
 	case session::REINVITE:
 		if(status != SIP_ACCEPTED)
 			s->state = session::OPEN;

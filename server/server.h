@@ -322,6 +322,7 @@ private:
 		void joinLocked(session *s);
 		void cancelLocked(void);
 		void log(void);
+		void refer(thread *thread, session *s);
 		void bye(thread *thread, session *s);
 		void set(state_t state, char id, const char *text);
 		
@@ -387,6 +388,7 @@ public:
 	public:
 		subnet(cidr::policy **acl, const char *rule, const char *name);
 
+		char netname[MAX_NETWORK_SIZE];
 		struct sockaddr_storage iface;
 	};
 
@@ -409,6 +411,7 @@ public:
 	static Socket::address *getAddress(const char *uri, Socket::address *addr = NULL);
 	static void siplog(osip_message_t *msg);
 	static void enableDumping(void);
+	static void refer(session *session, eXosip_event_t *sevent);
 	static void infomsg(session *session, eXosip_event_t *sevent);
 	static void setDialog(session *session, int did);
 	static int getDialog(session *session);

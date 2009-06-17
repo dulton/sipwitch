@@ -1289,7 +1289,7 @@ bool thread::getsource(void)
 	access = server::getPolicy(via_address.getAddr());
 	if(access) {
 		peering = access->iface;
-		String::set(network, sizeof(network), access->getName());
+		String::set(network, sizeof(network), access->netname);
 	}
 	else {
 		service::published(&peering);
@@ -1800,7 +1800,9 @@ void thread::run(void)
 			if(!session)
 				break;
 
-			if(session->state == stack::session::REINVITE) {
+			switch(session->state) {
+			case stack::session::REINVITE:
+			case stack::session::REFER:
 				session->parent->relay(this, session);
 				break;
 			}
@@ -1892,6 +1894,7 @@ void thread::run(void)
 				}
 			}
 			break;
+
 		case EXOSIP_CALL_REINVITE:
 			stack::siplog(sevent->request);
 			authorizing = CALL;
@@ -1964,6 +1967,12 @@ void thread::run(void)
 				else
 					send_reply(SIP_NOT_FOUND);
 			}
+			else if(MSG_IS_REFER(sevent->request)) {
+				if(sevent->cid > 0)
+					session = stack::access(sevent->cid);
+				if(session) 
+					stack::refer(session, sevent);
+			}
 			break;
 		case EXOSIP_MESSAGE_NEW:
 			stack::siplog(sevent->request);
@@ -1976,6 +1985,12 @@ void thread::run(void)
 			else if(MSG_IS_REGISTER(sevent->request)) {
 				authorizing = REGISTRAR;
 				registration();
+			}
+			else if(MSG_IS_REFER(sevent->request)) {
+				if(sevent->cid > 0)
+					session = stack::access(sevent->cid);
+				if(session) 
+					stack::refer(session, sevent);
 			}
 			else if(MSG_IS_BYE(sevent->request)) {
 				if(sevent->cid > 0)

@@ -5,6 +5,7 @@ From version 0.5.5 to 0.5.6
 - network and proxy peer now auto-detected from access policy control.
 - basic rtp proxy peer detection part of core server.
 - rtp media proxy will be integrated in core server, rtpproxy plugin removed.
+- refer state processing for call transfers.
 
 From verison 0.5.4 to 0.5.5
 - python swig binaries now placed correctly.
