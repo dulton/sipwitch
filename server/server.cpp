@@ -201,18 +201,6 @@ bool server::publish(MappedRegistry *rr, const char *msgtype, const char *event,
 	return rtn;
 }
 
-bool server::classify(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
-{
-	linked_pointer<modules::sipwitch> cb = getModules();
-	bool rtn = false;
-
-	while(!rtn && is(cb)) {
-		rtn = cb->classifier(sid, src, addr);
-		cb.next();
-	}
-	return rtn;
-}
-
 service::keynode *server::find(const char *id)
 {
 	assert(id != NULL && *id != 0);
@@ -268,6 +256,7 @@ void server::confirm(const char *user)
 	string_t digest;
 	const char *dirpath = ".";
 	const char *fn;
+	bool subnet = false;
 
 	snprintf(buf, sizeof(buf), "- welcome prefix=%d range=%d", prefix, range);
 	setHeader(buf);
@@ -368,6 +357,7 @@ void server::confirm(const char *user)
 		id = node->getId();
 		leaf = NULL;
 		if(id && node->getPointer()) {
+			subnet = true;
 			mp = (caddr_t)alloc(sizeof(cidr));
 			if(String::equal(id, "policy")) {
 				leaf = node->leaf("name");
@@ -401,6 +391,10 @@ void server::confirm(const char *user)
 		}
 		node.next();
 	}
+
+	// we can use default old style acl as subnet map if none found...
+	if(!nets && subnet)
+		nets = acl;
 
 	node = provision->getFirst();
 	while(is(node)) {
@@ -515,10 +509,11 @@ const char *server::getNetwork(struct sockaddr *addr)
 		return NULL;
 
 	locking.access();
+	// use acl as a network policy if no separate subnet map...
 	if((((server *)(cfg))->nets) == NULL)
 		return "-";
-
-	policy = cidr::find(((server *)(cfg))->nets, addr);
+	else
+		policy = cidr::find(((server *)(cfg))->nets, addr);
 	if(!policy)
 		return "*";
 	return policy->getName();

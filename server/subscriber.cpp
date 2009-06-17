@@ -41,7 +41,6 @@ private:
 public:
 	subscriber();
 
-	bool classifier(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
 	void reload(service *cfg);
 	void start(service *cfg);
 	void stop(service *cfg);
@@ -242,30 +241,6 @@ void subscriber::reload(service *cfg)
 
 	if(!isConfigured() && count)
 		stats::allocate(1);
-}
-
-bool subscriber::classifier(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
-{
-	// gateway mode on a router, we assume external calls are always through
-	// subscriber's sip provider, and hence require rtp proxy between isp
-	// and local user's subnet...
-	if(!sid)
-		return true;
-
-	sid->type = rtpproxy::NO_PROXY;
-
-	if(!addr)
-		addr = rtpproxy::getPublished();
-
-	Socket::getinterface((struct sockaddr *)(&sid->iface), addr);
-	if(sid != src) {
-		if(!Socket::equalhost((struct sockaddr *)(&sid->iface), (struct sockaddr *)(&src->iface))) {
-			sid->type = rtpproxy::GATEWAY_PROXY;
-			String::set(sid->network, sizeof(sid->network), "-");
-			return true;
-		}
-	}
-	return false;
 }
 
 void subscriber::registration(int id, modules::regmode_t mode) 

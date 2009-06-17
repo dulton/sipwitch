@@ -6,6 +6,9 @@ From version 0.5.5 to 0.5.6
 - access policy can now support properly named xml entities and rules both for
   access and for specifying network layout.  Compatible with old format.
 - simplified auto-id of network access rules which are subnet by interface.
+- basic rtp proxy classification code moving into server core...
+- old style access rules default into nets if no interface access rules...
+- network policy info now present in cdr record.
 
 From verison 0.5.4 to 0.5.5
 - python swig binaries now placed correctly.

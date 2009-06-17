@@ -272,16 +272,13 @@ void thread::invite(void)
 
 	// assign initial proxy if required to accept call...
 	// if no proxy available, then return 503...
-	if(server::classify(&session->proxy, &call->source->proxy, via_address.getAddr())) {
-		if(!stack::assign(call, 4)) {
-noproxy:
-			send_reply(SIP_SERVICE_UNAVAILABLE);
-			call->failed(this, session);
-			return;
-		}
-	}
-	else if((destination == REDIRECTED || destination == EXTERNAL) && server::isProxied() && !stack::assign(call, 4))
-		goto noproxy;
+//	if(server::classify(&session->proxy, &call->source->proxy, via_address.getAddr())) {
+//		if(!stack::assign(call, 4)) 
+//			goto noproxy;
+//	}
+//	else 
+//	if((destination == REDIRECTED || destination == EXTERNAL) && server::isProxied() && !stack::assign(call, 4))
+//		goto noproxy;
 		
 	if(extension)
 		snprintf(fromext, sizeof(fromext), "%u", extension);
@@ -329,6 +326,7 @@ noproxy:
 	cdrnode->sequence = session->sequence;
 	cdrnode->cid = session->cid;
 	String::set(cdrnode->uuid, sizeof(cdrnode->uuid), session->uuid);	
+	String::set(cdrnode->network, sizeof(cdrnode->network), network);
 	
 	call->type = destination;
 	switch(destination) {
@@ -519,6 +517,12 @@ exit:
 
 	call->trying(this);
 	debug(2, "call proceeding %08x:%u\n", session->sequence, session->cid);
+	return;
+
+noproxy:
+	send_reply(SIP_SERVICE_UNAVAILABLE);
+	call->failed(this, session);
+	return;
 }
 
 void thread::identify(void)
@@ -1270,6 +1274,8 @@ bool thread::getsource(void)
 	access = server::getPolicy(via_address.getAddr());
 	subnet = server::getNetwork(via_address.getAddr());
 	String::set(network, sizeof(network), subnet);
+	if(session)
+		String::set(session->network, sizeof(session->network), subnet);
 	server::release(subnet);
 	return true;
 }

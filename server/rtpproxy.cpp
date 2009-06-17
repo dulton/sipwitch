@@ -51,7 +51,6 @@ private:
 public:
 	rtp();
 
-	bool classifier(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
 	void reload(service *cfg);
 	void start(service *cfg);
 	void stop(service *cfg);
@@ -171,83 +170,6 @@ void rtp::reload(service *cfg)
 		}
 		sp.next();
 	}
-}
-
-bool rtp::classifier(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
-{
-	service::keynode *cfg;
-
-	if(!sid) {
-		if(!rtp::proxy.count || rtpproxy::isIPV6())
-			return false;
-
-		return true;
-	}
-
-	sid->type = rtpproxy::NO_PROXY;
-
-	if(!rtp::proxy.count)
-		return false;
-
-	cfg = service::get();
-	if(!cfg)
-		return false;
-
-	linked_pointer<cidr> np = rtp::proxy.nets;
-
-	if(!is(np)) {
-		service::release(cfg);
-		return false;
-	}
-
-	cidr *member = NULL;
-	unsigned top = 0;
-		
-	while(is(np) && addr) {
-		if(np->isMember(addr)) {
-			if(np->getMask() > top) {
-				top = np->getMask();
-				member = *np;
-			}
-		}
-		np.next();	
-	}
-
-	if(member)
-		String::set(sid->network, sizeof(sid->network), member->getName());
-	else
-		String::set(sid->network, sizeof(sid->network), "-");
-
-	service::release(cfg);
-
-	// we only do external-to-internal proxy for ipv4.  We can still need rtp
-	// proxying if joining two different subnets (private & public), however.
-
-	if(src != sid) {
-		if(!stricmp(src->network, "-") && stricmp(sid->network, "-")) {
-			if(!rtpproxy::isIPV6())
-				sid->type = rtpproxy::REMOTE_PROXY;
-		}
-		else if(stricmp(src->network, "-") && !stricmp(sid->network, "-")) {
-			if(!rtpproxy::isIPV6())
-				sid->type = rtpproxy::LOCAL_PROXY;
-		}
-		else if(!stricmp(src->network, "-") && !stricmp(sid->network, "-")) {
-			if(!rtpproxy::isIPV6())
-				sid->type = rtpproxy::BRIDGE_PROXY;
-		}
-		else if(stricmp(src->network, sid->network)) {
-			Socket::getinterface((struct sockaddr *)(&sid->iface), addr);
-			sid->type = rtpproxy::SUBNET_PROXY;
-		}
-	}
-	else if(addr)
-		Socket::getinterface((struct sockaddr *)(&sid->iface), addr);	
-
-	if(sid->type != rtpproxy::NO_PROXY)
-		return true;
-	
-	return false;		
 }
 
 END_NAMESPACE

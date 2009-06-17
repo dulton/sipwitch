@@ -247,12 +247,11 @@ private:
 
 		enum {OPEN, CLOSED, RING, BUSY, REORDER, REFER, REINVITE} state;
 
-		rtpproxy::session proxy;
-
 		char sdp[1024];					// sdp body to use in exchange
 		char identity[MAX_URI_SIZE];	// our effective contact/to point...
 		char sysident[MAX_IDENT_SIZE];	// ident of this session
 		char display[MAX_DISPLAY_SIZE];	// callerid reference field
+		char network[MAX_NETWORK_SIZE];	// network policy affinity for nat
 		char from[MAX_URI_SIZE + MAX_DISPLAY_SIZE];	// formatted from line for endpoint
 		char uuid[48];
 
@@ -466,7 +465,6 @@ public:
 	static unsigned allocate(void);
 
 	static bool publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body);
-	static bool classify(rtpproxy::session *session, rtpproxy::session *source, struct sockaddr *addr);
 	static void activate(MappedRegistry *rr);
 	static void expire(MappedRegistry *rr);
 	static void logging(MappedRegistry *rr, const char *reason);
@@ -476,9 +474,6 @@ public:
 	static MappedRegistry *accept(const char *request);
 	static const char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
 	static const char *referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size);
-
-	static inline bool isProxied(void)
-		{return classify(NULL, NULL, NULL);};
 };
 
 class __LOCAL messages : public service::callback

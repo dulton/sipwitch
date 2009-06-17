@@ -1055,7 +1055,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	assert(s != NULL && s->parent != NULL);
 	assert(uri_target != NULL);
 
-	rtpproxy::session proxyinfo;
+	struct sockaddr *target;
 	Socket::address resolve;
 	stack::session *invited;
 	stack::call *call = s->parent;
@@ -1081,8 +1081,6 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	
 	snprintf(touri, sizeof(touri), "<%s>", uri_target);
 
-	proxyinfo.clear();
-	server::classify(&proxyinfo, &call->source->proxy, NULL);
 	invite = NULL;
 
 	eXosip_lock();
@@ -1159,15 +1157,20 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	eXosip_unlock();
 	invited = stack::create(call, cid);
 	registry::incUse(NULL, stats::OUTGOING);
-	rtpproxy::copy(&invited->proxy, &proxyinfo);
 	uri::userid(uri_target, username, sizeof(username));
 	uri::hostid(uri_target, route, sizeof(route));
 	String::set(invited->identity, sizeof(invited->identity), uri_target);
 	String::set(invited->display, sizeof(invited->display), username);
 	snprintf(invited->from, sizeof(invited->from), "<%s>", uri_target);
 	resolve.set(route, 5060);
-	if(resolve.getAddr())
-		uri::identity(resolve.getAddr(), invited->sysident, username, sizeof(invited->sysident));
+	String::set(invited->network, sizeof(invited->network), "*");
+	target = resolve.getAddr();
+	if(target) {
+		uri::identity(target, invited->sysident, username, sizeof(invited->sysident));
+		const char *subnet = server::getNetwork(target);
+		String::set(invited->network, sizeof(invited->network), subnet);
+		server::release(subnet);
+	}
 	else
 		snprintf(invited->sysident, sizeof(invited->sysident), "%s@unknown", username);
 
@@ -1260,7 +1263,6 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 	assert(s != NULL && s->parent != NULL);
 	assert(rr != NULL);
 
-	rtpproxy::session proxyinfo;
 	linked_pointer<registry::target> tp = rr->internal.targets;
 	stack::session *invited;
 	stack::call *call = s->parent;
@@ -1301,12 +1303,10 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 			goto next;
 		}
 
-		proxyinfo.clear();
-
 		// if proxy required, but not available, then we must skip this
 		// invite...
-		if(server::classify(&proxyinfo, &call->source->proxy, (struct sockaddr *)&tp->address) && !assign(call, 4))
-			goto next;
+		// if(server::classify(&proxyinfo, &call->source->proxy, (struct sockaddr *)&tp->address) && !assign(call, 4))
+		//	goto next;
 
 		invite = NULL;
 		eXosip_lock();
@@ -1373,7 +1373,8 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 		eXosip_unlock();
 
 		invited = stack::create(call, cid);
-		rtpproxy::copy(&invited->proxy, &proxyinfo);
+
+		String::set(invited->network, sizeof(invited->network), rr->network);
 		
 		if(rr->ext) 
 			snprintf(invited->sysident, sizeof(invited->sysident), "%u", rr->ext);

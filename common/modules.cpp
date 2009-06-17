@@ -54,11 +54,6 @@ bool modules::sipwitch::publish(MappedRegistry *rr, const char *msgtype, const c
 	return false;
 }
 
-bool modules::sipwitch::classifier(rtpproxy::session *sid, rtpproxy::session *src, struct sockaddr *addr)
-{
-	return false;
-}
-
 void modules::sipwitch::registration(int id, regmode_t mode)
 {
 }
@@ -106,8 +101,8 @@ void modules::cdrlog(FILE *fp, cdr *call)
 		dt->tm_year += 1900;
 
 	if(call->type == cdr::STOP) {
-		debug(1, "call %08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s",
-			call->sequence, call->cid, call->reason,
+		debug(1, "call %08x:%u %s %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s",
+			call->sequence, call->cid, call->network, call->reason,
 			dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
 			dt->tm_hour, dt->tm_min, dt->tm_sec, call->duration,
 			call->ident, call->dialed, call->joined, call->display);
@@ -123,8 +118,8 @@ void modules::cdrlog(FILE *fp, cdr *call)
 	if(!fp || call->type != cdr::STOP)
 		return;
 
-	fprintf(fp, "%08x:%u %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s\n",
-		call->sequence, call->cid, call->reason,
+	fprintf(fp, "%08x:%u %s %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s\n",
+		call->sequence, call->cid, call->network, call->reason,
 		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
 		dt->tm_hour, dt->tm_min, dt->tm_sec, call->duration,
 		call->ident, call->dialed, call->joined, call->display);

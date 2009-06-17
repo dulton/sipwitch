@@ -56,6 +56,7 @@ public:
 	char dialed[MAX_IDENT_SIZE];
 	char joined[MAX_IDENT_SIZE];
 	char display[MAX_DISPLAY_SIZE];
+	char network[MAX_NETWORK_SIZE * 2];
 	char reason[16];
 	unsigned cid, sequence;
 	time_t starting;

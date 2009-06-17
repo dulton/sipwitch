@@ -826,6 +826,10 @@ void stack::call::log(void)
 	String::set(node->dialed, sizeof(node->dialed), dialed);
 	String::set(node->joined, sizeof(node->joined), joined);
 	String::set(node->display, sizeof(node->display), source->display);
+	if(target)
+		snprintf(node->network, sizeof(node->network), "%s/%s", source->network, target->network);
+	else
+		String::set(node->network, sizeof(node->network), source->network);
 	cdr::post(node);	
 	starting = 0l;
 }

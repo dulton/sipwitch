@@ -121,6 +121,7 @@ cdr *cdr::get(void) {
 		rec->dialed[0] = 0;
 		rec->joined[0] = 0;
 		rec->display[0] = 0;
+		rec->network[0] = 0;
 		rec->reason[0] = 0;
 		rec->cid = rec->sequence = 0;
 		rec->starting = 0;
