@@ -1,3 +1,7 @@
+Automatic recognition of all network interfaces for some operating systems.
+
+Closure of nat/network classify functionality into server core.
+
 Call forwarding now supported, but only either to registered destinations
 or external uri's.  There is no forwarding yet to/from hunt or call groups.
 Call forwarding includes busy, no answer, dnd, and away, though support is

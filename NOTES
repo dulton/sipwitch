@@ -36,3 +36,6 @@ Non-deterministic blocking operations must never be performed while holding
 	a modify lock.  To avoid writer starvation, they probably should be
 	avoided while holding an access lock as well outside of config.
 
+RTP proxy assumes that the access policy the user agent appears from is the 
+	same as the access policy for the media stream being offered in invite.
+

@@ -1234,6 +1234,7 @@ void thread::challenge(void)
 
 bool thread::getsource(void)
 {
+	const char *subnet;
 	osip_generic_param_t *param;
 	int vpos = 0;
 
@@ -1267,10 +1268,9 @@ bool thread::getsource(void)
 		
 	via_address.set(via_host, via_port);
 	access = server::getPolicy(via_address.getAddr());
-	if(access)
-		String::set(policy, sizeof(policy), access->getName());
-	else
-		String::set(policy, sizeof(policy), "*");
+	subnet = server::getNetwork(via_address.getAddr());
+	String::set(network, sizeof(network), subnet);
+	server::release(subnet);
 	return true;
 }
 
@@ -1514,9 +1514,9 @@ void thread::reregister(const char *contact, time_t interval)
 	refresh = reginfo->refresh(via_address, expire, contact);
 	if(!refresh) {
 		if(reginfo->type == MappedRegistry::USER && (reginfo->profile.features & USER_PROFILE_MULTITARGET))
-			count = reginfo->addTarget(via_address, expire, contact, policy);
+			count = reginfo->addTarget(via_address, expire, contact, network);
 		else
-			count = reginfo->setTarget(via_address, expire, contact, policy);
+			count = reginfo->setTarget(via_address, expire, contact, network);
 	}
 	if(refresh) 
 		debug(2, "refreshing %s for %ld seconds from %s:%u", getIdent(), interval, via_host, via_port);

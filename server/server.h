@@ -116,7 +116,7 @@ public:
 		status_t status;
 		volatile time_t expires;
 		char contact[MAX_URI_SIZE]; 
-		char policy[MAX_POLICY_SIZE];
+		char network[MAX_NETWORK_SIZE];
 
 		static void *operator new(size_t size);
 		static void operator delete(void *ptr);
@@ -427,6 +427,7 @@ class __LOCAL server : public service
 private:
 	typedef	linked_value<profile_t, LinkedObject> profile;
 
+	cidr::policy *nets;
 	cidr::policy *acl;
 	keynode **extmap;
 	keynode *provision;
@@ -448,10 +449,12 @@ public:
 	static void getDialing(const char *id, usernode& user);
 	static keynode *getConfig(void);
 	static cidr *getPolicy(struct sockaddr *addr);
+	static const char *getNetwork(struct sockaddr *addr);
 	static bool isLocal(struct sockaddr *addr);
 	static void release(cidr *access);
 	static void release(keynode *node);
 	static void release(usernode& user);
+	static void release(const char *str);
 	static void reload(const char *uid);
 	static Socket::address *getContact(const char *id);
 	static void plugins(const char *argv0, const char *names);
@@ -523,7 +526,7 @@ private:
 	unsigned instance;
 	unsigned extension;
 	cidr *access;
-	char policy[MAX_POLICY_SIZE];
+	char network[MAX_NETWORK_SIZE];
 	service::usernode authorized;
 	service::usernode dialed;
 	service::keynode *routed;

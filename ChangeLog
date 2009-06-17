@@ -1,7 +1,11 @@
 From version 0.5.5 to 0.5.6
 - java packaging policies can be passed through configure.
 - unneeded patches removed from rpm spec file.
-- network access policy saved in registry to make it easier to calculate nat.
+- network identity saved in registry to make it easier to calculate nat.
+- network identity rules can be embedded in access policy control.
+- access policy can now support properly named xml entities and rules both for
+  access and for specifying network layout.  Compatible with old format.
+- ethx automatically recognized as both subnet and access rule.
 
 From verison 0.5.4 to 0.5.5
 - python swig binaries now placed correctly.

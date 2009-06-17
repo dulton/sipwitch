@@ -15,6 +15,7 @@
 
 #include "server.h"
 #include <signal.h>
+#include <ctype.h>
 
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
@@ -58,6 +59,7 @@ service(id, PAGING_SIZE)
 
 	memset(keys, 0, sizeof(keys));
 	acl = NULL;
+	nets = NULL;
 }
 
 const char *server::referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size)
@@ -364,9 +366,35 @@ void server::confirm(const char *user)
 	node = access->getFirst();
 	while(node) {
 		id = node->getId();
+		leaf = NULL;
 		if(id && node->getPointer()) {
 			mp = (caddr_t)alloc(sizeof(cidr));
+			if(String::equal(id, "policy")) {
+				leaf = node->leaf("name");
+				if(leaf && leaf->getPointer())
+					id = leaf->getPointer();
+			}
 			new(mp) cidr(&acl, node->getPointer(), id);
+			if(String::equal(node->getId(), "eth", 3) && isdigit(id[3]))
+				leaf = *node;
+			else
+				leaf = node->leaf("network");
+		}
+		if(leaf && !nets) {
+			mp = (caddr_t)alloc(sizeof(cidr));
+			new(mp) cidr(&nets, "127.0.0.0/8", "lo");
+
+			mp = (caddr_t)alloc(sizeof(cidr));
+			new(mp) cidr(&nets, "::1", "lo");
+		}
+		if(leaf) {
+			const char *subnet = leaf->getPointer();
+			if(leaf == *node)
+				subnet = id;
+			if(!subnet || !*subnet)
+				subnet = id;
+			mp = (caddr_t)alloc(sizeof(cidr));
+			new(mp) cidr(&nets, node->getPointer(), subnet);
 		}
 		node.next();
 	}
@@ -430,6 +458,12 @@ void server::confirm(const char *user)
 	}
 }
 
+void server::release(const char *str)
+{
+	if(str)
+		locking.release();
+}
+
 void server::release(keynode *node)
 {
 	if(node)
@@ -465,6 +499,26 @@ bool server::isLocal(struct sockaddr *addr)
 		locking.release();
 	}
 	return rtn;
+}
+
+const char *server::getNetwork(struct sockaddr *addr)
+{
+	assert(addr != NULL);
+	assert(cfg != NULL);
+
+	cidr *policy = NULL;
+
+	if(!cfg)
+		return NULL;
+
+	locking.access();
+	if((((server *)(cfg))->nets) == NULL)
+		return "-";
+
+	policy = cidr::find(((server *)(cfg))->nets, addr);
+	if(!policy)
+		return "*";
+	return policy->getName();
 }
 
 cidr *server::getPolicy(struct sockaddr *addr)
