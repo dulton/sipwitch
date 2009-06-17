@@ -52,6 +52,46 @@ static bool tobool(const char *s)
 
 stack stack::sip;
 
+stack::subnet::subnet(cidr::policy **acl, const char *addr, const char *id) :
+cidr(acl, addr, id)
+{
+	struct sockaddr_storage dest;
+	struct sockaddr_in *sin = (struct sockaddr_in *)&dest;
+#ifdef	AF_INET6
+	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)&dest;
+#endif
+	unsigned char *lp;
+
+	memset(&dest, 0, sizeof(dest));
+	sin->sin_family = family;
+	memcpy(&sin->sin_addr, &network, sizeof(network));
+	switch(family) {
+	case AF_INET:
+		sin->sin_port = htons(1);
+		lp = (unsigned char *)(&sin->sin_addr) + sizeof(sin->sin_addr) - 1;
+		break;
+#ifdef	AF_INET6
+	case AF_INET6:
+		sin6->sin6_port = htons(1);
+		lp = (unsigned char *)(&sin6->sin6_addr) + sizeof(sin6->sin6_addr) - 1;
+		break;
+#endif
+	default:
+		return;
+	} 
+	++*lp;
+	if(Socket::getinterface((struct sockaddr *)&iface, (struct sockaddr *)&dest))
+		memset(&iface, 0, sizeof(iface));
+	// gateway special rule to specify a gateway public interface...
+	else if(String::equal(id, "gateway")) {
+		char buf[256];
+		Socket::getaddress((struct sockaddr *)&iface, buf, sizeof(buf));
+		service::publish(buf);
+	}
+	else if(!isMember((struct sockaddr *)&iface))
+		service::published(&iface);
+}
+
 stack::segment::segment(call *cr, int cid, int did, int tid) : OrderedObject()
 {
 	assert(cr != NULL);
@@ -767,6 +807,8 @@ void stack::reload(service *cfg)
 				anon = value;
 			else if(!stricmp(key, "published") || !stricmp(key, "public"))
 				published = cfg->dup(value);
+			else if(!stricmp(key, "peering") || !stricmp(key, "gateway"))
+				service::publish(value);
 			else if(!stricmp(key, "proxy") || !stricmp(key, "outbound"))
 				new_proxy = cfg->dup(value);
 			else if(!stricmp(key, "agent") && !isConfigured())
@@ -784,7 +826,7 @@ void stack::reload(service *cfg)
 		}
 		sp.next();
 	}
-
+	
 	while(is(tp)) {
 		key = tp->getId();
 		value = tp->getPointer();
@@ -1163,12 +1205,16 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	String::set(invited->display, sizeof(invited->display), username);
 	snprintf(invited->from, sizeof(invited->from), "<%s>", uri_target);
 	resolve.set(route, 5060);
+	service::published(&invited->peering);
 	String::set(invited->network, sizeof(invited->network), "*");
 	target = resolve.getAddr();
 	if(target) {
 		uri::identity(target, invited->sysident, username, sizeof(invited->sysident));
-		const char *subnet = server::getNetwork(target);
-		String::set(invited->network, sizeof(invited->network), subnet);
+		stack::subnet *subnet = server::getPolicy(target);
+		if(subnet) {
+			invited->peering = subnet->iface;
+			String::set(invited->network, sizeof(invited->network), subnet->getName());
+		}
 		server::release(subnet);
 	}
 	else
@@ -1360,7 +1406,7 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 		cid = eXosip_call_send_initial_invite(invite);
 		if(cid > 0) {
 			snprintf(seqid, sizeof(seqid), "%08x-%d", s->sequence, s->cid);
-			stack::sipAddress(&tp->iface, route, seqid, sizeof(route));
+			stack::sipAddress((struct sockaddr_internet *)&tp->peering, route, seqid, sizeof(route));
 			eXosip_call_set_reference(cid, route);
 			++count;
 		}
@@ -1374,7 +1420,8 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 
 		invited = stack::create(call, cid);
 
-		String::set(invited->network, sizeof(invited->network), rr->network);
+		String::set(invited->network, sizeof(invited->network), tp->network);
+		invited->peering = tp->peering;
 		
 		if(rr->ext) 
 			snprintf(invited->sysident, sizeof(invited->sysident), "%u", rr->ext);
@@ -1384,7 +1431,7 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 			String::set(invited->display, sizeof(invited->display), rr->display);
 		else
 			String::set(invited->display, sizeof(invited->display), invited->sysident);
-		stack::sipPublish(&tp->iface, invited->identity, invited->sysident, sizeof(invited->identity));
+		stack::sipPublish((struct sockaddr_internet *)&tp->peering, invited->identity, invited->sysident, sizeof(invited->identity));
 		if(rr->ext && !rr->display[0])
 			snprintf(invited->from, sizeof(invited->from), 
 				"\"%s\" <%s;user=phone>", invited->sysident, invited->identity);

@@ -79,7 +79,7 @@ void listener::run(void)
 		time(&now);
 		if(now > updated) {
 			updated = now + refresh;
-			rtpproxy::publish((const char *)published);
+			service::publish((const char *)published);
 		}
 	}
 	process::errlog(DEBUG1, "stopping rtpproxy thread");
@@ -199,7 +199,7 @@ void subscriber::reload(service *cfg)
 				String::set(provider.network, sizeof(provider.network), value);
 			else if(!stricmp(key, "refresh"))
 				refresh = atoi(value);
-			else if(!stricmp(key, "publish") || !stricmp(key, "public")) {
+			else if(!stricmp(key, "publish") || !stricmp(key, "public") || !stricmp(key, "gateway")) {
 				vp = published;
 				published = strdup(value);
 				if(vp)

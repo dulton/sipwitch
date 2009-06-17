@@ -40,6 +40,7 @@ condlock_t service::locking;
 service *service::cfg = NULL;
 volatile service::dialmode_t service::dialmode = service::ALL_DIALING;
 
+static struct sockaddr_storage peering;
 static char header[80] = "- welcome";
 static time_t started = 0l;
 static time_t periodic = 0l;
@@ -214,6 +215,26 @@ service::~service()
 void service::setHeader(const char *h)
 {
 	String::set(header, sizeof(header) - 1, h);
+}
+
+void service::publish(const char *addr)
+{
+	Socket::address resolver;
+	struct sockaddr *host;
+
+	if(!addr)
+		memset(&peering, 0, sizeof(peering));
+	
+	int i = 0;
+	resolver.set(addr, i);
+	host = resolver.getAddr();
+	if(host)
+		Socket::store(&peering, host);
+}
+	
+void service::published(struct sockaddr_storage *peer)
+{
+	memcpy(peer, &peering, sizeof(peering));
 }
 
 long service::uptime(void)
@@ -619,6 +640,8 @@ exit:
 void service::startup(void)
 {
 	linked_pointer<callback> sp;
+
+	memset(&peering, 0, sizeof(peering));
 
 	process::errlog(NOTICE, "startup");
 

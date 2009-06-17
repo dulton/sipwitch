@@ -196,6 +196,8 @@ public:
 	inline static bool isNode(keynode *node)
 		{return isLinked(node) && isValue(node);};
 	
+	static void publish(const char *addr);
+	static void published(struct sockaddr_storage *peer);
 	static const char *getValue(keynode *base, const char *id);
 	static void dump(FILE *fp, keynode *node, unsigned level);
 	static void snapshot(const char *uid);

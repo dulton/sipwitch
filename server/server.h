@@ -65,8 +65,8 @@ public:
 		bool expire(Socket::address& addr);
 		bool refresh(Socket::address& addr, time_t expires, const char *target_contact);
 		unsigned setTargets(Socket::address& addr);
-		unsigned addTarget(Socket::address& via, time_t expires, const char *contact, const char *policy);
-		unsigned setTarget(Socket::address& via, time_t expires, const char *contact, const char *policy);
+		unsigned addTarget(Socket::address& via, time_t expires, const char *contact, const char *policy, struct sockaddr *peer);
+		unsigned setTarget(Socket::address& via, time_t expires, const char *contact, const char *policy, struct sockaddr *peer);
 		void addContact(const char *id);
 		void addPublished(const char *id);
 		void addRoute(const char *pat, unsigned pri, const char *prefix, const char *suffix);
@@ -111,13 +111,14 @@ public:
 			target *getTarget(void);
 		} index;
 		struct sockaddr_internet address;
-		struct sockaddr_internet iface;
+		struct sockaddr_storage peering;
+
 		time_t created; 
 		status_t status;
 		volatile time_t expires;
 		char contact[MAX_URI_SIZE]; 
 		char network[MAX_NETWORK_SIZE];
-
+		
 		static void *operator new(size_t size);
 		static void operator delete(void *ptr);
 	};
@@ -255,6 +256,8 @@ private:
 		char from[MAX_URI_SIZE + MAX_DISPLAY_SIZE];	// formatted from line for endpoint
 		char uuid[48];
 
+		struct sockaddr_storage peering;
+
 		char authid[MAX_USERID_SIZE];	// for authentication...
 		char secret[MAX_USERID_SIZE];
 		enum {NONE, DIGEST}	authtype;
@@ -379,6 +382,14 @@ private:
 	static stack sip;
 
 public:
+	class __LOCAL subnet : public cidr
+	{
+	public:
+		subnet(cidr::policy **acl, const char *rule, const char *name);
+
+		struct sockaddr_storage iface;
+	};
+
 	stack();
 
 	static const char *getScheme(void);
@@ -407,7 +418,7 @@ public:
 	static bool assign(stack::call *cr, unsigned count);
 	static void inviteRemote(stack::session *session, const char *uri, const char *digest = NULL);
 	static void inviteLocal(stack::session *session, registry::mapped *rr, destination_t dest);
-
+	
 	inline static timeout_t ringTimeout(void)
 		{return stack::sip.ring_timer;};
 
@@ -426,7 +437,6 @@ class __LOCAL server : public service
 private:
 	typedef	linked_value<profile_t, LinkedObject> profile;
 
-	cidr::policy *nets;
 	cidr::policy *acl;
 	keynode **extmap;
 	keynode *provision;
@@ -447,13 +457,11 @@ public:
 	static void getProvision(const char *id, usernode& user);
 	static void getDialing(const char *id, usernode& user);
 	static keynode *getConfig(void);
-	static cidr *getPolicy(struct sockaddr *addr);
-	static const char *getNetwork(struct sockaddr *addr);
+	static stack::subnet *getPolicy(struct sockaddr *addr);
 	static bool isLocal(struct sockaddr *addr);
-	static void release(cidr *access);
+	static void release(stack::subnet *access);
 	static void release(keynode *node);
 	static void release(usernode& user);
-	static void release(const char *str);
 	static void reload(const char *uid);
 	static Socket::address *getContact(const char *id);
 	static void plugins(const char *argv0, const char *names);
@@ -520,8 +528,9 @@ private:
 
 	unsigned instance;
 	unsigned extension;
-	cidr *access;
+	stack::subnet *access;
 	char network[MAX_NETWORK_SIZE];
+	struct sockaddr_storage peering;
 	service::usernode authorized;
 	service::usernode dialed;
 	service::keynode *routed;

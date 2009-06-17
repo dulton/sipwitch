@@ -66,10 +66,6 @@ Summary: Scripting plugin for sipwitch
 Requires: %{name} = %{version}-%{release}
 Summary: Forward registration and routing plugin
 
-%package plugin-rtpproxy
-Requires: %{name} = %{version}-%{release}
-Summary: Generic rtp proxy plugin for sipwitch
-
 %package plugin-subscriber
 Requires: %{name} = %{version}-%{release}
 Summary: Subscriber gateway plugin for sipwitch
@@ -119,15 +115,6 @@ events.
 This plugin enables forwarding of registration requests and destination routes
 for unknown numbers so that one can create a "secure" peer to peer media
 domain managed by sipwitch and still access an "insecure" b2bua based ip-pbx.
-
-%description plugin-rtpproxy
-Generic assignment of RTP proxy for packet forwarding when local and
-remote caller is not directly routable.  This can include briding when
-both source and destination are offsite or on different subnets.  This
-will enable calls between local users and remote users when either or
-both parties are behind NAT.  It is assumed a block of rtp ports (and 
-the sip port) will be "port forwarded" to sipwitch.  All proxying is 
-transparent and hence directly usable for secure calling with ZRTP.
 
 %description plugin-subscriber
 This module is meant to eventually offer generic support for premise 
@@ -202,10 +189,6 @@ remote voip service provider.
 %files plugin-scripting
 %defattr(-,root,root,-)
 %{_libdir}/sipwitch/scripting.so
-
-%files plugin-rtpproxy
-%defattr(-,root,root,-)
-%{_libdir}/sipwitch/rtpproxy.so
 
 %files plugin-subscriber
 %defattr(-,root,root,-)

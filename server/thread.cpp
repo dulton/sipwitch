@@ -1272,11 +1272,18 @@ bool thread::getsource(void)
 		
 	via_address.set(via_host, via_port);
 	access = server::getPolicy(via_address.getAddr());
-	subnet = server::getNetwork(via_address.getAddr());
-	String::set(network, sizeof(network), subnet);
-	if(session)
-		String::set(session->network, sizeof(session->network), subnet);
-	server::release(subnet);
+	if(access) {
+		peering = access->iface;
+		String::set(network, sizeof(network), access->getName());
+	}
+	else {
+		service::published(&peering);
+		String::set(network, sizeof(network), "*");
+	}
+	if(session) {
+		session->peering = peering;
+		String::set(session->network, sizeof(session->network), network);
+	}
 	return true;
 }
 
@@ -1520,9 +1527,9 @@ void thread::reregister(const char *contact, time_t interval)
 	refresh = reginfo->refresh(via_address, expire, contact);
 	if(!refresh) {
 		if(reginfo->type == MappedRegistry::USER && (reginfo->profile.features & USER_PROFILE_MULTITARGET))
-			count = reginfo->addTarget(via_address, expire, contact, network);
+			count = reginfo->addTarget(via_address, expire, contact, network, (struct sockaddr *)&peering);
 		else
-			count = reginfo->setTarget(via_address, expire, contact, network);
+			count = reginfo->setTarget(via_address, expire, contact, network, (struct sockaddr *)&peering);
 	}
 	if(refresh) 
 		debug(2, "refreshing %s for %ld seconds from %s:%u", getIdent(), interval, via_host, via_port);

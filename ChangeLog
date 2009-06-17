@@ -2,13 +2,9 @@ From version 0.5.5 to 0.5.6
 - java packaging policies can be passed through configure.
 - unneeded patches removed from rpm spec file.
 - network identity saved in registry to make it easier to calculate nat.
-- network identity rules can be embedded in access policy control.
-- access policy can now support properly named xml entities and rules both for
-  access and for specifying network layout.  Compatible with old format.
-- simplified auto-id of network access rules which are subnet by interface.
-- basic rtp proxy classification code moving into server core...
-- old style access rules default into nets if no interface access rules...
-- network policy info now present in cdr record.
+- network and proxy peer now auto-detected from access policy control.
+- basic rtp proxy peer detection part of core server.
+- rtp media proxy will be integrated in core server, rtpproxy plugin removed.
 
 From verison 0.5.4 to 0.5.5
 - python swig binaries now placed correctly.

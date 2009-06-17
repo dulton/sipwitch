@@ -59,7 +59,6 @@ service(id, PAGING_SIZE)
 
 	memset(keys, 0, sizeof(keys));
 	acl = NULL;
-	nets = NULL;
 }
 
 const char *server::referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size)
@@ -240,7 +239,7 @@ void server::confirm(const char *user)
 	fsys_t dir;
 	keynode *access = getPath("access");
 	char *id = NULL, *secret = NULL;
-	const char *ext, *cp;
+	const char *ext;
 	linked_pointer<service::keynode> node;
  	service::keynode *leaf;
 	FILE *fp;
@@ -256,7 +255,6 @@ void server::confirm(const char *user)
 	string_t digest;
 	const char *dirpath = ".";
 	const char *fn;
-	bool subnet = false;
 
 	snprintf(buf, sizeof(buf), "- welcome prefix=%d range=%d", prefix, range);
 	setHeader(buf);
@@ -347,54 +345,21 @@ void server::confirm(const char *user)
 	fsys::close(dir);
 
 	mp = (caddr_t)alloc(sizeof(cidr));
-	new(mp) cidr(&acl, "127.0.0.0/8", "loopback");
+	new(mp) stack::subnet(&acl, "127.0.0.0/8", "loopback");
 
 	mp = (caddr_t)alloc(sizeof(cidr));
-	new(mp) cidr(&acl, "::1", "loopback");
+	new(mp) stack::subnet(&acl, "::1", "loopback");
 
 	node = access->getFirst();
 	while(node) {
 		id = node->getId();
 		leaf = NULL;
 		if(id && node->getPointer()) {
-			subnet = true;
 			mp = (caddr_t)alloc(sizeof(cidr));
-			if(String::equal(id, "policy")) {
-				leaf = node->leaf("name");
-				if(leaf && leaf->getPointer())
-					id = leaf->getPointer();
-			}
-			new(mp) cidr(&acl, node->getPointer(), id);
-			cp = node->getId();
-			while(cp && *cp && isalpha(*cp))
-				++cp;
-			if(cp != node->getId() && isdigit(*cp))
-				leaf = *node;
-			else
-				leaf = node->leaf("network");
-		}
-		if(leaf && !nets) {
-			mp = (caddr_t)alloc(sizeof(cidr));
-			new(mp) cidr(&nets, "127.0.0.0/8", "lo");
-
-			mp = (caddr_t)alloc(sizeof(cidr));
-			new(mp) cidr(&nets, "::1", "lo");
-		}
-		if(leaf) {
-			const char *subnet = leaf->getPointer();
-			if(leaf == *node)
-				subnet = id;
-			if(!subnet || !*subnet)
-				subnet = id;
-			mp = (caddr_t)alloc(sizeof(cidr));
-			new(mp) cidr(&nets, node->getPointer(), subnet);
+			new(mp) stack::subnet(&acl, node->getPointer(), id);
 		}
 		node.next();
 	}
-
-	// we can use default old style acl as subnet map if none found...
-	if(!nets && subnet)
-		nets = acl;
 
 	node = provision->getFirst();
 	while(is(node)) {
@@ -455,12 +420,6 @@ void server::confirm(const char *user)
 	}
 }
 
-void server::release(const char *str)
-{
-	if(str)
-		locking.release();
-}
-
 void server::release(keynode *node)
 {
 	if(node)
@@ -478,7 +437,7 @@ void server::release(usernode& user)
 	user.heap = NULL;
 }
 
-void server::release(cidr *access)
+void server::release(stack::subnet *access)
 {
 	if(access)
 		locking.release();
@@ -498,39 +457,18 @@ bool server::isLocal(struct sockaddr *addr)
 	return rtn;
 }
 
-const char *server::getNetwork(struct sockaddr *addr)
+stack::subnet *server::getPolicy(struct sockaddr *addr)
 {
 	assert(addr != NULL);
 	assert(cfg != NULL);
 
-	cidr *policy = NULL;
+	stack::subnet *policy;
 
 	if(!cfg)
 		return NULL;
 
 	locking.access();
-	// use acl as a network policy if no separate subnet map...
-	if((((server *)(cfg))->nets) == NULL)
-		return "-";
-	else
-		policy = cidr::find(((server *)(cfg))->nets, addr);
-	if(!policy)
-		return "*";
-	return policy->getName();
-}
-
-cidr *server::getPolicy(struct sockaddr *addr)
-{
-	assert(addr != NULL);
-	assert(cfg != NULL);
-
-	cidr *policy;
-
-	if(!cfg)
-		return NULL;
-
-	locking.access();
-	policy = cidr::find(((server *)(cfg))->acl, addr);
+	policy = (stack::subnet *)cidr::find(((server *)(cfg))->acl, addr);
 	if(!policy)
 		locking.release();
 	return policy;

@@ -1014,7 +1014,7 @@ void registry::detach(mapped *rr)
 	locking.release();
 }
 
-unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease, const char *target_contact, const char *target_network)
+unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease, const char *target_contact, const char *target_network, struct sockaddr *target_peering)
 {
 	assert(!isnull(target_addr));
 	assert(target_contact != NULL && *target_contact != 0);
@@ -1069,10 +1069,10 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 			tp->index.address = (struct sockaddr *)(&tp->address);
 			tp->index.enlist(&addresses[Socket::keyindex(tp->index.address, keysize)]);
 		}
-		stack::getInterface((struct sockaddr *)(&tp->iface), (struct sockaddr *)(&tp->address));
 		if(origin) 
 			delete origin;
 	}
+	Socket::store(&tp->peering, target_peering);
 	String::set(tp->network, sizeof(tp->network), target_network);
 	String::set(tp->contact, sizeof(tp->contact), target_contact);
 	String::set(network, sizeof(network), target_network);
@@ -1282,7 +1282,7 @@ bool registry::mapped::refresh(Socket::address& saddr, time_t lease, const char 
 	return false;
 }
 
-unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease, const char *target_contact, const char *target_network)
+unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease, const char *target_contact, const char *target_network, struct sockaddr *target_peering)
 {
 	assert(!isnull(target_addr));
 	assert(target_contact != NULL && *target_contact != 0);
@@ -1327,6 +1327,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 		if(tp->expires < now)
 			time(&tp->created);
 		tp->expires = lease;
+		Socket::store(&tp->peering, target_peering);
 		String::set(tp->contact, sizeof(tp->contact), target_contact);
 		String::set(tp->network, sizeof(tp->network), target_network);
 		locking.share();
@@ -1352,7 +1353,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 	time(&expired->created);
 	expired->expires = lease;
 	memcpy(&expired->address, ai, len);
-	stack::getInterface((struct sockaddr *)(&expired->iface), (struct sockaddr *)(&expired->address));
+	Socket::store(&expired->peering, target_peering);
 	String::set(expired->contact, sizeof(expired->contact), target_contact);
 	String::set(expired->network, sizeof(expired->network), target_network);
 	expired->index.registry = this;
@@ -1367,7 +1368,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
 {
 	assert(!isnull(target_addr));
 
-	const char *subnet = NULL;
+	stack::subnet *subnet;
 	struct addrinfo *al;
 	linked_pointer<target> tp;
 	socklen_t len;
@@ -1394,14 +1395,20 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
 
 		tp = new target;
 		time(&tp->created);
-		subnet = server::getNetwork(al->ai_addr);
-		String::set(tp->network, sizeof(tp->network), subnet);
+		subnet = server::getPolicy(al->ai_addr);
+		if(subnet) {
+			tp->peering = subnet->iface;
+			String::set(tp->network, sizeof(tp->network), subnet->getName());
+		}
+		else {
+			service::published(&tp->peering);
+			String::set(tp->network, sizeof(tp->network), "*");
+		}
 		server::release(subnet);
 		String::set(network, sizeof(network), tp->network);
 		memcpy(&tp->address, al->ai_addr, len);
 		memcpy(&contact, &tp->address, len);
 		remote[0] = 0;
-		stack::getInterface((struct sockaddr *)(&tp->iface), (struct sockaddr *)(&tp->address));
 		stack::sipAddress(&tp->address, tp->contact, userid);
 
 		tp->expires = 0l;
