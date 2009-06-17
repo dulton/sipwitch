@@ -268,6 +268,21 @@ void thread::invite(void)
 	if(!domain)
 		domain = requesting;
 
+	if(!access)
+		getsource();
+
+	if(String::equal(network, "decline")) {
+		send_reply(SIP_DECLINE);
+		call->failed(this, session);
+		return;
+	}
+
+	if(String::equal(network, "reject")) {
+		send_reply(SIP_SERVICE_UNAVAILABLE);
+		call->failed(this, session);
+		return;
+	}
+
 	// FIXME: we should get proxy count extimate from sdp into global thread object...
 
 	// assign initial proxy if required to accept call...
