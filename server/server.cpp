@@ -252,7 +252,7 @@ void server::confirm(const char *user)
 	fsys_t dir;
 	keynode *access = getPath("access");
 	char *id = NULL, *secret = NULL;
-	const char *ext;
+	const char *ext, *cp;
 	linked_pointer<service::keynode> node;
  	service::keynode *leaf;
 	FILE *fp;
@@ -375,7 +375,10 @@ void server::confirm(const char *user)
 					id = leaf->getPointer();
 			}
 			new(mp) cidr(&acl, node->getPointer(), id);
-			if(String::equal(node->getId(), "eth", 3) && isdigit(id[3]))
+			cp = node->getId();
+			while(cp && *cp && isalpha(*cp))
+				++cp;
+			if(cp != node->getId() && isdigit(*cp))
 				leaf = *node;
 			else
 				leaf = node->leaf("network");

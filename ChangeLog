@@ -5,7 +5,7 @@ From version 0.5.5 to 0.5.6
 - network identity rules can be embedded in access policy control.
 - access policy can now support properly named xml entities and rules both for
   access and for specifying network layout.  Compatible with old format.
-- ethx automatically recognized as both subnet and access rule.
+- simplified auto-id of network access rules which are subnet by interface.
 
 From verison 0.5.4 to 0.5.5
 - python swig binaries now placed correctly.
