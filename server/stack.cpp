@@ -430,8 +430,6 @@ void stack::refer(session *source, eXosip_event_t *sevent)
 	assert(sevent);
 
 	osip_header_t *header = NULL;
-	osip_to_t *to = NULL;
-	char uri[MAX_URI_SIZE];
 	osip_message_t *msg = NULL;
 	session *target = NULL;
 	call *cr = source->parent;
@@ -446,20 +444,6 @@ void stack::refer(session *source, eXosip_event_t *sevent)
 	if(!header || !header->hvalue)
 		goto norefer;
 
-    osip_to_init(&to);
-    osip_to_parse(to, header->hvalue);
-	if(!to || !to->url)
-		goto norefer;
-
-	if(to->url->port && *to->url->port)
-		snprintf(uri, sizeof(uri), "%s:%s@%s:%s",
-			to->url->scheme, to->url->username, to->url->host, to->url->port);
-	else if(to->url->host && *to->url->host)
-		snprintf(uri, sizeof(uri), "%s:%s@%s",
-			to->url->scheme, to->url->username, to->url->host);
-	else
-		goto norefer;
-
 	did = getDialog(target);
 	if(did < 1) {
 norefer:
@@ -468,14 +452,14 @@ norefer:
 	}
 
 	eXosip_lock();
-	eXosip_call_build_refer(did, uri, &msg);
+	eXosip_call_build_refer(did, header->hvalue, &msg);
 	if(!msg) {
 failed:
 		eXosip_call_build_answer(sevent->tid, SIP_SERVICE_UNAVAILABLE, &msg);
 		if(msg)
 			eXosip_call_send_answer(sevent->tid, SIP_SERVICE_UNAVAILABLE, msg);
 		eXosip_unlock();
-		goto done;
+		return;
 	}
 	osip_message_set_header(msg, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
 	osip_message_set_header(msg, ALLOW_EVENTS, "talk, hold, refer");
@@ -484,9 +468,6 @@ failed:
 	target->state = session::REFER;
 	target->tid = sevent->tid;
 	eXosip_unlock();
-done:
-	if(to)
-		osip_to_free(to);		
 }
 
 void stack::infomsg(session *source, eXosip_event_t *sevent)
