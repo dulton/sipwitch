@@ -91,6 +91,8 @@ modules::sipwitch()
 	memset(&provider, 0, sizeof(provider));
 	provider.rid = -1;
 	provider.type = MappedRegistry::EXTERNAL;
+	// we already know provider is normally external / outside NAT....
+	String::set(provider.network, sizeof(provider.network), "*");
 }
 
 void subscriber::update(void)
@@ -192,6 +194,9 @@ void subscriber::reload(service *cfg)
 				priority = atoi(value);
 			else if(!stricmp(key, "port") && !isConfigured())
 				port = atoi(value);
+			// very rare we may wish to override provider network/nat state
+			else if(!stricmp(key, "network"))
+				String::set(provider.network, sizeof(provider.network), value);
 			else if(!stricmp(key, "refresh"))
 				refresh = atoi(value);
 			else if(!stricmp(key, "publish") || !stricmp(key, "public")) {
