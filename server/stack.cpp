@@ -475,7 +475,7 @@ failed:
 		if(msg)
 			eXosip_call_send_answer(sevent->tid, SIP_SERVICE_UNAVAILABLE, msg);
 		eXosip_unlock();
-		return;
+		goto done;
 	}
 	osip_message_set_header(msg, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
 	osip_message_set_header(msg, ALLOW_EVENTS, "talk, hold, refer");
@@ -483,7 +483,10 @@ failed:
 	eXosip_call_send_request(did, msg);
 	target->state = session::REFER;
 	target->tid = sevent->tid;
-	eXosip_unlock();		
+	eXosip_unlock();
+done:
+	if(to)
+		osip_to_free(to);		
 }
 
 void stack::infomsg(session *source, eXosip_event_t *sevent)
