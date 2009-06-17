@@ -61,6 +61,7 @@ cidr(acl, addr, id)
 	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)&dest;
 #endif
 	unsigned char *lp;
+	unsigned bits = getMask();
 
 	memset(&dest, 0, sizeof(dest));
 	sin->sin_family = family;
@@ -69,17 +70,20 @@ cidr(acl, addr, id)
 	case AF_INET:
 		sin->sin_port = htons(1);
 		lp = (unsigned char *)(&sin->sin_addr) + sizeof(sin->sin_addr) - 1;
+		if(bits < 31)
+			++*lp;
 		break;
 #ifdef	AF_INET6
 	case AF_INET6:
 		sin6->sin6_port = htons(1);
 		lp = (unsigned char *)(&sin6->sin6_addr) + sizeof(sin6->sin6_addr) - 1;
+		if(bits < 127)
+			++*lp;
 		break;
 #endif
 	default:
 		return;
 	} 
-	++*lp;
 	if(Socket::getinterface((struct sockaddr *)&iface, (struct sockaddr *)&dest))
 		memset(&iface, 0, sizeof(iface));
 	// gateway special rule to specify a gateway public interface...
