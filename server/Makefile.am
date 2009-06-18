@@ -64,6 +64,6 @@ install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/@INITRDDIR@
 	$(INSTALL) -m 0755 sipwitch.init $(DESTDIR)/@INITRDDIR@/sipwitch
 	$(mkinstalldirs) $(DESTDIR)/$(sysconfdir)/cron.hourly 
-	$(INSTALL_DATA) sipwitch.cron $(DESTDIR)/$(sysconfdir)/cron.hourly/sipwitch 
+	$(INSTALL) -m 0755 sipwitch.cron $(DESTDIR)/$(sysconfdir)/cron.hourly/sipwitch 
 
 
