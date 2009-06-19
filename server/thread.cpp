@@ -1253,7 +1253,6 @@ void thread::challenge(void)
 
 bool thread::getsource(void)
 {
-	const char *subnet;
 	osip_generic_param_t *param;
 	int vpos = 0;
 
@@ -1804,6 +1803,7 @@ void thread::run(void)
 			case stack::session::REINVITE:
 			case stack::session::REFER:
 				session->parent->relay(this, session);
+			default:
 				break;
 			}
 			// copy target sdp into session object...
