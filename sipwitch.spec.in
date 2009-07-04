@@ -32,10 +32,15 @@ Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts
 Requires(postun): initscripts
+Requires: %{name}-runtime = %{version}-%{release}
+
+%package runtime
+Group: Development/Libraries
+Summary: Runtime library support for sipwitch
 
 %package devel
 Requires: ucommon-devel >= 2.0.0
-Requires: %{name} = %{version}-%{release}
+Requires: %{name}-runtime = %{version}-%{release}
 Group: Development/Libraries
 Summary: Headers for building sipwitch plugins
 
@@ -86,6 +91,12 @@ used for externally creating sipwitch modules, though normally modules are
 found or added to the core distribution directly.  This may also be for 
 developing external application services which need to communicate with a 
 running sipwitch daemon instance.
+
+%description runtime
+Runtime library required for sipwitch development and for using the server.
+This is available as a separate package so that one building sipwitch plugins
+with the required devel package does not also require installing a server
+image.
 
 %description snmp
 This is the standard GNU Telephony MIB.  It can be used to monitor sipwitch
@@ -155,7 +166,6 @@ remote voip service provider.
 %{_mandir}/man8/*.8*
 %{_sbindir}/*
 %{_bindir}/*
-%{_libdir}/*.so.*
 %dir %{_libdir}/sipwitch
 %config(noreplace) %{_sysconfdir}/logrotate.d/sipwitch
 %attr(0755,root,root) %{_initrddir}/sipwitch
@@ -164,6 +174,10 @@ remote voip service provider.
 %attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
 %attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sysconfig/sipwitch
 %attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.d/*.xml
+
+%files runtime
+%defattr(-,root,root,-)
+%{_libdir}/*.so.*
 
 %files snmp
 %defattr(-,root,root,-)
@@ -200,8 +214,10 @@ remote voip service provider.
 %{_includedir}/sipwitch/
 %{_libdir}/pkgconfig/*.pc
 
-%post
+%post runtime
 /sbin/ldconfig
+
+%post
 /sbin/chkconfig --add sipwitch
 
 %preun
@@ -214,9 +230,15 @@ fi
 if [ "$1" -ge "1" ] ; then
     /sbin/service sipwitch condrestart >/dev/null 2>&1 || :
 fi
+
+%postun runtime
 /sbin/ldconfig
 
 %changelog
+* Sat Jul 04 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.6-1
+- split runtime from server to build plugins without requiring server.
+- removed separate rtp proxy, functionality will be integrated into server.
+
 * Fri May 08 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.4-2
 - some fixups until upstream is changed, and new init scriptlets.
 
