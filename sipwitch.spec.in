@@ -235,9 +235,15 @@ fi
 /sbin/ldconfig
 
 %changelog
-* Sat Jul 04 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.6-1
+* Sat Jul 04 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.6-0
 - split runtime from server to build plugins without requiring server.
 - removed separate rtp proxy, functionality will be integrated into server.
+
+* Wed Jun 10 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.5-0
+- upstream fixed in rel 0.5.5, no patches now needed for rpm distros.
+
+* Sun May 10 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.4-3
+- new generic init script layout as a patch until next upstream release.
 
 * Fri May 08 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.4-2
 - some fixups until upstream is changed, and new init scriptlets.
