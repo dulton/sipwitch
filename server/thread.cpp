@@ -534,10 +534,9 @@ exit:
 	debug(2, "call proceeding %08x:%u\n", session->sequence, session->cid);
 	return;
 
-noproxy:
-	send_reply(SIP_SERVICE_UNAVAILABLE);
-	call->failed(this, session);
-	return;
+// noproxy:
+//	send_reply(SIP_SERVICE_UNAVAILABLE);
+//	call->failed(this, session);
 }
 
 void thread::identify(void)
