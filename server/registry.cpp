@@ -1398,7 +1398,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
 		subnet = server::getPolicy(al->ai_addr);
 		if(subnet) {
 			tp->peering = subnet->iface;
-			String::set(tp->network, sizeof(tp->network), subnet->netname);
+			String::set(tp->network, sizeof(tp->network), subnet->getId());
 		}
 		else {
 			service::published(&tp->peering);

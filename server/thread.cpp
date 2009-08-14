@@ -1290,7 +1290,7 @@ bool thread::getsource(void)
 	access = server::getPolicy(via_address.getAddr());
 	if(access) {
 		peering = access->iface;
-		String::set(network, sizeof(network), access->netname);
+		String::set(network, sizeof(network), access->getId());
 	}
 	else {
 		service::published(&peering);

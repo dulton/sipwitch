@@ -344,10 +344,10 @@ void server::confirm(const char *user)
 
 	fsys::close(dir);
 
-	mp = (caddr_t)alloc(sizeof(cidr));
+	mp = (caddr_t)alloc(sizeof(stack::subnet));
 	new(mp) stack::subnet(&acl, "127.0.0.0/8", "loopback");
 
-	mp = (caddr_t)alloc(sizeof(cidr));
+	mp = (caddr_t)alloc(sizeof(stack::subnet));
 	new(mp) stack::subnet(&acl, "::1", "loopback");
 
 	node = access->getFirst();
@@ -355,7 +355,7 @@ void server::confirm(const char *user)
 		id = node->getId();
 		leaf = NULL;
 		if(id && node->getPointer()) {
-			mp = (caddr_t)alloc(sizeof(cidr));
+			mp = (caddr_t)alloc(sizeof(stack::subnet));
 			new(mp) stack::subnet(&acl, node->getPointer(), id);
 		}
 		node.next();

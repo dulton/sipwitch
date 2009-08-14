@@ -388,8 +388,13 @@ public:
 	public:
 		subnet(cidr::policy **acl, const char *rule, const char *name);
 
-		char netname[MAX_NETWORK_SIZE];
 		struct sockaddr_storage iface;
+
+		const char *getId(void)
+			{return netname;};
+
+	private:
+		char netname[MAX_NETWORK_SIZE];
 	};
 
 	stack();

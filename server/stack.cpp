@@ -1267,7 +1267,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 		stack::subnet *subnet = server::getPolicy(target);
 		if(subnet) {
 			invited->peering = subnet->iface;
-			String::set(invited->network, sizeof(invited->network), subnet->netname);
+			String::set(invited->network, sizeof(invited->network), subnet->getId());
 		}
 		server::release(subnet);
 	}
