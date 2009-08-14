@@ -435,7 +435,10 @@ void thread::invite(void)
 		snprintf(session->identity, sizeof(session->identity), "%s:%s@%s",
 			stack::sip.getScheme(), session->sysident, domain);
 
-		uri::identity(request_address.getAddr(), call->dialed, uri->username, sizeof(call->dialed));
+		if(destination == EXTERNAL)
+			uri::identity(request_address.getAddr(), call->dialed, uri->username, sizeof(call->dialed));
+		else
+			String::set(call->dialed, sizeof(call->dialed), dialing);
 
 		if(extension && !display[0])
 			snprintf(session->from, sizeof(session->from), 

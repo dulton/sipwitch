@@ -1,3 +1,9 @@
+From version 0.5.6 to 0.5.7
+- ability to disable install of init.d.
+- fix for redirected invite identity vs external call request.
+- use of uri::identity returning false on NULL.
+- fix for setting call network in log.
+
 From version 0.5.5 to 0.5.6
 - java packaging policies can be passed through configure.
 - unneeded patches removed from rpm spec file.
