@@ -10,7 +10,7 @@
 
 AC_INIT(autogen.sh)
 
-VERSION="0.5.6"
+VERSION="0.5.7"
 LT_VERSION="0:26:0"
 UCOMMON_REQUIRES="2.0.0"
 

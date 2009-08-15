@@ -11,6 +11,7 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 %{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 %{!?php_extdir: %global %(php-config --extension-dir)}
+%global php_apiver %((echo 0; php -i 2>/dev/null | sed -n 's/^PHP API => //p') | tail -1)
 
 Name: sipwitch
 Summary: SIP telephony server for secure phone systems
@@ -59,9 +60,14 @@ Requires: %{name} = %{version}-%{release}
 Summary: Python package to control sipwitch server
 
 %package php-swig
-Requires: php
-Requires: %{name} = %{version}-%{release}
 Summary: PHP package to control sipwitch server
+Requires: %{name} = %{version}-%{release}
+%if 0%{?php_zend_api}
+Requires: php(zend-abi) = %{php_zend_api}
+Requires: php(api) = %{php_core_api}
+%else
+Requires: php-api = %{php_apiver}
+%endif
 
 %package plugin-scripting
 Requires: %{name} = %{version}-%{release}
@@ -157,6 +163,13 @@ remote voip service provider.
 %{__rm} -f %{buildroot}/%{_libdir}/*.la
 %{__rm} -f %{buildroot}/%{_libdir}/sipwitch/*.la
 
+# Put the php config bit into place
+%{__mkdir_p} %{buildroot}%{_sysconfdir}/php.d
+%{__cat} << __EOF__ > %{buildroot}%{_sysconfdir}/php.d/%{name}.ini
+; Enable %{name} extension module
+extension=%{name}.so
+__EOF__
+
 %clean
 %{__rm} -rf %{buildroot}
 
@@ -194,6 +207,7 @@ remote voip service provider.
 
 %files php-swig
 %defattr(-,root,root,-)
+%config(noreplace) %{_sysconfdir}/php.d/%{name}.ini
 %{php_extdir}/sipwitch.so
 
 %files plugin-forward
@@ -235,6 +249,11 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Mon Jul 13 2009 Remi Collet <Fedora@FamilleCollet.com> - 0.5.6-1
+- rebuild for new PHP 5.3.0 ABI (20090626)
+- add PHP ABI check
+- add php configuration file (/etc/php.d/sipwitch.ini)
+
 * Sat Jul 04 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.6-0
 - split runtime from server to build plugins without requiring server.
 - removed separate rtp proxy, functionality will be integrated into server.
