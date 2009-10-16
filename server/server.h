@@ -551,7 +551,7 @@ private:
 	char dialing[MAX_USERID_SIZE];
 	char display[MAX_DISPLAY_SIZE];
 	char requesting[MAX_URI_SIZE];
-	Socket::address via_address, request_address;
+	Socket::address via_address, request_address, contact_address;
 	stack::session *session;
 	osip_header_t *header;
 	long header_expires;
@@ -559,9 +559,9 @@ private:
 	osip_from_t *from;
 	osip_to_t *to;
 	osip_uri_t *uri;
-	const char *via_host;
+	const char *via_host, *contact_host;
 	unsigned via_hops;
-	unsigned via_port, from_port;
+	unsigned via_port, from_port, contact_port;
 	destination_t destination;
 
 	char *sip_realm;

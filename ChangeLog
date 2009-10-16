@@ -1,3 +1,6 @@
+From version 0.5.7 to 0.5.8
+- detect registration from ephemeral ports.
+
 From version 0.5.6 to 0.5.7
 - ability to disable install of init.d.
 - fix for redirected invite identity vs external call request.

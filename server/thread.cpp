@@ -1431,6 +1431,19 @@ void thread::registration(void)
 			port = (char *)"5060";
 		snprintf(buffer, sizeof(buffer), "%s:%s@%s:%s", 
 			reguri->scheme, reguri->username, reguri->host, port);
+
+		// auto-detect registration from ephemerial ports... 
+		if(Socket::isNumeric(reguri->host) && String::equal(reguri->host, via_host))
+		{
+			contact_host = reguri->host;
+			contact_port = atoi(port);
+			contact_address.set(contact_host, contact_port);
+		}
+		else {
+			contact_host = via_host;
+			contact_port = via_port;
+			contact_address.set(via_host, via_port);
+		}
 	}
 	else
 	{
@@ -1540,19 +1553,19 @@ void thread::reregister(const char *contact, time_t interval)
 
 	expire += interval + 3;	// overdraft 3 seconds...
 
-	refresh = reginfo->refresh(via_address, expire, contact);
+	refresh = reginfo->refresh(contact_address, expire, contact);
 	if(!refresh) {
 		if(reginfo->type == MappedRegistry::USER && (reginfo->profile.features & USER_PROFILE_MULTITARGET))
-			count = reginfo->addTarget(via_address, expire, contact, network, (struct sockaddr *)&peering);
+			count = reginfo->addTarget(contact_address, expire, contact, network, (struct sockaddr *)&peering);
 		else
-			count = reginfo->setTarget(via_address, expire, contact, network, (struct sockaddr *)&peering);
+			count = reginfo->setTarget(contact_address, expire, contact, network, (struct sockaddr *)&peering);
 	}
 	if(refresh) 
-		debug(2, "refreshing %s for %ld seconds from %s:%u", getIdent(), interval, via_host, via_port);
+		debug(2, "refreshing %s for %ld seconds from %s:%u", getIdent(), interval, contact_host, contact_port);
 	else if(count) {
 		time(&reginfo->created);
 		server::activate(reginfo);
-		process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%u", getIdent(), interval, via_host, via_port);
+		process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%u", getIdent(), interval, contact_host, contact_port);
 	}
 	else {
 		process::errlog(ERRLOG, "cannot register %s from %s", getIdent(), buffer);
@@ -1592,7 +1605,7 @@ void thread::deregister()
 	bool unreg = false;
 	registry::mapped *rr = registry::access(identity);
 	if(rr) {
-		unreg = rr->expire(via_address);
+		unreg = rr->expire(contact_address);
 		if(unreg)
 			server::expire(rr);
 		registry::detach(rr);
