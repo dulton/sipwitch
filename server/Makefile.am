@@ -33,7 +33,7 @@ sipw_LDADD = $(LDADD) $(DLOPEN)
 
 sysconf_DATA = sipwitch.conf
 
-pkgxml_DATA = *.xml 
+pkgxml_DATA = lab.xml tests.xml 
 
 forward_la_SOURCES = forward.cpp 
 forward_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)
