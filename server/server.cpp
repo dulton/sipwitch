@@ -17,6 +17,16 @@
 #include <signal.h>
 #include <ctype.h>
 
+#ifdef	HAVE_NET_IF_H
+#include <net/if.h>
+#include <arpa/inet.h>
+#ifdef	HAVE_IOCTL_H
+#include <ioctl.h>
+#else
+#include <sys/ioctl.h>
+#endif
+#endif
+
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
@@ -349,6 +359,41 @@ void server::confirm(const char *user)
 
 	mp = (caddr_t)alloc(sizeof(stack::subnet));
 	new(mp) stack::subnet(&acl, "::1", "loopback");
+
+#ifdef	HAVE_NET_IF_H
+	char buffer[8192];
+	struct ifconf ifc;
+	struct ifreq *ifr;
+
+	ifc.ifc_len = sizeof(buffer);
+    ifc.ifc_buf = buffer;
+	int count = 0, index = 0;
+	int ifd = ::socket(AF_INET, SOCK_DGRAM, 0);
+	if(ifd < 0)
+		process::errlog(FAILURE, "cannot access network");
+	else if(ioctl(ifd, SIOCGIFCONF, &ifc) == -1) {
+		::close(ifd);
+		ifd = -1;
+		process::errlog(ERRLOG, "cannot list interfaces");
+	}
+	if(ifd > 0)
+		count = ifc.ifc_len / sizeof(ifreq);
+	
+	while(index < count) {
+		ifr = &ifc.ifc_req[index++];
+		if(ifr->ifr_addr.sa_family != AF_INET)
+			continue;
+		struct sockaddr_in *saddr = (struct sockaddr_in *)&(ifr->ifr_addr);
+		snprintf(buf, sizeof(buf), "%s/", inet_ntoa(saddr->sin_addr));
+		if(ioctl(ifd, SIOCGIFNETMASK, ifr) == 0) {
+			saddr = (struct sockaddr_in *)&(ifr->ifr_addr);
+			String::add(buf, sizeof(buf), inet_ntoa(saddr->sin_addr));
+			mp = (caddr_t)alloc(sizeof(stack::subnet));
+			new(mp) stack::subnet(&acl, buf, ifr->ifr_name);
+		}
+	}
+	::close(ifd);
+#endif
 
 	node = access->getFirst();
 	while(node) {

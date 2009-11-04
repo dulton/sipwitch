@@ -62,6 +62,7 @@ cidr(acl, addr, id)
 #endif
 	unsigned char *lp;
 	unsigned bits = getMask();
+	char buf[256];
 
 	String::set(netname, sizeof(netname), id);
 	memset(&dest, 0, sizeof(dest));
@@ -90,7 +91,6 @@ cidr(acl, addr, id)
 	// gateway special rule to specify a gateway public interface...
 	else if(String::equal(id, "gateway")) {
 		String::set(netname, sizeof(netname), "*");
-		char buf[256];
 		Socket::getaddress((struct sockaddr *)&iface, buf, sizeof(buf));
 		service::publish(buf);
 	}

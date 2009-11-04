@@ -312,7 +312,7 @@ for lib in $UCOMMON_CLINK ; do
 	esac
 done
 
-AC_CHECK_HEADERS(sys/resource.h syslog.h)
+AC_CHECK_HEADERS(sys/resource.h syslog.h net/if.h ioctl.h)
 AC_CHECK_FUNCS(setrlimit)
 
 AC_LANG_CPLUSPLUS
