@@ -86,53 +86,6 @@ AC_ARG_WITH(initrddir,
 		INITRDDIR="$with_initrddir"
 ])
 
-# java paths
-AC_ARG_WITH(java-classpath,
-	AC_ARG_WITH([--with-java-classpath=dir], [specify java class dir]),
-		[JAVA_CLASSPATH="$with_java_classpath"],
-		[JAVA_CLASSPATH="/usr/share/java"]
-)
-
-AC_ARG_WITH(java-classarch,
-	AC_ARG_WITH([--with-java-classarch=dir], [architecture specific java classes]),
-		[JAVA_CLASSARCH="$with_java_classarch"],
-		[JAVA_CLASSARCH='${libdir}/java']
-)
-
-AC_ARG_WITH(java-jni,
-	AC_ARG_WITH([--with-java-jni=dir], [specify java jni directory]),
-		[JAVA_JNI="$with_java_jni"],
-		[JAVA_JNI='${libdir}/jni']
-)
-
-# php lib
-AC_ARG_WITH(php-extdir,
-	AC_HELP_STRING([--with-php-extdir=dir], [specify php extensions dir]),[
-		PHP_EXTDIR="$with_php_execdir"
-])
-
-# check python
-
-AC_ARG_WITH(python,
-	AC_HELP_STRING([--with-python=exec], [specify python interpreter]), 
-	[PYTHON="$with_python"],
-	[AC_PATH_PROG(PYTHON, python, no)]
-)	
-
-AC_ARG_WITH(python-sitearch,
-	AC_HELP_STRING([--with-python-sitearch=dir], [specify arch directory]),[
-		PYTHON_SITEARCH="$with_python_sitearch"
-])
-
-AC_ARG_WITH(python-sitelib,
-	AC_HELP_STRING([--with-python-sitelib=dir], [specify python lib directory]),[
-		PYTHON_SITELIB="$with_python_sitelib"
-])
-
-if test -z "$PYTHON_SITEARCH" ; then
-	PYTHON_SITEARCH="$PYTHON_SITELIB"
-fi
-
 # make list that is parsed...
 
 AC_ARG_WITH(crypto, 
@@ -371,30 +324,6 @@ AC_SUBST_DIR(prefix_libdir, libdir)
 if test -z "$INITRDDIR" ; then
 	INITRDDIR="$default_cfgpath/init.d" ; fi
 
-if test "$PYTHON" = "no" ; then
-	if test -z "$PYTHON_SITEARCH" ; then
-		PYTHON_SITEARCH="$prefix_libdir/python/site-packages"
-		PYTHON_SITELIB="$prefix_libdir/python/site-packages"
-	fi
-fi
-
-if test -z "$PYTHON_SITEARCH" ; then
-	PYTHON_SITEARCH=`$PYTHON -c 'from distutils.sysconfig import get_python_lib; print get_python_lib(1)'`
-fi
-
-if test -z "$PYTHON_SITELIB" ; then
-	PYTHON_SITELIB=`$PYTHON -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'`
-fi
-
-if test -z "$PHP_EXTDIR" ; then
-	AC_PATH_PROG(PHP_CONFIG, php-config, no)
-	if test "$PHP_CONFIG" = "no" ; then
-		PHP_EXTDIR="$prefix_libdir/php"
-	else
-		PHP_EXTDIR=`$PHP_CONFIG --extension-dir`
-	fi	 
-fi
-
 case "$SIPWITCH_FLAGS -I/usr/include" in
 *-I${default_incpath}*)
 	;;
@@ -449,14 +378,6 @@ fi
 
 AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
 
-AC_SUBST(JAVA_CLASSPATH)
-AC_SUBST(JAVA_CLASSARCH)
-AC_SUBST(JAVA_JNI)
-AC_SUBST(PYTHON)
-AC_SUBST(PYTHON_SITEARCH)
-AC_SUBST(PYTHON_SITELIB)
-AC_SUBST(PHP_EXTDIR)
-AC_SUBST(PHP_CONFIG)
 AC_SUBST(LT_VERSION)
 AC_SUBST(INITRDDIR)
 AC_SUBST(plugindir)
@@ -475,6 +396,6 @@ AC_SUBST(CXXFLAGS)
 AC_SUBST(MODFLAGS)
 AC_SUBST(DLOPEN)
 AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile 
-server/Makefile utils/Makefile test/Makefile swig/Makefile 
+server/Makefile utils/Makefile test/Makefile 
 libsipwitch.pc sipwitch.spec)
 

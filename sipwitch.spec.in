@@ -8,11 +8,6 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
-%{!?php_extdir: %global %(php-config --extension-dir)}
-%global php_apiver %((echo 0; php -i 2>/dev/null | sed -n 's/^PHP API => //p') | tail -1)
-
 Name: sipwitch
 Summary: SIP telephony server for secure phone systems
 Version: @VERSION@
@@ -24,9 +19,6 @@ Source: http://www.gnutelephony.org/dist/tarballs/sipwitch-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: ucommon-devel >= 2.0.0
 BuildRequires: libeXosip2-devel >= 3.0.0
-BuildRequires: swig >= 1.3.30
-BuildRequires: python-devel
-BuildRequires: php-devel >= 5.0.0
 BuildRequires: avahi-devel
 BuildRequires: libgcrypt-devel
 Requires(post): chkconfig
@@ -48,21 +40,6 @@ Summary: Headers for building sipwitch plugins
 %package plugin-zeroconf
 Requires: %{name} = %{version}-%{release}
 Summary: Zeroconf plugin for sipwitch
-
-%package python-swig
-Requires: python
-Requires: %{name} = %{version}-%{release}
-Summary: Python package to control sipwitch server
-
-%package php-swig
-Summary: PHP package to control sipwitch server
-Requires: %{name} = %{version}-%{release}
-%if 0%{?php_zend_api}
-Requires: php(zend-abi) = %{php_zend_api}
-Requires: php(api) = %{php_core_api}
-%else
-Requires: php-api = %{php_apiver}
-%endif
 
 %package plugin-scripting
 Requires: %{name} = %{version}-%{release}
@@ -103,18 +80,6 @@ image.
 This plugin activates zeroconf network services for sipwitch and publishes
 sipwitch as a sip server.
 
-%description python-swig
-This module allows one to interact with and control a locally running 
-instance of the GNU SIP Witch daemon using python.  This can be used to
-create sipwitch admininstration scripts or python web services that
-interact with the locally running instance of sipwitch.
-
-%description php-swig
-This extension allows one to interact with and control a locally running 
-instance of the GNU SIP Witch daemon using php.  This can be used to
-create sipwitch admininstration scripts or php web services that
-interact with the locally running instance of sipwitch.
-
 %description plugin-scripting
 This plugin enables shell scripting in connection with specific sipwitch 
 events.
@@ -137,29 +102,15 @@ remote voip service provider.
 %prep
 %setup -q
 %build
-%configure --with-pkg-config --disable-static \
-	--with-initrddir=%{_initrddir} \
-	--with-python=%{__python} \
-	--with-python-sitearch=%{python_sitearch} \
-	--with-python-sitelib=%{python_sitelib} \
-	--with-php-extdir=%{php_extdir}
+%configure --with-pkg-config --disable-static --with-initrddir=%{_initrddir}
 
 %{__make} %{?_smp_mflags} 
 
 %install
 %{__rm} -rf %{buildroot}
 %{__make} DESTDIR=%{buildroot} INSTALL="install -p" install
-%{__make} DESTDIR=%{buildroot} INSTALL="install -p" swig-python
-%{__make} DESTDIR=%{buildroot} INSTALL="install -p" swig-php5
 %{__rm} -f %{buildroot}/%{_libdir}/*.la
 %{__rm} -f %{buildroot}/%{_libdir}/sipwitch/*.la
-
-# Put the php config bit into place
-%{__mkdir_p} %{buildroot}%{_sysconfdir}/php.d
-%{__cat} << __EOF__ > %{buildroot}%{_sysconfdir}/php.d/%{name}.ini
-; Enable %{name} extension module
-extension=%{name}.so
-__EOF__
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -186,16 +137,6 @@ __EOF__
 %files plugin-zeroconf
 %defattr(-,root,root,-)
 %{_libdir}/sipwitch/zeroconf.so
-
-%files python-swig
-%defattr(-,root,root,-)
-%{python_sitelib}/sipwitch.py*
-%{python_sitearch}/_sipwitch.so
-
-%files php-swig
-%defattr(-,root,root,-)
-%config(noreplace) %{_sysconfdir}/php.d/%{name}.ini
-%{php_extdir}/sipwitch.so
 
 %files plugin-forward
 %defattr(-,root,root,-)

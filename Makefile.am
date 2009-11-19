@@ -14,23 +14,8 @@ EXTRA_DIST = autogen.sh README *.pc.in FEATURES  TODO Doxyfile BUILDS \
 #  *.pc.in *.spec.in *.spec
 
 SUBDIRS = common server utils inc test
-DIST_SUBDIRS = common server utils inc test swig
+DIST_SUBDIRS = common server utils inc test 
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsipwitch.pc
-
-swig-perl5:
-	(cd swig ; make perl5-swig)
-
-swig-python:
-	(cd swig ; make python-swig)
-
-swig-php5:
-	(cd swig ; make php5-swig)
-
-swig-java:
-	(cd swig ; make java-swig)
-
-swig-csharp:
-	(cd swig ; make csharp-swig)
 
