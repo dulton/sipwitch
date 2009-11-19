@@ -1,3 +1,7 @@
+From version 0.5.8 to 0.5.9
+- remove snmp from sipwitch, will be in switchroom.
+- remove swig from sipwitch, will be added where needed.
+
 From version 0.5.7 to 0.5.8
 - detect registration from ephemeral ports.
 - auto-detect interfaces and local subnets.

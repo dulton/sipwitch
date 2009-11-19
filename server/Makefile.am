@@ -11,7 +11,7 @@
 MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
 LDADD = ../common/libsipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ @DAEMON_LIBS@
-EXTRA_DIST = *.xml *.conf *.log *.defaults *.init *.cron GNUTelephony-MIB.txt
+EXTRA_DIST = *.xml *.conf *.log *.defaults *.init *.cron
 EXTRA_LTLIBRARIES =
 
 sbin_PROGRAMS = sipw
@@ -46,10 +46,6 @@ subscriber_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)
 
 zeroconf_la_SOURCES = zeroconf.cpp 
 zeroconf_la_LDFLAGS = -module $(MODFLAGS) @ZEROCONF_LIBS@ $(LDADD)
-
-mibsdatadir = $(datadir)/snmp/mibs
-
-mibsdata_DATA = GNUTelephony-MIB.txt
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(logrotatedir)

@@ -45,11 +45,6 @@ Requires: %{name}-runtime = %{version}-%{release}
 Group: Development/Libraries
 Summary: Headers for building sipwitch plugins
 
-%package snmp
-Requires: net-snmp
-Group: Applications/Internet
-Summary: Standard MIB for GNU Telephony
-
 %package plugin-zeroconf
 Requires: %{name} = %{version}-%{release}
 Summary: Zeroconf plugin for sipwitch
@@ -103,10 +98,6 @@ Runtime library required for sipwitch development and for using the server.
 This is available as a separate package so that one building sipwitch plugins
 with the required devel package does not also require installing a server
 image.
-
-%description snmp
-This is the standard GNU Telephony MIB.  It can be used to monitor sipwitch
-servers from a snmp management station when we add snmp support.
 
 %description plugin-zeroconf
 This plugin activates zeroconf network services for sipwitch and publishes
@@ -192,10 +183,6 @@ __EOF__
 %defattr(-,root,root,-)
 %{_libdir}/*.so.*
 
-%files snmp
-%defattr(-,root,root,-)
-%{_datadir}/snmp/mibs/GNUTelephony-MIB.txt
-
 %files plugin-zeroconf
 %defattr(-,root,root,-)
 %{_libdir}/sipwitch/zeroconf.so
@@ -249,6 +236,10 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Thu Nov 18 2009 David Sugar <dyfet@gnutelephony.org> - 0.5.9-0
+- removed snmp/mib from this package
+- removed unused swig support and complex packaging it required.
+
 * Mon Jul 13 2009 Remi Collet <Fedora@FamilleCollet.com> - 0.5.6-1
 - rebuild for new PHP 5.3.0 ABI (20090626)
 - add PHP ABI check
