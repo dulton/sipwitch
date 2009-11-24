@@ -1,3 +1,6 @@
+From version 0.5.9 to 0.5.10
+- missing man page in dist tarball.
+
 From version 0.5.8 to 0.5.9
 - remove snmp from sipwitch, will be in switchroom.
 - remove swig from sipwitch, will be added where needed.
