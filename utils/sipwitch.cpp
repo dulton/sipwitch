@@ -111,7 +111,7 @@ static void status(char **argv)
 	}
 
 	while(index < count) {
-		map = calls(index++);
+		map = (const volatile MappedCall *)(calls(index++));
 		if(map->state[0])
 			fputc(map->state[0], stdout);
 		else
@@ -141,7 +141,7 @@ static void calls(char **argv)
 
 	time(&now);
 	while(index < count) {
-		map = calls(index++);
+		map = (const volatile MappedCall *)(calls(index++));
 
 		if(!map->created || !map->source[0])
 			continue;
@@ -172,7 +172,7 @@ static void periodic(char **argv)
 		exit(-1);
 	}
 	while(index < count) {
-		map = sta(index++);
+		map = (const volatile stats *)(sta(index++));
 
 		if(!map->id[0])
 			continue;
@@ -278,7 +278,7 @@ static void registry(char **argv)
 
 	time(&now);
 	while(index < count) {
-		member = reg(index++);
+		member = (const volatile MappedRegistry *)(reg(index++));
 		do {	
 			memcpy(&buffer, (const void *)member, sizeof(buffer));
 		} while(memcmp(&buffer, (const void *)member, sizeof(buffer)));

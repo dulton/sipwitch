@@ -55,30 +55,33 @@ stack stack::sip;
 stack::subnet::subnet(cidr::policy **acl, const char *addr, const char *id) :
 cidr(acl, addr, id)
 {
-	struct sockaddr_storage dest;
-	struct sockaddr_in *sin = (struct sockaddr_in *)&dest;
+	union {
+		struct sockaddr_in in;
 #ifdef	AF_INET6
-	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)&dest;
+		struct sockaddr_in6 in6;
 #endif
+	} us;
+
+	struct sockaddr_storage dest;
 	unsigned char *lp;
 	unsigned bits = getMask();
 	char buf[256];
 
 	String::set(netname, sizeof(netname), id);
 	memset(&dest, 0, sizeof(dest));
-	sin->sin_family = family;
-	memcpy(&sin->sin_addr, &network, sizeof(network));
+	us.in.sin_family = family;
+	memcpy(&us.in.sin_addr, &network, sizeof(network));
 	switch(family) {
 	case AF_INET:
-		sin->sin_port = htons(1);
-		lp = (unsigned char *)(&sin->sin_addr) + sizeof(sin->sin_addr) - 1;
+		us.in.sin_port = htons(1);
+		lp = (unsigned char *)(&us.in.sin_addr) + sizeof(us.in.sin_addr) - 1;
 		if(bits < 31)
 			++*lp;
 		break;
 #ifdef	AF_INET6
 	case AF_INET6:
-		sin6->sin6_port = htons(1);
-		lp = (unsigned char *)(&sin6->sin6_addr) + sizeof(sin6->sin6_addr) - 1;
+		us.in6.sin6_port = htons(1);
+		lp = (unsigned char *)(&us.in6.sin6_addr) + sizeof(us.in6.sin6_addr) - 1;
 		if(bits < 127)
 			++*lp;
 		break;

@@ -1369,7 +1369,7 @@ static void server_status(void)
 	cp[count] = 0;
 	memset(cp, ' ', count);
 	while(index < count) {
-		map = cr(index++);
+		map = (const volatile MappedCall*)(cr(index++));
 		if(map->state[0])
 			cp[index - 1] = map->state[0];
 	}
@@ -1692,7 +1692,7 @@ static void dumpcalls(const char *id)
 	time(&now);
 
 	while(index < count) {
-		member = calls(index++);
+		member = (const volatile MappedCall *)(calls(index++));
 		do {	
 			memcpy(&buffer, (const void *)member, sizeof(buffer));
 		} while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
@@ -1738,7 +1738,7 @@ static void dumpstats(const char *id)
 	time(&now);
 
 	while(index < count) {
-		member = sta(index++);
+		member = (const volatile stats *)(sta(index++));
 		do {	
 			memcpy(&buffer, (const void *)member, sizeof(buffer));
 		} while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
@@ -1791,7 +1791,7 @@ static void registry(const char *id)
 	printf("<mappedRegistry>\n");
 	time(&now);
 	while(index < count) {
-		member = reg(index++);
+		member = (const volatile MappedRegistry *)(reg(index++));
 		do {	
 			memcpy(&buffer, (const void *)member, sizeof(buffer));
 		} while(memcmp(&buffer, (const void *)member, sizeof(buffer)));

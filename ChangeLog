@@ -1,3 +1,6 @@
+From version 0.5.10 to 0.5.11
+- pedantic fixes for strict aliasing and gcc 4.4.
+
 From version 0.5.9 to 0.5.10
 - missing man page in dist tarball.
 
