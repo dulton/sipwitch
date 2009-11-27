@@ -56,40 +56,43 @@ stack::subnet::subnet(cidr::policy **acl, const char *addr, const char *id) :
 cidr(acl, addr, id)
 {
 	union {
+		struct sockaddr_storage dest;
 		struct sockaddr_in in;
 #ifdef	AF_INET6
 		struct sockaddr_in6 in6;
 #endif
 	} us;
 
-	struct sockaddr_storage dest;
 	unsigned char *lp;
 	unsigned bits = getMask();
 	char buf[256];
 
 	String::set(netname, sizeof(netname), id);
-	memset(&dest, 0, sizeof(dest));
+	memset(&us.dest, 0, sizeof(us.dest));
 	us.in.sin_family = family;
-	memcpy(&us.in.sin_addr, &network, sizeof(network));
 	switch(family) {
 	case AF_INET:
 		us.in.sin_port = htons(1);
-		lp = (unsigned char *)(&us.in.sin_addr) + sizeof(us.in.sin_addr) - 1;
+		memcpy(&us.in.sin_addr, &network, sizeof(us.in.sin_addr));
+		lp = ((unsigned char *)(&us.in.sin_addr)) + sizeof(us.in.sin_addr) - 1;
 		if(bits < 31)
 			++*lp;
 		break;
 #ifdef	AF_INET6
 	case AF_INET6:
 		us.in6.sin6_port = htons(1);
-		lp = (unsigned char *)(&us.in6.sin6_addr) + sizeof(us.in6.sin6_addr) - 1;
+		memcpy(&us.in6.sin6_addr, &network, sizeof(us.in6.sin6_addr));
+		lp = ((unsigned char *)(&us.in6.sin6_addr)) + sizeof(us.in6.sin6_addr) - 1;
 		if(bits < 127)
 			++*lp;
 		break;
 #endif
 	default:
 		return;
-	} 
-	if(Socket::getinterface((struct sockaddr *)&iface, (struct sockaddr *)&dest))
+	}
+	Socket::getaddress((struct sockaddr *)&us.dest, buf, sizeof(buf));
+
+	if(Socket::getinterface((struct sockaddr *)&iface, (struct sockaddr *)&us.dest))
 		memset(&iface, 0, sizeof(iface));
 	// gateway special rule to specify a gateway public interface...
 	else if(String::equal(id, "gateway")) {
@@ -101,6 +104,7 @@ cidr(acl, addr, id)
 		String::set(netname, sizeof(netname), "*");
 		service::published(&iface);
 	}
+	Socket::getaddress((struct sockaddr *)&iface, buf, sizeof(buf));
 }
 
 stack::segment::segment(call *cr, int cid, int did, int tid) : OrderedObject()
