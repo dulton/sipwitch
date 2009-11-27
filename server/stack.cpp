@@ -104,7 +104,6 @@ cidr(acl, addr, id)
 		String::set(netname, sizeof(netname), "*");
 		service::published(&iface);
 	}
-	Socket::getaddress((struct sockaddr *)&iface, buf, sizeof(buf));
 }
 
 stack::segment::segment(call *cr, int cid, int did, int tid) : OrderedObject()
