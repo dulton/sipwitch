@@ -11,7 +11,7 @@
 AUTOMAKE_OPTIONS = no-dependencies dist-shar dist-zip
 EXTRA_DIST = autogen.sh README *.pc.in FEATURES  TODO Doxyfile BUILDS \
 	SUPPORT NOTES MODULES cmodel.sh sipwitch.spec.in sipwitch.spec \
-	sipwitch-config.in
+	sipwitch-config.in sipwitch-config.1
 #  *.pc.in *.spec.in *.spec
 
 SUBDIRS = common server utils inc test
@@ -22,4 +22,7 @@ pkgconfig_DATA = libsipwitch.pc
 
 scriptdir = $(bindir)
 script_SCRIPTS = sipwitch-config
+
+man_MANS = sipwitch-config.1
+
 
