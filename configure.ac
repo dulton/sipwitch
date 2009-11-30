@@ -10,8 +10,8 @@
 
 AC_INIT(autogen.sh)
 
-VERSION="0.5.10"
-LT_VERSION="0:27:0"
+VERSION="0.5.11"
+LT_VERSION="0:28:0"
 UCOMMON_REQUIRES="2.0.0"
 
 AC_CONFIG_AUX_DIR(autoconf)
@@ -397,5 +397,5 @@ AC_SUBST(MODFLAGS)
 AC_SUBST(DLOPEN)
 AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile 
 server/Makefile utils/Makefile test/Makefile 
-libsipwitch.pc sipwitch.spec)
+libsipwitch.pc sipwitch.spec sipwitch-config)
 
