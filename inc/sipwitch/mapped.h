@@ -109,14 +109,17 @@ public:
 		} internal;
 	};
 
-	inline bool isAdmin(void) const
-		{return (isUser() && (profile.features & USER_PROFILE_SUPERUSER));};
-
 	inline bool isUser(void) const
 		{return (type == USER || type == DEVICE);};
 
+	inline bool isProfiled(void) const
+		{return (type == USER || type == DEVICE || type == SERVICE);};
+
+	inline bool isAdmin(void) const
+		{return (isProfiled() && (profile.features & USER_PROFILE_SUPERUSER));};
+
 	inline bool isFeature(unsigned short X) const
-		{return isUser() && (profile.features & X);};
+		{return isProfiled() && (profile.features & X);};
 };
 
 class __EXPORT MappedCall : public LinkedObject

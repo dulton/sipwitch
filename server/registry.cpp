@@ -639,14 +639,11 @@ registry::mapped *registry::allocate(const char *id)
 	if(node)
 		cp = node->getId();
 
-	if(!stricmp(cp, "admin") || !stricmp(cp, "user") || !stricmp(cp, "local") || !stricmp(cp, "restricted")) {
-		cos = cp;
+	cos = cp;
+	if(!stricmp(cp, "admin") || !stricmp(cp, "user") || !stricmp(cp, "local") || !stricmp(cp, "restricted"))
 		rr->type = MappedRegistry::USER;
-	}
-	else if(!stricmp(cp, "device")) {
-		cos = cp;
+	else if(!stricmp(cp, "device"))
 		rr->type = MappedRegistry::DEVICE;
-	}
 	else if(!stricmp(cp, "refer"))
 		rr->type = MappedRegistry::REFER;
 	else if(!stricmp(cp, "reject"))
@@ -740,7 +737,7 @@ registry::mapped *registry::allocate(const char *id)
 	if(leaf && leaf->getPointer())
 		ext = atoi(leaf->getPointer());
 
-	if(rr->isUser()) {
+	if(rr->isProfiled()) {
 		pro = NULL;
 		leaf = node->leaf("profile");
 		if(leaf)
