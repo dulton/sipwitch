@@ -39,12 +39,16 @@
  * @file sipwitch/mapped.h
  */
 
+// user and device properties...
+
 #define	USER_PROFILE_DIALABLE		0x0001	// user may be dialed
 #define	USER_PROFILE_REACHABLE		0x0002	// user may be reached by gateway
 #define	USER_PROFILE_INTERNAL		0x0008	// user may use dialing/routing
 #define	USER_PROFILE_SUBSCRIPTIONS	0x0010	// user can subscribe to others
 #define	USER_PROFILE_SUBSCRIBERS	0x0020	// user can be subscribed
-#define	USER_PROFILE_MULTITARGET	0x0800	// multi-target registration
+
+// user specific properties...
+
 #define	USER_PROFILE_INCOMING		0x1000  // user "name" id may be accessed
 #define	USER_PROFILE_OUTGOING		0x2000	// may use generic uri
 
@@ -80,7 +84,7 @@ public:
 	char	remote[MAX_USERID_SIZE];
 	char	network[MAX_NETWORK_SIZE];
 	status_t status;
-	enum {EXPIRED = 0, USER, GATEWAY, SERVICE, REJECT, REFER, TEMPORARY, EXTERNAL} type;
+	enum {EXPIRED = 0, USER, DEVICE, GATEWAY, SERVICE, REJECT, REFER, TEMPORARY, EXTERNAL} type;
 	bool hidden;
 	int rid;					// registry remap or peer id 
 	unsigned ext;				// 0 or extnum

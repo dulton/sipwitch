@@ -1250,7 +1250,7 @@ static void user_instance(void)
 		} while(memcmp(&copy, map, sizeof(copy)));
 		map = &copy;
 
-		if(map->type != MappedRegistry::USER && map->type != MappedRegistry::SERVICE) 
+		if(map->type != MappedRegistry::DEVICE && map->type != MappedRegistry::USER && map->type != MappedRegistry::SERVICE) 
 			continue;
 
 		if(map->expires < now)
@@ -1317,7 +1317,7 @@ static void user_range(void)
 		} while(memcmp(&copy, map, sizeof(copy)));
 		map = &copy;
 
-		if(map->type != MappedRegistry::USER && map->type != MappedRegistry::SERVICE) 
+		if(map->type != MappedRegistry::DEVICE && map->type != MappedRegistry::USER && map->type != MappedRegistry::SERVICE) 
 			continue;
 
 		if(map->expires < now)

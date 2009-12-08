@@ -70,7 +70,7 @@ void thread::publish(void)
 	if(destination != LOCAL)
 		goto final;
 
-	if(!reginfo || reginfo->type != MappedRegistry::USER)
+	if(!reginfo || (reginfo->type != MappedRegistry::USER && reginfo->type != MappedRegistry::DEVICE))
 		goto final;
 
 	if(!String::equal(reginfo->userid, identity))
@@ -1552,7 +1552,7 @@ void thread::reregister(const char *contact, time_t interval)
 
 	refresh = reginfo->refresh(contact_address, expire, contact);
 	if(!refresh) {
-		if(reginfo->type == MappedRegistry::USER && (reginfo->profile.features & USER_PROFILE_MULTITARGET))
+		if(reginfo->type == MappedRegistry::USER)
 			count = reginfo->addTarget(contact_address, expire, contact, network, (struct sockaddr *)&peering);
 		else
 			count = reginfo->setTarget(contact_address, expire, contact, network, (struct sockaddr *)&peering);
@@ -1593,7 +1593,7 @@ reply:
 	else
 		eXosip_message_send_answer(sevent->tid, SIP_BAD_REQUEST, NULL);
 	eXosip_unlock();
-	if(reginfo && reginfo->type == MappedRegistry::USER && answer == SIP_OK)
+	if(reginfo && (reginfo->type == MappedRegistry::USER || reginfo->type == MappedRegistry::DEVICE) && answer == SIP_OK)
 		messages::update(identity);
 }
 

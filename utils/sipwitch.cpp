@@ -313,6 +313,9 @@ static void registry(char **argv)
 		case MappedRegistry::TEMPORARY:
 			type = "temp";
 			break;
+		case MappedRegistry::DEVICE:
+			type = "dext";
+			break;
 		default:
 			type = "user";
 		};

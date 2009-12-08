@@ -260,6 +260,9 @@ void registry::snapshot(FILE *fp)
 			if(rr->type == MappedRegistry::USER)
 				fprintf(fp, "  user %s; extension=%s, profile=%s, use=%d,",
 					rr->userid, buffer, rr->profile.id, rr->inuse);
+			if(rr->type == MappedRegistry::DEVICE)
+				fprintf(fp, "  device %s; extension=%s, profile=%s, use=%d,",
+					rr->userid, buffer, rr->profile.id, rr->inuse);\
 			else if(rr->type == MappedRegistry::GATEWAY)
 				fprintf(fp, "  gateway %s; use=%d,", rr->userid, rr->inuse);
 			else if(rr->type == MappedRegistry::SERVICE)
@@ -637,6 +640,8 @@ registry::mapped *registry::allocate(const char *id)
 
 	if(!stricmp(cp, "user"))
 		rr->type = MappedRegistry::USER;
+	else if(!stricmp(cp, "phone") || !stricmp(cp, "device"))
+		rr->type = MappedRegistry::DEVICE;
 	else if(!stricmp(cp, "refer"))
 		rr->type = MappedRegistry::REFER;
 	else if(!stricmp(cp, "reject"))
@@ -730,7 +735,7 @@ registry::mapped *registry::allocate(const char *id)
 	if(leaf && leaf->getPointer())
 		ext = atoi(leaf->getPointer());
 
-	if(rr->type == MappedRegistry::USER) {
+	if(rr->type == MappedRegistry::USER || rr->type == MappedRegistry::DEVICE) {
 		pro = NULL;
 		leaf = node->leaf("profile");
 		if(leaf)
@@ -1232,7 +1237,7 @@ void registry::mapped::update(Socket::address& saddr, int changed)
 
 	time(&now);
 
-	if(changed == registry::target::UNKNOWN || !saddr.getAddr() || !expires || expires < now || type != MappedRegistry::USER)
+	if(changed == registry::target::UNKNOWN || !saddr.getAddr() || !expires || expires < now || (type != MappedRegistry::USER && type != MappedRegistry::DEVICE))
 		return;
 
 	tp = internal.targets;
