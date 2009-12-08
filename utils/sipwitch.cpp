@@ -308,13 +308,13 @@ static void registry(char **argv)
 			type = "gw";
 			break;
 		case MappedRegistry::SERVICE:
-			type = "peer";
+			type = "svc";
 			break;
 		case MappedRegistry::TEMPORARY:
 			type = "temp";
 			break;
 		case MappedRegistry::DEVICE:
-			type = "ua";
+			type = "node";
 			break;
 		default:
 			type = "user";
