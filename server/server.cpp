@@ -311,6 +311,13 @@ void server::confirm(const char *user)
 	mp = (caddr_t)alloc(sizeof(profile));
 	pp = new(mp) profile(&profiles);
 	memcpy(&pp->value, &ppd->value, sizeof(profile_t));
+	String::set(pp->value.id, sizeof(pp->value.id), "service");
+	pp->value.level = 0;
+	pp->value.features = USER_PROFILE_SERVICE;
+
+	mp = (caddr_t)alloc(sizeof(profile));
+	pp = new(mp) profile(&profiles);
+	memcpy(&pp->value, &ppd->value, sizeof(profile_t));
 	String::set(pp->value.id, sizeof(pp->value.id), "admin");
 	pp->value.level = 9;
 	pp->value.features = USER_PROFILE_ADMIN;

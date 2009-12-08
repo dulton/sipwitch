@@ -53,6 +53,7 @@
 #define	USER_PROFILE_ADMIN			0xffff
 #define USER_PROFILE_LOCAL			0x0fff
 #define USER_PROFILE_DEVICE			0x0fff
+#define	USER_PROFILE_SERVICE		0xff0f
 #define	USER_PROFILE_DEFAULT		0x7fff
 #define	USER_PROFILE_RESTRICTED	(0)
 
