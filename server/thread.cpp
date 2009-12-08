@@ -815,6 +815,9 @@ rewrite:
 	}
 
 trying:
+	if(MSG_IS_PUBLISH(sevent->request))
+		return authenticate();
+
 	// extension references always require authentication
 	if(registry::isExtension(target)) {
 		if(!authenticate())
