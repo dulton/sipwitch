@@ -46,13 +46,11 @@
 #define	USER_PROFILE_INTERNAL		0x0008	// user may use dialing/routing
 #define	USER_PROFILE_SUBSCRIPTIONS	0x0010	// user can subscribe to others
 #define	USER_PROFILE_SUBSCRIBERS	0x0020	// user can be subscribed
-
-// user specific properties...
-
 #define	USER_PROFILE_INCOMING		0x1000  // user "name" id may be accessed
 #define	USER_PROFILE_OUTGOING		0x2000	// may use generic uri
 
-#define	USER_PROFILE_DEFAULT		0x0fff
+#define USER_PROFILE_DEVICE			0x0fff
+#define	USER_PROFILE_DEFAULT		0xffff
 #define	USER_PROFILE_RESTRICTED	(0)
 
 #define	MAX_NETWORK_SIZE	16		// based on cidr name size...

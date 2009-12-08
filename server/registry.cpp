@@ -740,6 +740,8 @@ registry::mapped *registry::allocate(const char *id)
 		leaf = node->leaf("profile");
 		if(leaf)
 			pro = server::getProfile(leaf->getPointer());
+		if(!pro && rr->type == MappedRegistry::DEVICE)
+			pro = server::getProfile("device");
 		if(!pro)
 			pro = server::getProfile("*");
 		if(pro)
