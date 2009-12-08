@@ -48,9 +48,12 @@
 #define	USER_PROFILE_SUBSCRIBERS	0x0020	// user can be subscribed
 #define	USER_PROFILE_INCOMING		0x1000  // user "name" id may be accessed
 #define	USER_PROFILE_OUTGOING		0x2000	// may use generic uri
+#define	USER_PROFILE_SUPERUSER		0x8000	// has admin flag
 
+#define	USER_PROFILE_ADMIN			0xffff
+#define USER_PROFILE_LOCAL			0x0fff
 #define USER_PROFILE_DEVICE			0x0fff
-#define	USER_PROFILE_DEFAULT		0xffff
+#define	USER_PROFILE_DEFAULT		0x7fff
 #define	USER_PROFILE_RESTRICTED	(0)
 
 #define	MAX_NETWORK_SIZE	16		// based on cidr name size...
@@ -104,6 +107,9 @@ public:
 			LinkedObject *routes;	// active route records
 		} internal;
 	};
+
+	inline bool isAdmin(void) const
+		{return (isUser() && (profile.features & USER_PROFILE_SUPERUSER));};
 
 	inline bool isUser(void) const
 		{return (type == USER || type == DEVICE);};

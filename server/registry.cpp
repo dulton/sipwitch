@@ -596,6 +596,7 @@ registry::mapped *registry::allocate(const char *id)
 	service::keynode *node, *leaf;
 	unsigned ext = 0;
 	const char *cp = "none";
+	const char *cos = "none";
 	profile_t *pro = NULL;
 	bool listed = false;
 	service::usernode user;
@@ -638,10 +639,14 @@ registry::mapped *registry::allocate(const char *id)
 	if(node)
 		cp = node->getId();
 
-	if(!stricmp(cp, "user"))
+	if(!stricmp(cp, "admin") || !stricmp(cp, "user") || !stricmp(cp, "local") || !stricmp(cp, "restricted")) {
+		cos = cp;
 		rr->type = MappedRegistry::USER;
-	else if(!stricmp(cp, "phone") || !stricmp(cp, "device"))
+	}
+	else if(!stricmp(cp, "device")) {
+		cos = "device";
 		rr->type = MappedRegistry::DEVICE;
+	}
 	else if(!stricmp(cp, "refer"))
 		rr->type = MappedRegistry::REFER;
 	else if(!stricmp(cp, "reject"))
@@ -735,13 +740,13 @@ registry::mapped *registry::allocate(const char *id)
 	if(leaf && leaf->getPointer())
 		ext = atoi(leaf->getPointer());
 
-	if(rr->type == MappedRegistry::USER || rr->type == MappedRegistry::DEVICE) {
+	if(rr->isUser()) {
 		pro = NULL;
 		leaf = node->leaf("profile");
 		if(leaf)
 			pro = server::getProfile(leaf->getPointer());
-		if(!pro && rr->type == MappedRegistry::DEVICE)
-			pro = server::getProfile("device");
+		if(!pro)
+			pro = server::getProfile(cos);
 		if(!pro)
 			pro = server::getProfile("*");
 		if(pro)
