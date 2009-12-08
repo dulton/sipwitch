@@ -827,6 +827,9 @@ trying:
 	if(reginfo && reginfo->isFeature(USER_PROFILE_INCOMING))
 		goto anonymous;
 
+	if(reginfo && reginfo->type == MappedRegistry::SERVICE)
+		goto anonymous;
+
 	return authenticate();
 
 routing:
@@ -991,7 +994,7 @@ remote:
 	if(!reginfo || (reginfo->expires && reginfo->expires < now))
 		goto invalid;
 
-	if(reginfo->isFeature(USER_PROFILE_OUTGOING))
+	if(!reginfo->isFeature(USER_PROFILE_OUTGOING) && !reginfo->type == MappedRegistry::SERVICE)
 		goto invalid;
 
 	refer = server::referRemote(reginfo, requesting, buffer, sizeof(buffer));
