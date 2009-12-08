@@ -783,7 +783,7 @@ rewrite:
 		}
 		if(!stricmp(dialed.keys->getId(), "queue"))
 			goto anonymous;
-		if(!stricmp(dialed.keys->getId(), "user")) {
+		if(!stricmp(dialed.keys->getId(), "user") || !stricmp(dialed.keys->getId(), "admin")) {
 			if(MSG_IS_MESSAGE(sevent->request))
 				goto trying;
 			process::errlog(NOTIFY, "unregistered destination %s", target);

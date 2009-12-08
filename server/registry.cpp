@@ -637,7 +637,7 @@ registry::mapped *registry::allocate(const char *id)
 		cp = node->getId();
 
 	cos = cp;
-	if(!stricmp(cp, "admin") || !stricmp(cp, "user") || !stricmp(cp, "local") || !stricmp(cp, "restricted"))
+	if(!stricmp(cp, "admin") || !stricmp(cp, "user"))
 		rr->type = MappedRegistry::USER;
 	else if(!stricmp(cp, "refer"))
 		rr->type = MappedRegistry::REFER;
