@@ -260,9 +260,6 @@ void registry::snapshot(FILE *fp)
 			if(rr->type == MappedRegistry::USER)
 				fprintf(fp, "  user %s; extension=%s, profile=%s, use=%d,",
 					rr->userid, buffer, rr->profile.id, rr->inuse);
-			if(rr->type == MappedRegistry::DEVICE)
-				fprintf(fp, "  device %s; extension=%s, profile=%s, use=%d,",
-					rr->userid, buffer, rr->profile.id, rr->inuse);\
 			else if(rr->type == MappedRegistry::GATEWAY)
 				fprintf(fp, "  gateway %s; use=%d,", rr->userid, rr->inuse);
 			else if(rr->type == MappedRegistry::SERVICE)
@@ -642,15 +639,13 @@ registry::mapped *registry::allocate(const char *id)
 	cos = cp;
 	if(!stricmp(cp, "admin") || !stricmp(cp, "user") || !stricmp(cp, "local") || !stricmp(cp, "restricted"))
 		rr->type = MappedRegistry::USER;
-	else if(!stricmp(cp, "device"))
-		rr->type = MappedRegistry::DEVICE;
 	else if(!stricmp(cp, "refer"))
 		rr->type = MappedRegistry::REFER;
 	else if(!stricmp(cp, "reject"))
 		rr->type = MappedRegistry::REJECT;
 	else if(!stricmp(cp, "gateway"))
 		rr->type = MappedRegistry::GATEWAY;
-	else if(!stricmp(cp, "service"))
+	else if(!stricmp(cp, "service") || !stricmp(cp, "device"))
 		rr->type = MappedRegistry::SERVICE;
 	if(!node || rr->type == MappedRegistry::EXPIRED) {
 		server::release(user);
@@ -1241,7 +1236,7 @@ void registry::mapped::update(Socket::address& saddr, int changed)
 
 	time(&now);
 
-	if(changed == registry::target::UNKNOWN || !saddr.getAddr() || !expires || expires < now || (type != MappedRegistry::USER && type != MappedRegistry::DEVICE))
+	if(changed == registry::target::UNKNOWN || !saddr.getAddr() || !expires || expires < now || !isUser())
 		return;
 
 	tp = internal.targets;

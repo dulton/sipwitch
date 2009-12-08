@@ -52,7 +52,7 @@
 
 #define	USER_PROFILE_ADMIN			0xffff
 #define USER_PROFILE_LOCAL			0x0fff
-#define USER_PROFILE_DEVICE			0x0fff
+#define USER_PROFILE_DEVICE			0x0f1f
 #define	USER_PROFILE_SERVICE		0xff0f
 #define	USER_PROFILE_DEFAULT		0x7fff
 #define	USER_PROFILE_RESTRICTED	(0)
@@ -86,7 +86,7 @@ public:
 	char	remote[MAX_USERID_SIZE];
 	char	network[MAX_NETWORK_SIZE];
 	status_t status;
-	enum {EXPIRED = 0, USER, DEVICE, GATEWAY, SERVICE, REJECT, REFER, TEMPORARY, EXTERNAL} type;
+	enum {EXPIRED = 0, USER, GATEWAY, SERVICE, REJECT, REFER, TEMPORARY, EXTERNAL} type;
 	bool hidden;
 	int rid;					// registry remap or peer id 
 	unsigned ext;				// 0 or extnum
@@ -110,10 +110,10 @@ public:
 	};
 
 	inline bool isUser(void) const
-		{return (type == USER || type == DEVICE);};
+		{return (type == USER);};
 
 	inline bool isProfiled(void) const
-		{return (type == USER || type == DEVICE || type == SERVICE);};
+		{return (type == USER || type == SERVICE);};
 
 	inline bool isAdmin(void) const
 		{return (isProfiled() && (profile.features & USER_PROFILE_SUPERUSER));};

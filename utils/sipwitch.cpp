@@ -313,9 +313,6 @@ static void registry(char **argv)
 		case MappedRegistry::TEMPORARY:
 			type = "temp";
 			break;
-		case MappedRegistry::DEVICE:
-			type = "node";
-			break;
 		default:
 			type = "user";
 		};
