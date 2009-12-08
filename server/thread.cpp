@@ -70,7 +70,7 @@ void thread::publish(void)
 	if(destination != LOCAL)
 		goto final;
 
-	if(!reginfo || (reginfo->type != MappedRegistry::USER && reginfo->type != MappedRegistry::DEVICE))
+	if(!reginfo || !reginfo->isUser())
 		goto final;
 
 	if(!String::equal(reginfo->userid, identity))
@@ -824,7 +824,7 @@ trying:
 		return true;
 	}
 
-	if(reginfo && reginfo->type == MappedRegistry::USER && (reginfo->profile.features & USER_PROFILE_INCOMING))
+	if(reginfo && reginfo->isFeature(USER_PROFILE_INCOMING))
 		goto anonymous;
 
 	return authenticate();
@@ -991,7 +991,7 @@ remote:
 	if(!reginfo || (reginfo->expires && reginfo->expires < now))
 		goto invalid;
 
-	if(reginfo->type == MappedRegistry::USER && !(reginfo->profile.features & USER_PROFILE_OUTGOING))
+	if(reginfo->isFeature(USER_PROFILE_OUTGOING))
 		goto invalid;
 
 	refer = server::referRemote(reginfo, requesting, buffer, sizeof(buffer));
@@ -1593,7 +1593,7 @@ reply:
 	else
 		eXosip_message_send_answer(sevent->tid, SIP_BAD_REQUEST, NULL);
 	eXosip_unlock();
-	if(reginfo && (reginfo->type == MappedRegistry::USER || reginfo->type == MappedRegistry::DEVICE) && answer == SIP_OK)
+	if(reginfo && reginfo->isUser() && answer == SIP_OK)
 		messages::update(identity);
 }
 

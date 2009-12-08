@@ -104,6 +104,12 @@ public:
 			LinkedObject *routes;	// active route records
 		} internal;
 	};
+
+	inline bool isUser(void) const
+		{return (type == USER || type == DEVICE);};
+
+	inline bool isFeature(unsigned short X) const
+		{return isUser() && (profile.features & X);};
 };
 
 class __EXPORT MappedCall : public LinkedObject
