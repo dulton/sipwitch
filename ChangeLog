@@ -4,6 +4,7 @@ From version 0.5.11 to 0.5.12
 - local devices not "forwarded" in forward module.
 - device specific "profile" added.
 - admin profile level support.
+- service peers can offer and dial public uri's.
 
 From version 0.5.10 to 0.5.11
 - pedantic fixes for strict aliasing and gcc 4.4.
