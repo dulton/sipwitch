@@ -298,8 +298,15 @@ void server::confirm(const char *user)
 	pp = new(mp) profile(&profiles);
 	memcpy(&pp->value, &ppd->value, sizeof(profile_t));
 	String::set(pp->value.id, sizeof(pp->value.id), "local");
-	pp->value.level = 0;
+	pp->value.level = 1;
 	pp->value.features = USER_PROFILE_LOCAL;
+
+	mp = (caddr_t)alloc(sizeof(profile));
+	pp = new(mp) profile(&profiles);
+	memcpy(&pp->value, &ppd->value, sizeof(profile_t));
+	String::set(pp->value.id, sizeof(pp->value.id), "device");
+	pp->value.level = 0;
+	pp->value.features = USER_PROFILE_DEVICE;
 
 	mp = (caddr_t)alloc(sizeof(profile));
 	pp = new(mp) profile(&profiles);

@@ -644,7 +644,7 @@ registry::mapped *registry::allocate(const char *id)
 		rr->type = MappedRegistry::USER;
 	}
 	else if(!stricmp(cp, "device")) {
-		cos = "device";
+		cos = cp;
 		rr->type = MappedRegistry::DEVICE;
 	}
 	else if(!stricmp(cp, "refer"))
