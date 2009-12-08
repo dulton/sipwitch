@@ -303,9 +303,15 @@ static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 
 	if(uid) {
 		setenv("PWD", pwd->pw_dir, 1);
+		fsys::createDir(pwd->pw_dir, 0770);
 		if(!fsys::changeDir(pwd->pw_dir)) {
-			fsys::changeDir(buf);			
-			setenv("PWD", buf, 1);
+			fsys::createDir(DEFAULT_VARPATH "/lib/sipwitch", 0770);
+			if(fsys::changeDir(DEFAULT_VARPATH "/lib/sipwitch"))
+				setenv("PWD", DEFAULT_VARPATH "/lib/sipwitch", 1);
+			else {
+				fsys::changeDir(buf);			
+				setenv("PWD", buf, 1);
+			}
 		}
 	}
 	else {
