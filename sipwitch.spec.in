@@ -154,11 +154,11 @@ remote voip service provider.
 
 %files devel
 %defattr(-,root,root,-)
-%{_bindir}/sipwitch-config
 %{_libdir}/*.so
 %{_includedir}/sipwitch/
 %{_libdir}/pkgconfig/*.pc
-%{_mandir}/man1/*.1*
+%{_bindir}/sipwitch-config
+%{_mandir}/man1/sipwitch-config.*
 
 %post runtime
 /sbin/ldconfig
