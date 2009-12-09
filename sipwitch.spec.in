@@ -120,7 +120,9 @@ remote voip service provider.
 %doc README COPYING NEWS FEATURES SUPPORT TODO NOTES AUTHORS MODULES ChangeLog
 %{_mandir}/man8/*.8*
 %{_sbindir}/*
-%{_bindir}/*
+%{_bindir}/sipquery
+%{_bindir}/sipwitch
+%{_bindir}/sipdigest
 %dir %{_libdir}/sipwitch
 %config(noreplace) %{_sysconfdir}/logrotate.d/sipwitch
 %attr(0755,root,root) %{_initrddir}/sipwitch
@@ -152,9 +154,11 @@ remote voip service provider.
 
 %files devel
 %defattr(-,root,root,-)
+%{_bindir}/sipwitch-config
 %{_libdir}/*.so
 %{_includedir}/sipwitch/
 %{_libdir}/pkgconfig/*.pc
+%{_mandir}/man1/*.1*
 
 %post runtime
 /sbin/ldconfig
@@ -177,6 +181,10 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Wed Dec 09 2009 David Sugar <dyfet@gnutelephony.org> - 0.5.12-0
+- redefined internal user & service permissions and profiles.
+- fixed anonymous inbound.
+
 * Thu Nov 18 2009 David Sugar <dyfet@gnutelephony.org> - 0.5.9-0
 - removed snmp/mib from this package
 - removed unused swig support and complex packaging it required.
