@@ -827,8 +827,26 @@ trying:
 		return true;
 	}
 
-	if(reginfo && reginfo->isFeature(USER_PROFILE_INCOMING))
+	// see if destination allows anonymous remote (public) callers
+
+	if(reginfo && reginfo->isFeature(USER_PROFILE_INCOMING) && from->url->host) {
+
+		// now we make sure the originating call does not "claim" to be
+		// associated with us.  If it has any of our our names, then we have
+		// the inbound caller authenticate like any local-to-local call
+
+		if(String::equal(stack::sip.domain, from->url->host))
+			return authenticate();
+
+		if(String::equal("localdomain", from->url->host))
+			return authenticate();
+
+		if(String::ifind(stack::sip.localnames, from->url->host, " ,;:\t\n"))
+			return authenticate();
+
+		// It "seems" external, user allows incoming, handle as public
 		goto anonymous;
+	}
 
 	return authenticate();
 
