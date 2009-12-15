@@ -118,7 +118,8 @@ remote voip service provider.
 %files 
 %defattr(-,root,root,-)
 %doc README COPYING NEWS FEATURES SUPPORT TODO NOTES AUTHORS MODULES ChangeLog
-%{_mandir}/man8/*.8*
+%{_mandir}/man8/sipwitch.8*
+%{_mandir}/man8/sipdigest.8*
 %{_sbindir}/*
 %{_bindir}/sipquery
 %{_bindir}/sipwitch

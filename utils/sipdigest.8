@@ -1,0 +1,74 @@
+.\" sipdigest - compute digest for user's secret in a specific sip realm
+.\" Copyright (c) 2009 David Sugar <dyfet@gnutelephony.org>
+.\"
+.\" This manual page is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc.,59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+.\"
+.\" This manual page is written especially for Debian GNU/Linux.
+.\"
+.TH sipdigest "8" "December 2009" "GNU SIP Witch" "GNU Telephony"
+.SH NAME
+sipdigest \- compute digest for user's secret in specific sip realm
+.SH SYNOPSIS
+.B sipdigest [-realm="string"] [-md5|-sha1|-rmd160] \fIUSER\fR \fISECRET\fR 
+.br
+.SH DESCRIPTION
+This is a tool to compute secret digest values for a \fIUSER\fR account which 
+has a \fISECRET\fR (password) so that the digest can then be safely placed in
+the sipwitch XML config files so that the password is not exposed in a 
+potentially readable file.  SIP digests are computed using the authentication 
+realm of the sip server for a given \fIUSER\fR id and \fISECRET\fR (password).  
+Hence, it is desirable to set the realm once, because changing it will also 
+require changing all the user hashes.
+.PP
+By default, sipdigest uses the realm that the sipwitch daemon is set to, and
+using MD5, though alternate hashing algorithims may also be specified.  The
+\fBsipdigest\fR command can also be set for any realm to compute an arbitrary 
+digest, and hence this may be useful to build database entries or config files 
+for remote servers.  For all these reasons, it is assumed this command would 
+likely be used by a system administrator, although any user can safely run 
+and use this command.
+.SH OPTIONS
+.TP
+.B -md5
+Select md5 digest algorithm.
+.TP
+.B -realm=STRING
+Compute digest based on the
+.I STRING
+realm passed instead of current server's realm.
+.TP
+.B -rmd160
+Select rmd160 digest algorithm.
+.TP
+.B -sha1
+Select sha1 digest algorithm.
+.TP
+.B -rmd160
+.I 
+.SH "EXIT STATUS"
+Any error in argument format will return an exit status of 3.  The command
+will normally return with exit status of 0 after printing the requested
+digest.
+.SH AUTHOR
+Written by David Sugar.
+.SH "REPORTING BUGS"
+Report bugs to <dyfet@gnutelephony.org>.
+.SH COPYRIGHT
+Copyright \(co 2009 David Sugar, Tycho Softworks.
+.br
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
