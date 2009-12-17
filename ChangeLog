@@ -6,6 +6,7 @@ From version 0.5.11 to 0.5.12
 - admin profile level support.
 - var lib path to store future digests and other settings.
 - fixes for anonymous public inbound callers.
+- lots of man pages added.
 
 From version 0.5.10 to 0.5.11
 - pedantic fixes for strict aliasing and gcc 4.4.

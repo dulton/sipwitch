@@ -695,6 +695,22 @@ extern "C" int main(int argc, char **argv)
 		if(!stricmp(*argv, "-help") || !stricmp(*argv, "-?")) 
 			server::usage();
 
+		if(!stricmp(*argv, "-debug")) {
+			++argv;
+			if(!*argv) {
+				fprintf(stderr, "*** sipw: debug level missing\n");
+				exit(-1);
+			}
+			verbose = atoi(*argv) + INFO;
+			continue;
+		}
+
+
+		if(!strnicmp(*argv, "-debug=", 7)) {
+			verbose = atoi(*argv + 7) + INFO;
+			continue;
+		} 
+
 		if(!strnicmp(*argv, "-x", 2)) {
 			if(*argv + 2)
 				cp = *argv + 2;

@@ -1,0 +1,108 @@
+.\" sipw - sipwitch service daemon.
+.\" Copyright (c) 2009 David Sugar <dyfet@gnutelephony.org>
+.\"
+.\" This manual page is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc.,59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+.\"
+.\" This manual page is written especially for Debian GNU/Linux.
+.\"
+.TH sipw "8" "December 2009" "GNU SIP Witch" "GNU Telephony"
+.SH NAME
+sipw \- sipwitch service daemon
+.SH SYNOPSIS
+.B sipw
+.B [--background]
+.BI [--concurrency=value]
+.BI [--config=file]
+.BI [--debug=level]
+.B [--foreground]
+.B [--gdb]
+.BI [--group=id]
+.B [--memcheck]
+.B [--memleak]
+.BI [--plugins=names]
+.BI [--priority=value]
+.B [--restarable]
+.B [--trace]
+.B [--version]
+.SH DESCRIPTION
+.SH OPTIONS
+Normally the \fBsipw\fR daemon is started from an init script or upstart
+rather than manually, and hence only those options setable in the
+.I /etc/default/sipwitch
+config file can be set.  However, the \fBsipw\fR daemon can be manually
+started, both in the foreground for testing, and in the background.  If
+this is done, a number of options may be passed to it directly as documented.
+.TP
+.B --background
+Execute the \fBsipw\fR daemon detached in the background (default).
+.TP
+.B --concurrency=level
+Set the pthread concurrency level for the \fBsipw\fR process.
+.TP
+.B --config=FILE
+Use specified \fIFILE\fR in place of default config, which is either 
+\fI/etc/sipwitch.conf\fR or \fI~/.sipwitchrc\fR.
+.TP
+.B --debug=LEVEL
+Specify debug logging \fILEVEL\fR (0-9).  When run in foreground debug
+messages are shown on the console.  When in background they are saved in
+the sipwitch log file.
+.TP
+.B --foreground
+Execute the \fBsipw\fR daemon in the foreground, with output shown on stdout
+or stderr.
+.TP
+.B --gdb
+Execute the \fBsipw\fR daemon under control of gdb for full debugging.
+.TP
+.B --group=ID
+Specify the group \fIID\fR that the \fBsipw\fR daemon will execute as for 
+receiving control messages or access to daemon managed shared memory.
+.TP
+.B --memcheck
+Execute the \fBsipw\fR daemon under valgrind to validate basic memory management.
+.TP
+.B --memleak
+Execute the \fBsipw\fR daemon under valgrind for full memory leak detection.
+.TP
+.B --plugins=NAMES
+Load only these specified plugins from /var/lib/sipwitch.
+.TP
+.BI --priority=LEVEL
+Execute the \fBsipw\fR daemon under the realtime (fifo) schedule, and specify
+a realtime process priority \fILEVEL\fR (1-9).
+.TP
+.B --restarable
+The \fBsipw\fR daemon will automatically restart if it exits or crashes other
+than from a manually specified reason.  This is often used on BSD systems 
+when \fBsipw\fR is started from an rc file.
+.TP
+.B --trace
+Logs sip messages the \fBsipw\fR daemon sends and receives.
+.TP
+.B --version
+Print the currently installed version of sipwitch to standard output.
+.SH AUTHOR
+.B sipw
+was written by David Sugar <dyfet@gnutelephony.org>.
+.SH "REPORTING BUGS"
+Report bugs to <dyfet@gnutelephony.org>.
+.SH COPYRIGHT
+Copyright \(co 2009 David Sugar, Tycho Softworks.
+.br
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
