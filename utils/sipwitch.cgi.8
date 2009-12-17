@@ -1,0 +1,44 @@
+.\" sipwitch.cgi - web services for sipwitch.
+.\" Copyright (c) 2009 David Sugar <dyfet@gnutelephony.org>
+.\"
+.\" This manual page is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc.,59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+.\"
+.\" This manual page is written especially for Debian GNU/Linux.
+.\"
+.TH sipw "8" "December 2009" "GNU SIP Witch" "GNU Telephony"
+.SH NAME
+sipwitch.cgi \- web services for sipwitch
+.SH SYNOPSIS
+.B sipwitch.cgi
+.SH DESCRIPTION
+This is not meant as a user executed application.  Instead, \fBsipwitch.cgi\fR
+will be symlinked to or typically executed from a web server's cgi-bin
+directory.  This utility offers a remote web-driven XMLRPC interface for
+managing a locally resident \fBsipw\fR daemon, including the ability to collect
+statistics and call information, and to perform control operations.  This is
+meant to support creation of remote management applications for sipwitch,
+especially when \fBsipw\fR might be executed on a dedicated router.
+.SH AUTHOR
+.B sipwitch.cgi
+was written by David Sugar <dyfet@gnutelephony.org>.
+.SH "REPORTING BUGS"
+Report bugs to <dyfet@gnutelephony.org>.
+.SH COPYRIGHT
+Copyright \(co 2009 David Sugar, Tycho Softworks.
+.br
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+

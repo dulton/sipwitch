@@ -121,7 +121,9 @@ remote voip service provider.
 %{_mandir}/man1/sipwitch.1*
 %{_mandir}/man1/sipdigest.1*
 %{_mandir}/man8/sipw.8*
-%{_sbindir}/*
+%{_mandir}/man8/sipwitch.cgi.8*
+%{_sbindir}/sipw
+%{_sbindir}/sipwitch.cgi
 %{_bindir}/sipquery
 %{_bindir}/sipwitch
 %{_bindir}/sipdigest
