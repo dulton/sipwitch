@@ -239,7 +239,7 @@ usage:
 	if(forwarded)
 		eXosip_masquerade_contact(forwarded, port);
 	
-	eXosip_set_user_agent("SIPW/sipuser");
+	eXosip_set_user_agent("SIPW/sipquery");
 
 	if(!strncmp(user, "sip:", 4)) {
 		tls = 0;

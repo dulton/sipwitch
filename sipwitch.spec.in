@@ -120,6 +120,7 @@ remote voip service provider.
 %doc README COPYING NEWS FEATURES SUPPORT TODO NOTES AUTHORS MODULES ChangeLog
 %{_mandir}/man1/sipwitch.1*
 %{_mandir}/man1/sipdigest.1*
+%{_mandir}/man1/sipquery.1*
 %{_mandir}/man8/sipw.8*
 %{_mandir}/man8/sipwitch.cgi.8*
 %{_sbindir}/sipw

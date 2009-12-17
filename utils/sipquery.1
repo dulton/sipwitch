@@ -1,4 +1,4 @@
-.\" sipwitch.cgi - web services for sipwitch.
+.\" sipquery - register and report sip contact details
 .\" Copyright (c) 2009 David Sugar <dyfet@gnutelephony.org>
 .\"
 .\" This manual page is free software; you can redistribute it and/or modify
@@ -17,21 +17,42 @@
 .\"
 .\" This manual page is written especially for Debian GNU/Linux.
 .\"
-.TH sipwitch.cgi "8" "December 2009" "GNU SIP Witch" "GNU Telephony"
+.TH sipquery "1" "December 2009" "GNU SIP Witch" "GNU Telephony"
 .SH NAME
-sipwitch.cgi \- web services for sipwitch
+sipquery \- register and report sip contact details
 .SH SYNOPSIS
-.B sipwitch.cgi
+.B sipquery
+.B -forward \fIipaddr\fR
+.B -port \fInumber\fR
+.B -proxy \fIsip:host[:port]\fR
+.B -server \fIsip:host[:port]\fR
+.B -timeout \fIseconds\fR
+.B -verbose
+.I userid[@server[:port]]
 .SH DESCRIPTION
-This is not meant as a user executed application.  Instead, \fBsipwitch.cgi\fR
-will be symlinked to or typically executed from a web server's cgi-bin
-directory.  This utility offers a remote web-driven XMLRPC interface for
-managing a locally resident \fBsipw\fR daemon, including the ability to collect
-statistics and call information, and to perform control operations.  This is
-meant to support creation of remote management applications for sipwitch,
-especially when \fBsipw\fR might be executed on a dedicated router.
+This is a tool that uses the registration process to query the sip contact
+uri for a registered user agent.  This may even be considered a demonstration
+of a security flaw in the standard SIP server model.  Basically, an
+un-authenticated registration request is sent to the server, and the contact
+uri is read to standard out from the server reply message.
+.SH OPTIONS
+.TP
+.B -forward
+Sets the "public appearing" IP address for testing behind NAT.
+.TP
+.B -port 
+Sets the sip port number, in case the default port (5060) is in use already.
+.TP 
+.B -proxy 
+Use a specified outbound proxy uri to get to the server being queried.
+.TP
+.B -server 
+Specify server uri to query unless offered as part of userid.
+.TP
+.B -timeout 
+Time to wait for query response.
 .SH AUTHOR
-.B sipwitch.cgi
+.B sipquery
 was written by David Sugar <dyfet@gnutelephony.org>.
 .SH "REPORTING BUGS"
 Report bugs to sipwitch-devel@gnu.org.
