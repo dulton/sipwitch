@@ -290,7 +290,7 @@ static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 	}
 
 	if(!pwd) {
-		fprintf(stderr, "*** sipw: unkown user identity; exiting\n");
+		fprintf(stderr, "*** sipw: unknown user identity; exiting\n");
 		exit(-1);
 	}
 
