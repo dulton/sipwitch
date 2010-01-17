@@ -958,6 +958,21 @@ invalid:
 			continue;
 		}
 
+		if(!stricmp(argv[0], "realm")) {
+			if(argc != 2)
+				goto invalid;
+
+			time(&now);
+			dt = localtime_r(&now, &hold);
+			if(dt->tm_year < 1900)
+				dt->tm_year += 1900;
+			process::printlog("realm %s %04d-%02d-%02d %02d:%02d:%02d\n",
+				argv[1], dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+				dt->tm_hour, dt->tm_min, dt->tm_sec);
+            reload(user);
+            continue;
+		}
+
 		if(!stricmp(argv[0], "period")) {
 			if(argc != 2)
 				goto invalid;

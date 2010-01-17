@@ -120,6 +120,7 @@ remote voip service provider.
 %doc README COPYING NEWS FEATURES SUPPORT TODO NOTES AUTHORS MODULES ChangeLog
 %{_mandir}/man1/sipwitch.1*
 %{_mandir}/man1/sipdigest.1*
+%{_mandir}/man1/siprealm.1*
 %{_mandir}/man1/sipquery.1*
 %{_mandir}/man8/sipw.8*
 %{_mandir}/man8/sipwitch.cgi.8*
@@ -128,6 +129,7 @@ remote voip service provider.
 %{_bindir}/sipquery
 %{_bindir}/sipwitch
 %{_bindir}/sipdigest
+%{_bindir}/siprealm
 %dir %{_libdir}/sipwitch
 %config(noreplace) %{_sysconfdir}/logrotate.d/sipwitch
 %attr(0755,root,root) %{_initrddir}/sipwitch
@@ -186,6 +188,9 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Sun Jan 17 2010 David Sugar <dyfet@gnutelephony.org> - 0.5.13-0
+- sip realm fully externalized and new siprealm utility added.
+
 * Wed Dec 09 2009 David Sugar <dyfet@gnutelephony.org> - 0.5.12-0
 - redefined internal user & service permissions and profiles.
 - fixed anonymous inbound.

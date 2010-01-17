@@ -265,13 +265,6 @@ static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 		setenv("CFG", buf, 1);
 	}
 
-	::remove("/tmp/siprealm");
-	fsys::create(fs, "/tmp/siprealm", fsys::ACCESS_WRONLY, 0644);
-	if(is(fs)) {
-		fsys::write(fs, "none", 4);
-		fsys::close(fs);
-	}
-
 	if(uid) {
 		umask(007);
 		pwd = getpwnam(uid);
