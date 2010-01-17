@@ -1338,14 +1338,17 @@ static void server_realm(void)
 	if(params.argc != 0)
 		fault(3, "Invalid Parameters");
 
-	fsys::open(fd, "/tmp/siprealm", fsys::ACCESS_RDONLY);
+	fsys::open(fd, "/etc/siprealm", fsys::ACCESS_RDONLY);
 	if(is(fd)) {
 		memset(realm, 0, sizeof(realm));
 		fsys::read(fd, realm, sizeof(realm) - 1);
 		fsys::close(fd);
+		char *cp = strchr(realm, ':');
+		if(cp)
+			*cp = 0;
 	}
 	else
-		fault(2, "Server Offline");
+		fault(2, "No Realm Available");
 
 	response(buffer, sizeof(buffer), "^s", realm);
 	reply(buffer);

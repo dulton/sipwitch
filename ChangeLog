@@ -1,3 +1,6 @@
+From version 0.5.12 to 0.5.13
+- introduction of /etc/siprealm to set hash type and realm.
+
 From version 0.5.11 to 0.5.12
 - user is always multi-target capable.
 - local devices not "forwarded" in forward module.

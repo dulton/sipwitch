@@ -446,12 +446,13 @@ void registry::cleanup(time_t period)
 void registry::reload(service *cfg)
 {
 	assert(cfg != NULL);
-
+	
+	static const char *olddigest = "MD5";
 	static const char *oldrealm = "-";
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("registry");
 	fsys_t fd;
-
+	
 	while(is(sp)) {
 		key = sp->getId();
 		value = sp->getPointer();
@@ -496,19 +497,37 @@ void registry::reload(service *cfg)
 	memset(publishing, 0, sizeof(LinkedObject *) * keysize);
 	memset(addresses, 0, sizeof(LinkedObject *) * keysize);
 
-	Mutex::protect(&oldrealm);
-	if(!String::equal(realm, oldrealm)) {
-		process::errlog(INFO, "realm is %s", realm);
-		oldrealm = realm;
+// windows may use registry keys?
 #ifndef	_MSWINDOWS_
-		fsys::open(fd, "/tmp/siprealm", fsys::ACCESS_WRONLY);
-		if(is(fd)) {
-			fsys::write(fd, realm, strlen(realm));		
-			fsys::close(fd);
+	char buffer[256];
+	char *cp;
+	fsys_t fs;
+
+	fsys::open(fd, "/etc/siprealm", fsys::ACCESS_RDONLY);
+	if(is(fd)) {
+        memset(buffer, 0, sizeof(buffer));
+        fsys::read(fs, buffer, sizeof(buffer) - 1);
+        fsys::close(fs);
+        char *cp = strchr(buffer, ':');
+        if(cp)
+            *(cp++) = 0;
+		if(buffer[0])
+			realm = cfg->dup(buffer);
+		if(cp && cp[0]) {
+			digest = cfg->dup(cp);
+			String::upper(digest);
 		}
-#endif
 	}
-	Mutex::release(&oldrealm);
+#endif
+
+	if(!String::equal(realm, oldrealm)) {
+		process::errlog(INFO, "new realm %s", realm);
+	} else if(!String::equal(digest, olddigest)) {
+		process::errlog(INFO, "digest changed to %s", digest);
+	}
+
+	oldrealm = realm;
+	olddigest = digest;
 }
 
 unsigned registry::getEntries(void)

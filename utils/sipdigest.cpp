@@ -598,7 +598,7 @@ usage:
 
 	if(!realm) {
 		fsys_t fs;
-		fsys::open(fs, "/tmp/siprealm", fsys::ACCESS_RDONLY);
+		fsys::open(fs, "/etc/siprealm", fsys::ACCESS_RDONLY);
 		if(!is(fs)) {
 			fprintf(stderr, "*** sipdigest: no realm known\n");
 			exit(4);
@@ -606,6 +606,10 @@ usage:
 		memset(buffer, 0, sizeof(buffer));
 		fsys::read(fs, buffer, sizeof(buffer) - 1);
 		fsys::close(fs);
+		char *cp = strchr(buffer, ':');
+		if(cp)
+			*cp = 0;
+
 		realm = strdup(buffer);
 	}
 
