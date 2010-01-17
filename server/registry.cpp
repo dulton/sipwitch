@@ -500,7 +500,6 @@ void registry::reload(service *cfg)
 // windows may use registry keys?
 #ifndef	_MSWINDOWS_
 	char buffer[256];
-	char *cp;
 	fsys_t fs;
 
 	fsys::open(fd, "/etc/siprealm", fsys::ACCESS_RDONLY);
