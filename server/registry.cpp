@@ -502,8 +502,8 @@ void registry::reload(service *cfg)
 	char buffer[256];
 	fsys_t fs;
 
-	fsys::open(fd, "/etc/siprealm", fsys::ACCESS_RDONLY);
-	if(is(fd)) {
+	fsys::open(fs, "/etc/siprealm", fsys::ACCESS_RDONLY);
+	if(is(fs)) {
         memset(buffer, 0, sizeof(buffer));
         fsys::read(fs, buffer, sizeof(buffer) - 1);
         fsys::close(fs);
