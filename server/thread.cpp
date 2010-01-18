@@ -183,6 +183,7 @@ void thread::message(void)
 	char *msglen = NULL;
 	const char *id = NULL;
 	const char *digest = NULL;
+	const char *hash = NULL;
 
 	switch(destination) {
 	case LOCAL:
@@ -200,8 +201,13 @@ void thread::message(void)
 		break;
 	case REDIRECTED:
 		// -digest-: get user digest into "digest" buffer 
-		if(authorized.keys)
-			digest = server::getValue(authorized.keys, "digest");
+		if(authorized.keys) {
+			hash = digest::get(server::getValue(authorized.keys, "id"));
+			if(hash)
+				digest = hash;
+			else
+				digest = server::getValue(authorized.keys, "digest");
+		}
 		if(!digest) {
 			send_reply(SIP_DECLINE);
 			return;
@@ -217,6 +223,7 @@ void thread::message(void)
 	ct = sevent->request->content_type;
 	if(!body || !ct || !ct->type) {
 		send_reply(SIP_BAD_REQUEST);
+		digest::release(hash);
 		return;
 	}
 	
@@ -246,10 +253,12 @@ void thread::message(void)
 	debug(3, "sending message from %s to %s\n", sysid, target);
 	osip_content_length_to_str(sevent->request->content_length, &msglen);
 	if(!msglen) {
+		digest::release(hash);
 		send_reply(SIP_BAD_REQUEST);
 		return;
 	}
 	send_reply(messages::publish(target, sysid, fromhdr, body->body, atoi(msglen), msgtype, digest));
+	digest::release(hash);
 	osip_free(msglen);
 }
 
@@ -1132,6 +1141,7 @@ bool thread::authenticate(void)
 	stringbuf<64> digest;
 	int error = SIP_PROXY_AUTHENTICATION_REQUIRED;
 	const char *cp;
+	const char *hash = NULL;
 
 	if(authorized.keys != NULL)
 		return true;
@@ -1191,8 +1201,9 @@ bool thread::authenticate(void)
 		String::set(display, sizeof(display), leaf->getPointer());
 
 	// -digest-: fetch from leaf node...
+	hash = digest::get(auth->username);
 	leaf = node->leaf("digest");
-	if(!leaf || !leaf->getPointer()) {
+	if(!hash && (!leaf || !leaf->getPointer())) {
 		process::errlog(NOTICE, "rejecting unsupported %s", auth->username);
 		error = SIP_FORBIDDEN;
 		goto failed;
@@ -1208,7 +1219,11 @@ bool thread::authenticate(void)
 		digest::md5(digest, buffer);
 
 	// apply user digest pointer with nonce, and service digest string
-	snprintf(buffer, sizeof(buffer), "%s:%s:%s", leaf->getPointer(), auth->nonce, *digest);
+	if(hash)
+		snprintf(buffer, sizeof(buffer), "%s:%s:%s", hash, auth->nonce, *digest);
+	else
+		snprintf(buffer, sizeof(buffer), "%s:%s:%s", leaf->getPointer(), auth->nonce, *digest);
+	digest::release(hash);
 	if(!stricmp(registry::getDigest(), "sha1"))
 		digest::sha1(digest, buffer);
 	else if(!stricmp(registry::getDigest(), "rmd160"))
@@ -1341,6 +1356,7 @@ void thread::validate(void)
 	char temp[64];
 	osip_message_t *reply = NULL;
 	service::usernode user;
+	const char *hash = NULL;
 
 	if(!sevent->request || osip_message_get_authorization(sevent->request, 0, &auth) != 0 || !auth || !auth->username || !auth->response) {
 		challenge();
@@ -1372,8 +1388,9 @@ void thread::validate(void)
 	}
 
 	// -digest-: get a leaf pointer
+	hash = digest::get(auth->username); 
 	leaf = node->leaf("digest");
-	if(!leaf || !leaf->getPointer()) {
+	if(!hash && (!leaf || !leaf->getPointer())) {
 		error = SIP_FORBIDDEN;
 		goto reply;
 	}
@@ -1388,7 +1405,12 @@ void thread::validate(void)
 		digest::md5(digest, buffer);
 
 	// compute with user digest
-	snprintf(buffer, sizeof(buffer), "%s:%s:%s", leaf->getPointer(), auth->nonce, *digest);
+	if(hash)
+		snprintf(buffer, sizeof(buffer), "%s:%s:%s", hash, auth->nonce, *digest);
+	else
+		snprintf(buffer, sizeof(buffer), "%s:%s:%s", leaf->getPointer(), auth->nonce, *digest);
+
+	digest::release(hash);
 	if(!stricmp(registry::getDigest(), "sha1"))
 		digest::sha1(digest, buffer);
 	else if(!stricmp(registry::getDigest(), "rmd160"))

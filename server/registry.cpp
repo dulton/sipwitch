@@ -452,7 +452,7 @@ void registry::reload(service *cfg)
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("registry");
 	fsys_t fd;
-	
+
 	while(is(sp)) {
 		key = sp->getId();
 		value = sp->getPointer();
@@ -478,24 +478,6 @@ void registry::reload(service *cfg)
 		}
 		sp.next();
 	}
-
-	if(isConfigured())
-		return;
-
-	if(range) {
-		extmap = new mapped *[range];
-		memset(extmap, 0, sizeof(mapped *) * range);
-	}
-	primap = new LinkedObject *[routes];
-	memset(primap, 0, sizeof(LinkedObject *) * routes);
-	keys = new LinkedObject *[keysize];
-	contacts = new LinkedObject *[keysize];
-	publishing = new LinkedObject *[keysize];
-	addresses = new LinkedObject *[keysize];
-	memset(keys, 0, sizeof(LinkedObject *) * keysize);
-	memset(contacts, 0, sizeof(LinkedObject *) * keysize);
-	memset(publishing, 0, sizeof(LinkedObject *) * keysize);
-	memset(addresses, 0, sizeof(LinkedObject *) * keysize);
 
 // windows may use registry keys?
 #ifndef	_MSWINDOWS_
@@ -529,6 +511,24 @@ void registry::reload(service *cfg)
 
 	oldrealm = realm;
 	olddigest = digest;
+
+	if(isConfigured())
+		return;
+
+	if(range) {
+		extmap = new mapped *[range];
+		memset(extmap, 0, sizeof(mapped *) * range);
+	}
+	primap = new LinkedObject *[routes];
+	memset(primap, 0, sizeof(LinkedObject *) * routes);
+	keys = new LinkedObject *[keysize];
+	contacts = new LinkedObject *[keysize];
+	publishing = new LinkedObject *[keysize];
+	addresses = new LinkedObject *[keysize];
+	memset(keys, 0, sizeof(LinkedObject *) * keysize);
+	memset(contacts, 0, sizeof(LinkedObject *) * keysize);
+	memset(publishing, 0, sizeof(LinkedObject *) * keysize);
+	memset(addresses, 0, sizeof(LinkedObject *) * keysize);
 }
 
 unsigned registry::getEntries(void)
