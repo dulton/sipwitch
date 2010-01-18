@@ -110,8 +110,10 @@ usage:
 		fsys::close(fs);
 		char *cp = strchr(buffer, ':');
 		if(cp)
-			*cp = 0;
+			*(cp++) = 0;
 
+		if(cp && *cp)
+			mode = cp;
 		realm = strdup(buffer);
 	}
 
