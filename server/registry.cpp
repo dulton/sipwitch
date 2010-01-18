@@ -521,8 +521,10 @@ void registry::reload(service *cfg)
 
 	if(!String::equal(realm, oldrealm)) {
 		process::errlog(INFO, "new realm %s", realm);
+		digest::clear();
 	} else if(!String::equal(digest, olddigest)) {
 		process::errlog(INFO, "digest changed to %s", digest);
+		digest::clear();
 	}
 
 	oldrealm = realm;

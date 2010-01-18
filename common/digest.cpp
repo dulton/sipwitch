@@ -18,6 +18,8 @@
 #include <ucommon/export.h>
 #include <sipwitch/digest.h>
 
+#define		INDEX_KEYSIZE	177
+
 #ifdef	HAVE_GCRYPT_CRYPTO
 #ifdef	HAVE_GCRYPT_GCRYPT_H
 #include <gcrypt/gcrypt.h>
@@ -299,6 +301,26 @@ void MD5Transform(uint32_t buf[4], uint32_t const in[16])
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
+class __LOCAL key : public LinkedObject
+{
+public:
+	key(const char *keyid, const char *keyhash);
+
+	const char *id;
+	char *hash;
+};
+
+static memalloc cache;
+static LinkedObject *paths[INDEX_KEYSIZE];
+static condlock_t locking;
+
+key::key(const char *keyid, const char *keyhash) :
+LinkedObject(&paths[NamedObject::keyindex(id, INDEX_KEYSIZE)])
+{
+	id = cache.dup(keyid);
+	hash = cache.dup(keyhash);
+}
+
 #ifdef	MD5_MISSING
 unsigned digest::md5(unsigned char *target, const char *str)
 {
@@ -523,5 +545,96 @@ unsigned digest::rmd160(string_t &d, const char *s)
 	else
 		d = strbuf;
 	return 20;
+}
+
+void digest::clear(void)
+{
+	locking.modify();
+	memset(paths, 0, sizeof(paths));
+	cache.purge();
+	locking.commit();
+}
+
+const char *digest::get(const char *id)
+{
+	assert(id != NULL);
+
+	locking.access();
+	unsigned path = NamedObject::keyindex(id, INDEX_KEYSIZE);
+	linked_pointer<key> keys = paths[path];
+	while(is(keys)) {
+		if(String::equal(id, keys->id))
+			return keys->hash;
+		keys.next();
+	}
+	locking.release();
+	return NULL; 
+}
+
+void digest::release(const char *id)
+{
+	if(id)
+		locking.release();
+}
+
+bool digest::set(const char *id, const char *hash)
+{
+	assert(id != NULL && hash != NULL);
+
+	caddr_t mp;
+	size_t len = strlen(hash);
+	
+	locking.access();
+	unsigned path = NamedObject::keyindex(id, INDEX_KEYSIZE);
+	linked_pointer<key> keys = paths[path];
+	while(is(keys)) {
+		if(String::equal(id, keys->id)) {
+			if(len == strlen(keys->hash)) {
+				String::set(keys->hash, ++len, hash);
+				locking.commit();
+				return true;
+			}
+			return false;
+		}
+		keys.next();
+	}
+	mp = (caddr_t)cache.alloc(sizeof(key));
+	new(mp) key(id, hash);
+	locking.commit();
+	return true;
+}
+
+void digest::load(void)
+{
+	FILE *fp = fopen(DEFAULT_VARPATH "/lib/sipwitch/digests.db", "r");
+	char buffer[256];
+	char *cp, *ep;
+
+	if(!fp)
+		return;
+
+	for(;;) {
+		fgets(buffer, sizeof(buffer), fp);
+		if(feof(fp))
+			break;
+
+		cp = strchr(buffer, ':');
+		if(!cp)
+			continue;
+
+		*(cp++) = 0;
+
+		ep = strchr(buffer, '\r');
+		if(!ep)
+			ep = strchr(buffer, '\n');
+
+		if(ep)
+			*ep = 0;
+		else
+			continue;
+
+		set(buffer, cp);
+	}
+	fclose(fp);
 }
 

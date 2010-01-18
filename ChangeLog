@@ -1,5 +1,6 @@
 From version 0.5.13 to ?
 - updated sipdigest to use sipwitch server library.
+- introduction of separate user account digest hash database.
 
 From version 0.5.12 to 0.5.13
 - introduction of /etc/siprealm to set hash type and realm.

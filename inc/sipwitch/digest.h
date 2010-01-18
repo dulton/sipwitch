@@ -44,6 +44,11 @@ public:
 	static unsigned sha1(string_t &d, const char *str = NULL);
 	static unsigned rmd160(unsigned char *buf, const char *str);
 	static unsigned rmd160(string_t &d, const char *str = NULL);
+	static void clear(void);
+	static const char *get(const char *id);
+	static bool set(const char *id, const char *hash);
+	static void release(const char *hash);
+	static void load(void);
 };
 
 END_NAMESPACE

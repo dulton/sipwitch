@@ -891,6 +891,9 @@ void server::run(const char *user)
 	if(dt->tm_year < 1900)
 		dt->tm_year += 1900;
 
+	// initial load of digest cache
+	digest::load();
+
 	process::printlog("server starting %04d-%02d-%02d %02d:%02d:%02d\n",
 		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
 		dt->tm_hour, dt->tm_min, dt->tm_sec);
@@ -955,6 +958,15 @@ invalid:
 				continue;
 			}
 			process::setVerbose(errlevel_t(atoi(argv[1])));
+			continue;
+		}
+
+		if(!stricmp(argv[0], "digest")) {
+			if(argc != 3)
+				goto invalid;
+
+			if(!digest::set(argv[1], argv[2]))
+				process::reply("invalid digest");			
 			continue;
 		}
 
