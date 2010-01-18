@@ -490,6 +490,7 @@ public:
 	static MappedRegistry *accept(const char *request);
 	static const char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
 	static const char *referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size);
+	static bool checkId(const char *id);
 };
 
 class __LOCAL messages : public service::callback

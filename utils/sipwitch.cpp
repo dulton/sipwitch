@@ -428,6 +428,7 @@ static void usage(void)
 		"  check                   Server deadlock check\n"
         "  concurrency <level>     Server concurrency level\n"
 		"  down                    Shut down server\n"
+		"  dump                    Dump server configuration\n"
 		"  message <ext> <text>    Send text message to extension\n"
 		"  period <interval>       Collect periodic statistics\n"
 		"  pstats                  Dump periodic statistics\n"
@@ -575,7 +576,7 @@ extern "C" int main(int argc, char **argv)
 		version();
 	else if(String::equal(*argv, "help") || String::equal(*argv, "-help") || String::equal(*argv, "--help"))
 		usage();
-	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot"))
+	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot") || String::equal(*argv, "dump"))
 		single(argv, 30);
 	else if(String::equal(*argv, "down") || String::equal(*argv, "restart") || String::equal(*argv, "abort"))
 		single(argv, 0);

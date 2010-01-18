@@ -640,6 +640,26 @@ service::keynode *server::getRouting(const char *id)
 	return NULL;
 }
 
+bool server::checkId(const char *uid)
+{
+	assert(uid != NULL && *uid != 0);
+	assert(cfg != NULL);
+	keynode *node = NULL;
+	server *cfgp;
+
+	locking.access();
+	cfgp = static_cast<server*>(cfg);
+	if(!cfgp) {
+		locking.release();
+		return false;
+	}
+	node = cfgp->find(uid);
+	locking.release();
+	if(node)
+		return true;
+	return false;
+}
+
 void server::getDialing(const char *uid, usernode& user)
 {
 	assert(uid != NULL && *uid != 0);
