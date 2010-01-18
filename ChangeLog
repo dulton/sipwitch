@@ -1,3 +1,6 @@
+From version 0.5.13 to ?
+- updated sipdigest to use sipwitch server library.
+
 From version 0.5.12 to 0.5.13
 - introduction of /etc/siprealm to set hash type and realm.
 
