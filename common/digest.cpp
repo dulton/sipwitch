@@ -315,7 +315,7 @@ static LinkedObject *paths[INDEX_KEYSIZE];
 static condlock_t locking;
 
 key::key(const char *keyid, const char *keyhash) :
-LinkedObject(&paths[NamedObject::keyindex(id, INDEX_KEYSIZE)])
+LinkedObject(&paths[NamedObject::keyindex(keyid, INDEX_KEYSIZE)])
 {
 	id = cache.dup(keyid);
 	hash = cache.dup(keyhash);
@@ -624,14 +624,12 @@ void digest::load(void)
 
 		*(cp++) = 0;
 
-		ep = strchr(buffer, '\r');
+		ep = strchr(cp, '\r');
 		if(!ep)
-			ep = strchr(buffer, '\n');
+			ep = strchr(cp, '\n');
 
 		if(ep)
 			*ep = 0;
-		else
-			continue;
 
 		set(buffer, cp);
 	}

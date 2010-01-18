@@ -135,7 +135,6 @@ usage:
 	}
 
 	printf("%s\n", *digestbuf);
-	sleep(10000);
 	exit(0);
 }
 
