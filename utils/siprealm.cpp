@@ -14,11 +14,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <ucommon/ucommon.h>
-#include <sipwitch/digest.h>
 #include <config.h>
 
 using namespace UCOMMON_NAMESPACE;
-using namespace SIPWITCH_NAMESPACE;
 
 static void usage(void)
 {

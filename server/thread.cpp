@@ -199,6 +199,7 @@ void thread::message(void)
 		String::set(target, sizeof(target), requesting);
 		break;
 	case REDIRECTED:
+		// -digest-: get user digest into "digest" buffer 
 		if(authorized.keys)
 			digest = server::getValue(authorized.keys, "digest");
 		if(!digest) {
@@ -1189,6 +1190,7 @@ bool thread::authenticate(void)
 	if(leaf && leaf->getPointer())
 		String::set(display, sizeof(display), leaf->getPointer());
 
+	// -digest-: fetch from leaf node...
 	leaf = node->leaf("digest");
 	if(!leaf || !leaf->getPointer()) {
 		process::errlog(NOTICE, "rejecting unsupported %s", auth->username);
@@ -1196,6 +1198,7 @@ bool thread::authenticate(void)
 		goto failed;
 	}
 
+	// compute service request digest string
 	snprintf(buffer, sizeof(buffer), "%s:%s", sevent->request->sip_method, auth->uri);
 	if(!stricmp(registry::getDigest(), "sha1"))
 		digest::sha1(digest, buffer);
@@ -1203,6 +1206,8 @@ bool thread::authenticate(void)
 		digest::rmd160(digest, buffer);
 	else
 		digest::md5(digest, buffer);
+
+	// apply user digest pointer with nonce, and service digest string
 	snprintf(buffer, sizeof(buffer), "%s:%s:%s", leaf->getPointer(), auth->nonce, *digest);
 	if(!stricmp(registry::getDigest(), "sha1"))
 		digest::sha1(digest, buffer);
@@ -1210,11 +1215,13 @@ bool thread::authenticate(void)
 		digest::rmd160(digest, buffer);
 	else
 		digest::md5(digest, buffer);
- 
+
+	// see if digests match 
 	if(stricmp(*digest, auth->response)) {
 		process::errlog(NOTICE, "rejecting unauthorized %s", auth->username);
 		goto failed;
 	}
+
 	String::set(identity, sizeof(identity), auth->username);
 	return true;
 
@@ -1364,12 +1371,14 @@ void thread::validate(void)
 		goto reply;
 	}
 
+	// -digest-: get a leaf pointer
 	leaf = node->leaf("digest");
 	if(!leaf || !leaf->getPointer()) {
 		error = SIP_FORBIDDEN;
 		goto reply;
 	}
 
+	// compute a method/uri hash
 	snprintf(buffer, sizeof(buffer), "%s:%s", sevent->request->sip_method, auth->uri);
 	if(!stricmp(registry::getDigest(), "sha1"))
 		digest::sha1(digest, buffer);
@@ -1377,6 +1386,8 @@ void thread::validate(void)
 		digest::rmd160(digest, buffer);
 	else
 		digest::md5(digest, buffer);
+
+	// compute with user digest
 	snprintf(buffer, sizeof(buffer), "%s:%s:%s", leaf->getPointer(), auth->nonce, *digest);
 	if(!stricmp(registry::getDigest(), "sha1"))
 		digest::sha1(digest, buffer);

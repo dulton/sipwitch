@@ -32,13 +32,11 @@ realm of the sip server for a given \fIUSER\fR id and \fISECRET\fR (password).
 Hence, it is desirable to set the realm once, because changing it will also 
 require changing all the user hashes.
 .PP
-By default, sipdigest uses the realm that the sipwitch daemon is set to, and
-using MD5, though alternate hashing algorithims may also be specified.  The
-\fBsipdigest\fR command can also be set for any realm to compute an arbitrary 
-digest, and hence this may be useful to build database entries or config files 
-for remote servers.  For all these reasons, it is assumed this command would 
-likely be used by a system administrator, although any user can safely run 
-and use this command.
+By default, sipdigest uses the current sip authentication realm and algorithm
+as set by the siprealm command, though alternate realms and hashing algorithms
+may also be specified.  Since sipdigest can compute an arbitrary digest it
+can be useful to build database entries or config files where secret hashes
+must be stored. 
 .SH OPTIONS
 .TP
 .B -md5
