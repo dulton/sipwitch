@@ -554,6 +554,18 @@ extern "C" int main(int argc, char **argv)
 
 	// for deaemon env usually loaded from /etc/defaults or /etc/sysconfig
 
+	cp = getenv("FIRSTUID");
+	if(cp && *cp)
+		server::uid = atoi(cp);
+
+	cp = getenv("SIPUSERS");
+	if(cp && *cp)
+		server::sipusers = strdup(cp);
+
+	cp = getenv("SIPADMIN");
+	if(cp && *cp)
+		server::sipadmin = strdup(cp);
+
 	cp = getenv("GROUP");
 	if(cp && *cp)
 		user = strdup(cp);

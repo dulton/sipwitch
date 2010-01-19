@@ -67,6 +67,10 @@ static bool activating(int argc, char **args)
 	return rtn;
 }
 
+unsigned server::uid = 1000;
+const char *server::sipusers = "sipusers";
+const char *server::sipadmin = "wheel";
+
 server::server(const char *id) :
 service(id, PAGING_SIZE)
 {
@@ -506,7 +510,11 @@ void server::confirm(const char *user)
 	keynode *base = getPath("accounts");
 
 	struct passwd *pwd;
-	struct group *grp = getgrnam("sipusers");
+	struct group *grp = NULL; 
+
+	if(sipusers)
+		grp = getgrnam(sipusers);
+
 	if(!grp || !grp->gr_mem)
 		return;
 
@@ -535,6 +543,7 @@ void server::confirm(const char *user)
 			goto skip;
 		}
 
+		debug(2, "adding %s %s", node->getId(), id);
 		id = pwd->pw_gecos;
 
 		cp = strchr(id, ',');
@@ -545,8 +554,8 @@ void server::confirm(const char *user)
 			number = atoi(cp);
 		else
 			number = 0;
-		if(!number && pwd->pw_uid >= 1000)
-			number = pwd->pw_uid - 1000 + prefix;
+		if(!number && pwd->pw_uid >= uid && uid > 0)
+			number = pwd->pw_uid - uid + prefix;
 
 		if(number >= prefix && number < prefix + range && extmap[number - prefix] == NULL)
 			extmap[number - prefix] = *node;

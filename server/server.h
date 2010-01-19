@@ -457,6 +457,10 @@ private:
 	void dump(FILE *fp);
 
 public:
+	static unsigned uid;
+	static const char *sipusers;
+	static const char *sipadmin;
+
 	server(const char *id);
 
 	static bool check(void);
