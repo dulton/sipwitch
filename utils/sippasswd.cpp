@@ -16,6 +16,9 @@
 #include <ucommon/ucommon.h>
 #include <sipwitch/digest.h>
 #include <config.h>
+#ifdef	HAVE_PWD_H
+#include <pwd.h>
+#endif
 
 using namespace UCOMMON_NAMESPACE;
 using namespace SIPWITCH_NAMESPACE;
@@ -47,10 +50,29 @@ extern "C" int main(int argc, char **argv)
 		exit(0);
 	}
 	
+#ifdef	HAVE_PWD_H
+	if(user && getuid() != 0) {
+		fprintf(stderr, "*** sippasswd: only root can change other user's digests\n");
+		exit(1);
+	}
 	if(!user) {
-		fprintf(stderr, "*** sippasswd: userid missing\n");
+		struct passwd *pwd = getpwuid(getuid());
+		if(!pwd) {
+			fprintf(stderr, "*** sippasswd: user id cannot be determined\n");
+			exit(3);
+		}
+		user = strdup(pwd->pw_name);
+	}
+	if(geteuid() != 0) {
+		fprintf(stderr, "*** sippasswd: root privilege required\n");
 		exit(3);
 	}
+#else
+	if(!user) {
+		fprintf(stderr, "*** sippasswd: user id not specified\n");
+		exit(3);
+	}
+#endif
 
 	fsys_t fs;
 	fsys::open(fs, "/etc/siprealm", fsys::ACCESS_RDONLY);

@@ -130,8 +130,8 @@ remote voip service provider.
 %{_bindir}/sipquery
 %{_bindir}/sipwitch
 %{_bindir}/sipdigest
-%{_bindir}/sippasswd
 %{_bindir}/siprealm
+%attr(4755,root,root,-) %{_bindir}/sippasswd
 %dir %{_libdir}/sipwitch
 %config(noreplace) %{_sysconfdir}/logrotate.d/sipwitch
 %attr(0755,root,root) %{_initrddir}/sipwitch
