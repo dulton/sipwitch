@@ -17,6 +17,11 @@
 #include <signal.h>
 #include <ctype.h>
 
+#ifdef	HAVE_PWD_H
+#include <pwd.h>
+#include <grp.h>
+#endif
+
 #ifdef	HAVE_NET_IF_H
 #include <net/if.h>
 #include <arpa/inet.h>
@@ -265,6 +270,7 @@ void server::confirm(const char *user)
 	string_t digest;
 	const char *dirpath = ".";
 	const char *fn;
+	char *cp;
 
 	snprintf(buf, sizeof(buf), "- welcome prefix=%d range=%d", prefix, range);
 	setHeader(buf);
@@ -459,8 +465,10 @@ void server::confirm(const char *user)
 		}
 		else if(leaf && id) {
 			id = leaf->getPointer();
-			if(create(id, *node))
+			if(create(id, *node)) {
 				process::errlog(WARN, "duplicate identity %s", id);
+				node->setPointer((char *)"duplicate");
+			}
 			else {
 				debug(2, "adding %s %s", node->getId(), id);
 				if(!stricmp(node->getId(), "reject"))
@@ -491,6 +499,69 @@ void server::confirm(const char *user)
 		}
 		node.next();	
 	}
+
+#ifdef	HAVE_PWD_H
+	count = 0;
+	char *member;
+	keynode *base = getPath("accounts");
+
+	struct passwd *pwd;
+	struct group *grp = getgrnam("sipusers");
+	if(!grp || !grp->gr_mem)
+		return;
+
+	while(NULL != (member = grp->gr_mem[count++])) {
+		leaf = addNode(base, "user", NULL);
+		addNode(leaf, "id", member); 
+	}
+
+	node = base->getFirst();
+	while(is(node)) {
+		id = NULL;
+		leaf = node->leaf("id");
+		if(leaf && leaf->getPointer())
+			id = leaf->getPointer();
+
+		if(id)
+			pwd = getpwnam(id);
+		
+		if(!pwd) {
+			node->setPointer((char *)"invalid");
+			goto skip;
+		}
+
+		if(create(id, *node)) {
+			node->setPointer((char *)"duplicate");
+			goto skip;
+		}
+
+		id = pwd->pw_gecos;
+
+		cp = strchr(id, ',');
+		if(cp)
+			*(cp++) = 0;
+		addNode(*node, "display", id);
+		if(cp)
+			number = atoi(cp);
+		else
+			number = 0;
+		if(!number && pwd->pw_uid >= 1000)
+			number = pwd->pw_uid - 1000 + prefix;
+
+		if(number >= prefix && number < prefix + range && extmap[number - prefix] == NULL)
+			extmap[number - prefix] = *node;
+
+		if(number) {
+			snprintf(buf, 16, "%d", number);
+			addNode(*node, "extension", buf);
+		}
+skip:
+		node.next();
+	}	
+	
+	endpwent();
+	endgrent();
+#endif
 }
 
 void server::release(keynode *node)

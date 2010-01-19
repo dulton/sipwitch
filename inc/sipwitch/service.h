@@ -248,9 +248,7 @@ protected:
 
 	void setHeader(const char *header);
 	void clearId(void);
-
-private:
-	void __LOCAL addAttributes(keynode *node, char *astr);
+	void addAttributes(keynode *node, char *astr);
 };
 
 #define	RUNLEVELS	(sizeof(callback::runlevels) / sizeof(LinkedObject *))

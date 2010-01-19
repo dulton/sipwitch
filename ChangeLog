@@ -1,8 +1,9 @@
-From version 0.5.13 to ?
+From version 0.5.13 to 0.6.0
 - updated sipdigest to use sipwitch server library.
 - introduction of separate user account digest hash database.
 - digest hash database usable as an authentication source.
 - new sippasswd utility to set user's digest secret.
+- can convert login accounts to sipwitch accounts.
 
 From version 0.5.12 to 0.5.13
 - introduction of /etc/siprealm to set hash type and realm.
