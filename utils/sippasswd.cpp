@@ -131,8 +131,7 @@ extern "C" int main(int argc, char **argv)
 
 	for(;;) {
 		fgetpos(fp, &pos);
-		fgets(buffer, sizeof(buffer), fp);
-		if(feof(fp))
+		if(NULL == fgets(buffer, sizeof(buffer), fp) || feof(fp))
 			break;
 
 		if(String::equal(buffer, replace)) {

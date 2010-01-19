@@ -536,6 +536,7 @@ void server::confirm(const char *user)
 		if(leaf && leaf->getPointer())
 			id = leaf->getPointer();
 
+		pwd = NULL;
 		if(id)
 			pwd = getpwnam(id);
 		

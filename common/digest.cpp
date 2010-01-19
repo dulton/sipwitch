@@ -613,8 +613,7 @@ void digest::load(void)
 	if(!fp)
 		return;
 
-	for(;;) {
-		fgets(buffer, sizeof(buffer), fp);
+	while(NULL != fgets(buffer, sizeof(buffer), fp)) {
 		if(feof(fp))
 			break;
 
