@@ -38,6 +38,6 @@ sipwitch_cgi_SOURCES = cgiserver.cpp
 sipwitch_cgi_LDADD = @SIPWITCH_LIBS@
 
 install-exec-hook:
-	chown root $(bindir)/sippasswd
-	chmod u+s $(bindir)/sippasswd
+	chown root $(DESTDIR)$(bindir)/sippasswd
+	chmod u+s $(DESTDIR)$(bindir)/sippasswd
 

@@ -518,10 +518,23 @@ void server::confirm(const char *user)
 	if(sipusers)
 		grp = getgrnam(sipusers);
 
-	if(!grp || !grp->gr_mem)
+	// if no separated privilege, then use sipadmin
+	if(!grp)
+		grp = getgrnam(sipadmin);
+
+	if(grp && !grp->gr_mem)
 		return;
 
-	while(NULL != (member = grp->gr_mem[count++])) {
+	// if no groups at all, try to add base user if enabled....
+	// this allows fully automated service for primary desktop user...
+	if(!grp && uid) {
+		pwd = getpwuid(uid);
+		if(!pwd)
+			return;
+		leaf = addNode(base, "user", NULL);
+		addNode(leaf, "id", pwd->pw_name);
+	}
+	else while(NULL != (member = grp->gr_mem[count++])) {
 		leaf = addNode(base, "user", NULL);
 		addNode(leaf, "id", member); 
 	}

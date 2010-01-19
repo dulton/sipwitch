@@ -118,6 +118,9 @@ extern "C" int main(int argc, char **argv)
 
 	snprintf(replace, sizeof(replace), "%s:%s\n", user, *digestbuf);
 
+	// create work directory if it does not exist
+	fsys::createDir(DEFAULT_VARPATH "/lib/sipwitch", 0770);
+
 	// make sure always created root only
 	fsys::create(fs, DEFAULT_VARPATH "/lib/sipwitch/digests.db", 
 		fsys::ACCESS_RDONLY, 0600);
