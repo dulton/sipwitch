@@ -507,7 +507,10 @@ void server::confirm(const char *user)
 #ifdef	HAVE_PWD_H
 	count = 0;
 	char *member;
+	const char *tempname;
 	keynode *base = getPath("accounts");
+	keyclone *clone, *entry;
+	linked_pointer<keynode> temp;
 
 	struct passwd *pwd;
 	struct group *grp = NULL; 
@@ -523,8 +526,11 @@ void server::confirm(const char *user)
 		addNode(leaf, "id", member); 
 	}
 
+	grp = getgrnam(sipadmin);
+
 	node = base->getFirst();
 	while(is(node)) {
+		count = 0;
 		id = NULL;
 		leaf = node->leaf("id");
 		if(leaf && leaf->getPointer())
@@ -543,7 +549,6 @@ void server::confirm(const char *user)
 			goto skip;
 		}
 
-		debug(2, "adding %s %s", node->getId(), id);
 		id = pwd->pw_gecos;
 
 		cp = strchr(id, ',');
@@ -564,6 +569,32 @@ void server::confirm(const char *user)
 			snprintf(buf, 16, "%d", number);
 			addNode(*node, "extension", buf);
 		}
+
+		entry = (keyclone *)(*node);
+		count = 0;
+		tempname = "templates.user";
+		while(grp && grp->gr_mem && NULL != (member = grp->gr_mem[count++])) {
+			if(String::equal(member, pwd->pw_name)) {
+				tempname = "templates.admin";
+				entry->reset("admin");
+				break;
+			}
+		}
+		
+		debug(2, "adding %s %s", node->getId(), pwd->pw_name);
+
+		clone = (keyclone *)getPath(tempname);
+		if(!clone)
+			goto skip;
+
+		temp = clone->getFirst();
+		while(is(temp)) {
+			clone = (keyclone *)alloc(sizeof(keynode));
+			memcpy(clone, *temp, sizeof(keynode));
+			clone->enlist(entry);
+			temp.next();
+		}
+
 skip:
 		node.next();
 	}	

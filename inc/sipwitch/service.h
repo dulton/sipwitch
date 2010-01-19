@@ -81,6 +81,15 @@ public:
 		const char *value;
 	} define;
 
+	class __EXPORT keyclone : public treemap<char *>
+	{
+	public:
+		void enlist(keyclone *trunk);
+
+		inline void reset(const char *tag)
+			{id = (char *)tag;};
+	};
+
 	class __EXPORT usernode
 	{
 	public:

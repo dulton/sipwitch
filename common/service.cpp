@@ -177,6 +177,13 @@ service::instance::~instance()
 	service::locking.release();
 }
 
+void service::keyclone::enlist(keyclone *trunk)
+{
+	parent = trunk;
+	if(parent)
+		enlistTail(&trunk->child);
+}
+
 service::service(const char *name, size_t s) :
 memalloc(s), root()
 {
