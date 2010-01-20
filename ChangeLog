@@ -1,3 +1,6 @@
+From version 0.6.0 to 0.6.1
+- fix for exec hook when ran on packaging systems that do not use fakeroot.
+
 From version 0.5.13 to 0.6.0
 - updated sipdigest to use sipwitch server library.
 - introduction of separate user account digest hash database.
