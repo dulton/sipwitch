@@ -569,19 +569,23 @@ void server::confirm(const char *user)
 		if(cp)
 			*(cp++) = 0;
 		addNode(*node, "display", id);
-		if(cp)
-			number = atoi(cp);
-		else
-			number = 0;
-		if(!number && pwd->pw_uid >= uid && uid > 0)
-			number = pwd->pw_uid - uid + prefix;
 
-		if(number >= prefix && number < prefix + range && extmap[number - prefix] == NULL)
-			extmap[number - prefix] = *node;
+		// add extension node only if prefix is used...
+		if(prefix && range) {
+			if(cp)
+				number = atoi(cp);
+			else
+				number = 0;
+			if(!number && pwd->pw_uid >= uid && uid > 0)
+				number = pwd->pw_uid - uid + prefix;
 
-		if(number) {
-			snprintf(buf, 16, "%d", number);
-			addNode(*node, "extension", buf);
+			if(number >= prefix && number < prefix + range && extmap[number - prefix] == NULL)
+				extmap[number - prefix] = *node;
+
+			if(number) {
+				snprintf(buf, 16, "%d", number);
+				addNode(*node, "extension", buf);
+			}
 		}
 
 		entry = (keyclone *)(*node);
