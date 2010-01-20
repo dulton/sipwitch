@@ -190,6 +190,9 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Wed Jan 20 2010 David Sugar <dyfet@gnutelephony.org> - 0.6.0-0
+- user account integration with sip accounts.
+
 * Sun Jan 17 2010 David Sugar <dyfet@gnutelephony.org> - 0.5.13-0
 - sip realm fully externalized and new siprealm utility added.
 
