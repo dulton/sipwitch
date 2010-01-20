@@ -1110,6 +1110,17 @@ invalid:
 			continue;
 		}
 
+		if(!stricmp(argv[0], "uid")) {
+			if(argc != 2)
+				goto invalid;
+			server::uid = atoi(argv[1]);
+			process::printlog("uid %d %04d-%02d-%02d %02d:%02d:%02d\n",
+				server::uid, dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
+				dt->tm_hour, dt->tm_min, dt->tm_sec);
+			reload(user);
+			continue;
+		}
+
 		if(!stricmp(argv[0], "digest")) {
 			if(argc != 3)
 				goto invalid;
