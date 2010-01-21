@@ -34,17 +34,25 @@ static void show(void)
 	fsys_t fs;
 	char buffer[256];
 
-	fsys::open(fs, "/etc/siprealm", fsys::ACCESS_RDONLY);
+	fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+	if(!is(fs))
+		fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
+
 	if(!is(fs)) {
 error:
-		fprintf(stderr, "*** sipdigest: no realm known\n");
+		fprintf(stderr, "*** siprealm: no public realm known\n");
         exit(1);
     }
 
 	memset(buffer, 0, sizeof(buffer));
 	fsys::read(fs, buffer, sizeof(buffer) - 1);
 	fsys::close(fs);
-	char *cp = strchr(buffer, ':');
+
+	char *cp = strchr(buffer, '\n');
+	if(cp)
+		*cp = 0;
+
+	cp = strchr(buffer, ':');
 	if(cp)
 		*cp = 0;
 
@@ -88,15 +96,15 @@ extern "C" int main(int argc, char **argv)
 	}
 
 	if(String::equal(*argv, "-md5")) {
-		mode = "md5";
+		mode = "MD5";
 		++argv;
 	}
 	else if(String::equal(*argv, "-sha1")) {
-		mode = "sha1";
+		mode = "SHA1";
 		++argv;
 	}
 	else if(String::equal(*argv, "-rmd160")) {
-		mode = "rmd160";
+		mode = "RMD160";
 		++argv;
 	}
 	else if(String::equal(*argv, "-?") || String::equal(*argv, "-help"))
@@ -106,7 +114,7 @@ extern "C" int main(int argc, char **argv)
 		exit(2);
 	}
 
-	fsys::open(fs, "/etc/siprealm", fsys::ACCESS_RDONLY);
+	fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
 	memset(buffer, 0, sizeof(buffer));
 	if(is(fs)) {
 		fsys::read(fs, buffer, sizeof(buffer) - 1);
@@ -142,8 +150,8 @@ extern "C" int main(int argc, char **argv)
 	else
 		snprintf(replace, sizeof(replace), "%s:%s", realm, mode);
 
-	::remove("/etc/siprealm");
-	fsys::create(fs, "/etc/siprealm", fsys::ACCESS_WRONLY, 0644);
+	::remove(DEFAULT_CFGPATH "/siprealm");
+	fsys::create(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_WRONLY, 0644);
 	if(is(fs)) {
 		fsys::write(fs, replace, strlen(replace));
 		fsys::close(fs);

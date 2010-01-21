@@ -1580,6 +1580,7 @@ void thread::reregister(const char *contact, time_t interval)
 	bool refresh;
 
 	if(extension && (extension < registry::getPrefix() || extension >= registry::getPrefix() + registry::getRange())) {
+		debug(2, "rejecting %s, not in local dialing plan", getIdent());
 		answer = SIP_NOT_ACCEPTABLE_HERE;
 		interval = 0;
 		goto reply;

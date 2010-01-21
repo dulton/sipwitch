@@ -106,8 +106,6 @@ void registry::route::operator delete(void *obj)
 registry::registry() :
 service::callback(0), mapped_array<MappedRegistry>()
 {
-	realm = (char *)"Local Telephony";
-	digest = (char *)"MD5";
 	prefix = 100;
 	range = 600;
 	expires = 300l;
@@ -446,12 +444,15 @@ void registry::cleanup(time_t period)
 void registry::reload(service *cfg)
 {
 	assert(cfg != NULL);
-	
+
 	static const char *olddigest = "MD5";
 	static const char *oldrealm = "-";
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("registry");
 	fsys_t fd;
+
+	digest = (char *)"MD5";
+	realm = NULL;
 
 	while(is(sp)) {
 		key = sp->getId();
@@ -483,13 +484,22 @@ void registry::reload(service *cfg)
 #ifndef	_MSWINDOWS_
 	char buffer[256];
 	fsys_t fs;
+	char *cp;
 
-	fsys::open(fs, "/etc/siprealm", fsys::ACCESS_RDONLY);
+	if(!getuid() || !realm)	
+		fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+	if(!is(fs) && !realm)
+		fsys::open(fs, "uuid", fsys::ACCESS_RDONLY);
 	if(is(fs)) {
         memset(buffer, 0, sizeof(buffer));
         fsys::read(fs, buffer, sizeof(buffer) - 1);
         fsys::close(fs);
-        char *cp = strchr(buffer, ':');
+		
+		cp = strchr(buffer, '\n');
+		if(cp)
+			*cp = 0;
+
+        cp = strchr(buffer, ':');
         if(cp)
             *(cp++) = 0;
 		if(buffer[0])
@@ -499,6 +509,26 @@ void registry::reload(service *cfg)
 			String::upper(digest);
 		}
 	}
+	// if not in config file and not set, create one...
+	else if(!realm) {
+		memset(buffer, 0, sizeof(buffer));
+		const char *evp = getenv("HOSTNAME");
+		if(!evp)
+			evp = "none";
+		process::uuid(buffer, sizeof(buffer), evp);
+		String::add(buffer, sizeof(buffer), ":");
+		String::add(buffer, sizeof(buffer), digest);
+		fsys::create(fs, "uuid", fsys::ACCESS_WRONLY, 0444);
+		if(is(fs)) {
+			fsys::write(fs, buffer, sizeof(buffer));
+			fsys::close(fs);
+		}
+		cp = strchr(buffer, ':');
+		if(cp)
+			*cp = 0;
+		realm = cfg->dup(buffer);
+	}
+			
 #endif
 
 	if(!String::equal(realm, oldrealm)) {

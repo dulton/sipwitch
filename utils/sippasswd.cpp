@@ -75,15 +75,24 @@ extern "C" int main(int argc, char **argv)
 #endif
 
 	fsys_t fs;
-	fsys::open(fs, "/etc/siprealm", fsys::ACCESS_RDONLY);
+	fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+
+	if(!is(fs))
+		fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
+
 	if(!is(fs)) {
-		fprintf(stderr, "*** sippasswd: no realm known\n");
+		fprintf(stderr, "*** sippasswd: no realm active\n");
 		exit(4);
 	}
 	memset(buffer, 0, sizeof(buffer));
 	fsys::read(fs, buffer, sizeof(buffer) - 1);
 	fsys::close(fs);
-	char *cp = strchr(buffer, ':');
+
+	char *cp = strchr(buffer, '\n');
+	if(cp)
+		*cp = 0;
+
+	cp = strchr(buffer, ':');
 	if(cp)
 		*(cp++) = 0;
 
@@ -104,9 +113,9 @@ extern "C" int main(int argc, char **argv)
 	}
 
 	digestbuf = (string_t)user + ":" + (string_t)realm + ":" + (string_t)secret;
-	if(String::equal(mode, "sha1"))
+	if(!stricmp(mode, "sha1"))
 		digest::sha1(digestbuf);
-	else if(String::equal(mode, "rmd160"))
+	else if(!stricmp(mode, "rmd160"))
 		digest::rmd160(digestbuf);
 	else
 		digest::md5(digestbuf);
