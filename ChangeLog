@@ -1,3 +1,6 @@
+From version 0.6.2 to 0.6.3
+- fixup autogen.sh order
+
 From version 0.6.1 to 0.6.2
 - only create extensions for generated accounts if using extension dialing.
 - can change uid setting when server is live.
