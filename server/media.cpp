@@ -32,7 +32,6 @@ void media::sdp::set(char *buffer, char *target, size_t len)
 {
 	outdata = target;
 	bufdata = buffer;
-	bufpos = 0;
 	outpos = 0;
 }
 
@@ -41,21 +40,21 @@ char *media::sdp::get(char *buffer, size_t len)
 	char *base = buffer;
 
 	// if eod, return NULL
-	if(!bufdata || bufdata[bufpos] == 0) {
+	if(!bufdata || *bufdata == 0) {
 		*buffer = 0;
 		return NULL;
 	}
 
-	while(len > 1 && bufdata[bufpos] != 0) {
-		if(bufdata[bufpos] == '\r') {
-			++bufpos;
+	while(len > 1 && *bufdata != 0) {
+		if(*bufdata == '\r') {
+			++bufdata;
 			continue;
 		}
 		else if(*buffer == '\n') {
 			*buffer = 0;
 			return base;
 		}
-		*(buffer++) = bufdata[bufpos++];
+		*(buffer++) = *(bufdata++);
 		--len;
 	}
 	*buffer = 0;
@@ -77,7 +76,7 @@ size_t media::sdp::put(char *buffer)
 	*(outdata++) = '\r';
 	*(outdata++) = '\n';
 	*outdata = 0;
-	return count;
+	return count + 2;
 }
 
 END_NAMESPACE

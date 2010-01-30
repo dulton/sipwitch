@@ -613,7 +613,7 @@ public:
 	{
 	private:
 		char *bufdata, *outdata;
-		size_t buflen, bufpos, outpos;
+		size_t buflen, outpos;
 
 	public:
 		sdp();
