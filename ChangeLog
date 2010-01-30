@@ -1,5 +1,5 @@
 From version 0.6.2 to ???
-- server media proxy for NAT support.
+- start of server media proxy for NAT support.
 
 From version 0.6.1 to 0.6.2
 - only create extensions for generated accounts if using extension dialing.

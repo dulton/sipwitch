@@ -34,8 +34,6 @@ void media::sdp::set(char *buffer, char *target, size_t len)
 	bufdata = buffer;
 	bufpos = 0;
 	outpos = 0;
-	buflen = len;
-	memset(buffer, 0, len);
 }
 
 char *media::sdp::get(char *buffer, size_t len)
@@ -43,22 +41,21 @@ char *media::sdp::get(char *buffer, size_t len)
 	char *base = buffer;
 
 	// if eod, return NULL
-	if(!bufdata || bufpos >= buflen || bufdata[bufpos] == 0) {
+	if(!bufdata || bufdata[bufpos] == 0) {
 		*buffer = 0;
 		return NULL;
 	}
 
-	while(len > 1 && bufpos < buflen) {
+	while(len > 1 && bufdata[bufpos] != 0) {
 		if(bufdata[bufpos] == '\r') {
 			++bufpos;
 			continue;
 		}
-		*buffer = bufdata[bufpos++];
-		if(*buffer == '\n') {
+		else if(*buffer == '\n') {
 			*buffer = 0;
 			return base;
 		}
-		++buffer;
+		*(buffer++) = bufdata[bufpos++];
 		--len;
 	}
 	*buffer = 0;
@@ -72,7 +69,7 @@ size_t media::sdp::put(char *buffer)
 	if(!outdata)
 		return 0;	
 
-	while(*buffer && outpos < buflen - 2) {
+	while(*buffer && outpos < (MAX_SDP_BUFFER - 2)) {
 		++count;
 		*(outdata++) = *(buffer++);
 	}

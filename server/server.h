@@ -248,7 +248,7 @@ private:
 
 		enum {OPEN, CLOSED, RING, BUSY, REORDER, REFER, REINVITE} state;
 
-		char sdp[1024];					// sdp body to use in exchange
+		char sdp[MAX_SDP_BUFFER];		// sdp body to use in exchange
 		char identity[MAX_URI_SIZE];	// our effective contact/to point...
 		char sysident[MAX_IDENT_SIZE];	// ident of this session
 		char display[MAX_DISPLAY_SIZE];	// callerid reference field
@@ -617,7 +617,7 @@ public:
 
 	public:
 		sdp();
-		sdp(char *buffer, char *target, size_t len);
+		sdp(char *buffer, char *target, size_t len = MAX_SDP_BUFFER);
 
 		void set(char *buffer, char *target, size_t len);
 		char *get(char *buffer, size_t len);
