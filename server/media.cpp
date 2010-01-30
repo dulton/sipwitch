@@ -23,15 +23,15 @@ media::sdp::sdp()
 	outdata = bufdata = NULL;
 }
 
-media::sdp::sdp(char *buffer, char *target, size_t len)
+media::sdp::sdp(char *source, char *target, size_t len)
 {
-	set(buffer, target, len);
+	set(source, target, len);
 }
 
-void media::sdp::set(char *buffer, char *target, size_t len)
+void media::sdp::set(char *source, char *target, size_t len)
 {
 	outdata = target;
-	bufdata = buffer;
+	bufdata = source;
 	outpos = 0;
 }
 
@@ -77,6 +77,22 @@ size_t media::sdp::put(char *buffer)
 	*(outdata++) = '\n';
 	*outdata = 0;
 	return count + 2;
+}
+
+void media::release(stack::session *s, unsigned expires)
+{
+	time_t expire = 0;
+
+	if(expires) {
+		time(&expire);
+		expire += expires;
+	}
+
+	// linked_pointer set for nat...
+	// chain walked...
+	// if expires, move to runlist for transition, else move to idle list for re-assign...
+
+	s->nat = NULL;
 }
 
 END_NAMESPACE

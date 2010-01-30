@@ -211,6 +211,7 @@ private:
 	friend class proxy;
 	friend class thread;
 	friend class messages;
+	friend class media;
 
 	class call;
 
@@ -256,6 +257,7 @@ private:
 		char from[MAX_URI_SIZE + MAX_DISPLAY_SIZE];	// formatted from line for endpoint
 		char uuid[48];
 
+		LinkedObject *nat;				// media nat chain...
 		struct sockaddr_storage peering;
 
 		char authid[MAX_USERID_SIZE];	// for authentication...
@@ -607,6 +609,10 @@ public:
 // media proxy support for NAT transversal is being moved to here...
 class __LOCAL media
 {
+private:
+	// low level rewrite & proxy assignment
+	static char *assign(stack::session *session, char *original, char *buffer, size_t len = MAX_SDP_BUFFER);
+
 public:
 	// a support class to help in sdp parsing
 	class __LOCAL sdp
@@ -617,12 +623,24 @@ public:
 
 	public:
 		sdp();
-		sdp(char *buffer, char *target, size_t len = MAX_SDP_BUFFER);
+		sdp(char *source, char *target, size_t len = MAX_SDP_BUFFER);
 
-		void set(char *buffer, char *target, size_t len);
+		void set(char *source, char *target, size_t len = MAX_SDP_BUFFER);
 		char *get(char *buffer, size_t len);
 		size_t put(char *buffer);
 	};
+
+	// release any existing media proxy for the call session, proxy can be kept active for re-invite transition
+	static void release(stack::session *session, unsigned expires = 0);
+
+	// rewrite an invite for a call target if different, otherwise uses original source sdp...
+	static char *invite(stack::session *session, char *buffer, size_t len = MAX_SDP_BUFFER);
+
+	// rewrite or copy sdp of session on answer for connection
+	static char *answer(stack::session *session, const char *sdp); 
+
+	// re-assign or copy sdp on re-invite; clears and rebuilds media proxy if needed...
+	static char *reinvite(stack::session *session, const char *sdp);
 };
 
 END_NAMESPACE

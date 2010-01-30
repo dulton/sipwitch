@@ -120,6 +120,7 @@ stack::segment::segment(call *cr, int cid, int did, int tid) : OrderedObject()
 	sid.sequence = (uint32_t)now;
 	sid.sequence &= 0xffffffffl;
 	sid.expires = 0l;
+	sid.nat = NULL;
 	sid.cid = cid;
 	sid.did = did;
 	sid.tid = tid;
@@ -577,6 +578,8 @@ void stack::destroy(call *cr)
 			}
 			sp->sid.delist(&hash[sp->sid.cid % keysize]);
 		}
+		if(sp->sid.nat)
+			media::release(&sp->sid);
 		delete *sp;
 		sp = next;
 	}
