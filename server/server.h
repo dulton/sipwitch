@@ -325,7 +325,7 @@ private:
 		void refer(thread *thread, session *s);
 		void bye(thread *thread, session *s);
 		void set(state_t state, char id, const char *text);
-		
+
 		OrderedIndex segments;
 		const char *reason;
 		const char *joined;
@@ -602,6 +602,27 @@ private:
 
 public:
 	static void shutdown(void);
+};
+
+// media proxy support for NAT transversal is being moved to here...
+class __LOCAL media
+{
+public:
+	// a support class to help in sdp parsing
+	class __LOCAL sdp
+	{
+	private:
+		char *bufdata, *outdata;
+		size_t buflen, bufpos, outpos;
+
+	public:
+		sdp();
+		sdp(char *buffer, char *target, size_t len);
+
+		void set(char *buffer, char *target, size_t len);
+		char *get(char *buffer, size_t len);
+		size_t put(char *buffer);
+	};
 };
 
 END_NAMESPACE
