@@ -21,7 +21,7 @@ using namespace UCOMMON_NAMESPACE;
 static unsigned baseport = 5062;
 static bool ipv6 = false;
 static LinkedObject *runlist = NULL;
-static condlock_t runlock;
+static mutex_t lock;
 static media::proxy *nat = NULL;
 static fd_set connections;
 
@@ -115,6 +115,23 @@ void media::enableIPV6(void)
 	ipv6 = true;
 }
 
+media::proxy *get(void)
+{
+	lock.acquire();
+	linked_pointer<media::proxy> pp = runlist;
+	while(is(pp)) {
+		if(pp->so == INVALID_SOCKET) {
+			pp->delist(&runlist);
+			lock.release();
+			// pp->activate();
+			return *pp;
+		}
+		pp.next();
+	}
+	lock.release();
+	return NULL;
+}
+
 void media::release(LinkedObject **nat, unsigned expires)
 {
 	assert(nat != NULL);
@@ -130,7 +147,7 @@ void media::release(LinkedObject **nat, unsigned expires)
 		expire += expires;
 	}
 
-	runlock.access();	
+	lock.acquire();
 	linked_pointer<proxy> pp = *nat;
 	while(is(pp)) {
 		member = *pp;
@@ -138,8 +155,7 @@ void media::release(LinkedObject **nat, unsigned expires)
 		member->release(expires);
 		member->enlist(&runlist);
 	}
-
-	runlock.release();
+	lock.release();
 	
 	*nat = NULL;
 }

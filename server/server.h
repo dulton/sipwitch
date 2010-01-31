@@ -626,6 +626,7 @@ public:
 		proxy();		
 		~proxy();
 
+		void activate(void);
 		void release(time_t expire = 0l);
 	};
 
@@ -644,6 +645,9 @@ public:
 		char *get(char *buffer, size_t len);
 		size_t put(char *buffer);
 	};
+
+	// get and activate nat instance if any are free...
+	static proxy *get(void);
 
 	// set ipv6 flag, removes need to proxy any external addresses...
 	static void enableIPV6(void);
