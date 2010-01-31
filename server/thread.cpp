@@ -292,19 +292,7 @@ void thread::invite(void)
 		call->failed(this, session);
 		return;
 	}
-
-	// FIXME: we should get proxy count extimate from sdp into global thread object...
-
-	// assign initial proxy if required to accept call...
-	// if no proxy available, then return 503...
-//	if(server::classify(&session->proxy, &call->source->proxy, via_address.getAddr())) {
-//		if(!stack::assign(call, 4)) 
-//			goto noproxy;
-//	}
-//	else 
-//	if((destination == REDIRECTED || destination == EXTERNAL) && server::isProxied() && !stack::assign(call, 4))
-//		goto noproxy;
-		
+	
 	if(extension)
 		snprintf(fromext, sizeof(fromext), "%u", extension);
 

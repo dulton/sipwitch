@@ -612,7 +612,7 @@ private:
 	static char *assign(stack::session *session, char *original, char *buffer, size_t len = MAX_SDP_BUFFER);
 
 	// see if connected directly or if requires proxy
-	static bool isDirect(char *source, char *target);
+	static bool isDirect(const char *source, const char *target);
 
 public:
 	// a support class to help in sdp parsing
@@ -638,7 +638,7 @@ public:
 	static void release(LinkedObject **nat, unsigned expires = 0);
 
 	// rewrite an invite for a call target if different, otherwise uses original source sdp...
-	static char *invite(stack::session *session, char *target, LinkedObject **nat);
+	static char *invite(stack::session *session, const char *target, LinkedObject **nat, char *sdp, size_t size = MAX_SDP_BUFFER);
 
 	// rewrite or copy sdp of session on answer for connection
 	static char *answer(stack::session *session, const char *sdp); 

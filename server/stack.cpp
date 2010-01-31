@@ -1239,7 +1239,16 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 		osip_message_set_header(invite, SESSION_EXPIRES, expheader);
 	}
 
-	osip_message_set_body(invite, s->sdp, strlen(s->sdp));
+	char sdp[MAX_SDP_BUFFER];
+	LinkedObject *nat = NULL;
+
+	if(media::invite(s, "*", &nat, sdp) == NULL) {
+		process::errlog(ERRLOG, "cannot assign media proxy for %s", uri_target);
+		eXosip_unlock();
+		return;
+	}
+
+	osip_message_set_body(invite, sdp, strlen(sdp));
 	osip_message_set_content_type(invite, "application/sdp");
 	stack::siplog(invite);
 	cid = eXosip_call_send_initial_invite(invite);
@@ -1250,6 +1259,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 		++count;
 	}
 	else {
+		media::release(&nat);
 		process::errlog(ERRLOG, "invite failed for %s", uri_target);
 		eXosip_unlock();
 		return;
@@ -1266,6 +1276,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	resolve.set(route, 5060);
 	service::published(&invited->peering);
 	String::set(invited->network, sizeof(invited->network), "*");
+	invited->nat = nat;
 	target = resolve.getAddr();
 	if(target) {
 		uri::identity(target, invited->sysident, username, sizeof(invited->sysident));
@@ -1373,7 +1384,7 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 	stack::call *call = s->parent;
 	linked_pointer<stack::segment> sp = call->segments.begin();
 	LinkedObject *nat;
-	char *sdp;
+	char sdp[MAX_SDP_BUFFER];
 
 	time_t now;
 	osip_message_t *invite;
@@ -1457,8 +1468,7 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 		}
 
 		nat = NULL;
-		sdp = media::invite(s, tp->network, &nat);
-		if(!sdp) {
+		if(media::invite(s, tp->network, &nat, sdp) == NULL) {
 			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
 			process::errlog(ERRLOG, "no media proxy available for %s", route);
 			goto unlock;

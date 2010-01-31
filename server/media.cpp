@@ -18,6 +18,7 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+static unsigned port = 5062;
 static bool ipv6 = false;
 static LinkedObject *idle = NULL;
 static LinkedObject *runlist = NULL;
@@ -109,7 +110,7 @@ void media::release(LinkedObject **nat, unsigned expires)
 	*nat = NULL;
 }
 
-bool media::isDirect(char *source, char *target)
+bool media::isDirect(const char *source, const char *target)
 {
 	assert(source != NULL);
 	assert(target != NULL);
@@ -135,7 +136,7 @@ bool media::isDirect(char *source, char *target)
 	return true;
 }
 
-char *media::invite(stack::session *session, char *target, LinkedObject **nat)
+char *media::invite(stack::session *session, const char *target, LinkedObject **nat, char *sdp, size_t size)
 {
 	assert(session != NULL);
 	assert(target != NULL);
@@ -143,8 +144,10 @@ char *media::invite(stack::session *session, char *target, LinkedObject **nat)
 
 	*nat = NULL;
 
-	if(isDirect(session->network, target))
-		return session->sdp;
+	if(isDirect(session->network, target)) {
+		String::set(sdp, size, session->sdp);
+		return sdp;
+	}
 
 	// no proxy code yet...
 	return NULL;
