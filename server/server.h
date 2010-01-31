@@ -615,6 +615,20 @@ private:
 	static bool isDirect(const char *source, const char *target);
 
 public:
+	// proxy socket class
+	class __LOCAL proxy : public LinkedObject
+	{
+	public:
+		socket_t so;
+		time_t expires;
+		uint16_t port;
+
+		proxy();		
+		~proxy();
+
+		void release(time_t expire = 0l);
+	};
+
 	// a support class to help in sdp parsing
 	class __LOCAL sdp
 	{

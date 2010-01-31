@@ -18,11 +18,36 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-static unsigned port = 5062;
+static unsigned baseport = 5062;
 static bool ipv6 = false;
-static LinkedObject *idle = NULL;
 static LinkedObject *runlist = NULL;
-static condlock_t runlock, idlelock; 
+static condlock_t runlock;
+static media::proxy *nat = NULL;
+static fd_set connections;
+
+media::proxy::proxy() :
+LinkedObject(&runlist)
+{
+	so = INVALID_SOCKET;
+	expires = 0l;
+	port = baseport++;
+};
+
+media::proxy::~proxy()
+{
+	Socket::release(so);
+}
+
+void media::proxy::release(time_t expire)
+{
+	expire = expires;
+	if(expire || so == INVALID_SOCKET)
+		return;
+
+	FD_CLR(so, &connections);
+	Socket::release(so);
+	so = INVALID_SOCKET;
+}
 
 media::sdp::sdp()
 {
@@ -93,7 +118,8 @@ void media::enableIPV6(void)
 void media::release(LinkedObject **nat, unsigned expires)
 {
 	assert(nat != NULL);
-
+	
+	proxy *member;
 	time_t expire = 0;
 
 	if(!*nat)
@@ -104,9 +130,17 @@ void media::release(LinkedObject **nat, unsigned expires)
 		expire += expires;
 	}
 
-	// linked_pointer set for nat...
-	// chain walked...
-	// if expires, move to runlist for transition, else move to idle list for re-assign...
+	runlock.access();	
+	linked_pointer<proxy> pp = *nat;
+	while(is(pp)) {
+		member = *pp;
+		pp.next();
+		member->release(expires);
+		member->enlist(&runlist);
+	}
+
+	runlock.release();
+	
 	*nat = NULL;
 }
 
