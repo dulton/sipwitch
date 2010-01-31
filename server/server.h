@@ -622,11 +622,12 @@ public:
 		socket_t so;
 		time_t expires;
 		uint16_t port;
+		struct sockaddr_storage local, remote;
 
 		proxy();		
 		~proxy();
 
-		void activate(void);
+		void activate(struct sockaddr *local);
 		void release(time_t expire = 0l);
 	};
 
@@ -647,7 +648,7 @@ public:
 	};
 
 	// get and activate nat instance if any are free...
-	static proxy *get(void);
+	static proxy *get(struct sockaddr *local);
 
 	// set ipv6 flag, removes need to proxy any external addresses...
 	static void enableIPV6(void);

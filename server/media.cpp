@@ -115,7 +115,7 @@ void media::enableIPV6(void)
 	ipv6 = true;
 }
 
-media::proxy *get(void)
+media::proxy *get(struct sockaddr *local)
 {
 	lock.acquire();
 	linked_pointer<media::proxy> pp = runlist;
@@ -123,7 +123,7 @@ media::proxy *get(void)
 		if(pp->so == INVALID_SOCKET) {
 			pp->delist(&runlist);
 			lock.release();
-			// pp->activate();
+			// pp->activate(local);
 			return *pp;
 		}
 		pp.next();
