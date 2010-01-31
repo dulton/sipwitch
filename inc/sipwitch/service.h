@@ -53,10 +53,6 @@
 #include <sipwitch/mapped.h>
 #endif
 
-#ifndef	_SIPWITCH_RTPPROXY_H_
-#include <sipwitch/rtpproxy.h>
-#endif
-
 #ifndef	_SIPWITCH_PROCESS_H_
 #include <sipwitch/process.h>
 #endif

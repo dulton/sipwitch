@@ -75,7 +75,6 @@ void listener::run(void)
 
 	rtp_running = true;
 	while(rtp_running) {
-		rtpproxy::slice(interval);
 		time(&now);
 		if(now > updated) {
 			updated = now + refresh;
@@ -142,8 +141,6 @@ void subscriber::start(service *cfg)
 		if(changed)
 			update();
 		
-		rtpproxy::startup(count, port, iface);
-		process::errlog(INFO, "rtp proxy started for %d ports", count);
 		thr = new listener();
 		thr->start();
 	} 
@@ -157,7 +154,6 @@ void subscriber::stop(service *cfg)
 	if(thr) {
 		process::errlog(DEBUG1, "rtp proxy stopping");
 		delete thr;
-		rtpproxy::shutdown();
 	}
 }
 

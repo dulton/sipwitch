@@ -550,7 +550,6 @@ void stack::destroy(call *cr)
 	MappedCall *map;
 
 	linked_pointer<segment> sp;
-	rtpproxy *rtp = NULL;
 
 	cr->log();
 
@@ -579,18 +578,15 @@ void stack::destroy(call *cr)
 			sp->sid.delist(&hash[sp->sid.cid % keysize]);
 		}
 		if(sp->sid.nat)
-			media::release(&sp->sid);
+			media::release(&sp->sid.nat);
 		delete *sp;
 		sp = next;
 	}
-	rtp = cr->rtp;
 	map = cr->map;
 	cr->delist();
 	delete cr;
 	locking.share();
 	release(map);
-	if(rtp)
-		rtp->release();	
 }
 
 void stack::release(MappedCall *map)
@@ -911,7 +907,7 @@ void stack::reload(service *cfg)
 	domain = new_domain;
 
 	if(sip_family != AF_INET)
-		rtpproxy::enableIPV6();
+		media::enableIPV6();
 
 	if(ring_value && ring_value < 100)
 		ring_timer = ring_value * 1000l;
@@ -1376,6 +1372,8 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 	stack::session *invited;
 	stack::call *call = s->parent;
 	linked_pointer<stack::segment> sp = call->segments.begin();
+	LinkedObject *nat;
+	char *sdp;
 
 	time_t now;
 	osip_message_t *invite;
@@ -1412,13 +1410,7 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 			goto next;
 		}
 
-		// if proxy required, but not available, then we must skip this
-		// invite...
-		// if(server::classify(&proxyinfo, &call->source->proxy, (struct sockaddr *)&tp->address) && !assign(call, 4))
-		//	goto next;
-
 		invite = NULL;
-		eXosip_lock();
 
 		if(dest == ROUTED) {
 			stack::sipPublish(&tp->address, route, call->dialed, sizeof(route));
@@ -1433,6 +1425,7 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 		route[0] = '<';
 		String::add(route, sizeof(route), ";lr>");
 
+		eXosip_lock();
 		if(eXosip_call_build_initial_invite(&invite, touri, s->from, route, call->subject)) {
 			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
 			process::errlog(ERRLOG, "cannot invite %s; build failed", route);
@@ -1463,7 +1456,15 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 			osip_message_set_header(invite, SESSION_EXPIRES, expheader);
 		}
 
-		osip_message_set_body(invite, s->sdp, strlen(s->sdp));
+		nat = NULL;
+		sdp = media::invite(s, tp->network, &nat);
+		if(!sdp) {
+			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
+			process::errlog(ERRLOG, "no media proxy available for %s", route);
+			goto unlock;
+		}
+
+		osip_message_set_body(invite, sdp, strlen(sdp));
 		osip_message_set_content_type(invite, "application/sdp");
 		stack::siplog(invite);
 		cid = eXosip_call_send_initial_invite(invite);
@@ -1474,6 +1475,7 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 			++count;
 		}
 		else {
+			media::release(&nat);
 			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
 			process::errlog(ERRLOG, "invite failed for %s", route);
 			goto unlock;
@@ -1485,6 +1487,7 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 
 		String::set(invited->network, sizeof(invited->network), tp->network);
 		invited->peering = tp->peering;
+		invited->nat = nat;
 		
 		if(rr->ext) 
 			snprintf(invited->sysident, sizeof(invited->sysident), "%u", rr->ext);
@@ -1541,18 +1544,6 @@ next:
 	default:
 		return;
 	}
-}
-
-bool stack::assign(stack::call *cr, unsigned count)
-{
-	if(cr->rtp)
-		return true;
-
-	cr->rtp = rtpproxy::create(count);
-	if(cr->rtp)
-		return true;
-
-	return false;
 }
 
 END_NAMESPACE

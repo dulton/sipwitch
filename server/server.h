@@ -303,7 +303,6 @@ private:
 		char dialed[MAX_IDENT_SIZE];	// user or ip address...
 		char subject[MAX_URI_SIZE];		// call subject
 		char request[MAX_URI_SIZE];		// requesting identity for refer flip
-		rtpproxy *rtp;
 
 		void disarm(void);
 		void arm(timeout_t timeout);
@@ -425,7 +424,6 @@ public:
 	static void release(MappedCall *map);
 	static MappedCall *get(void);
 	static bool forward(stack::call *cr);
-	static bool assign(stack::call *cr, unsigned count);
 	static void inviteRemote(stack::session *session, const char *uri, const char *digest = NULL);
 	static void inviteLocal(stack::session *session, registry::mapped *rr, destination_t dest);
 	
@@ -613,6 +611,9 @@ private:
 	// low level rewrite & proxy assignment
 	static char *assign(stack::session *session, char *original, char *buffer, size_t len = MAX_SDP_BUFFER);
 
+	// see if connected directly or if requires proxy
+	static bool isDirect(char *source, char *target);
+
 public:
 	// a support class to help in sdp parsing
 	class __LOCAL sdp
@@ -630,11 +631,14 @@ public:
 		size_t put(char *buffer);
 	};
 
+	// set ipv6 flag, removes need to proxy any external addresses...
+	static void enableIPV6(void);
+
 	// release any existing media proxy for the call session, proxy can be kept active for re-invite transition
-	static void release(stack::session *session, unsigned expires = 0);
+	static void release(LinkedObject **nat, unsigned expires = 0);
 
 	// rewrite an invite for a call target if different, otherwise uses original source sdp...
-	static char *invite(stack::session *session, char *buffer, size_t len = MAX_SDP_BUFFER);
+	static char *invite(stack::session *session, char *target, LinkedObject **nat);
 
 	// rewrite or copy sdp of session on answer for connection
 	static char *answer(stack::session *session, const char *sdp); 

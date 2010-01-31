@@ -1164,7 +1164,7 @@ invalid:
 			if(argc != 2)
 				goto invalid;
 			state = String::unquote(argv[1], "\"\"\'\'()[]{}");
-			rtpproxy::publish(state);
+			service::publish(state);
 			process::errlog(NOTICE, "published address is %s", state);
 			continue;
 		}

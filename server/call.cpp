@@ -32,7 +32,6 @@ stack::call::call() : LinkedList(), segments()
 	enlist(&stack::sip);
 	starting = ending = 0l;
 	reason = joined = NULL;
-	rtp = NULL;
 	map = NULL;
 	timer = Timer::inf;
 }

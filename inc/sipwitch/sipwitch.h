@@ -35,7 +35,6 @@
 #include <sipwitch/stats.h>
 #include <sipwitch/uri.h>
 #include <sipwitch/cdr.h>
-#include <sipwitch/rtpproxy.h>
 
 /**
  * @short SIP Witch common library and API services.

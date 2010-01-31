@@ -18,6 +18,11 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+static bool ipv6 = false;
+static LinkedObject *idle = NULL;
+static LinkedObject *runlist = NULL;
+static condlock_t runlock, idlelock; 
+
 media::sdp::sdp()
 {
 	outdata = bufdata = NULL;
@@ -79,9 +84,19 @@ size_t media::sdp::put(char *buffer)
 	return count + 2;
 }
 
-void media::release(stack::session *s, unsigned expires)
+void media::enableIPV6(void)
 {
+	ipv6 = true;
+}
+
+void media::release(LinkedObject **nat, unsigned expires)
+{
+	assert(nat != NULL);
+
 	time_t expire = 0;
+
+	if(!*nat)
+		return;
 
 	if(expires) {
 		time(&expire);
@@ -91,8 +106,48 @@ void media::release(stack::session *s, unsigned expires)
 	// linked_pointer set for nat...
 	// chain walked...
 	// if expires, move to runlist for transition, else move to idle list for re-assign...
+	*nat = NULL;
+}
 
-	s->nat = NULL;
+bool media::isDirect(char *source, char *target)
+{
+	assert(source != NULL);
+	assert(target != NULL);
+
+	// if same subnets, then we know is direct
+	if(String::equal(source, target))
+		return true;
+
+	// if unknown networks then we cannot determine...
+	if(String::equal(source, "-") || String::equal(target, "-"))
+		return true;
+
+	// if sdp source is external, we do not need to proxy (one-legged only)
+	// since we assume we can trust external user's public sdp
+	if(String::equal(source, "*"))
+		return true;
+
+	// if external is remote and also we're ipv6, no need to proxy...
+	if(String::equal(target, "*") && ipv6)
+		return true;
+
+	// will become false later...
+	return true;
+}
+
+char *media::invite(stack::session *session, char *target, LinkedObject **nat)
+{
+	assert(session != NULL);
+	assert(target != NULL);
+	assert(nat != NULL);
+
+	*nat = NULL;
+
+	if(isDirect(session->network, target))
+		return session->sdp;
+
+	// no proxy code yet...
+	return NULL;
 }
 
 END_NAMESPACE
