@@ -34,6 +34,14 @@ reasonable practice to set the realm of your machines to match your NIS domain.
 If you are using a stand-alone sipwitch, such as for an independent desktop
 workstation, you might want to use a uuid.  
 .PP
+When a proper domain is used as the realm, then sipwitch behaves as if
+the old stack domain property is also set.  Realms that look like proper
+domain names are required to perform internode networking, since the
+identity presented between nodes must be common (based on the domain) and
+the authentication realm must also match each node for digests to work between
+nodes.  Hence, it became much simpler and more consistent to combine 
+authentication realms and identity domains.
+.PP
 Only the root user can set the sipwitch domain or hash type.  When either is
 changed, any sipwitch digest entries cached are automatically cleared.  This
 means that if you have sipwitch setup to generate digests based on user
