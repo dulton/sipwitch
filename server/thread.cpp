@@ -271,7 +271,7 @@ void thread::invite(void)
 	osip_header_t *msgheader = NULL;
 	char fromext[32];
 	cdr *cdrnode;
-	const char *domain = stack::sip.domain;
+	const char *domain = registry::getDomain();
 
 	uri::serviceid(requesting, call->request, sizeof(call->request));
 
@@ -639,8 +639,8 @@ bool thread::authorize(void)
 	if(stack::sip_tlsmode)
 		scheme = "sips";
 
-	if(!uri_host && stack::sip.domain)
-		uri_host = (char *)stack::sip.domain;
+	if(!uri_host && registry::getDomain())
+		uri_host = (char *)registry::getDomain();
 
 	if(!from->url->host || !uri_host)
 		goto invalid;
@@ -699,7 +699,7 @@ bool thread::authorize(void)
 
 	memset(&iface, 0, sizeof(iface));
 
-	if(String::equal(stack::sip.domain, uri_host))
+	if(String::equal(registry::getRealm(), uri_host))
 		goto local;
 
 	if(String::equal("localdomain", uri_host))
@@ -833,7 +833,7 @@ trying:
 		// associated with us.  If it has any of our our names, then we have
 		// the inbound caller authenticate like any local-to-local call
 
-		if(String::equal(stack::sip.domain, from->url->host))
+		if(String::equal(registry::getRealm(), from->url->host))
 			return authenticate();
 
 		if(String::equal("localdomain", from->url->host))

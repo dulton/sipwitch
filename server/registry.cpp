@@ -112,6 +112,17 @@ service::callback(0), mapped_array<MappedRegistry>()
 	routes = 10;
 }
 
+const char *registry::getDomain(void)
+{
+	if(!strchr(reg.realm, '.'))
+		return NULL;
+
+	if(strchr(reg.realm, ' '))
+		return NULL;
+
+	return reg.realm;
+}
+
 void registry::incUse(mapped *rr, stats::stat_t stat)
 {
 	if(rr) {

@@ -262,7 +262,6 @@ service::callback(1), mapped_array<MappedCall>(), OrderedIndex()
 	anon = "anonymous";
 	restricted = trusted = published = proxy = NULL;
 	localnames = "localhost, localhost.localdomain";
-	domain = NULL;
 	ring_timer = 4000;
 	cfna_timer = 16000;
 	reset_timer = 6000;
@@ -793,7 +792,6 @@ void stack::reload(service *cfg)
 {
 	assert(cfg != NULL);	
 
-	const char *new_domain = "localdomain";
 	const char *new_proxy = NULL;
 	const char *key = NULL, *value;
 	linked_pointer<service::keynode> sp = cfg->getList("stack");
@@ -850,8 +848,6 @@ void stack::reload(service *cfg)
 				else
 					restricted = cfg->dup(value);
 			}
-			else if(!stricmp(key, "domain"))
-				new_domain = cfg->dup(value);
 			else if(!stricmp(key, "localnames"))
 				localhosts = cfg->dup(value);
 			else if(!stricmp(key, "trusted")) {
@@ -904,7 +900,6 @@ void stack::reload(service *cfg)
 
 	localnames = localhosts;
 	proxy = new_proxy;
-	domain = new_domain;
 
 	if(sip_family != AF_INET)
 		media::enableIPV6();
@@ -1011,7 +1006,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
 		break;
 #endif
 	default:
-		defaddr = stack::sip.domain;
+		defaddr = registry::getDomain();
 	}
 	if(!port)
 		port = sip_port;

@@ -184,6 +184,7 @@ public:
 	inline static unsigned getRoutes(void)
 		{return reg.routes;};
 
+	static const char *getDomain(void);
 	static void incUse(mapped *rr, stats::stat_t stat);
 	static void decUse(mapped *rr, stats::stat_t stat);
 	static unsigned getEntries(void);
@@ -366,7 +367,6 @@ private:
 
 	volatile int timing;
 
-	const char *volatile domain;
 	const char *volatile localnames;
 	const char *volatile restricted;
 	const char *volatile trusted;
