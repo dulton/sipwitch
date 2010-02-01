@@ -803,6 +803,8 @@ void stack::reload(service *cfg)
 	unsigned ring_value = 0;
 	unsigned reset_value = 0;
 
+	sip_domain = registry::getDomain();
+
 	while(sp) {
 		key = sp->getId();
 		value = sp->getPointer();

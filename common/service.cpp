@@ -36,6 +36,7 @@ unsigned short service::callback::sip_port = 5060;
 int service::callback::sip_protocol = IPPROTO_UDP;
 int service::callback::sip_family = AF_INET;
 int service::callback::sip_tlsmode = 0;
+const char *service::callback::sip_domain = NULL;
 condlock_t service::locking;
 service *service::cfg = NULL;
 volatile service::dialmode_t service::dialmode = service::ALL_DIALING;
