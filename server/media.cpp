@@ -211,6 +211,58 @@ exit:
 	return proxy;
 }
 
+char *media::reinvite(stack::session *session, const char *sdp)
+{
+	assert(session != NULL);
+	assert(sdp != NULL);
+
+	stack::call *cr = session->parent;
+	struct sockaddr_storage peering;
+	stack::session *target = NULL;
+	LinkedObject **nat;
+
+	if(session == cr->source)
+		target = cr->target;
+	else
+		target = cr->source;
+
+	// in case we had a nat chain...
+	nat = &target->nat;
+	media::release(nat, 2);
+
+	if(!isProxied(session->network, target->network, &peering)) {
+		String::set(session->sdp, sizeof(session->sdp), sdp);
+		return session->sdp;
+	}
+
+	return NULL;
+}
+
+char *media::answer(stack::session *session, const char *sdp)
+{
+	assert(session != NULL);
+	assert(sdp != NULL);
+
+	LinkedObject **nat;
+	stack::call *cr = session->parent;
+	stack::session *target = cr->source;
+	struct sockaddr_storage peering;
+
+	if(session == target || (cr->target != NULL && cr->target != session))
+		return NULL;
+
+	// in case we had a nat chain...
+	nat = &target->nat;
+	media::release(nat, 2);
+
+	if(!isProxied(session->network, target->network, &peering)) {
+		String::set(session->sdp, sizeof(session->sdp), sdp);
+		return session->sdp;
+	}
+
+	return NULL;
+}
+
 char *media::invite(stack::session *session, const char *target, LinkedObject **nat, char *sdp, size_t size)
 {
 	assert(session != NULL);

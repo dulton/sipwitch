@@ -1875,8 +1875,12 @@ void thread::run(void)
 			// copy target sdp into session object...
 			body = NULL;
 			osip_message_get_body(sevent->response, 0, &body);
-			if(body && body->body)
-				String::set(session->sdp, sizeof(session->sdp), body->body);
+			if(body && body->body) {
+				if(media::answer(session, body->body) == NULL) {
+					session->parent->failed(this, session);
+					break;
+				}
+			}
 			session->parent->answer(this, session);
 			break;
 		case EXOSIP_CALL_SERVERFAILURE:

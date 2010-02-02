@@ -357,6 +357,8 @@ void stack::call::reinvite(thread *thread, session *s)
 	int did = source->did;
 	session *update = source;
 	bool holding = false;
+	char *sdp;
+	int error = 200;
 
 	assert(thread != NULL);
 	assert(s != NULL);
@@ -410,11 +412,16 @@ unconnected:
 			osip_message_set_require(reply, "100rel");
 			osip_message_set_header(reply, "RSeq", "1");
 			if(body && body->body) {
-				osip_message_set_body(reply, body->body, strlen(body->body));
-				osip_message_set_content_type(reply, "application/sdp");
+				sdp = media::reinvite(s, body->body);
+				if(sdp) {
+					osip_message_set_body(reply, sdp, strlen(sdp));
+					osip_message_set_content_type(reply, "application/sdp");
+				}
+				else
+					error = SIP_TEMPORARILY_UNAVAILABLE;
 			}
 			stack::siplog(reply);
-			eXosip_call_send_answer(source->tid, 200, reply);
+			eXosip_call_send_answer(source->tid, error, reply);
 		}
 		eXosip_unlock();
 		return;
