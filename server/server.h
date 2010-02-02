@@ -470,6 +470,7 @@ public:
 	static void getDialing(const char *id, usernode& user);
 	static keynode *getConfig(void);
 	static stack::subnet *getPolicy(struct sockaddr *addr);
+	static stack::subnet *getSubnet(const char *id);
 	static bool isLocal(struct sockaddr *addr);
 	static void release(stack::subnet *access);
 	static void release(keynode *node);
@@ -612,7 +613,7 @@ private:
 	static char *assign(stack::session *session, char *original, char *buffer, size_t len = MAX_SDP_BUFFER);
 
 	// see if connected directly or if requires proxy
-	static bool isDirect(const char *source, const char *target);
+	static bool isProxied(const char *source, const char *target, struct sockaddr_storage *peering);
 
 public:
 	// proxy socket class
@@ -622,7 +623,7 @@ public:
 		socket_t so;
 		time_t expires;
 		uint16_t port;
-		struct sockaddr_storage local, remote;
+		struct sockaddr_storage local, remote, peering;
 
 		proxy();		
 		~proxy();

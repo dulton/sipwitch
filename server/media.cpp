@@ -160,30 +160,55 @@ void media::release(LinkedObject **nat, unsigned expires)
 	*nat = NULL;
 }
 
-bool media::isDirect(const char *source, const char *target)
+bool media::isProxied(const char *source, const char *target, struct sockaddr_storage *peering)
 {
 	assert(source != NULL);
 	assert(target != NULL);
+	assert(peering != NULL);
 
-	// if same subnets, then we know is direct
+	bool proxy = false;
+
+	// if same subnets, then we know is not proxied
 	if(String::equal(source, target))
-		return true;
+		return false;
 
-	// if unknown networks then we cannot determine...
+	// if unknown networks then we cannot proxy...
 	if(String::equal(source, "-") || String::equal(target, "-"))
-		return true;
+		return false;
 
 	// if sdp source is external, we do not need to proxy (one-legged only)
 	// since we assume we can trust external user's public sdp
 	if(String::equal(source, "*"))
-		return true;
+		return false;
 
-	// if external is remote and also we're ipv6, no need to proxy...
+	// if external is remote and also we're ipv6, no need to proxy either...
 	if(String::equal(target, "*") && ipv6)
-		return true;
+		return false;
 
-	// will become false later...
-	return true;
+	// if remote, then peering for proxy is public address
+	if(String::equal(target, "*")) {
+		server::published(peering);
+		return true;
+	}
+
+	// get subnets from policy name
+	stack::subnet *src = server::getSubnet(source);
+	stack::subnet *dst = server::getSubnet(target);
+	
+	if(!src || !dst)
+		goto exit;
+
+	// check by interface to see if same subnet, else to get subnet peering
+	if(!Socket::equal((struct sockaddr *)(&src->iface), (struct sockaddr *)(&dst->iface))) {
+		memcpy(peering, &dst->iface, sizeof(struct sockaddr_storage));
+		proxy = true;
+	}
+
+exit:
+	server::release(src);
+	server::release(dst);
+	// will become true later...
+	return proxy;
 }
 
 char *media::invite(stack::session *session, const char *target, LinkedObject **nat, char *sdp, size_t size)
@@ -193,8 +218,9 @@ char *media::invite(stack::session *session, const char *target, LinkedObject **
 	assert(nat != NULL);
 
 	*nat = NULL;
+	struct sockaddr_storage peering;
 
-	if(isDirect(session->network, target)) {
+	if(!isProxied(session->network, target, &peering)) {
 		String::set(sdp, size, session->sdp);
 		return sdp;
 	}

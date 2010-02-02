@@ -659,6 +659,21 @@ bool server::isLocal(struct sockaddr *addr)
 	return rtn;
 }
 
+stack::subnet *server::getSubnet(const char *id)
+{
+	locking.access();
+
+	linked_pointer<stack::subnet> np = (((server *)(cfg))->acl);
+	
+	while(is(np)) {
+		if(String::equal(np->getId(), id))
+			return *np;
+		np.next();
+	}
+	locking.release();
+	return NULL;
+} 
+
 stack::subnet *server::getPolicy(struct sockaddr *addr)
 {
 	assert(addr != NULL);
