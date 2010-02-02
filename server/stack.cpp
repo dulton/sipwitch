@@ -1159,6 +1159,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	stack::call *call = s->parent;
 	linked_pointer<stack::segment> sp = call->segments.begin();
 	char username[MAX_USERID_SIZE];
+	char network[MAX_NETWORK_SIZE];
 	char touri[MAX_URI_SIZE];
 	char route[MAX_URI_SIZE];
 	osip_message_t *invite = NULL;
@@ -1167,8 +1168,29 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	int cid;
 	unsigned count = 0;
 	time_t now;
+	struct sockaddr_storage peering;
 
 	time(&now);
+
+	// compute network and subnet..
+	String::set(network, sizeof(network), "*");
+	uri::userid(uri_target, username, sizeof(username));
+	uri::hostid(uri_target, route, sizeof(route));
+
+	resolve.set(route, 5060);
+	target = resolve.getAddr();
+	if(target) {
+		stack::subnet *subnet = server::getPolicy(target);
+		if(subnet) {
+			memcpy(&peering, &subnet->iface, sizeof(struct sockaddr_storage));
+			String::set(network, sizeof(network), subnet->getId());
+		}
+		else
+			service::published(&peering);
+		server::release(subnet);
+	}
+	else
+		service::published(&peering);
 
 	// make sure we do not re-invite an existing active member again
 	while(is(sp)) {
@@ -1241,7 +1263,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	char sdp[MAX_SDP_BUFFER];
 	LinkedObject *nat = NULL;
 
-	if(media::invite(s, "*", &nat, sdp) == NULL) {
+	if(media::invite(s, network, &nat, sdp) == NULL) {
 		process::errlog(ERRLOG, "cannot assign media proxy for %s", uri_target);
 		eXosip_unlock();
 		return;
@@ -1267,24 +1289,14 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	eXosip_unlock();
 	invited = stack::create(call, cid);
 	registry::incUse(NULL, stats::OUTGOING);
-	uri::userid(uri_target, username, sizeof(username));
-	uri::hostid(uri_target, route, sizeof(route));
 	String::set(invited->identity, sizeof(invited->identity), uri_target);
 	String::set(invited->display, sizeof(invited->display), username);
 	snprintf(invited->from, sizeof(invited->from), "<%s>", uri_target);
-	resolve.set(route, 5060);
-	service::published(&invited->peering);
-	String::set(invited->network, sizeof(invited->network), "*");
+	String::set(invited->network, sizeof(invited->network), network);
 	invited->nat = nat;
-	target = resolve.getAddr();
 	if(target) {
 		uri::identity(target, invited->sysident, username, sizeof(invited->sysident));
-		stack::subnet *subnet = server::getPolicy(target);
-		if(subnet) {
-			invited->peering = subnet->iface;
-			String::set(invited->network, sizeof(invited->network), subnet->getId());
-		}
-		server::release(subnet);
+		invited->peering = peering;
 	}
 	else
 		snprintf(invited->sysident, sizeof(invited->sysident), "%s@unknown", username);
