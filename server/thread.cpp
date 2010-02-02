@@ -624,6 +624,8 @@ bool thread::authorize(void)
 	const char *refer = NULL;
 	const char *uri_host;
 	struct sockaddr_internet iface;
+	osip_header_t *msgheader = NULL;
+	bool anon = false;
 
 	if(!sevent->request || !sevent->request->to || !sevent->request->from || !sevent->request->req_uri)
 		goto invalid;
@@ -633,6 +635,11 @@ bool thread::authorize(void)
 	uri = sevent->request->req_uri;
 	to = sevent->request->to;
 	uri_host = uri->host;
+	
+	osip_message_header_get_byname(sevent->request, P_SIPWITCH_NODE, 0, &msgheader);
+	if(msgheader && msgheader->hvalue)
+		if(!stricmp(msgheader->hvalue, "no") || !strnicmp(msgheader->hvalue, "anon", 4))
+			anon = true; 
 
 	error = SIP_ADDRESS_INCOMPLETE;
 
@@ -695,8 +702,12 @@ bool thread::authorize(void)
 		uri->scheme, uri->username, uri_host, local_port,
 		to->url->scheme, to->url->username, to->url->host, to_port);
 */
-	// bypass request address processing if local domain call....
 
+	// if marked as a remote call, we can skip local tests entirely
+	if(anon)
+		goto remote;
+
+	// bypass request address processing if local domain call....
 	memset(&iface, 0, sizeof(iface));
 
 	if(String::equal(registry::getRealm(), uri_host))

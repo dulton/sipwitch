@@ -29,6 +29,8 @@
 #define	ALLOW_EVENTS	"allow-events"
 #endif
 
+#define	P_SIPWITCH_NODE	"P-sipwitch-node"
+
 #define	SECOND_TIMEOUT	(1000l)
 #define	MINUTE_TIMEOUT	(SECOND_TIMEOUT * 60l)
 #define	HOUR_TIMEOUT	(MINUTE_TIMEOUT * 60l)

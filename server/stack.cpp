@@ -1194,7 +1194,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	osip_message_set_header(invite, ALLOW_EVENTS, "talk, hold, refer");
 	osip_message_set_supported(invite, "100rel,replaces,timer");
 
-	if(digest && s->reg) {
+	if(digest && s->reg) {	
 		char *authbuf = new char[1024];
 		stringbuf<64> response;
 		stringbuf<64> once;
@@ -1230,6 +1230,8 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 		delete[] authbuf;
 		osip_free(req); 
 	}
+	else
+		osip_message_set_header(invite, P_SIPWITCH_NODE, "no");
 
 	if(call->expires) {
 		snprintf(expheader, sizeof(expheader), "%ld", call->expires - now);
