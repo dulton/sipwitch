@@ -324,7 +324,8 @@ void media::sdp::check_media(char *buffer, size_t len)
 		return;
 	}
 
-	count = mediacount = 2;
+	mediacount = count;
+	count = align(count);
 
 	ep = strchr(cp, ' ');
 	if(!ep)
@@ -355,6 +356,8 @@ void media::sdp::check_media(char *buffer, size_t len)
 	else
 		snprintf(buffer, len, "%s %u %s",
 			mtype, tport, tmp);
+
+	mediacount = align(mediacount);
 }
 	
 
