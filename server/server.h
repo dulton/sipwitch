@@ -16,6 +16,7 @@
 #include <sipwitch/sipwitch.h>
 #include <eXosip2/eXosip.h>
 #include <config.h>
+#include <ctype.h>
 
 #ifndef	SESSION_EXPIRES
 #define	SESSION_EXPIRES	"session-expires"
@@ -630,12 +631,10 @@ public:
 	// a support class to help in sdp parsing
 	class __LOCAL sdp
 	{
-	private:
-		const char *bufdata;
-		char *outdata;
-		size_t buflen, outpos;
-
 	public:
+		const char *bufdata;
+		char *outdata, *result;
+		size_t buflen, outpos;
 		struct sockaddr *peering;
 		struct sockaddr_storage local, top;
 		LinkedObject **nat;
@@ -652,8 +651,12 @@ public:
 		char *get(char *buffer, size_t len);
 		size_t put(char *buffer);
 
+		// check connect in sdp output
+		void check_connect(char *buffer, size_t len);
+		void check_media(char *buffer, size_t len);
+
 		// can do backfill of NAT if connect in media record
-		void connect(void);
+		void reconnect(void);
 	};
 
 	// proxy socket class
@@ -668,7 +671,7 @@ public:
 		proxy();		
 		~proxy();
 
-		bool activate(media::sdp& parser);
+		bool activate(media::sdp *parser);
 		void release(time_t expire = 0l);
 		void reconnect(struct sockaddr *address);
 		void copy(void);
@@ -681,7 +684,7 @@ public:
 	void reload(service *cfg);
 
 	// get and activate nat instance if any are free...
-	static proxy *get(media::sdp& parser);
+	static proxy *get(media::sdp *parser);
 
 	// set ipv6 flag, removes need to proxy any external addresses...
 	static void enableIPV6(void);
@@ -700,7 +703,7 @@ public:
 
 private:
 	// low level rewrite & proxy assignment
-	static char *rewrite(media::sdp& parser);
+	static char *rewrite(media::sdp *parser);
 
 	// see if connected directly or if requires proxy
 	static bool isProxied(const char *source, const char *target, struct sockaddr_storage *peering);

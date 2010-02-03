@@ -40,6 +40,11 @@ static unsigned portcount = 38;
 static media _proxy;
 static media::thread *th = NULL;
 
+static unsigned align(unsigned value)
+{
+	return ((value + 1) / 2) * 2;
+}
+
 media::thread::thread() : DetachedThread()
 {
 }
@@ -171,10 +176,10 @@ void media::proxy::reconnect(struct sockaddr *host)
 	Socket::store(&local, host);
 }
 
-bool media::proxy::activate(media::sdp& parser)
+bool media::proxy::activate(media::sdp *parser)
 {
-	struct sockaddr *iface = parser.peering;
-	struct sockaddr *host = (struct sockaddr *)&parser.local;
+	struct sockaddr *iface = parser->peering;
+	struct sockaddr *host = (struct sockaddr *)&parser->local;
 	
 	release(0);
 	Socket::store(&local, host);
@@ -183,13 +188,13 @@ bool media::proxy::activate(media::sdp& parser)
 #ifdef	AF_INET6
 	case AF_INET6:
 		so = Socket::create(AF_INET6, SOCK_DGRAM, 0);
-		((struct sockaddr_in6*)(host))->sin6_port = htons(++parser.mediaport);
+		((struct sockaddr_in6*)(host))->sin6_port = htons(++parser->mediaport);
 		((struct sockaddr_in6*)(iface))->sin6_port = htons(port);
 		break;
 #endif
 	case AF_INET:
 		so = Socket::create(AF_INET, SOCK_DGRAM, 0);
-		((struct sockaddr_in*)(host))->sin_port = htons(++parser.mediaport);
+		((struct sockaddr_in*)(host))->sin_port = htons(++parser->mediaport);
 		((struct sockaddr_in*)(iface))->sin_port = htons(port);
 	}
 
@@ -220,7 +225,7 @@ void media::proxy::release(time_t expire)
 
 media::sdp::sdp()
 {
-	outdata = NULL;
+	outdata = result = NULL;
 	bufdata = NULL;
 	mediacount = 0;
 	mediaport = 0;
@@ -234,7 +239,7 @@ media::sdp::sdp(const char *source, char *target, size_t len)
 	set(source, target, len);
 }
 
-void media::sdp::connect(void)
+void media::sdp::reconnect(void)
 {
 	linked_pointer<media::proxy> pp = *nat;
 	
@@ -247,7 +252,7 @@ void media::sdp::connect(void)
 
 void media::sdp::set(const char *source, char *target, size_t len)
 {
-	outdata = target;
+	outdata = result = target;
 	bufdata = source;
 	outpos = 0;
 }
@@ -255,6 +260,7 @@ void media::sdp::set(const char *source, char *target, size_t len)
 char *media::sdp::get(char *buffer, size_t len)
 {
 	char *base = buffer;
+	size_t blen = len;
 
 	// if eod, return NULL
 	if(!bufdata || *bufdata == 0) {
@@ -275,9 +281,133 @@ char *media::sdp::get(char *buffer, size_t len)
 		--len;
 	}
 	*buffer = 0;
+	check_connect(base, blen);
+
+	if(!result)
+		return NULL;
+
 	return base;
 }
 
+void media::sdp::check_media(char *buffer, size_t len)
+{
+	char *cp, *ep, *sp;
+	char tmp[128];
+	char mtype[32];
+	unsigned tport;
+	unsigned count = 1;
+	media::proxy *pp;
+
+	if(strnicmp(buffer, "m=", 2))
+		return;
+
+	cp = sp = strchr(buffer, ' ');
+	if(!cp)
+		return;
+
+	while(isspace(*cp))
+		++cp;
+
+	tport = atoi(cp);
+	if(!tport)
+		return;
+
+	ep = strchr(cp, '/');
+	if(ep)
+		count = atoi(ep + 1);
+
+	// at the moment we can only do rtp/rtcp pairs...	
+	if(count > 2) {
+		result = NULL;
+		return;
+	}
+
+	count = mediacount = 2;
+
+	ep = strchr(cp, ' ');
+	if(!ep)
+		ep = (char *)"";
+	else while(isspace(*ep))
+		++ep;
+
+	mediaport = tport;
+	mediacount = count;
+	tport = 0;
+
+	String::set(tmp, sizeof(tmp), ep);
+	while(count--) {
+		pp = media::get(this);
+		if(!pp) {
+			result = NULL;
+			return;
+		}
+		if(!tport)
+			tport = align(pp->port);
+	}
+
+	*sp = 0;
+	String::set(mtype, sizeof(mtype), buffer);
+	if(mediacount > 1)
+		snprintf(buffer, len, "%s %u/%u %s",
+			mtype, tport, mediacount, tmp);
+	else
+		snprintf(buffer, len, "%s %u %s",
+			mtype, tport, tmp);
+}
+	
+
+
+void media::sdp::check_connect(char *buffer, size_t len)
+{
+	char *cp = buffer + 4;
+	char *ap;
+	char ttl[16];
+	struct sockaddr *hp;
+
+	if(strnicmp(buffer, "c=in", 4))
+		return;
+
+	while(isspace(*cp))
+		++cp;
+		
+	if(ipv6 && strnicmp(cp, "ip6", 3))
+		return;
+	else if(!ipv6 && strnicmp(cp, "ip4", 3))
+		return;
+
+	ap = cp + 3;
+	while(isspace(*ap))
+		++ap;
+
+	cp = strchr(ap, '/');
+	if(cp) {
+		String::set(ttl, sizeof(ttl), cp);
+		*cp = 0;
+	}
+	else
+		ttl[0] = 0;
+
+	if(!Socket::isNumeric(ap)) {
+invalid:
+		*cp = '/';
+		return;
+	}
+
+	Socket::address addr(ap);
+	hp = addr.getAddr();
+	if(!hp)
+		goto invalid;
+
+	Socket::store(&local, hp);
+	if(!mediaport)
+		Socket::store(&top, hp);
+	else
+		reconnect();
+
+	Socket::getaddress((struct sockaddr *)&peering, ap, len - 8);
+	String::add(buffer, len, ttl);
+}
+	
 size_t media::sdp::put(char *buffer)
 {
 	size_t count = 0;
@@ -318,11 +448,11 @@ void media::reload(service *cfg)
         value = mp->getPointer();
         if(key && value) {
 			if(!stricmp(key, "port"))
-				baseport = atoi(value);
+				baseport = align(atoi(value));
 			else if(!stricmp(key, "priority"))
 				tpriority = atoi(value);
 			else if(!stricmp(key, "count"))
-				portcount = atoi(value);
+				portcount = align(atoi(value));
 		}
 		mp.next();
 	}
@@ -370,7 +500,7 @@ void media::enableIPV6(void)
 	ipv6 = true;
 }
 
-media::proxy *media::get(media::sdp& parser)
+media::proxy *media::get(media::sdp *parser)
 {
 	time_t now;
 	time(&now);
@@ -387,7 +517,7 @@ media::proxy *media::get(media::sdp& parser)
 				pp->delist(&runlist);
 				lock.release();
 				media::thread::notify();
-				pp->enlist(parser.nat);	
+				pp->enlist(parser->nat);	
 				return *pp;
 			}
 			else
@@ -510,7 +640,7 @@ char *media::reinvite(stack::session *session, const char *sdpin)
 	parser.peering = (struct sockaddr *)&peering;
 	parser.nat = nat;
 
-	return rewrite(parser);
+	return rewrite(&parser);
 }
 
 char *media::answer(stack::session *session, const char *sdpin)
@@ -539,7 +669,7 @@ char *media::answer(stack::session *session, const char *sdpin)
 	parser.peering = (struct sockaddr *)&peering;
 	parser.nat = nat;
 
-	return rewrite(parser);
+	return rewrite(&parser);
 }
 
 char *media::invite(stack::session *session, const char *target, LinkedObject **nat, char *sdpout, size_t size)
@@ -560,12 +690,21 @@ char *media::invite(stack::session *session, const char *target, LinkedObject **
 	parser.peering = (struct sockaddr *)&peering;
 	parser.nat = nat;
 
-	return rewrite(parser);
+	return rewrite(&parser);
 }
 
-char *media::rewrite(media::sdp& parser)
+char *media::rewrite(media::sdp *parser)
 {
-	return NULL;
+	char buffer[256];
+	char *out = parser->outdata;
+
+	// simple copy rewrite parser for now....
+	while(NULL != parser->get(buffer, sizeof(buffer))) {
+		if(!parser->put(buffer))
+			return NULL;
+
+	}
+	return parser->result;
 }
 
 END_NAMESPACE
