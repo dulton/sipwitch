@@ -345,7 +345,7 @@ void media::sdp::check_media(char *buffer, size_t len)
 			return;
 		}
 		if(!tport)
-			tport = align(pp->port);
+			tport = (pp->port / 2) * 2;
 	}
 
 	*sp = 0;
@@ -453,7 +453,7 @@ void media::reload(service *cfg)
         value = mp->getPointer();
         if(key && value) {
 			if(!stricmp(key, "port"))
-				baseport = align(atoi(value));
+				baseport = (atoi(value) / 2) * 2;
 			else if(!stricmp(key, "priority"))
 				tpriority = atoi(value);
 			else if(!stricmp(key, "count"))
