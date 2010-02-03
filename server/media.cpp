@@ -61,7 +61,8 @@ void media::thread::notify(void)
 
 #ifdef	_MSWINDOWS_
 #else
-	::write(control[1], &buf, 1);
+	if(::write(control[1], &buf, 1) < 1)
+		process::errlog(ERRLOG, "media notify failure");
 #endif
 }
 
@@ -100,7 +101,8 @@ void media::thread::run(void)
 #ifdef	_MSWINDOWS_
 #else
 			if(so == control[0] && FD_ISSET(so, &session)) {
-				::read(so, buf, 1);
+				if(::read(so, buf, 1) < 1)
+					process::errlog(ERRLOG, "media control failure");
 				continue;
 			}
 #endif
@@ -133,7 +135,7 @@ LinkedObject(&runlist)
 	so = INVALID_SOCKET;
 	expires = 0l;
 	port = baseport++;
-};
+}
 
 media::proxy::~proxy()
 {
@@ -474,7 +476,11 @@ void media::start(service *cfg)
 
 #ifdef	_MSWINDOWS_
 #else
-	pipe(control);
+	if(pipe(control)) {
+		process::errlog(ERRLOG, "media proxy startup failed");
+		return;
+	}
+
 	FD_SET(control[0], &connections);
 	hiwater = control[0] + 1;
 #endif
@@ -696,7 +702,6 @@ char *media::invite(stack::session *session, const char *target, LinkedObject **
 char *media::rewrite(media::sdp *parser)
 {
 	char buffer[256];
-	char *out = parser->outdata;
 
 	// simple copy rewrite parser for now....
 	while(NULL != parser->get(buffer, sizeof(buffer))) {
