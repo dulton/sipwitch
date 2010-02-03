@@ -624,6 +624,7 @@ public:
 		struct sockaddr_storage local, top;
 		LinkedObject **nat;
 		unsigned mediacount;
+		unsigned short mediaport;
 
 		sdp();
 		sdp(const char *source, char *target, size_t len = MAX_SDP_BUFFER);

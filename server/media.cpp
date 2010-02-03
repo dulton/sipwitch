@@ -59,7 +59,6 @@ void media::proxy::reconnect(struct sockaddr *host)
 
 bool media::proxy::activate(media::sdp& parser)
 {
-	short mediaport;
 	struct sockaddr *iface = parser.peering;
 	struct sockaddr *host = (struct sockaddr *)&parser.local;
 	
@@ -70,15 +69,13 @@ bool media::proxy::activate(media::sdp& parser)
 #ifdef	AF_INET6
 	case AF_INET6:
 		so = Socket::create(AF_INET6, SOCK_DGRAM, 0);
-		mediaport = ntohs(((struct sockaddr_in6*)(host))->sin6_port);
-		((struct sockaddr_in6*)(host))->sin6_port = htons(++mediaport);
+		((struct sockaddr_in6*)(host))->sin6_port = htons(++parser.mediaport);
 		((struct sockaddr_in6*)(iface))->sin6_port = htons(port);
 		break;
 #endif
 	case AF_INET:
 		so = Socket::create(AF_INET, SOCK_DGRAM, 0);
-		mediaport = ntohs(((struct sockaddr_in*)(host))->sin_port);
-		((struct sockaddr_in*)(host))->sin_port = htons(++mediaport);
+		((struct sockaddr_in*)(host))->sin_port = htons(++parser.mediaport);
 		((struct sockaddr_in*)(iface))->sin_port = htons(port);
 	}
 
@@ -108,6 +105,7 @@ media::sdp::sdp()
 	outdata = NULL;
 	bufdata = NULL;
 	mediacount = 0;
+	mediaport = 0;
 	nat = NULL;
 	memset(&local, 0, sizeof(local));
 	memset(&top, 0, sizeof(local));
