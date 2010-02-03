@@ -608,7 +608,7 @@ public:
 };
 
 // media proxy support for NAT transversal is being moved to here...
-class __LOCAL media
+class __LOCAL media : public service::callback
 {
 public:
 	// a support class to help in sdp parsing
@@ -657,6 +657,12 @@ public:
 		void reconnect(struct sockaddr *address);
 	};
 	
+	media();
+
+	void start(service *cfg);
+	void stop(service *cfg);
+	void reload(service *cfg);
+
 	// get and activate nat instance if any are free...
 	static proxy *get(media::sdp& parser);
 

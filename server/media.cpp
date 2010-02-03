@@ -18,13 +18,17 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+static unsigned priority = 0;
 static unsigned baseport = 5062;
+static unsigned portcount = 38;
 static bool ipv6 = false;
 static LinkedObject *runlist = NULL;
 static mutex_t lock;
 static media::proxy *nat = NULL;
 static fd_set connections;
 static media::proxy *map[sizeof(connections) * 8];
+
+static media _proxy;
 
 media::proxy::proxy() :
 LinkedObject(&runlist)
@@ -178,6 +182,54 @@ size_t media::sdp::put(char *buffer)
 	return count + 2;
 }
 
+media::media() :
+service::callback(2)
+{
+}
+
+void media::reload(service *cfg)
+{
+	assert(cfg != NULL);
+
+	if(isConfigured())
+		return;
+
+	baseport = sip_port + 2;
+	
+	linked_pointer<service::keynode> mp = cfg->getList("media");
+    const char *key = NULL, *value;
+
+	while(is(mp)) {
+		key = mp->getId();
+        value = mp->getPointer();
+        if(key && value) {
+			if(!stricmp(key, "port"))
+				baseport = atoi(value);
+			else if(!stricmp(key, "priority"))
+				priority = atoi(value);
+			else if(!stricmp(key, "count"))
+				portcount = atoi(value);
+		}
+		mp.next();
+	}
+	if(portcount)
+		process::errlog(DEBUG2, "media proxy configured for %d ports", portcount);
+	else
+		process::errlog(DEBUG1, "media proxy disabled");
+}
+
+void media::start(service *cfg)
+{
+	if(portcount)
+		process::errlog(DEBUG1, "media proxy starting for %d ports", portcount);
+}
+
+void media::stop(service *cfg)
+{
+	if(portcount)
+		process::errlog(DEBUG1, "media proxy stopping");
+}
+
 void media::enableIPV6(void)
 {
 	ipv6 = true;
@@ -235,6 +287,10 @@ bool media::isProxied(const char *source, const char *target, struct sockaddr_st
 	assert(peering != NULL);
 
 	bool proxy = false;
+
+	// if no port count, then proxy is disabled...
+	if(!portcount)
+		return false;
 
 	// if same subnets, then we know is not proxied
 	if(String::equal(source, target))
