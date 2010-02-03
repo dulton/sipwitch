@@ -18,17 +18,109 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-static unsigned priority = 0;
+static unsigned tpriority = 0;
 static unsigned baseport = 5062;
-static unsigned portcount = 38;
 static bool ipv6 = false;
 static LinkedObject *runlist = NULL;
 static mutex_t lock;
-static media::proxy *nat = NULL;
+static media::proxy *list = NULL;
 static fd_set connections;
 static media::proxy *map[sizeof(connections) * 8];
+static volatile bool running = false;
+static volatile int hiwater = 0;
+
+#ifdef	_MSWINDOWS_
+static socket_t control;
+static unsigned portcount = 0;
+#else
+static int control[2];
+static unsigned portcount = 38;
+#endif
 
 static media _proxy;
+static media::thread *th = NULL;
+
+media::thread::thread() : DetachedThread()
+{
+}
+
+void media::thread::startup(void)
+{
+	th = new thread();
+	th->start(tpriority);
+}
+
+void media::thread::notify(void)
+{
+	char buf[1];
+
+#ifdef	_MSWINDOWS_
+#else
+	::write(control[1], &buf, 1);
+#endif
+}
+
+void media::thread::shutdown(void)
+{
+	running = false;
+
+	notify();
+
+	while(!running) {
+		Thread::sleep(100);
+	}
+}
+
+void media::thread::run(void)
+{
+	fd_set session;
+
+	process::errlog(DEBUG1, "starting media thread");
+	running = true;
+	socket_t so;
+	char buf[1];
+	media::proxy *mp;
+	time_t now;
+
+	while(running) {
+		lock.acquire();
+		memcpy(&session, &connections, sizeof(session));
+		lock.release();
+		select(hiwater, &session, NULL, NULL, NULL);
+		if(!running)
+			break;
+
+		time(&now);
+		for(so = 0; so < hiwater; ++so) {
+#ifdef	_MSWINDOWS_
+#else
+			if(so == control[0] && FD_ISSET(so, &session)) {
+				::read(so, buf, 1);
+				continue;
+			}
+#endif
+			mp = NULL;
+			if(!FD_ISSET(so, &session))
+				continue;
+
+			lock.acquire();
+			mp = map[so];
+			if(mp->so == INVALID_SOCKET) {
+				map[so] = NULL;
+				mp = NULL;
+			}
+
+			if(mp && mp->expires && mp->expires < now)
+				mp->release(0);
+			else if(mp)
+				mp->copy();
+			lock.release();
+		}
+	}
+	
+	process::errlog(DEBUG1, "stopping media thread");
+	running = true;	
+}
 
 media::proxy::proxy() :
 LinkedObject(&runlist)
@@ -41,6 +133,24 @@ LinkedObject(&runlist)
 media::proxy::~proxy()
 {
 	Socket::release(so);
+}
+
+void media::proxy::copy(void)
+{
+	char buffer[1024];
+	struct sockaddr_storage where;
+	struct sockaddr *wp = (struct sockaddr *)&where;
+	ssize_t count = Socket::recvfrom(so, buffer, sizeof(buffer), 0, &where);
+
+	if(count < 1)
+		return;
+
+	if(Socket::equal(wp, (struct sockaddr *)&local)) {
+		Socket::sendto(so, buffer, count, 0, (struct sockaddr *)&remote);
+		return;
+	}
+	Socket::store(&remote, wp);
+	Socket::sendto(so, buffer, count, 0, (struct sockaddr *)&local);
 }
 
 void media::proxy::reconnect(struct sockaddr *host)
@@ -86,10 +196,14 @@ bool media::proxy::activate(media::sdp& parser)
 	if(so == INVALID_SOCKET)
 		return false;
 
+	memset(&remote, 0, sizeof(remote));
 	Socket::store(&peering, iface);
 	Socket::bindto(so, iface);
 	FD_SET(so, &connections);
+	if(so >= hiwater)
+		hiwater = so + 1;
 	map[so] = this;
+	return true;
 }
 
 void media::proxy::release(time_t expire)
@@ -206,7 +320,7 @@ void media::reload(service *cfg)
 			if(!stricmp(key, "port"))
 				baseport = atoi(value);
 			else if(!stricmp(key, "priority"))
-				priority = atoi(value);
+				tpriority = atoi(value);
 			else if(!stricmp(key, "count"))
 				portcount = atoi(value);
 		}
@@ -222,12 +336,33 @@ void media::start(service *cfg)
 {
 	if(portcount)
 		process::errlog(DEBUG1, "media proxy starting for %d ports", portcount);
+	else
+		return;
+
+	memset(map, 0, sizeof(map));
+	memset(&connections, 0, sizeof(connections));
+
+#ifdef	_MSWINDOWS_
+#else
+	pipe(control);
+	FD_SET(control[0], &connections);
+	hiwater = control[0] + 1;
+#endif
+
+	list = new media::proxy[portcount];
+
+	thread::startup();
 }
 
 void media::stop(service *cfg)
 {
 	if(portcount)
 		process::errlog(DEBUG1, "media proxy stopping");
+	else
+		return;
+
+	thread::shutdown();
+	delete[] list;
 }
 
 void media::enableIPV6(void)
@@ -235,16 +370,28 @@ void media::enableIPV6(void)
 	ipv6 = true;
 }
 
-media::proxy *get(media::sdp& parser)
+media::proxy *media::get(media::sdp& parser)
 {
+	time_t now;
+	time(&now);
+
 	lock.acquire();
 	linked_pointer<media::proxy> pp = runlist;
 	while(is(pp)) {
+		if(pp->expires && pp->expires < now)
+			pp->release(0);
+
 		if(pp->so == INVALID_SOCKET) {
-			pp->delist(&runlist);
-			lock.release();
-			// pp->activate(parser);
-			return *pp;
+			if(pp->activate(parser))
+			{
+				pp->delist(&runlist);
+				lock.release();
+				media::thread::notify();
+				pp->enlist(parser.nat);	
+				return *pp;
+			}
+			else
+				break;
 		}
 		pp.next();
 	}

@@ -1,7 +1,7 @@
-From version 0.6.2 to ???
-- start of server media proxy for NAT support.
+From version 0.6.2 to 0.7.0
+- integrated media proxy for NAT support.
 - authentication realm and "domain" merged into single property.
-- new P_SIPWITCH_NODE header to mark anonymous/off-network calls.
+- new P_SIPWITCH_NODE header to mark anonymous/off-network internodal calls.
 
 From version 0.6.1 to 0.6.2
 - only create extensions for generated accounts if using extension dialing.

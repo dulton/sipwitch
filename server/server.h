@@ -611,6 +611,22 @@ public:
 class __LOCAL media : public service::callback
 {
 public:
+	// support thread
+	class __LOCAL thread : public DetachedThread
+	{
+	public:
+		static void startup(void);
+
+		static void notify(void);	
+
+		static void shutdown(void);
+
+	private:
+		thread();
+
+		void run(void);
+	};
+
 	// a support class to help in sdp parsing
 	class __LOCAL sdp
 	{
@@ -655,6 +671,7 @@ public:
 		bool activate(media::sdp& parser);
 		void release(time_t expire = 0l);
 		void reconnect(struct sockaddr *address);
+		void copy(void);
 	};
 	
 	media();
