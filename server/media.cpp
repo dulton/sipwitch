@@ -24,6 +24,7 @@ static LinkedObject *runlist = NULL;
 static mutex_t lock;
 static media::proxy *nat = NULL;
 static fd_set connections;
+static media::proxy *map[sizeof(connections) * 8];
 
 media::proxy::proxy() :
 LinkedObject(&runlist)
@@ -38,6 +39,58 @@ media::proxy::~proxy()
 	Socket::release(so);
 }
 
+void media::proxy::reconnect(struct sockaddr *host)
+{
+	struct sockaddr *hp = (struct sockaddr *)&local;
+
+	switch(host->sa_family) {
+#ifdef	AF_INET6
+	case AF_INET6:
+		((struct sockaddr_in6*)(host))->sin6_port = 
+			((struct sockaddr_in6 *)(hp))->sin6_port;
+		break;
+#endif
+	case AF_INET:
+		((struct sockaddr_in*)(host))->sin_port = 
+			((struct sockaddr_in *)(hp))->sin_port;
+	}
+	Socket::store(&local, host);
+}
+
+bool media::proxy::activate(media::sdp& parser)
+{
+	short mediaport;
+	struct sockaddr *iface = parser.peering;
+	struct sockaddr *host = (struct sockaddr *)&parser.local;
+	
+	release(0);
+	Socket::store(&local, host);
+
+	switch(iface->sa_family) {
+#ifdef	AF_INET6
+	case AF_INET6:
+		so = Socket::create(AF_INET6, SOCK_DGRAM, 0);
+		mediaport = ntohs(((struct sockaddr_in6*)(host))->sin6_port);
+		((struct sockaddr_in6*)(host))->sin6_port = htons(++mediaport);
+		((struct sockaddr_in6*)(iface))->sin6_port = htons(port);
+		break;
+#endif
+	case AF_INET:
+		so = Socket::create(AF_INET, SOCK_DGRAM, 0);
+		mediaport = ntohs(((struct sockaddr_in*)(host))->sin_port);
+		((struct sockaddr_in*)(host))->sin_port = htons(++mediaport);
+		((struct sockaddr_in*)(iface))->sin_port = htons(port);
+	}
+
+	if(so == INVALID_SOCKET)
+		return false;
+
+	Socket::store(&peering, iface);
+	Socket::bindto(so, iface);
+	FD_SET(so, &connections);
+	map[so] = this;
+}
+
 void media::proxy::release(time_t expire)
 {
 	expire = expires;
@@ -45,21 +98,38 @@ void media::proxy::release(time_t expire)
 		return;
 
 	FD_CLR(so, &connections);
+	map[so] = NULL;
 	Socket::release(so);
 	so = INVALID_SOCKET;
 }
 
 media::sdp::sdp()
 {
-	outdata = bufdata = NULL;
+	outdata = NULL;
+	bufdata = NULL;
+	mediacount = 0;
+	nat = NULL;
+	memset(&local, 0, sizeof(local));
+	memset(&top, 0, sizeof(local));
 }
 
-media::sdp::sdp(char *source, char *target, size_t len)
+media::sdp::sdp(const char *source, char *target, size_t len)
 {
 	set(source, target, len);
 }
 
-void media::sdp::set(char *source, char *target, size_t len)
+void media::sdp::connect(void)
+{
+	linked_pointer<media::proxy> pp = *nat;
+	
+	while(is(pp) && mediacount--) {
+		pp->reconnect((struct sockaddr *)&local);
+		pp.next();
+	}
+	memcpy(&local, &top, sizeof(local));
+}
+
+void media::sdp::set(const char *source, char *target, size_t len)
 {
 	outdata = target;
 	bufdata = source;
@@ -115,7 +185,7 @@ void media::enableIPV6(void)
 	ipv6 = true;
 }
 
-media::proxy *get(struct sockaddr *local)
+media::proxy *get(media::sdp& parser)
 {
 	lock.acquire();
 	linked_pointer<media::proxy> pp = runlist;
@@ -123,7 +193,7 @@ media::proxy *get(struct sockaddr *local)
 		if(pp->so == INVALID_SOCKET) {
 			pp->delist(&runlist);
 			lock.release();
-			// pp->activate(local);
+			// pp->activate(parser);
 			return *pp;
 		}
 		pp.next();
@@ -211,10 +281,10 @@ exit:
 	return proxy;
 }
 
-char *media::reinvite(stack::session *session, const char *sdp)
+char *media::reinvite(stack::session *session, const char *sdpin)
 {
 	assert(session != NULL);
-	assert(sdp != NULL);
+	assert(sdpin != NULL);
 
 	stack::call *cr = session->parent;
 	struct sockaddr_storage peering;
@@ -231,17 +301,21 @@ char *media::reinvite(stack::session *session, const char *sdp)
 	media::release(nat, 2);
 
 	if(!isProxied(session->network, target->network, &peering)) {
-		String::set(session->sdp, sizeof(session->sdp), sdp);
+		String::set(session->sdp, sizeof(session->sdp), sdpin);
 		return session->sdp;
 	}
 
-	return NULL;
+	sdp parser(sdpin, session->sdp, sizeof(session->sdp));
+	parser.peering = (struct sockaddr *)&peering;
+	parser.nat = nat;
+
+	return rewrite(parser);
 }
 
-char *media::answer(stack::session *session, const char *sdp)
+char *media::answer(stack::session *session, const char *sdpin)
 {
 	assert(session != NULL);
-	assert(sdp != NULL);
+	assert(sdpin != NULL);
 
 	LinkedObject **nat;
 	stack::call *cr = session->parent;
@@ -256,14 +330,18 @@ char *media::answer(stack::session *session, const char *sdp)
 	media::release(nat, 2);
 
 	if(!isProxied(session->network, target->network, &peering)) {
-		String::set(session->sdp, sizeof(session->sdp), sdp);
+		String::set(session->sdp, sizeof(session->sdp), sdpin);
 		return session->sdp;
 	}
 
-	return NULL;
+	sdp parser(sdpin, session->sdp, sizeof(session->sdp));
+	parser.peering = (struct sockaddr *)&peering;
+	parser.nat = nat;
+
+	return rewrite(parser);
 }
 
-char *media::invite(stack::session *session, const char *target, LinkedObject **nat, char *sdp, size_t size)
+char *media::invite(stack::session *session, const char *target, LinkedObject **nat, char *sdpout, size_t size)
 {
 	assert(session != NULL);
 	assert(target != NULL);
@@ -273,11 +351,19 @@ char *media::invite(stack::session *session, const char *target, LinkedObject **
 	struct sockaddr_storage peering;
 
 	if(!isProxied(session->network, target, &peering)) {
-		String::set(sdp, size, session->sdp);
-		return sdp;
+		String::set(sdpout, size, session->sdp);
+		return sdpout;
 	}
 
-	// no proxy code yet...
+	sdp parser(session->sdp, sdpout, size);
+	parser.peering = (struct sockaddr *)&peering;
+	parser.nat = nat;
+
+	return rewrite(parser);
+}
+
+char *media::rewrite(media::sdp& parser)
+{
 	return NULL;
 }
 

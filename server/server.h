@@ -610,14 +610,35 @@ public:
 // media proxy support for NAT transversal is being moved to here...
 class __LOCAL media
 {
-private:
-	// low level rewrite & proxy assignment
-	static char *assign(stack::session *session, char *original, char *buffer, size_t len = MAX_SDP_BUFFER);
-
-	// see if connected directly or if requires proxy
-	static bool isProxied(const char *source, const char *target, struct sockaddr_storage *peering);
-
 public:
+	// a support class to help in sdp parsing
+	class __LOCAL sdp
+	{
+	private:
+		const char *bufdata;
+		char *outdata;
+		size_t buflen, outpos;
+
+	public:
+		struct sockaddr *peering;
+		struct sockaddr_storage local, top;
+		LinkedObject **nat;
+		unsigned mediacount;
+
+		sdp();
+		sdp(const char *source, char *target, size_t len = MAX_SDP_BUFFER);
+
+		inline struct sockaddr *get(void)
+			{return (struct sockaddr *)&local;};
+
+		void set(const char *source, char *target, size_t len = MAX_SDP_BUFFER);
+		char *get(char *buffer, size_t len);
+		size_t put(char *buffer);
+
+		// can do backfill of NAT if connect in media record
+		void connect(void);
+	};
+
 	// proxy socket class
 	class __LOCAL proxy : public LinkedObject
 	{
@@ -630,28 +651,13 @@ public:
 		proxy();		
 		~proxy();
 
-		void activate(struct sockaddr *local);
+		bool activate(media::sdp& parser);
 		void release(time_t expire = 0l);
+		void reconnect(struct sockaddr *address);
 	};
-
-	// a support class to help in sdp parsing
-	class __LOCAL sdp
-	{
-	private:
-		char *bufdata, *outdata;
-		size_t buflen, outpos;
-
-	public:
-		sdp();
-		sdp(char *source, char *target, size_t len = MAX_SDP_BUFFER);
-
-		void set(char *source, char *target, size_t len = MAX_SDP_BUFFER);
-		char *get(char *buffer, size_t len);
-		size_t put(char *buffer);
-	};
-
+	
 	// get and activate nat instance if any are free...
-	static proxy *get(struct sockaddr *local);
+	static proxy *get(media::sdp& parser);
 
 	// set ipv6 flag, removes need to proxy any external addresses...
 	static void enableIPV6(void);
@@ -667,6 +673,13 @@ public:
 
 	// re-assign or copy sdp on re-invite; clears and rebuilds media proxy if needed...
 	static char *reinvite(stack::session *session, const char *sdp);
+
+private:
+	// low level rewrite & proxy assignment
+	static char *rewrite(media::sdp& parser);
+
+	// see if connected directly or if requires proxy
+	static bool isProxied(const char *source, const char *target, struct sockaddr_storage *peering);
 };
 
 END_NAMESPACE
