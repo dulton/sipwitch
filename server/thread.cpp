@@ -430,8 +430,14 @@ void thread::invite(void)
 		else
 			String::set(session->display, sizeof(session->display), identity);
 
-		snprintf(session->identity, sizeof(session->identity), "%s:%s@%s",
-			stack::sip.getScheme(), session->sysident, domain);
+		if(registry::getDomain() || destination != EXTERNAL) 
+			snprintf(session->identity, sizeof(session->identity), "%s:%s@%s",
+				stack::sip.getScheme(), session->sysident, domain);
+		else {
+			gethostname(buftemp, sizeof(buftemp));
+			snprintf(session->identity, sizeof(session->identity), "%s:%s@%s",
+				stack::sip.getScheme(), session->sysident, buftemp);	
+		}
 
 		if(destination == EXTERNAL)
 			uri::identity(request_address.getAddr(), call->dialed, uri->username, sizeof(call->dialed));

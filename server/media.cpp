@@ -80,6 +80,7 @@ void media::thread::shutdown(void)
 void media::thread::run(void)
 {
 	fd_set session;
+	int max;
 
 	process::errlog(DEBUG1, "starting media thread");
 	running = true;
@@ -90,14 +91,15 @@ void media::thread::run(void)
 
 	while(running) {
 		lock.acquire();
+		max = hiwater;
 		memcpy(&session, &connections, sizeof(session));
 		lock.release();
-		select(hiwater, &session, NULL, NULL, NULL);
+		select(max, &session, NULL, NULL, NULL);
 		if(!running)
 			break;
 
 		time(&now);
-		for(so = 0; so < hiwater; ++so) {
+		for(so = 0; so < max; ++so) {
 #ifdef	_MSWINDOWS_
 #else
 			if(so == control[0] && FD_ISSET(so, &session)) {
@@ -121,6 +123,7 @@ void media::thread::run(void)
 				mp->release(0);
 			else if(mp)
 				mp->copy();
+
 			lock.release();
 		}
 	}

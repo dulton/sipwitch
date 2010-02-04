@@ -555,6 +555,7 @@ private:
 	MappedRegistry *accepted;
 	eXosip_event_t *sevent;
 	char buffer[MAX_URI_SIZE];	
+	char buftemp[MAX_URI_SIZE];
 	char identbuf[MAX_USERID_SIZE + 12];
 	char identity[MAX_USERID_SIZE];
 	char dialing[MAX_USERID_SIZE];
