@@ -190,6 +190,9 @@ fi
 /sbin/ldconfig
 
 %changelog
+* Wed Feb 03 2010 David Sugar <dyfet@gnutelephony.org> - 0.7.0-0
+- NAT media functionality and internodal remote.
+
 * Wed Jan 20 2010 David Sugar <dyfet@gnutelephony.org> - 0.6.0-0
 - user account integration with sip accounts.
 
