@@ -340,16 +340,19 @@ void media::sdp::check_media(char *buffer, size_t len)
 	mediacount = count;
 	tport = 0;
 
+	lock.acquire();
 	String::set(tmp, sizeof(tmp), ep);
 	while(count--) {
 		pp = media::get(this);
 		if(!pp) {
 			result = NULL;
+			lock.release();
 			return;
 		}
 		if(!tport)
 			tport = (pp->port / 2) * 2;
 	}
+	lock.release();
 
 	*sp = 0;
 	String::set(mtype, sizeof(mtype), buffer);
@@ -517,7 +520,6 @@ media::proxy *media::get(media::sdp *parser)
 	time_t now;
 	time(&now);
 
-	lock.acquire();
 	linked_pointer<media::proxy> pp = runlist;
 	while(is(pp)) {
 		if(pp->expires && pp->expires < now)
@@ -527,7 +529,6 @@ media::proxy *media::get(media::sdp *parser)
 			if(pp->activate(parser))
 			{
 				pp->delist(&runlist);
-				lock.release();
 				media::thread::notify();
 				pp->enlist(parser->nat);	
 				return *pp;
@@ -537,7 +538,6 @@ media::proxy *media::get(media::sdp *parser)
 		}
 		pp.next();
 	}
-	lock.release();
 	return NULL;
 }
 
