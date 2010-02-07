@@ -1447,6 +1447,8 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 		route[0] = '<';
 		String::add(route, sizeof(route), ";lr>");
 
+		printf("*** INVITE %s %s %s\n", touri, s->from, route);
+
 		eXosip_lock();
 		if(eXosip_call_build_initial_invite(&invite, touri, s->from, route, call->subject)) {
 			stack::sipPublish(&tp->address, route, NULL, sizeof(route));

@@ -138,6 +138,7 @@ LinkedObject(&runlist)
 	so = INVALID_SOCKET;
 	expires = 0l;
 	port = baseport++;
+	fw = false;
 }
 
 media::proxy::~proxy()
@@ -525,7 +526,7 @@ media::proxy *media::get(media::sdp *parser)
 		if(pp->expires && pp->expires < now)
 			pp->release(0);
 
-		if(pp->so == INVALID_SOCKET) {
+		if(pp->so == INVALID_SOCKET && !pp->fw) {
 			if(pp->activate(parser))
 			{
 				pp->delist(&runlist);
@@ -648,6 +649,7 @@ char *media::reinvite(stack::session *session, const char *sdpin)
 		return session->sdp;
 	}
 
+	process::errlog(DEBUG3, "reinvite proxied %s to %s", session->network, target->network);
 	sdp parser(sdpin, session->sdp, sizeof(session->sdp));
 	parser.peering = (struct sockaddr *)&peering;
 	parser.nat = nat;
@@ -677,6 +679,7 @@ char *media::answer(stack::session *session, const char *sdpin)
 		return session->sdp;
 	}
 
+	process::errlog(DEBUG3, "answer proxied %s to %s", session->network, target->network);
 	sdp parser(sdpin, session->sdp, sizeof(session->sdp));
 	parser.peering = (struct sockaddr *)&peering;
 	parser.nat = nat;
@@ -698,6 +701,7 @@ char *media::invite(stack::session *session, const char *target, LinkedObject **
 		return sdpout;
 	}
 
+	process::errlog(DEBUG3, "invite proxied %s to %s", session->network, target);
 	sdp parser(session->sdp, sdpout, size);
 	parser.peering = (struct sockaddr *)&peering;
 	parser.nat = nat;

@@ -668,6 +668,7 @@ public:
 		time_t expires;
 		uint16_t port;
 		struct sockaddr_storage local, remote, peering;
+		bool fw;	// to be used when we add ipfw rules support
 
 		proxy();		
 		~proxy();

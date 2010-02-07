@@ -1189,7 +1189,7 @@ bool thread::authenticate(void)
 	// one doesn't want to loose configuration info
 
 	if(!stricmp(node->getId(), "reject")) {
-		process::errlog(NOTICE, "rejecting unauthorized %s", auth->username);
+		process::errlog(NOTICE, "rejecting user %s", auth->username);
 		error = SIP_FORBIDDEN;
 		cp = service::getValue(node, "error");
 		if(cp)
