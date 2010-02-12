@@ -139,7 +139,7 @@ remote voip service provider.
 %attr(0770,root,root) %dir %{_sysconfdir}/sipwitch.d
 %attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
 %attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sysconfig/sipwitch
-%attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.d/*.xml
+%attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.d/*.xml*
 
 %files runtime
 %defattr(-,root,root,-)
