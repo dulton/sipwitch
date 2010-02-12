@@ -289,7 +289,7 @@ static struct passwd *getuserenv(const char *uid, const char *cfgfile)
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/sipwitch");
 	fsys::createDir(buf, 0775);
-	if(stat(buf, &ino) || !S_ISDIR(ino.st_mode)) {
+	if(stat(buf, &ino) || !S_ISDIR(ino.st_mode) || access(buf, W_OK)) {
 		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s", pwd->pw_name);
 		fsys::createDir(buf, 0770);
 	}

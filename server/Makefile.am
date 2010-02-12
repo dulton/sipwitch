@@ -11,7 +11,7 @@
 MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
 LDADD = ../common/libsipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ @DAEMON_LIBS@
-EXTRA_DIST = *.xml *.conf *.log *.defaults *.init *.cron *.8
+EXTRA_DIST = *.xml *-example *.conf *.log *.defaults *.init *.cron *.8
 EXTRA_LTLIBRARIES =
 
 man_MANS = sipw.8
@@ -34,7 +34,7 @@ sipw_LDADD = $(LDADD) $(DLOPEN)
 
 sysconf_DATA = sipwitch.conf
 
-pkgxml_DATA = lab.xml tests.xml 
+pkgxml_DATA = lab.xml-example tests.xml 
 
 forward_la_SOURCES = forward.cpp 
 forward_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)

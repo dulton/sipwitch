@@ -699,9 +699,11 @@ FILE *process::config(const char *uid)
 	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony\\%s.xml", ident);
 #else
 	struct stat ino;
+	bool root = false;
 
 	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", ident);
-	if(uid && !stat(buf, &ino) && S_ISDIR(ino.st_mode)) {
+	if(uid && !stat(buf, &ino) && S_ISDIR(ino.st_mode) && !::access(buf, W_OK)) {
+		root = true;
 		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/config.xml", ident);
 		fp = fopen(buf, "r");
 		if(fp) {
@@ -710,7 +712,7 @@ FILE *process::config(const char *uid)
 		}
 	}
 
-	if(uid)
+	if(uid && root)
 		snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s.conf", ident);
 	else
 		snprintf(buf, sizeof(buf), "%s/.%src", getenv("HOME"), ident); 
