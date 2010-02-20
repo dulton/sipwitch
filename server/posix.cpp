@@ -578,6 +578,10 @@ extern "C" int main(int argc, char **argv)
 	if(cp && *cp)
 		priority = atoi(cp);
 
+	cp = getenv("HISTORY");
+	if(cp && *cp)
+		process::histlimit = atoi(cp);
+
 	cp = getenv("VERBOSE");
 	if(cp && *cp) {
 		warned = true;
@@ -631,6 +635,12 @@ extern "C" int main(int argc, char **argv)
 			priority = atoi(*argv + 10);
 			continue;
 		} 
+
+		if(!strnicmp(*argv, "-history=", 10)) {
+			process::histlimit = atoi(*argv + 10);
+			continue;
+		} 
+
 
 		if(!stricmp(*argv, "-concurrency")) {
 			cp = *(++argv);

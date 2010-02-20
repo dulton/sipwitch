@@ -1101,6 +1101,11 @@ void server::run(const char *user)
 			continue;
 		}
 
+		if(!stricmp(cp, "history") || !stricmp(cp, "debug")) {
+			service::history(user);
+			continue;
+		}
+
 		if(!stricmp(cp, "abort")) {
 			abort();
 			continue;

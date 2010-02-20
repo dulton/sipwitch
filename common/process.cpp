@@ -28,8 +28,71 @@
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
+class __EXPORT history : public OrderedObject, public process
+{
+public:
+	char text[128];
+	
+	history(errlevel_t lid, const char *msg);
+
+	void set(errlevel_t lid, const char *msg);
+
+	static void add(errlevel_t lid, const char *msg);
+};
+
 static const char *replytarget = NULL;
 static const char *ident = "sipwitch";
+static mutex_t histlock;
+static OrderedIndex histindex;
+static unsigned histcount = 0;
+
+unsigned process::histlimit = 0;
+errlevel_t process::verbose = FAILURE;
+
+history::history(errlevel_t lid, const char *msg) :
+OrderedObject(&histindex)
+{
+	++histcount;
+	set(lid, msg);
+}
+
+void history::set(errlevel_t lid, const char *msg)
+{
+	time_t now;
+	time(&now);
+	struct tm *dt = localtime(&now);
+
+	snprintf(text, sizeof(text), "%02d:%02d:%02d %d %s",
+		dt->tm_hour, dt->tm_min, dt->tm_sec, (int)lid, msg);
+
+	char *cp = strchr(text, '\n');
+	if(cp)
+		*cp = 0;
+}
+
+void history::add(errlevel_t lid, const char *msg)
+{
+	history *reuse;
+	
+	// if no logging active, nothing to add...
+	if(!histlimit)
+		return;
+
+	histlock.acquire();
+	// if not to buffer limit, start by allocating
+	// maybe we could use a pager heap....
+	if(histcount < histlimit) {
+		new history(lid, msg);
+		histlock.release();
+		return;
+	}
+
+	reuse = (history *)histindex.begin();
+	reuse->delist(&histindex);
+	reuse->set(lid, msg);
+	reuse->enlist(&histindex);
+	histlock.release();
+}
 
 #ifndef	_MSWINDOWS_
 
@@ -229,6 +292,7 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 		}
 		::syslog(level, "%s", buf);
 		modules::errlog(loglevel, buf);
+		history::add(loglevel, buf);
 	}
 	
 	if(level == LOG_CRIT)
@@ -406,7 +470,46 @@ void process::release(void)
 
 #endif
 
-errlevel_t process::verbose = FAILURE;
+void process::histlog(const char *uid)
+{
+	FILE *fp;
+	char buf[256];
+
+	linked_pointer<history> hp;
+
+	if(!histlimit)
+		return;
+
+#ifdef	_MSWINDOWS_
+	GetEnvironmentVariable("APPDATA", buf, 192);
+	unsigned len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, "\\%s\\history.log", ident);	 
+#else
+	if(replytarget && isdigit(*replytarget))
+		snprintf(buf, sizeof(buf), "/tmp/.sipwitch.%d", atoi(replytarget));
+	else
+		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/history", ident);
+#endif
+	fp = fopen(buf, "w");
+#ifndef	_MSWINDOWS_
+	if(!fp) {
+		snprintf(buf, sizeof(buf), "/tmp/%s-%s/history", ident, uid);
+		fp = fopen(buf, "w");
+	}
+#endif
+
+	if(!fp)
+		return;
+
+	histlock.acquire();
+	hp = histindex.begin();
+	while(is(hp)) {
+		fprintf(fp, "%s\n", hp->text);
+		hp.next();
+	}
+	histlock.release();
+	fclose(fp);
+}
 
 void process::printlog(const char *fmt, ...)
 {

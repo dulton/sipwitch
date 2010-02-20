@@ -13,6 +13,9 @@
 # can be used to specify running effective user/group id for the server
 #GROUP="sipwitch"
 
+# set server errlog history buffer, typical may be 100, default is none...
+#HISTORY=0
+
 # set UID mapping for automatic extension numbers, or 0 to disable
 #FIRSTUID="1000"
 

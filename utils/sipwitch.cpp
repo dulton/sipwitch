@@ -576,7 +576,7 @@ extern "C" int main(int argc, char **argv)
 		version();
 	else if(String::equal(*argv, "help") || String::equal(*argv, "-help") || String::equal(*argv, "--help"))
 		usage();
-	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot") || String::equal(*argv, "dump"))
+	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot") || String::equal(*argv, "dump") || String::equal(*argv, "history"))
 		single(argv, 30);
 	else if(String::equal(*argv, "down") || String::equal(*argv, "restart") || String::equal(*argv, "abort"))
 		single(argv, 0);

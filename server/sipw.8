@@ -29,6 +29,7 @@ sipw \- sipwitch service daemon
 .B [--foreground]
 .B [--gdb]
 .BI [--group=id]
+.BI [--history=limit]
 .B [--memcheck]
 .B [--memleak]
 .BI [--plugins=names]
@@ -82,6 +83,10 @@ Execute the \fBsipw\fR daemon under control of gdb for full debugging.
 .B --group=ID
 Specify the group \fIID\fR that the \fBsipw\fR daemon will execute as for 
 receiving control messages or access to daemon managed shared memory.
+.TP
+.B --history=LIMIT
+Number of errlog events that will be kept in the history buffer.  The last
+LIMIT records at the time will be output whenever requested.
 .TP
 .B --memcheck
 Execute the \fBsipw\fR daemon under valgrind to validate basic memory management.

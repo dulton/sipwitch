@@ -718,6 +718,19 @@ void service::dump(FILE *fp)
 	dump(fp, &root, 0);
 }
 
+void service::history(const char *uid)
+{
+	assert(uid == NULL || *uid != 0);
+
+	keynode *env = getEnviron();
+
+	if(!uid)
+		uid = getValue(env, "USER");
+
+	process::histlog(uid);
+	release(env);
+}
+
 void service::dumpfile(const char *uid)
 {
 	assert(uid == NULL || *uid != 0);
