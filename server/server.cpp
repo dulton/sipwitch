@@ -1101,11 +1101,6 @@ void server::run(const char *user)
 			continue;
 		}
 
-		if(!stricmp(cp, "history") || !stricmp(cp, "debug")) {
-			service::history(user);
-			continue;
-		}
-
 		if(!stricmp(cp, "abort")) {
 			abort();
 			continue;
@@ -1119,6 +1114,16 @@ void server::run(const char *user)
 		argv[argc] = NULL;
 		if(argc < 1)
 			continue;
+
+		if(!stricmp(argv[0], "history")) {
+			if(argc > 2)
+				goto invalid;
+			else if(argc == 2)
+				process::histlimit = atoi(argv[1]);
+			else
+				service::history(user);
+			continue;
+		}
 
 		if(!stricmp(argv[0], "verbose")) {
 			if(argc > 2) {

@@ -429,7 +429,7 @@ static void usage(void)
         "  concurrency <level>     Server concurrency level\n"
 		"  down                    Shut down server\n"
 		"  dump                    Dump server configuration\n"
-		"  history                 Dump history of errors\n"
+		"  history [bufsize]       Set buffer or dump error log\n"
 		"  message <ext> <text>    Send text message to extension\n"
 		"  period <interval>       Collect periodic statistics\n"
 		"  pstats                  Dump periodic statistics\n"
@@ -577,8 +577,14 @@ extern "C" int main(int argc, char **argv)
 		version();
 	else if(String::equal(*argv, "help") || String::equal(*argv, "-help") || String::equal(*argv, "--help"))
 		usage();
-	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot") || String::equal(*argv, "dump") || String::equal(*argv, "history"))
+	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot") || String::equal(*argv, "dump"))
 		single(argv, 30);
+	else if(String::equal(*argv, "history")) {
+		if(argc == 2)
+			single(argv, 30);
+		else
+			level(argv, 10);
+	}
 	else if(String::equal(*argv, "down") || String::equal(*argv, "restart") || String::equal(*argv, "abort"))
 		single(argv, 0);
 	else if(String::equal(*argv, "verbose") || String::equal(*argv, "concurrency"))
