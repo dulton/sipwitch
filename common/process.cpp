@@ -450,6 +450,7 @@ void process::errlog(errlevel_t loglevel, const char *fmt, ...)
 		else
 			fprintf(stderr, "%s: %s\n", getenv("IDENT"), buf);
 		modules::errlog(loglevel, buf);
+		history::add(loglevel, buf);
 	}
 	
 	if(loglevel == FAILURE)

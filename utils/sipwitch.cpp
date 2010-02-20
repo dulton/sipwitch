@@ -429,6 +429,7 @@ static void usage(void)
         "  concurrency <level>     Server concurrency level\n"
 		"  down                    Shut down server\n"
 		"  dump                    Dump server configuration\n"
+		"  history                 Dump history of errors\n"
 		"  message <ext> <text>    Send text message to extension\n"
 		"  period <interval>       Collect periodic statistics\n"
 		"  pstats                  Dump periodic statistics\n"
