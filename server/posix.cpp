@@ -580,7 +580,7 @@ extern "C" int main(int argc, char **argv)
 
 	cp = getenv("HISTORY");
 	if(cp && *cp)
-		process::histlimit = atoi(cp);
+		process::setHistory(atoi(cp));
 
 	cp = getenv("VERBOSE");
 	if(cp && *cp) {
@@ -637,7 +637,7 @@ extern "C" int main(int argc, char **argv)
 		} 
 
 		if(!strnicmp(*argv, "-history=", 10)) {
-			process::histlimit = atoi(*argv + 10);
+			process::setHistory(atoi(*argv + 10));
 			continue;
 		} 
 

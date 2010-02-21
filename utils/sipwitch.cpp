@@ -441,6 +441,7 @@ static void usage(void)
         "  stats                   Dump server statistics\n"
         "  state <selection>       Change server state\n"
 		"  status                  Dump status string\n"
+		"  trace <on|off|clear>    Set sip message tracing\n"
         "  verbose <level>         Server verbose logging level\n"
 	);		
 
@@ -587,7 +588,7 @@ extern "C" int main(int argc, char **argv)
 	}
 	else if(String::equal(*argv, "down") || String::equal(*argv, "restart") || String::equal(*argv, "abort"))
 		single(argv, 0);
-	else if(String::equal(*argv, "verbose") || String::equal(*argv, "concurrency"))
+	else if(String::equal(*argv, "verbose") || String::equal(*argv, "concurrency") || String::equal(*argv, "trace"))
 		level(argv, 10);
 	else if(String::equal(*argv, "message"))
 		message(argv);

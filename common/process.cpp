@@ -45,9 +45,8 @@ static const char *ident = "sipwitch";
 static mutex_t histlock;
 static OrderedIndex histindex;
 static unsigned histcount = 0;
-
-unsigned process::histlimit = 0;
-errlevel_t process::verbose = FAILURE;
+static unsigned histlimit = 0;
+static errlevel_t verbose = FAILURE;
 
 history::history(errlevel_t lid, const char *msg) :
 OrderedObject(&histindex)
@@ -91,6 +90,25 @@ void history::add(errlevel_t lid, const char *msg)
 	reuse->delist(&histindex);
 	reuse->set(lid, msg);
 	reuse->enlist(&histindex);
+	histlock.release();
+}
+
+void process::setVerbose(errlevel_t level)
+{
+	verbose = level;
+}
+
+void process::setHistory(unsigned limit)
+{
+	history *reuse;
+
+	histlock.acquire();
+	while(histcount > limit) {
+		reuse = (history *)histindex.begin();
+		reuse->delist(&histindex);
+		delete reuse;
+	}
+	histlimit = limit;
 	histlock.release();
 }
 

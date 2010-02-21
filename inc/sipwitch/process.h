@@ -61,12 +61,8 @@ typedef enum
 class __EXPORT process
 {
 public:
-	static errlevel_t verbose;
-	static unsigned histlimit;
-
-	inline static void setVerbose(errlevel_t idx)
-		{verbose = idx;};
-
+	static void setVerbose(errlevel_t idx);
+	static void setHistory(unsigned limit);
 	static const char *identity(void);
 	static void printlog(const char *fmt, ...) __PRINTF(1, 2);
 	static void errlog(errlevel_t log, const char *fmt, ...) __PRINTF(2, 3);
@@ -87,8 +83,6 @@ public:
 	static void uuid(char *buffer, size_t size, const char *node);
 	static void uuid(char *buffer, size_t size, unsigned short seq, unsigned callid);
 };
-
-extern unsigned histlimit;
 
 #if defined(DEBUG) || defined(OLD_STDCPP) || defined(NEW_STDCPP)
 #define	debug(l, args...)	process::errlog((errlevel_t)(INFO + l), ## args)

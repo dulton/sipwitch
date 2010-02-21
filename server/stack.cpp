@@ -268,7 +268,12 @@ service::callback(1), mapped_array<MappedCall>(), OrderedIndex()
 	invite_expires = 120;
 }
 
-void stack::enableDumping(void)
+void stack::disableDumping(void)
+{
+	stack::sip.dumping = false;
+}
+
+void stack::clearDumping(void)
 {
 	char buf[128];
 	const char *uid = NULL;
@@ -284,6 +289,11 @@ void stack::enableDumping(void)
 
 	}
 	service::release(env);
+}
+
+void stack::enableDumping(void) 
+{
+	clearDumping();
 	stack::sip.dumping = true;
 }
 
@@ -802,6 +812,12 @@ void stack::reload(service *cfg)
 	unsigned cfna_value = 0;
 	unsigned ring_value = 0;
 	unsigned reset_value = 0;
+
+	char buf[256];
+	if(!gethostname(buf, sizeof(buf))) {
+		String::add(buf, sizeof(buf), ", localhost, localhost.localdomainb");
+		localhosts = buf;
+	}
 
 	sip_domain = registry::getDomain();
 

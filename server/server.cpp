@@ -1119,14 +1119,28 @@ void server::run(const char *user)
 			if(argc > 2)
 				goto invalid;
 			else if(argc == 2)
-				process::histlimit = atoi(argv[1]);
+				process::setHistory(atoi(argv[1]));
 			else
 				service::history(user);
 			continue;
 		}
 
+		if(!stricmp(argv[0], "trace")) {
+			if(argc != 2)
+				goto invalid;
+			if(!stricmp(argv[1], "on"))
+				stack::enableDumping();
+			else if(!stricmp(argv[1], "off"))
+				stack::disableDumping();
+			else if(!stricmp(argv[1], "clear"))
+				stack::clearDumping();
+			else
+				goto invalid;
+			continue;
+		}
+
 		if(!stricmp(argv[0], "verbose")) {
-			if(argc > 2) {
+			if(argc != 2) {
 invalid:
 				process::reply("invalid argument");
 				continue;

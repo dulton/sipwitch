@@ -420,6 +420,8 @@ public:
 	static Socket::address *getAddress(const char *uri, Socket::address *addr = NULL);
 	static void siplog(osip_message_t *msg);
 	static void enableDumping(void);
+	static void clearDumping(void);
+	static void disableDumping(void);
 	static void refer(session *session, eXosip_event_t *sevent);
 	static void infomsg(session *session, eXosip_event_t *sevent);
 	static void setDialog(session *session, int did);
