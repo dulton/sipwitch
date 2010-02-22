@@ -437,6 +437,7 @@ static void usage(void)
         "  release <ext>           Release registration\n"
 		"  reload                  Reload configuration\n"
         "  restart                 Server restart\n"
+		"  siplog                  Dump sip log when tracing\n"
         "  snapshot                Server snapshot\n"
         "  stats                   Dump server statistics\n"
         "  state <selection>       Change server state\n"
@@ -578,7 +579,7 @@ extern "C" int main(int argc, char **argv)
 		version();
 	else if(String::equal(*argv, "help") || String::equal(*argv, "-help") || String::equal(*argv, "--help"))
 		usage();
-	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot") || String::equal(*argv, "dump"))
+	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot") || String::equal(*argv, "dump") || String::equal(*argv, "siplog"))
 		single(argv, 30);
 	else if(String::equal(*argv, "history")) {
 		if(argc == 2)

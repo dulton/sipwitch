@@ -1096,6 +1096,11 @@ void server::run(const char *user)
 			continue;
 		}
 
+		if(!stricmp(cp, "siplog")) {
+			service::siplog(user);
+			continue;
+		}
+
 		if(!stricmp(cp, "dump")) {
 			service::dumpfile(user);
 			continue;

@@ -718,6 +718,19 @@ void service::dump(FILE *fp)
 	dump(fp, &root, 0);
 }
 
+void service::siplog(const char *uid)
+{
+	assert(uid == NULL || *uid != 0);
+
+	keynode *env = getEnviron();
+
+	if(!uid)
+		uid = getValue(env, "USER");
+
+	process::siplog(uid);
+	release(env);
+}
+
 void service::history(const char *uid)
 {
 	assert(uid == NULL || *uid != 0);

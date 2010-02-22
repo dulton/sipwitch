@@ -75,6 +75,7 @@ public:
 	static bool state(const char *value);
 	static bool system(const char *fmt, ...) __PRINTF(1, 2);
 	static void histlog(const char *uid);
+	static void siplog(const char *uid);
 	static FILE *dumpfile(const char *uid);
 	static FILE *snapshot(const char *uid);
 	static FILE *statfile(void);

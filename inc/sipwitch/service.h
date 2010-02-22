@@ -209,6 +209,7 @@ public:
 	static void snapshot(const char *uid);
 	static void dumpfile(const char *uid);
 	static void history(const char *uid);
+	static void siplog(const char *uid);
 	static bool period(long slice);
 	static void result(const char *value);
 	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);

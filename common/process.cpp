@@ -489,6 +489,41 @@ void process::release(void)
 
 #endif
 
+void process::siplog(const char *uid)
+{
+	FILE *fp, *log;
+	char buf[256];
+
+#ifndef	_MSWINDOWS_
+	if(!replytarget || !isdigit(*replytarget))
+		return;
+
+	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/sipdump.log");
+	log = fopen(buf, "r");
+	if(log == NULL) {
+		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/sipdump", uid);
+		log = fopen(buf, "r");
+	}
+
+	if(!log)
+		return;
+
+	snprintf(buf, sizeof(buf), "/tmp/.sipwitch.%d", atoi(replytarget));
+	fp = fopen(buf, "w");
+
+	while(fp != NULL && NULL != fgets(buf, sizeof(buf), log)) {
+		if(feof(log))
+			break;
+		fputs(buf, fp);
+	}
+	if(fp)
+		fclose(fp);
+
+	if(log)
+		fclose(log);
+#endif
+}
+
 void process::histlog(const char *uid)
 {
 	FILE *fp;
