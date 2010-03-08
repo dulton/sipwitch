@@ -37,6 +37,11 @@ Requires: %{name}-runtime = %{version}-%{release}
 Group: Development/Libraries
 Summary: Headers for building sipwitch plugins
 
+%package cgi
+Requires: %{name} = %{version}-%{release}
+Group: Applications/CGI
+Summary: cgi web interface to control sipwitch server
+
 %package plugin-zeroconf
 Requires: %{name} = %{version}-%{release}
 Summary: Zeroconf plugin for sipwitch
@@ -75,6 +80,12 @@ Runtime library required for sipwitch development and for using the server.
 This is available as a separate package so that one building sipwitch plugins
 with the required devel package does not also require installing a server
 image.
+
+%description cgi
+This package offers a means to perform remote management of a sipwitch 
+server using the cgi interface of an installed web server.  The primary
+service this offers is xmlrpc access to sipwitch shared memory and
+control interfaces in a manner analgolous to the sipwitch command utility.
 
 %description plugin-zeroconf
 This plugin activates zeroconf network services for sipwitch and publishes
@@ -124,9 +135,7 @@ remote voip service provider.
 %{_mandir}/man1/siprealm.1*
 %{_mandir}/man1/sipquery.1*
 %{_mandir}/man8/sipw.8*
-%{_mandir}/man8/sipwitch.cgi.8*
 %{_sbindir}/sipw
-%{_sbindir}/sipwitch.cgi
 %{_bindir}/sipquery
 %{_bindir}/sipwitch
 %{_bindir}/sipdigest
@@ -140,6 +149,11 @@ remote voip service provider.
 %attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
 %attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sysconfig/sipwitch
 %attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.d/*.xml*
+
+%files cgi
+%defattr(-,root,root,-)
+%{_mandir}/man8/sipwitch.cgi.8*
+%{_libdir}/cgi-bin/sipwitch.cgi
 
 %files runtime
 %defattr(-,root,root,-)

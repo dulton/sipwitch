@@ -17,7 +17,7 @@ man_MANS = sipwitch.1 sipdigest.1 sipquery.1 siprealm.1 sippasswd.1 \
 	sipwitch.cgi.8
 
 bin_PROGRAMS = sipquery sipwitch sipdigest siprealm sippasswd
-sbin_PROGRAMS = sipwitch.cgi
+cgibin_PROGRAMS = sipwitch.cgi
 
 sipwitch_SOURCES = sipwitch.cpp
 sipwitch_LDADD = @SIPWITCH_LIBS@

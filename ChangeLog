@@ -1,3 +1,7 @@
+From version 0.7.2 to 0.7.3
+- sipwitch state can now show as well as set state.
+- new configure split for cgi support.
+
 From version 0.7.1 to 0.7.2
 - new server history control to dump recent errlog records from daemon.
 - server option to set size of errlog history.

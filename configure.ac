@@ -10,8 +10,8 @@
 
 AC_INIT(autogen.sh)
 
-VERSION="0.7.2"
-LT_VERSION="0:35:0"
+VERSION="0.7.3"
+LT_VERSION="0:36:0"
 UCOMMON_REQUIRES="2.0.0"
 
 AC_CONFIG_AUX_DIR(autoconf)
@@ -85,6 +85,15 @@ AC_ARG_WITH(initrddir,
 	AC_HELP_STRING([--with-initrddir=path], [specify /etc/init.d path]),[
 		INITRDDIR="$with_initrddir"
 ])
+
+# and cgi bin path
+AC_ARG_WITH(cgibindir,
+	AC_HELP_STRING([--with-cgibindir=path], [specific cgi-bin path]), [
+		cgibindir="$with_initrddir"
+])
+
+if test -z "$cgibindir" ; then
+	cgibindir='${libdir}/cgi-bin' ; fi
 
 # make list that is parsed...
 
@@ -378,9 +387,10 @@ fi
 
 AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
 
+AC_SUBST(cgibindir)
+AC_SUBST(plugindir)
 AC_SUBST(LT_VERSION)
 AC_SUBST(INITRDDIR)
-AC_SUBST(plugindir)
 AC_SUBST(UCOMMON_REQUIRES)
 AC_SUBST(UCOMMON_MODEL)
 AC_SUBST(UCOMMON_CLINK)
