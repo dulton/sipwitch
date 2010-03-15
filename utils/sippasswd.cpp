@@ -169,7 +169,7 @@ extern "C" int main(int argc, char **argv)
 	// if server is up, also sync server with digest change...
 	fp = fopen(control, "w");
 	if(fp) {
-		fprintf(fp, "digest %s %s\n", user, realm);
+		fprintf(fp, "digest %s %s\n", user, *digestbuf);
 		fclose(fp);
 	}
 
