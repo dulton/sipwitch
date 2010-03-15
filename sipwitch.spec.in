@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2010 David Sugar, Tycho Softworks.
+# Copyright (c) 2008, 2009, 2010 David Sugar, Tycho Softworks.
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without
 # modifications, as long as this notice is preserved.
@@ -138,7 +138,7 @@ remote voip service provider.
 %{_bindir}/sipwitch
 %{_bindir}/sipdigest
 %{_bindir}/siprealm
-%attr(4755,root,root) %{_bindir}/sippasswd
+%attr(04755,root,root) %{_bindir}/sippasswd
 %dir %{_libdir}/sipwitch
 %config(noreplace) %{_sysconfdir}/logrotate.d/sipwitch
 %attr(0755,root,root) %{_initrddir}/sipwitch
@@ -202,11 +202,27 @@ fi
 /sbin/ldconfig
 
 %changelog
-* Wed Feb 03 2010 David Sugar <dyfet@gnutelephony.org> - 0.7.0-0
-- NAT media functionality and internodal remote.
+* Sun Mar 14 2010 David Sugar <dyfet@gnutelephony.org> - 0.7.4-0
+- fixed sippasswd to send digest rather than realm to running server.
+- separated packaging and install of cgi webservice.
+- new runtime server debug and monitoring operations.
 
-* Wed Jan 20 2010 David Sugar <dyfet@gnutelephony.org> - 0.6.0-0
+* Fri Feb 12 2010 David Sugar <dyfet@gnutelephony.org> - 0.7.1-0
+- Moved lab.xml to lab.xml-example so not part of default config.
+- Removed config conflict when started in pure user mode.
+
+* Sun Feb 07 2010 David Sugar <dyfet@gnutelephony.org> - 0.7.0-0
+- NAT media functionality and internodal remote.
+- merger of domain and realm server definitions.
+- clearer source aliasing of remote calls between network domains.
+
+* Sat Jan 23 2010 David Sugar <dyfet@gnutelephony.org> - 0.6.2-0
+- use uuid for unset authentication realms.
+- saner default configuration file.
+
+* Wed Jan 20 2010 David Sugar <dyfet@gnutelephony.org> - 0.6.1-0
 - user account integration with sip accounts.
+- exec hook for packaging systems that done use fakeroot.
 
 * Sun Jan 17 2010 David Sugar <dyfet@gnutelephony.org> - 0.5.13-0
 - sip realm fully externalized and new siprealm utility added.
