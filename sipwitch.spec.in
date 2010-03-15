@@ -9,7 +9,7 @@
 # PARTICULAR PURPOSE.
 
 Name: sipwitch
-Summary: SIP telephony server for secure phone systems
+Summary: A secure peer-to-peer VoIP server for the SIP protocol
 Version: @VERSION@
 Release: 0%{?dist}
 License: GPLv3+
@@ -59,14 +59,12 @@ Requires: %{name} = %{version}-%{release}
 Summary: Subscriber gateway plugin for sipwitch
 
 %description
-GNU SIP Witch is a pure SIP-based office telephone call server that supports
-generic phone system features like call forwarding, hunt groups and call
-distribution, call coverage and ring groups, holding, and call transfer, as
-well as offering SIP specific capabilities such as presence and messaging. It
-supports secure telephone extensions for making calls over the Internet, and
-intercept/decrypt-free peer-to-peer audio and video extensions. It is not a 
-SIP proxy, a multi-protocol telephone server, or an IP-PBX, and does not try 
-to emulate Asterisk, FreeSWITCH, or Yate. 
+GNU SIP Witch is a secure peer-to-peer VoIP server.  Calls can be made even 
+behind NAT firewalls, and without needing a service provider.  SIP Witch can
+be used on the desktop to create bottom-up secure calling networks as a
+free software alternative to Skype.  SIP Witch can also be used as a stand-
+alone SIP-based office telephone server, or to create secure VoIP networks 
+for an existing IP-PBX such as Asterisk, FreeSWITCH, or Yate.
 
 %description devel
 Header files for building plugins that interface with sipwitch. This might be 
