@@ -1,3 +1,6 @@
+From version 0.7.3 to 0.7.4
+- fix for default uuid system realms.
+
 From version 0.7.2 to 0.7.3
 - sipwitch state can now show as well as set state.
 - new configure split for cgi support.
