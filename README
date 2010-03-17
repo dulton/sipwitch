@@ -2,6 +2,8 @@ SIP Witch is an official package of the GNU Project as of August 10th 2007.
 GNU SIP Witch is also part of GNU Telephony & the GNU Telecom subsystem.  The
 server directory includes some basic example server configurations.
 
+OUR GOALS:
+
 The goal of this package is to individuals and organizations to communicate
 securely whether in private or peer-to-peer over the public Internet without
 intermediary service providers.  This package can also operate as a pure SIP
@@ -9,11 +11,22 @@ based office telephone call server supporting generic phone system features
 like call forwarding, hunt groups and call distribution, call coverage and ring
 groups, holding and call transfer, as well as offering SIP specific
 capabilities such as presence and messaging.  Support for using secure
-telephone extensions, for placing and receiving b2b calls directly over the
-internet, and intercept/decrypt-free peer-to-peer audio is also being
+telephone extensions, for placing and receiving peer-to-peer calls directly
+over the internet, and intercept/decrypt-free peer-to-peer audio is also being
 incorporated into the sipwitch design.
 
-GNU SIP Witch is a call and registration server for the SIP protocol. As a call
+Our goal includes creating on-premise SIP telephone systems, telecenter
+servers, and Internet hosted SIP telephone systems.  One important feature will
+include use of URI routing to support direct peer to peer calls between service
+domains over the public internet peer-to-peer without needing mediation of an
+intermediary "service provider" so that people can publish and call sip: uri's
+unconstrained.  GNU SIP Witch is about freedom to communicate and the removal
+of artifical barriers and constraints whether imposed by monopoly service
+providers or by governments.
+
+WHAT IS SIPWITCH:
+
+GNU SIP Witch is a peer-to-peer VoIP server for the SIP protocol. As a VoIP
 server it services call registration for SIP devices and destination routing
 through SIP gateways.  GNU SIP Witch does not perform codec operations or media
 proxying and thereby enables SIP endpoints to directly peer negotiate call
@@ -40,20 +53,16 @@ telephone architecture that can be deeply embedded, which can support secure
 calling nodes, and that can integrate well with other SIP based/standards
 compliant components.
 
-GNU SIP Witch is not a SIP "router", and does not try to address the same
-things as a project like iptel "Ser".  GNU SIP Witch is being designed to
-create on-premise SIP telephone systems, telecenter servers, and Internet
-hosted SIP telephone systems.  One important feature will include use of URI
-routing to support direct peer to peer calls between service domains over the
-public internet without needing mediation of an intermediary "service provider"
-so that people can publish and call sip: uri's unconstrained.  GNU SIP Witch is
-about freedom to communicate and the removal of artifical barriers and
-constraints whether imposed by monopoly service providers or by governments.
+SUPPORT:
 
 Resources for supporting GNU SIP Witch will be consolidated and handled
 principally through Savannah using the existing GNU Telecom subsystem project
 found there (https://savannah.gnu.org/projects/gnucomm) as a central point of
-contact. This sub-project is being reorganized for this purpose.
+contact. This sub-project is being reorganized for this purpose.  In addition
+the sipwitch-devel@gnu.org mailing list can be used to submit patches or
+report bugs.
+
+REQUIREMENTS:
 
 GNU SIP Witch depends on the UCommon library, which may merge with and become
 GNU Common C++ 2.0 later this year or early next year.  CVS for and new
@@ -61,4 +70,20 @@ distributions of UCommon will be found in the GNU Telecom project on an interim
 basis until then.  GNU SIP Witch also uses libeXosip2 and GNU oSIP, and these
 may be found at their respective sites.  GNU SIP Witch is licensed under the
 GNU General Public License Version 3 or later.
+
+CONTRIBUTING:
+
+The primary development mailing list is sipwitch-devel@gnu.org
+
+For those looking to write faq's or howto's, I could suggest using our wiki,
+http://www.gnutelephony.org
+
+We are requiring any non-trivial contributions to the code base be copyright
+assigned to the FSF.  It is of course necessary to have a limited set of
+copyright holders who share common interest (some do strongly suggest having a
+single copyright holder for this purpose; I personally have prefer two...), and
+it is necessary to have a trustable third party when asking people to do
+copyright assignment.  To me the FSF meets these goals perfectly, and this I
+think helps assure people the codebase cannot later be taken private or
+otherwise used in ways "not anticipated" if they do assign copyright.
 
