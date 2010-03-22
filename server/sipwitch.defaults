@@ -2,7 +2,7 @@
 # by init script.
 
 # install specifc plugins, or use "auto" to auto-load whatever is installed...
-#PLUGINS="zeroconf scripting subscriber forward rtpproxy"
+#PLUGINS="zeroconf scripting subscriber forward"
 
 # runtime priority, recommended realtime for high capacity
 #PRIORITY="1"

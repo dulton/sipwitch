@@ -97,7 +97,8 @@ start)
 	echo -n "Starting $DESC: "
 	$DAEMON $OPTIONS
 	echo "$NAME."
-	touch /var/lock/subsys/sipwitch
+	if test -d /var/lock/subsys ; then
+		touch /var/lock/subsys/sipwitch ; fi
 	;;
 stop)
 	if [ ! -p $FIFO ] ; then
@@ -106,7 +107,8 @@ stop)
 	echo -n "Stopping $DESC: "
 	echo "down" >$FIFO
 	echo "$NAME."
-	rm -f /var/lock/subsys/sipwitch
+	if test -d /var/lock/subsys ; theb
+		rm -f /var/lock/subsys/sipwitch ; fi
 	;;
 status)
 	sipwitch status
