@@ -600,47 +600,47 @@ extern "C" int main(int argc, char **argv)
 		daemon = true;
 
 	while(NULL != *(++argv)) {
-		if(!strncmp(*argv, "--", 2))
+		if(eq(*argv, "--", 2))
 			++*argv;
 
-		if(!strcmp(*argv, "-f") || !stricmp(*argv, "-foreground")) {
+		if(eq(*argv, "-f") || ieq(*argv, "-foreground")) {
 			daemon = false;
 			continue;
 		}
 
-		if(!strcmp(*argv, "-r") || !stricmp(*argv, "-restartable")) {
+		if(eq(*argv, "-r") || ieq(*argv, "-restartable")) {
 			restartable = true;
 			daemon = true;
 			continue;
 		}
 
-		if(!strcmp(*argv, "-t") || !stricmp(*argv, "-trace")) {
+		if(eq(*argv, "-t") || ieq(*argv, "-trace")) {
 			dumping = true;
 			continue;
 		}
 
-		if(!strcmp(*argv, "-d") || !stricmp(*argv, "-background")) {
+		if(eq(*argv, "-d") || ieq(*argv, "-background")) {
 			daemon = true;
 			continue;
 		}
 
-		if(!strcmp(*argv, "-p")) {
+		if(eq(*argv, "-p")) {
 			priority = 1;
 			continue;
 		}
 
-		if(!strnicmp(*argv, "-priority=", 10)) {
+		if(ieq(*argv, "-priority=", 10)) {
 			priority = atoi(*argv + 10);
 			continue;
 		} 
 
-		if(!strnicmp(*argv, "-history=", 10)) {
+		if(ieq(*argv, "-history=", 10)) {
 			process::setHistory(atoi(*argv + 10));
 			continue;
 		} 
 
 
-		if(!stricmp(*argv, "-concurrency")) {
+		if(ieq(*argv, "-concurrency")) {
 			cp = *(++argv);
 			if(!cp) {
 				fprintf(stderr, "*** sipw: concurrency option missing\n");
@@ -650,12 +650,12 @@ extern "C" int main(int argc, char **argv)
 			continue;
 		}
 
-		if(!strnicmp(*argv, "-concurrency=", 13)) {
+		if(ieq(*argv, "-concurrency=", 13)) {
 			concurrency = atoi(*argv + 13);
 			continue;
 		} 
 
-		if(!stricmp(*argv, "-l") || !stricmp(*argv, "-plugins")) {
+		if(eq(*argv, "-l") || ieq(*argv, "-plugins")) {
 			plugins = *(++argv);
 			if(!plugins) {
 				fprintf(stderr, "*** sipw: plugins option missing\n");
@@ -664,12 +664,12 @@ extern "C" int main(int argc, char **argv)
 			continue;
 		}
 
-		if(!strnicmp(*argv, "-plugins=", 9)) {
+		if(ieq(*argv, "-plugins=", 9)) {
 			plugins = *argv + 9;
 			continue;
 		} 
 
-		if(!stricmp(*argv, "-c") || !stricmp(*argv, "-config")) {
+		if(eq(*argv, "-c") || ieq(*argv, "-config")) {
 			cfgfile = *(++argv);
 			if(!cfgfile) {
 				fprintf(stderr, "*** sipw: cfgfile option missing\n");
@@ -678,15 +678,15 @@ extern "C" int main(int argc, char **argv)
 			continue;
 		}
 
-		if(!strnicmp(*argv, "-config=", 8)) {
+		if(ieq(*argv, "-config=", 8)) {
 			cfgfile = *argv + 8;
 			continue;
 		} 
 
-		if(!stricmp(*argv, "-version")) 
+		if(ieq(*argv, "-version")) 
 			server::version();
 
-		if(!strcmp(*argv, "-u") || !stricmp(*argv, "-user") || !strcmp(*argv, "-g") || !stricmp(*argv, "-group")) {
+		if(eq(*argv, "-u") || ieq(*argv, "-user") || eq(*argv, "-g") || ieq(*argv, "-group")) {
 			user = *(++argv);
 			if(!user) {
 				fprintf(stderr, "*** sipw: user option missing\n");
@@ -695,20 +695,20 @@ extern "C" int main(int argc, char **argv)
 			continue;
 		}
 
-		if(!strnicmp(*argv, "-user=", 6)) {
+		if(ieq(*argv, "-user=", 6)) {
 			user = *argv + 6;
 			continue;
 		} 
 
-		if(!strnicmp(*argv, "-group=", 7)) {
+		if(ieq(*argv, "-group=", 7)) {
 			user = *argv + 7;
 			continue;
 		} 
 
-		if(!stricmp(*argv, "-help") || !stricmp(*argv, "-?")) 
+		if(ieq(*argv, "-help") || eq(*argv, "-?")) 
 			server::usage();
 
-		if(!stricmp(*argv, "-debug")) {
+		if(ieq(*argv, "-debug")) {
 			++argv;
 			if(!*argv) {
 				fprintf(stderr, "*** sipw: debug level missing\n");
@@ -719,12 +719,12 @@ extern "C" int main(int argc, char **argv)
 		}
 
 
-		if(!strnicmp(*argv, "-debug=", 7)) {
+		if(ieq(*argv, "-debug=", 7)) {
 			verbose = atoi(*argv + 7) + INFO;
 			continue;
 		} 
 
-		if(!strnicmp(*argv, "-x", 2)) {
+		if(eq(*argv, "-x", 2)) {
 			if(*argv + 2)
 				cp = *argv + 2;
 			else
