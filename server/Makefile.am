@@ -29,9 +29,9 @@ EXTRA_LTLIBRARIES += zeroconf.la
 endif
 
 if LIBNOTIFY
-pkglib_LTLIBRARIES += notify.la
+pkglib_LTLIBRARIES += libnotify.la
 else
-EXTRA_LTLIBRARIES += notify.la
+EXTRA_LTLIBRARIES += libnotify.la
 endif
 
 sipw_SOURCES = server.cpp registry.cpp stack.cpp thread.cpp \
@@ -54,8 +54,8 @@ subscriber_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)
 zeroconf_la_SOURCES = zeroconf.cpp 
 zeroconf_la_LDFLAGS = -module $(MODFLAGS) @ZEROCONF_LIBS@ $(LDADD)
 
-notify_la_SOURCES = notify.cpp
-notify_la_LDFLAGS = -module $(MODFLAGS) @LIBNOTIFY_LIBS@ $(LDADD)
+libnotify_la_SOURCES = libnotify.cpp
+libnotify_la_LDFLAGS = -module $(MODFLAGS) @LIBNOTIFY_LIBS@ $(LDADD)
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(logrotatedir)
