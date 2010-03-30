@@ -360,6 +360,11 @@ if test -z "$zeroconf" ; then
     ],[zeroconf="$zeroconf"])
 fi
 
+PKG_CHECK_MODULES(LIBNOTIFY, libnotify, [
+	AC_DEFINE(HAVE_LIBNOTIFY, 1, [have libnotify library])
+	libnotify="yes"
+],[libnotify=""])
+
 AH_BOTTOM([
 #ifndef	HAVE_LOCALTIME_R
 #define	localtime_r(x, y)	localtime(x)
@@ -383,6 +388,7 @@ else
 fi
 
 AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
+AM_CONDITIONAL(LIBNOTIFY, test ! -z "$libnotify")
 
 AC_SUBST(cgibindir)
 AC_SUBST(plugindir)
@@ -398,6 +404,8 @@ AC_SUBST(INCLUDE_FLAGS)
 AC_SUBST(SIPWITCH_FLAGS)
 AC_SUBST(SIPWITCH_LIBS)
 AC_SUBST(SIPWITCH_EXOSIP2)
+AC_SUBST(LIBNOTIFY_CFLAGS)
+AC_SUBST(LIBNOTIFY_LIBS)
 AC_SUBST(ZEROCONF_LIBS)
 AC_SUBST(CXXFLAGS)
 AC_SUBST(MODFLAGS)

@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
-AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
+AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@ @LIBNOTIFY_CFLAGS@
 LDADD = ../common/libsipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ @DAEMON_LIBS@
 EXTRA_DIST = *.xml *-example *.conf *.log *.defaults *.init *.cron *.8
 EXTRA_LTLIBRARIES =
@@ -26,6 +26,12 @@ if ZEROCONF
 pkglib_LTLIBRARIES += zeroconf.la
 else
 EXTRA_LTLIBRARIES += zeroconf.la
+endif
+
+if LIBNOTIFY
+pkglib_LTLIBRARIES += notify.la
+else
+EXTRA_LTLIBRARIES += notify.la
 endif
 
 sipw_SOURCES = server.cpp registry.cpp stack.cpp thread.cpp \
@@ -47,6 +53,9 @@ subscriber_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)
 
 zeroconf_la_SOURCES = zeroconf.cpp 
 zeroconf_la_LDFLAGS = -module $(MODFLAGS) @ZEROCONF_LIBS@ $(LDADD)
+
+notify_la_SOURCES = notify.cpp
+notify_la_LDFLAGS = -module $(MODFLAGS) @LIBNOTIFY_LIBS@ $(LDADD)
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(logrotatedir)
