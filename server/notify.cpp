@@ -90,14 +90,50 @@ void notify::stop(service *cfg)
 
 void notify::activating(MappedRegistry *rr)
 {
+	char summary[80];
+	char body[256];
 	char addr[128];
 
 	Socket::getaddress((struct sockaddr *)&rr->contact, addr, sizeof(addr));
+
+	if(rr->ext)
+		snprintf(summary, sizeof(summary),
+			"sipwitch activate %s as %d", rr->userid, rr->ext);
+	else
+		snprintf(summary, sizeof(summary),
+			"sipwitch activate %s", rr->userid);
+
+	if(rr->display[0])
+		snprintf(body, sizeof(body), "name=%s\nsource=%s",	
+			rr->display, addr);
+	else
+		snprintf(body, sizeof(body), "source=%s", addr);
+
+	NotifyNotification *notice = notify_notification_new(summary, body, NULL, NULL);
+	notify_notification_set_category(notice, NULL);
+	notify_notification_set_urgency(notice, NOTIFY_URGENCY_NORMAL);
+	notify_notification_set_timeout(notice, 3000);
+	notify_notification_show(notice, NULL);
+	g_object_unref(G_OBJECT(notice));
 }
 
 void notify::expiring(MappedRegistry *rr)
 {
-	// process::system("%s/sipdown %s %d", dirpath, rr->userid, rr->ext);
+	char summary[80];
+
+	if(rr->ext)
+		snprintf(summary, sizeof(summary),
+			"sipwitch release %s from %d", rr->userid, rr->ext);
+	else
+		snprintf(summary, sizeof(summary),
+			"sipwitch release %s", rr->userid);
+
+	NotifyNotification *notice = notify_notification_new(summary, NULL, NULL, NULL);
+	notify_notification_set_category(notice, NULL);
+	notify_notification_set_urgency(notice, NOTIFY_URGENCY_NORMAL);
+	notify_notification_set_timeout(notice, 3000);
+	notify_notification_show(notice, NULL);
+	g_object_unref(G_OBJECT(notice));
 }
 
 END_NAMESPACE
