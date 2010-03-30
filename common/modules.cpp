@@ -95,17 +95,14 @@ void modules::errlog(errlevel_t level, const char *text)
 
 void modules::cdrlog(FILE *fp, cdr *call)
 {
-	struct tm *dt = localtime(&call->starting);
+	DateTime dt(call->starting);
+	char buf[DateTime::sz_string];
 
-	if(dt->tm_year < 1900)
-		dt->tm_year += 1900;
-
+	dt.get(buf);
 	if(call->type == cdr::STOP) {
-		debug(1, "call %08x:%u %s %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s",
-			call->sequence, call->cid, call->network, call->reason,
-			dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
-			dt->tm_hour, dt->tm_min, dt->tm_sec, call->duration,
-			call->ident, call->dialed, call->joined, call->display);
+		debug(1, "call %08x:%u %s %s %s %ld %s %s %s %s",
+			call->sequence, call->cid, call->network, call->reason, buf,
+			call->duration, call->ident, call->dialed, call->joined, call->display);
 	}
 
 	linked_pointer<service::callback> cb = service::getModules();
@@ -118,11 +115,9 @@ void modules::cdrlog(FILE *fp, cdr *call)
 	if(!fp || call->type != cdr::STOP)
 		return;
 
-	fprintf(fp, "%08x:%u %s %s %04d-%02d-%02d %02d:%02d:%02d %ld %s %s %s %s\n",
-		call->sequence, call->cid, call->network, call->reason,
-		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
-		dt->tm_hour, dt->tm_min, dt->tm_sec, call->duration,
-		call->ident, call->dialed, call->joined, call->display);
+	fprintf(fp, "%08x:%u %s %s %s %ld %s %s %s %s\n",
+		call->sequence, call->cid, call->network, call->reason, buf,
+		call->duration, call->ident, call->dialed, call->joined, call->display);
 }
  
 

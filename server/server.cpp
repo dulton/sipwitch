@@ -193,18 +193,12 @@ void server::expire(MappedRegistry *rr)
 
 void server::logging(MappedRegistry *rr, const char *reason)
 {
-	time_t now;
-	struct tm *dt, hold;
+	DateTime dt;
+	char buf[DateTime::sz_string];
 
-	time(&now);
-	dt = localtime_r(&now, &hold);
-	if(dt->tm_year < 1900)
-		dt->tm_year += 1900;
+	dt.get(buf);
 
-	process::printlog("%s %s %04d-%02d-%02d %02d:%02d:%02d\n",
-		reason, rr->userid, 
-		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
-		dt->tm_hour, dt->tm_min, dt->tm_sec);
+	process::printlog("%s %s %s\n", reason, rr->userid, buf); 
 }
 
 bool server::publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body)
@@ -1050,29 +1044,23 @@ void server::run(const char *user)
 	struct tm *dt, hold;
 	FILE *fp;
 
-	time(&now);
-	dt = localtime_r(&now, &hold);
-	if(dt->tm_year < 1900)
-		dt->tm_year += 1900;
+	DateTime start;
+	char buf[DateTime::sz_string];
+	start.get(buf);
 
 	// initial load of digest cache
 	digest::load();
 
-	process::printlog("server starting %04d-%02d-%02d %02d:%02d:%02d\n",
-		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
-		dt->tm_hour, dt->tm_min, dt->tm_sec);
+	process::printlog("server starting %s\n", buf);
 
 	while(running && NULL != (cp = process::receive())) {
 		debug(9, "received request %s\n", cp);
 
+		DateTime now;
+
         if(!stricmp(cp, "reload")) {
-			time(&now);
-			dt = localtime_r(&now, &hold);
-			if(dt->tm_year < 1900)
-				dt->tm_year += 1900;
-			process::printlog("server reloading %04d-%02d-%02d %02d:%02d:%02d\n",
-				dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
-				dt->tm_hour, dt->tm_min, dt->tm_sec);
+			now.get(buf);
+			process::printlog("server reloading %s\n", buf);
             reload(user);
             continue;
         }
@@ -1157,10 +1145,9 @@ invalid:
 		if(!stricmp(argv[0], "uid")) {
 			if(argc != 2)
 				goto invalid;
+			now.get(buf);
 			server::uid = atoi(argv[1]);
-			process::printlog("uid %d %04d-%02d-%02d %02d:%02d:%02d\n",
-				server::uid, dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
-				dt->tm_hour, dt->tm_min, dt->tm_sec);
+			process::printlog("uid %d %s\n", server::uid, buf);
 			reload(user);
 			continue;
 		}
@@ -1178,13 +1165,8 @@ invalid:
 			if(argc != 2)
 				goto invalid;
 
-			time(&now);
-			dt = localtime_r(&now, &hold);
-			if(dt->tm_year < 1900)
-				dt->tm_year += 1900;
-			process::printlog("realm %s %04d-%02d-%02d %02d:%02d:%02d\n",
-				argv[1], dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
-				dt->tm_hour, dt->tm_min, dt->tm_sec);
+			now.get(buf);
+			process::printlog("realm %s %s\n", argv[1], buf);
             reload(user);
             continue;
 		}
@@ -1193,13 +1175,8 @@ invalid:
 			if(argc != 2)
 				goto invalid;
 			if(service::period(atol(argv[1]))) {
-				time(&now);
-				dt = localtime_r(&now, &hold);
-				if(dt->tm_year < 1900)
-					dt->tm_year += 1900;
-				process::printlog("server period %04d-%02d-%02d %02d:%02d:%02d\n",
-					dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
-					dt->tm_hour, dt->tm_min, dt->tm_sec);
+				now.get(buf);
+				process::printlog("server period %s\n", buf);
 			}
 			continue;
 		}
@@ -1224,14 +1201,8 @@ invalid:
 				fputs(state, fp);
 				fclose(fp);
 			}
-			time(&now);
-			dt = localtime_r(&now, &hold);
-			if(dt->tm_year < 1900)
-				dt->tm_year += 1900;
-			process::printlog("state %s %04d-%02d-%02d %02d:%02d:%02d\n",
-				state, dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
-				dt->tm_hour, dt->tm_min, dt->tm_sec);
-
+			now.get(buf);
+			process::printlog("state %s %s\n", state, buf);
 			process::errlog(NOTICE, "state changed to %s", state);
 			reload(user);
 			continue;
@@ -1268,14 +1239,10 @@ invalid:
 
 		process::reply("unknown command");
 	}
-	time(&now);
-	dt = localtime_r(&now, &hold);
-	if(dt->tm_year < 1900)
-		dt->tm_year += 1900;
 
-	process::printlog("server shutdown %04d-%02d-%02d %02d:%02d:%02d\n",
-		dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
-		dt->tm_hour, dt->tm_min, dt->tm_sec);
+	DateTime stop;
+	stop.get(buf);
+	process::printlog("server shutdown %s\n", buf);
 }
 
 void server::version(void)

@@ -776,7 +776,6 @@ bool service::period(long slice)
 	assert(slice > 0);
 
 	time_t now, next;
-	struct tm *dt;
 
 	slice *= 60l;	// convert to minute intervals...
 	time(&now);
@@ -789,14 +788,11 @@ bool service::period(long slice)
 	FILE *fp = process::statfile();
 
 	if(fp) {
-		dt = localtime(&periodic);
+		DateTime dt(periodic);
+		char buf[DateTime::sz_string];
 
-		if(dt->tm_year < 1900)
-			dt->tm_year += 1900;
-
-		fprintf(fp, "%04d-%02d-%02d %02d:%02d:%02d %ld\n",
-			dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
-			dt->tm_hour, dt->tm_min, dt->tm_sec, next - periodic);
+		dt.get(buf);
+		fprintf(fp, "%s %ld\n", buf, next - periodic);
 	}
 	periodic = next;
 	stats::period(fp);

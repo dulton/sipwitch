@@ -608,7 +608,7 @@ static void response(char *buffer, unsigned max, const char *fmt, ...)
 {
 	rpcint_t iv;
 	time_t tv;
-	struct tm *dt, dbuf;
+	struct tm *dt;
 	double dv;
 	const unsigned char *xp;
 	size_t xsize;
@@ -814,13 +814,14 @@ static void response(char *buffer, unsigned max, const char *fmt, ...)
 				break;
 			case 't':
 				tv = va_arg(args, time_t);
-				dt = localtime_r(&tv, &dbuf);
+				dt = DateTime::glt(&tv);
 				if(dt->tm_year < 1800)
 					dt->tm_year += 1900;
 				count += xmlformat(buffer + count, max - count,
 					"%04d%02d%02dT%02d:%02d:%02d",
 					dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
 					dt->tm_hour, dt->tm_min, dt->tm_sec);
+				DateTime::release(dt);
 				break;
 			}
 			if(struct_flag)
@@ -1586,12 +1587,13 @@ static void callfile(FILE *fp, const char *id)
 	fstat(fileno(fp), &ino);
 #endif
 
-	dt = localtime(&ino.st_ctime);
+	dt = DateTime::glt(&ino.st_ctime);
 
 	if(dt->tm_year >= 2000)
 		dt->tm_year -= 2000;
 
 	date = dt->tm_hour + (32l * dt->tm_mday) + (1024l * dt->tm_mon) + (16384l * dt->tm_year);  
+	DateTime::release(dt);
 
 	if(id) {
 		last_date = atol(id);
@@ -1846,7 +1848,7 @@ use:
 		printf("  <type>%s</type>\n", type);
 		printf("  <class>%s</class>\n", buffer.profile.id);
 
-		dt = localtime(&buffer.created);
+		dt = DateTime::glt(&buffer.created);
 		if(dt->tm_year < 1000)
 			dt->tm_year += 1900;
 
@@ -1854,6 +1856,7 @@ use:
 			dt->tm_year, dt->tm_mon + 1, dt->tm_mday,
 			dt->tm_hour, dt->tm_min, dt->tm_sec);
 
+		DateTime::release(dt);
 		Socket::getaddress((struct sockaddr *)&buffer.contact, buf, sizeof(buf));
 		port = Socket::getservice((struct sockaddr *)&buffer.contact);
 		printf("  <address>%s</address>\n", buf);
