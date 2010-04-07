@@ -98,7 +98,7 @@ void notify::cdrlog(cdr *call)
 	case cdr::START:
 		snprintf(summary, sizeof(summary),
 			"sipwitch call for %s", call->dialed);
-		if(call->display)
+		if(call->display[0])
 			snprintf(body, sizeof(body),
 				"call from %s\n"
 				"\"%s\"", call->ident, call->display);

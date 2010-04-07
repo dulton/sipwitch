@@ -107,7 +107,7 @@ stop)
 	echo -n "Stopping $DESC: "
 	echo "down" >$FIFO
 	echo "$NAME."
-	if test -d /var/lock/subsys ; theb
+	if test -d /var/lock/subsys ; then
 		rm -f /var/lock/subsys/sipwitch ; fi
 	;;
 status)
