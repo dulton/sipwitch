@@ -169,7 +169,7 @@ echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
 
 %files plugin-libnotify
 %defattr(-,root,root,-)
-%{_libdir}/sipwitch/libnotify.so
+%{_libdir}/sipwitch/notify.so
 
 %files plugin-zeroconf
 %defattr(-,root,root,-)

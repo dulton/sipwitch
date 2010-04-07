@@ -30,6 +30,7 @@ public:
 	notify();
 
 private:
+	void cdrlog(cdr *call);
 	void start(service *cfg);
 	void stop(service *cfg);
 	void reload(service *cfg);
@@ -86,6 +87,35 @@ void notify::start(service *cfg)
 void notify::stop(service *cfg)
 {
 	notify_uninit();
+}
+
+void notify::cdrlog(cdr *call)
+{
+	char summary[80];
+	char body[256];
+
+	switch(call->type) {
+	case cdr::START:
+		snprintf(summary, sizeof(summary),
+			"sipwitch call for %s", call->dialed);
+		if(call->display)
+			snprintf(body, sizeof(body),
+				"call from %s\n"
+				"\"%s\"", call->ident, call->display);
+		else
+			snprintf(body, sizeof(body),
+				"call from %s", call->ident);
+		break;
+	default:
+		return;
+	}
+
+	NotifyNotification *notice = notify_notification_new(summary, body, NULL, NULL);
+	notify_notification_set_category(notice, NULL);
+	notify_notification_set_urgency(notice, NOTIFY_URGENCY_NORMAL);
+	notify_notification_set_timeout(notice, 3000);
+	notify_notification_show(notice, NULL);
+	g_object_unref(G_OBJECT(notice));
 }
 
 void notify::activating(MappedRegistry *rr)
