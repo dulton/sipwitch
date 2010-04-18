@@ -789,7 +789,7 @@ bool service::period(long slice)
 
 	if(fp) {
 		DateTime dt(periodic);
-		char buf[DateTime::sz_string];
+		char buf[20];
 
 		dt.get(buf);
 		fprintf(fp, "%s %ld\n", buf, next - periodic);

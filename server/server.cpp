@@ -194,7 +194,7 @@ void server::expire(MappedRegistry *rr)
 void server::logging(MappedRegistry *rr, const char *reason)
 {
 	DateTime dt;
-	char buf[DateTime::sz_string];
+	char buf[20];
 
 	dt.get(buf);
 
@@ -1040,12 +1040,10 @@ void server::run(const char *user)
 	char *state;
 	char *cp, *tokens;
 	static int exit_code = 0;
-	time_t now;
-	struct tm *dt, hold;
 	FILE *fp;
 
 	DateTime start;
-	char buf[DateTime::sz_string];
+	char buf[20];
 	start.get(buf);
 
 	// initial load of digest cache

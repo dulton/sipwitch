@@ -58,7 +58,7 @@ OrderedObject(&histindex)
 void history::set(errlevel_t lid, const char *msg)
 {
 	Time now;
-	char buf[Time::sz_string];
+	char buf[20];
 
 	now.get(buf);
 	snprintf(text, sizeof(text), "%s %d %s",

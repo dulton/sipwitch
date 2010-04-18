@@ -96,7 +96,7 @@ void modules::errlog(errlevel_t level, const char *text)
 void modules::cdrlog(FILE *fp, cdr *call)
 {
 	DateTime dt(call->starting);
-	char buf[DateTime::sz_string];
+	char buf[20];
 
 	dt.get(buf);
 	if(call->type == cdr::STOP) {
