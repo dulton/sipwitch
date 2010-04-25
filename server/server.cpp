@@ -193,12 +193,8 @@ void server::expire(MappedRegistry *rr)
 
 void server::logging(MappedRegistry *rr, const char *reason)
 {
-	DateTime dt;
-	char buf[20];
-
-	dt.get(buf);
-
-	process::printlog("%s %s %s\n", reason, rr->userid, buf); 
+	DateTimeString dt;
+	process::printlog("%s %s %s\n", reason, rr->userid, (const char *)dt); 
 }
 
 bool server::publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body)
@@ -1042,23 +1038,20 @@ void server::run(const char *user)
 	static int exit_code = 0;
 	FILE *fp;
 
-	DateTime start;
-	char buf[20];
-	start.get(buf);
+	DateTimeString logtime;
 
 	// initial load of digest cache
 	digest::load();
 
-	process::printlog("server starting %s\n", buf);
+	process::printlog("server starting %s\n", (const char *)logtime);
 
 	while(running && NULL != (cp = process::receive())) {
 		debug(9, "received request %s\n", cp);
 
-		DateTime now;
+		logtime.set();
 
         if(!stricmp(cp, "reload")) {
-			now.get(buf);
-			process::printlog("server reloading %s\n", buf);
+			process::printlog("server reloading %s\n", (const char *)logtime);
             reload(user);
             continue;
         }
@@ -1143,9 +1136,8 @@ invalid:
 		if(!stricmp(argv[0], "uid")) {
 			if(argc != 2)
 				goto invalid;
-			now.get(buf);
 			server::uid = atoi(argv[1]);
-			process::printlog("uid %d %s\n", server::uid, buf);
+			process::printlog("uid %d %s\n", server::uid, (const char *)logtime);
 			reload(user);
 			continue;
 		}
@@ -1163,8 +1155,7 @@ invalid:
 			if(argc != 2)
 				goto invalid;
 
-			now.get(buf);
-			process::printlog("realm %s %s\n", argv[1], buf);
+			process::printlog("realm %s %s\n", argv[1], (const char *)logtime);
             reload(user);
             continue;
 		}
@@ -1172,10 +1163,8 @@ invalid:
 		if(!stricmp(argv[0], "period")) {
 			if(argc != 2)
 				goto invalid;
-			if(service::period(atol(argv[1]))) {
-				now.get(buf);
-				process::printlog("server period %s\n", buf);
-			}
+			if(service::period(atol(argv[1]))) 
+				process::printlog("server period %s\n", (const char *)logtime);
 			continue;
 		}
 
@@ -1199,8 +1188,7 @@ invalid:
 				fputs(state, fp);
 				fclose(fp);
 			}
-			now.get(buf);
-			process::printlog("state %s %s\n", state, buf);
+			process::printlog("state %s %s\n", state, (const char *)logtime);
 			process::errlog(NOTICE, "state changed to %s", state);
 			reload(user);
 			continue;
@@ -1238,9 +1226,8 @@ invalid:
 		process::reply("unknown command");
 	}
 
-	DateTime stop;
-	stop.get(buf);
-	process::printlog("server shutdown %s\n", buf);
+	logtime.set();
+	process::printlog("server shutdown %s\n", (const char *)logtime);
 }
 
 void server::version(void)

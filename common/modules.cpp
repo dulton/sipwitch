@@ -95,10 +95,9 @@ void modules::errlog(errlevel_t level, const char *text)
 
 void modules::cdrlog(FILE *fp, cdr *call)
 {
-	DateTime dt(call->starting);
-	char buf[20];
+	DateTimeString dt(call->starting);
+	const char *buf = dt.c_str();
 
-	dt.get(buf);
 	if(call->type == cdr::STOP) {
 		debug(1, "call %08x:%u %s %s %s %ld %s %s %s %s",
 			call->sequence, call->cid, call->network, call->reason, buf,

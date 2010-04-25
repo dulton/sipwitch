@@ -788,11 +788,8 @@ bool service::period(long slice)
 	FILE *fp = process::statfile();
 
 	if(fp) {
-		DateTime dt(periodic);
-		char buf[20];
-
-		dt.get(buf);
-		fprintf(fp, "%s %ld\n", buf, next - periodic);
+		DateTimeString dt(periodic);
+		fprintf(fp, "%s %ld\n", (const char *)dt, next - periodic);
 	}
 	periodic = next;
 	stats::period(fp);
