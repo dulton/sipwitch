@@ -32,6 +32,10 @@
 #endif
 #endif
 
+#ifdef	HAVE_SYS_SOCKIO_H
+#include <sys/sockio.h>
+#endif
+
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
@@ -389,13 +393,13 @@ void server::confirm(const char *user)
 	new(mp) stack::subnet(&acl, "::1", "loopback");
 
 #ifdef	HAVE_NET_IF_H
-	char buffer[8192];
+	char ifbuf[8192];
 	struct ifconf ifc;
 	struct ifreq *ifr;
 
-	ifc.ifc_len = sizeof(buffer);
-    ifc.ifc_buf = buffer;
-	int count = 0, index = 0;
+	ifc.ifc_len = sizeof(ifbuf);
+	ifc.ifc_buf = ifbuf;
+	int ifcount = 0, index = 0;
 	int ifd = ::socket(AF_INET, SOCK_DGRAM, 0);
 	if(ifd < 0)
 		process::errlog(FAILURE, "cannot access network");
@@ -405,9 +409,9 @@ void server::confirm(const char *user)
 		process::errlog(ERRLOG, "cannot list interfaces");
 	}
 	if(ifd > 0)
-		count = ifc.ifc_len / sizeof(ifreq);
+		ifcount = ifc.ifc_len / sizeof(ifreq);
 	
-	while(index < count) {
+	while(index < ifcount) {
 		ifr = &ifc.ifc_req[index++];
 		if(ifr->ifr_addr.sa_family != AF_INET)
 			continue;
@@ -495,7 +499,7 @@ void server::confirm(const char *user)
 	}
 
 #ifdef	HAVE_PWD_H
-	count = 0;
+	ifcount = 0;
 	char *member;
 	const char *tempname;
 	keynode *base = getPath("accounts");
@@ -524,7 +528,7 @@ void server::confirm(const char *user)
 		leaf = addNode(base, "user", NULL);
 		addNode(leaf, "id", pwd->pw_name);
 	}
-	else while(NULL != (member = grp->gr_mem[count++])) {
+	else while(NULL != (member = grp->gr_mem[ifcount++])) {
 		leaf = addNode(base, "user", NULL);
 		addNode(leaf, "id", member); 
 	}
@@ -533,7 +537,7 @@ void server::confirm(const char *user)
 
 	node = base->getFirst();
 	while(is(node)) {
-		count = 0;
+		ifcount = 0;
 		id = NULL;
 		leaf = node->leaf("id");
 		if(leaf && leaf->getPointer())
@@ -579,9 +583,9 @@ void server::confirm(const char *user)
 		}
 
 		entry = (keyclone *)(*node);
-		count = 0;
+		ifcount = 0;
 		tempname = "templates.user";
-		while(grp && grp->gr_mem && NULL != (member = grp->gr_mem[count++])) {
+		while(grp && grp->gr_mem && NULL != (member = grp->gr_mem[ifcount++])) {
 			if(String::equal(member, pwd->pw_name)) {
 				tempname = "templates.admin";
 				entry->reset("admin");
@@ -599,7 +603,7 @@ void server::confirm(const char *user)
 		while(is(temp)) {
 			clone = (keyclone *)alloc(sizeof(keynode));
 			memcpy(clone, *temp, sizeof(keynode));
-			clone->enlist(entry);
+			clone->splice(entry);
 			temp.next();
 		}
 
@@ -722,14 +726,14 @@ service::keynode *server::getConfig(void)
 	return (keynode *)cfg;
 }
 
-Socket::address *server::getContact(const char *uid)
+Socket::address *server::getContact(const char *cuid)
 {
-	assert(uid != NULL && *uid != 0);
+	assert(cuid != NULL && *cuid != 0);
 	assert(cfg != NULL);
 
 	usernode user;
 
-	getProvision(uid, user);
+	getProvision(cuid, user);
 	Socket::address *addr = NULL;
 
 	if(!user.keys)
@@ -774,9 +778,9 @@ service::keynode *server::getRouting(const char *id)
 	return NULL;
 }
 
-bool server::checkId(const char *uid)
+bool server::checkId(const char *cuid)
 {
-	assert(uid != NULL && *uid != 0);
+	assert(cuid != NULL && *cuid != 0);
 	assert(cfg != NULL);
 	keynode *node = NULL;
 	server *cfgp;
@@ -787,16 +791,16 @@ bool server::checkId(const char *uid)
 		locking.release();
 		return false;
 	}
-	node = cfgp->find(uid);
+	node = cfgp->find(cuid);
 	locking.release();
 	if(node)
 		return true;
 	return false;
 }
 
-void server::getDialing(const char *uid, usernode& user)
+void server::getDialing(const char *cuid, usernode& user)
 {
-	assert(uid != NULL && *uid != 0);
+	assert(cuid != NULL && *cuid != 0);
 	assert(cfg != NULL);
 
 	keynode *leaf = NULL;
@@ -804,7 +808,7 @@ void server::getDialing(const char *uid, usernode& user)
 	server *cfgp;
 	unsigned range = registry::getRange();
 	unsigned prefix = registry::getPrefix();
-	unsigned ext = atoi(uid);
+	unsigned ext = atoi(cuid);
 
 	server::release(user);
 
@@ -814,7 +818,7 @@ void server::getDialing(const char *uid, usernode& user)
 		locking.release();
 		return;
 	}
-	node = cfgp->find(uid);
+	node = cfgp->find(cuid);
 	if(node)
 		leaf = node->leaf("extension");
 	if(node && leaf && service::dialmode == service::EXT_DIALING)
@@ -828,16 +832,16 @@ void server::getDialing(const char *uid, usernode& user)
 	user.keys = node;
 }
 
-void server::getProvision(const char *uid, usernode& user)
+void server::getProvision(const char *cuid, usernode& user)
 {
-	assert(uid != NULL && *uid != 0);
+	assert(cuid != NULL && *cuid != 0);
 	assert(cfg != NULL);
 
 	keynode *node;
 	server *cfgp;
 	unsigned range = registry::getRange();
 	unsigned prefix = registry::getPrefix();
-	unsigned ext = atoi(uid);
+	unsigned ext = atoi(cuid);
 
 	server::release(user);
 
@@ -847,7 +851,7 @@ void server::getProvision(const char *uid, usernode& user)
 		locking.release();
 		return;
 	}
-	node = cfgp->find(uid);
+	node = cfgp->find(cuid);
 	if(!node && range && ext >= prefix && ext < prefix + range)
 		node = cfgp->extmap[ext - prefix];
 	if(!node)
@@ -890,9 +894,9 @@ void server::dump(FILE *fp)
 	}
 }
 		
-void server::reload(const char *uid)
+void server::reload(const char *cuid)
 {
-	assert(uid == NULL || *uid != 0);
+	assert(cuid == NULL || *cuid != 0);
 
 	char buf[256];
 	FILE *state = NULL;
@@ -918,7 +922,7 @@ void server::reload(const char *uid)
 			process::errlog(ERRLOG, "invalid state");
 	}
 
-	FILE *fp = service::open(uid);
+	FILE *fp = service::open(cuid);
 	if(fp)
 		if(!cfgp->load(fp)) {
 			process::errlog(ERRLOG, "invalid config");
@@ -930,7 +934,7 @@ void server::reload(const char *uid)
 	if(cp)
 		process::errlog(INFO, "activating for state \"%s\"", cp);
 
-	cfgp->commit(uid);
+	cfgp->commit(cuid);
 	if(!cfg) {
 		process::errlog(FAILURE, "no configuration");
 		exit(2);

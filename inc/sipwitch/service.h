@@ -80,7 +80,7 @@ public:
 	class __EXPORT keyclone : public treemap<char *>
 	{
 	public:
-		void enlist(keyclone *trunk);
+		void splice(keyclone *trunk);
 
 		inline void reset(const char *tag)
 			{id = (char *)tag;};

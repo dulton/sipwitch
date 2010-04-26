@@ -1630,7 +1630,7 @@ void thread::reregister(const char *contact, time_t interval)
 		goto reply;
 	}		
 
-	if(reginfo->type != MappedRegistry::SERVICE || reginfo->internal.routes)
+	if(reginfo->type != MappedRegistry::SERVICE || reginfo->source.internal.routes)
 		goto reply;
 
 	while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {

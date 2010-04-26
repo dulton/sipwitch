@@ -136,7 +136,7 @@ void subscriber::start(service *cfg)
 	assert(cfg != NULL);
 
 	if(count) {
-		provider.external.statnode = stats::request("provider");	
+		provider.source.external.statnode = stats::request("provider");	
 
 		if(changed)
 			update();

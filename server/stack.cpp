@@ -199,7 +199,7 @@ void stack::background::run(void)
 {
 	process::errlog(DEBUG1, "starting background thread");
 	timeout_t timeout, current;
-	Timer expires = interval;
+	Timer expiration = interval;
 	stack::call *next;
 
 	for(;;) {
@@ -210,13 +210,13 @@ void stack::background::run(void)
 			thread = NULL;
 			return;	// exits thread...
 		}
-		timeout = expires.get();
+		timeout = expiration.get();
 		if(!signalled && timeout) {
 			if(timeout > interval) 
 				timeout = interval;
 			Conditional::wait(timeout);
 		}
-		timeout = expires.get();
+		timeout = expiration.get();
 		if(signalled || !timeout) {
 			signalled = false;
 			// release lock in case expire calls update timer methods...
@@ -232,7 +232,7 @@ void stack::background::run(void)
 				cp = next;
 			}
 			locking.release();	
-			expires = timeout;
+			expiration = timeout;
 		}
 		else {
 			signalled = false;
@@ -1164,7 +1164,7 @@ void stack::divert(stack::call *call, osip_message_t *invite)
 	}
 }
 
-void stack::inviteRemote(stack::session *s, const char *uri_target, const char *digest)
+int stack::inviteRemote(stack::session *s, const char *uri_target, const char *digest)
 {
 	assert(s != NULL && s->parent != NULL);
 	assert(uri_target != NULL);
@@ -1182,7 +1182,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	char expheader[32];
 	char seqid[64];
 	int cid;
-	unsigned count = 0;
+	unsigned icount = 0;
 	time_t now;
 	struct sockaddr_storage peering;
 
@@ -1211,7 +1211,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	// make sure we do not re-invite an existing active member again
 	while(is(sp)) {
 		if(!stricmp(sp->sid.identity, uri_target) && sp->sid.state != stack::session::CLOSED)
-			return;
+			return icount;
 		sp.next();
 	}
 	
@@ -1223,7 +1223,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	if(eXosip_call_build_initial_invite(&invite, touri, s->from, NULL, call->subject)) {
 		process::errlog(ERRLOG, "cannot invite %s; build failed", uri_target);
 		eXosip_unlock();
-		return;
+		return icount;
 	}
 
 	divert(call, invite);
@@ -1282,7 +1282,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 	if(media::invite(s, network, &nat, sdp) == NULL) {
 		process::errlog(ERRLOG, "cannot assign media proxy for %s", uri_target);
 		eXosip_unlock();
-		return;
+		return icount;
 	}
 
 	osip_message_set_body(invite, sdp, strlen(sdp));
@@ -1293,13 +1293,13 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 		snprintf(seqid, sizeof(seqid), "%08x-%d", s->sequence, s->cid);
 		uri::publish(call->request, route, seqid, sizeof(route));
 		eXosip_call_set_reference(cid, route);
-		++count;
+		++icount;
 	}
 	else {
 		media::release(&nat);
 		process::errlog(ERRLOG, "invite failed for %s", uri_target);
 		eXosip_unlock();
-		return;
+		return icount;
 	}
 		
 	eXosip_unlock();
@@ -1318,6 +1318,7 @@ void stack::inviteRemote(stack::session *s, const char *uri_target, const char *
 		snprintf(invited->sysident, sizeof(invited->sysident), "%s@unknown", username);
 
 	debug(3, "inviting %s\n", uri_target);
+	return icount;
 }
 
 bool stack::forward(stack::call *cr)
@@ -1401,12 +1402,12 @@ test:
 	return false;
 }
 
-void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t dest)
+int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t dest)
 {
 	assert(s != NULL && s->parent != NULL);
 	assert(rr != NULL);
 
-	linked_pointer<registry::target> tp = rr->internal.targets;
+	linked_pointer<registry::target> tp = rr->source.internal.targets;
 	stack::session *invited;
 	stack::call *call = s->parent;
 	linked_pointer<stack::segment> sp = call->segments.begin();
@@ -1420,17 +1421,17 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 	char route[MAX_URI_SIZE];
 	char touri[MAX_URI_SIZE];
 	int cid;
-	unsigned count = 0;
+	unsigned icount = 0;
 
 	time(&now);
 
 	if(rr->expires && rr->expires < now + 1)
-		return;
+		return icount;
 
 	// make sure we do not re-invite an existing active member again
 	while(is(sp)) {
 		if(sp->sid.reg == rr && sp->sid.state == stack::session::OPEN) {
-			return;
+			return icount;
 		}
 		sp.next();
 	}
@@ -1509,7 +1510,7 @@ void stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t d
 			snprintf(seqid, sizeof(seqid), "%08x-%d", s->sequence, s->cid);
 			stack::sipAddress((struct sockaddr_internet *)&tp->peering, route, seqid, sizeof(route));
 			eXosip_call_set_reference(cid, route);
-			++count;
+			++icount;
 		}
 		else {
 			media::release(&nat);
@@ -1563,24 +1564,25 @@ next:
 	}
 
 	if(call->count > 0 || call->forwarding == NULL)
-		return;
+		return icount;
 
 	switch(rr->status) {
 	case MappedRegistry::BUSY:
 		call->forwarding = "busy";
-		return;
+		return icount;
 	case MappedRegistry::OFFLINE:
 		call->forwarding = "gone";
-		return;
+		return icount;
 	case MappedRegistry::DND:
 		call->forwarding = "dnd";
-		return;
+		return icount;
 	case MappedRegistry::AWAY:
 		call->forwarding = "away";
-		return;
+		return icount;
 	default:
-		return;
+		break;
 	}
+	return icount;
 }
 
 END_NAMESPACE

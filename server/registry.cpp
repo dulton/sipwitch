@@ -131,8 +131,8 @@ void registry::incUse(mapped *rr, stats::stat_t stat)
 		Mutex::release(rr);
 		switch(rr->type) {
 		case MappedRegistry::EXTERNAL:
-			if(rr->external.statnode) {
-				rr->external.statnode->assign(stat);
+			if(rr->source.external.statnode) {
+				rr->source.external.statnode->assign(stat);
 				break;
 			}
 			statmap[5].assign(stat);
@@ -159,8 +159,8 @@ void registry::decUse(mapped *rr, stats::stat_t stat)
 		Mutex::release(rr);
 		switch(rr->type) {
 		case MappedRegistry::EXTERNAL:
-			if(rr->external.statnode) {
-				rr->external.statnode->release(stat);
+			if(rr->source.external.statnode) {
+				rr->source.external.statnode->release(stat);
 				break;
 			}
 			statmap[5].release(stat);
@@ -283,7 +283,7 @@ void registry::snapshot(FILE *fp)
 				fprintf(fp, " address=none\n");
 			else
 				fputc('\n', fp);
-			tp = rr->internal.targets;
+			tp = rr->source.internal.targets;
 			while(is(tp)) {
 				Socket::getaddress((struct sockaddr *)(&tp->address), buffer, sizeof(buffer));
 				fprintf(fp, "    address=%s, contact=%s", buffer, tp->contact);		
@@ -296,7 +296,7 @@ void registry::snapshot(FILE *fp)
 				fputc('\n', fp);
 				tp.next();
 			}
-			rp = rr->internal.routes;
+			rp = rr->source.internal.routes;
 			if(is(rp) && rr->type == MappedRegistry::SERVICE)
 				fprintf(fp, "      services=");
 			else if(is(rp) && rr->type == MappedRegistry::GATEWAY)
@@ -309,7 +309,7 @@ void registry::snapshot(FILE *fp)
 					fputc('\n', fp);
 				rp.next();
 			}
-			rp = rr->internal.published;
+			rp = rr->source.internal.published;
 			if(rp)
 				fprintf(fp, "      published=");
 			while(rp) {
@@ -345,7 +345,7 @@ void registry::clear(mapped *rr)
 	rr->expires = 0;
 	// this one is safe to clear...
 	memset(&rr->profile, 0, sizeof(profile_t));
-	rr->internal.published = rr->internal.targets = rr->internal.routes = NULL;
+	rr->source.internal.published = rr->source.internal.targets = rr->source.internal.routes = NULL;
 }
 	
 bool registry::remove(const char *id)
@@ -371,8 +371,8 @@ void registry::expire(mapped *rr)
 {
 	assert(rr != NULL);
 
-	linked_pointer<target> tp = rr->internal.targets;
-	linked_pointer<route> rp = rr->internal.routes;
+	linked_pointer<target> tp = rr->source.internal.targets;
+	linked_pointer<route> rp = rr->source.internal.routes;
 	unsigned path;
 
 	--active_entries;
@@ -389,7 +389,7 @@ void registry::expire(mapped *rr)
 		delete *rp;
 		rp = nr;
 	}	
-	rp = rr->internal.published;
+	rp = rr->source.internal.published;
 	while(rp) {
 		route *nr = rp.getNext();
 		--published_routes;
@@ -411,9 +411,9 @@ void registry::expire(mapped *rr)
 		delete *tp;
 		tp = nt;
 	}
-	rr->internal.routes = NULL;
-	rr->internal.targets = NULL;
-	rr->internal.published = NULL;
+	rr->source.internal.routes = NULL;
+	rr->source.internal.targets = NULL;
+	rr->source.internal.published = NULL;
 	rr->count = 0;
 	rr->inuse = 0;
 	rr->status = MappedRegistry::OFFLINE;
@@ -1097,7 +1097,7 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 	len = Socket::getlen(ai);
 
 	locking.exclusive();
-	tp = internal.targets;
+	tp = source.internal.targets;
 	while(is(tp) && count > 1) {
 		delete *tp;
 		tp.next();
@@ -1107,7 +1107,7 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
 	if(!tp) {
 		tp = new target;
 		time(&tp->created);
-		tp->enlist(&internal.targets);
+		tp->enlist(&source.internal.targets);
 		count = 1;
 		tp->status = registry::target::READY;
 		tp->address.address.sa_family = 0;
@@ -1164,7 +1164,7 @@ void registry::mapped::addRoute(const char *route_pattern, unsigned route_priori
 	rp->entry.priority = route_priority;
 	rp->entry.registry = this;
 	rp->entry.enlist(&primap[route_priority]);
-	rp->enlist(&internal.routes);
+	rp->enlist(&source.internal.routes);
 	locking.share();
 }
 
@@ -1179,7 +1179,7 @@ void registry::mapped::addPublished(const char *published_id)
 	rp->entry.priority = 0;
 	rp->entry.registry = this;
 	rp->entry.enlist(&publishing[path]);
-	rp->enlist(&internal.published);
+	rp->enlist(&source.internal.published);
 	++published_routes;
 	locking.share();
 }
@@ -1196,13 +1196,13 @@ void registry::mapped::addContact(const char *contact_id)
 	rp->entry.priority = 0;
 	rp->entry.registry = this;
 	rp->entry.enlist(&contacts[path]);
-	rp->enlist(&internal.routes);
+	rp->enlist(&source.internal.routes);
 	locking.share();
 }
 
 void registry::mapped::update(void)
 {
-	linked_pointer<target> tp = internal.targets;
+	linked_pointer<target> tp = source.internal.targets;
 	time_t now;
 	status_t prior = status;
 	const char *text;
@@ -1270,7 +1270,7 @@ bool registry::mapped::expire(Socket::address& saddr)
 	if(!saddr.getAddr() || !expires || expires < now || type == MappedRegistry::EXPIRED || type == MappedRegistry::TEMPORARY)
 		return false;
 
-	tp = internal.targets;
+	tp = source.internal.targets;
 	while(tp) {
 		if(Socket::equal(saddr.getAddr(), (struct sockaddr *)(&tp->address))) 
 			tp->expires = now - 10;
@@ -1300,7 +1300,7 @@ void registry::mapped::update(Socket::address& saddr, int changed)
 	if(changed == registry::target::UNKNOWN || !saddr.getAddr() || !expires || expires < now || !isUser())
 		return;
 
-	tp = internal.targets;
+	tp = source.internal.targets;
 	while(tp) {
 		if(Socket::equal(saddr.getAddr(), (struct sockaddr *)(&tp->address))) {
 			if(tp->status != changed) {
@@ -1325,7 +1325,7 @@ bool registry::mapped::refresh(Socket::address& saddr, time_t lease, const char 
 	if(!saddr.getAddr() || !expires || expires < now || type == MappedRegistry::EXPIRED || type == MappedRegistry::TEMPORARY)
 		return false;
 
-	tp = internal.targets;
+	tp = source.internal.targets;
 	while(tp) {
 		if(Socket::equal(saddr.getAddr(), (struct sockaddr *)(&tp->address))) {
 			char target_userid[MAX_USERID_SIZE];
@@ -1365,7 +1365,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 		return 0;
 
 	locking.exclusive();
-	tp = internal.targets;
+	tp = source.internal.targets;
 	if(lease > expires)
 		expires = lease;
 
@@ -1385,7 +1385,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 				expired->index.address = NULL;
 				expired->index.registry = NULL;
 			}
-			expired->delist(&internal.targets);
+			expired->delist(&source.internal.targets);
 			--count;
 			delete expired;
 		}
@@ -1406,7 +1406,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
 		if(!oi)
 			oi = ai;
 		expired = new target;
-		expired->enlist(&internal.targets);
+		expired->enlist(&source.internal.targets);
 		expired->status = registry::target::READY;
 		memcpy(&contact, oi, len);
 		String::set(network, sizeof(network), target_network);
@@ -1448,12 +1448,12 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
 		return 0;
 	}
 
-	tp = internal.targets;
+	tp = source.internal.targets;
 	while(tp) {
 		delete *tp;
 		tp.next();
 	}	
-	internal.targets = NULL;
+	source.internal.targets = NULL;
 	count = 0;
 	while(al) {
 		len = Socket::getlen(al->ai_addr);
@@ -1478,7 +1478,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
 
 		tp->expires = 0l;
 		tp->status = registry::target::READY;
-		tp->enlist(&internal.targets);
+		tp->enlist(&source.internal.targets);
 		++count;
 		al = al->ai_next;
 	}

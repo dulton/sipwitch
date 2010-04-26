@@ -178,7 +178,7 @@ service::instance::~instance()
 	service::locking.release();
 }
 
-void service::keyclone::enlist(keyclone *trunk)
+void service::keyclone::splice(keyclone *trunk)
 {
 	parent = trunk;
 	if(parent)

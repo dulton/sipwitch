@@ -287,7 +287,7 @@ int messages::deliver(message *msg)
 	}
 
 	debug(3, "instant message delivered to %s from %s", msg->user, msg->reply);
-	tp = rr->internal.targets;
+	tp = rr->source.internal.targets;
 	while(tp) {
 		if(!rr->expires || tp->expires > now) {
 			stack::sipAddress(&tp->address, to + 1, msg->user, sizeof(to) - 6); 

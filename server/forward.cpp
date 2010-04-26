@@ -54,7 +54,7 @@ public:
 	void remove(int id);
 	void add(MappedRegistry *rr);
 	MappedRegistry *find(int id);
-	void release(MappedRegistry *rr);
+	void releaseMap(MappedRegistry *rr);
 
 private:
 	void start(service *cfg);
@@ -84,7 +84,7 @@ modules::sipwitch()
 	expires = 120;
 }
 
-void forward::release(MappedRegistry *rr)
+void forward::releaseMap(MappedRegistry *rr)
 {
 	if(rr)
 		locking.release();
@@ -92,7 +92,7 @@ void forward::release(MappedRegistry *rr)
 
 bool forward::isActive(int id)
 {
-	bool active = false;
+	bool activeflag = false;
 
 	linked_pointer<regmap> mp;
 	int path = id % INDEX_SIZE;
@@ -100,13 +100,13 @@ bool forward::isActive(int id)
 	mp = index[path];
 	while(is(mp)) {
 		if(mp->active) {
-			active = true;
+			activeflag = true;
 			break;
 		}
 		mp.next();
 	}
 	locking.release();
-	return active;
+	return activeflag;
 }
 
 MappedRegistry *forward::find(int id)
@@ -320,7 +320,7 @@ void forward::activating(MappedRegistry *rr)
 	}
 }
 
-bool forward::publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body)
+bool forward::publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expiration, const char *body)
 {
 	char uri_to[MAX_URI_SIZE];
 	char contact[MAX_URI_SIZE];
@@ -339,7 +339,7 @@ bool forward::publish(MappedRegistry *rr, const char *msgtype, const char *event
 	debug(3, "publishing %s with %s", contact, server);
 
 	eXosip_lock();
-	eXosip_build_publish(&msg, uri_to, contact, NULL, event, expires, msgtype, body);
+	eXosip_build_publish(&msg, uri_to, contact, NULL, event, expiration, msgtype, body);
 	if(msg) 
 		eXosip_publish(msg, uri_to);
 	eXosip_unlock();
@@ -406,7 +406,7 @@ bool forward::authenticate(int id, const char *remote_realm)
 	else {
 		debug(3, "cannot authorize %s for %s", rr->userid, remote_realm);
 		service::release(node);
-		release(rr);
+		releaseMap(rr);
 		remove(id);
 		return false;
 	}
@@ -415,7 +415,7 @@ bool forward::authenticate(int id, const char *remote_realm)
 	eXosip_automatic_action();
 	eXosip_unlock();
 	service::release(node);
-	release(rr);
+	releaseMap(rr);
 	return true;
 }
 

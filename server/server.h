@@ -429,8 +429,8 @@ public:
 	static void release(MappedCall *map);
 	static MappedCall *get(void);
 	static bool forward(stack::call *cr);
-	static void inviteRemote(stack::session *session, const char *uri, const char *digest = NULL);
-	static void inviteLocal(stack::session *session, registry::mapped *rr, destination_t dest);
+	static int inviteRemote(stack::session *session, const char *uri, const char *digest = NULL);
+	static int inviteLocal(stack::session *session, registry::mapped *rr, destination_t dest);
 	
 	inline static timeout_t ringTimeout(void)
 		{return stack::sip.ring_timer;};

@@ -108,7 +108,7 @@ public:
 			LinkedObject *targets;	// active registrations (can be multiple)
 			LinkedObject *routes;	// active route records
 		} internal;
-	};
+	} source;
 
 	inline bool isUser(void) const
 		{return (type == USER);};
