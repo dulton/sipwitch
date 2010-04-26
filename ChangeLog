@@ -1,3 +1,7 @@
+From version 0.8.0 to 0.8.1
+- code cleanup and opensolaris support
+- now requires ucommon 2.1.2 or later
+
 From version 0.7.5 to 0.8.0
 - uses ucommon 2.1
 - added notify plugin to use libnotify
