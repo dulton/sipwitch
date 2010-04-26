@@ -57,12 +57,10 @@ OrderedObject(&histindex)
 
 void history::set(errlevel_t lid, const char *msg)
 {
-	Time now;
-	char buf[20];
+	DateTimeString now(DateTimeString::TIME);
 
-	now.get(buf);
 	snprintf(text, sizeof(text), "%s %d %s",
-		buf, (int)lid, msg);
+		(const char *)now, (int)lid, msg);
 
 	char *cp = strchr(text, '\n');
 	if(cp)
