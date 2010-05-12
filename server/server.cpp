@@ -1113,6 +1113,34 @@ void server::run(const char *user)
 			continue;
 		}
 
+		if(!stricmp(argv[0], "ifup")) {
+			if(argc != 2)
+				goto invalid;
+			process::printlog("server reloading %s\n", (const char *)logtime);
+            reload(user);
+            continue;
+		}
+	
+		if(!stricmp(argv[0], "ifdown")) {
+			if(argc != 2)
+				goto invalid;
+			process::printlog("server reloading %s\n", (const char *)logtime);
+            reload(user);
+            continue;
+		}
+
+		if(!stricmp(argv[0], "ifdrop")) {
+			if(argc != 2)
+				goto invalid;
+            continue;
+		}
+
+		if(!stricmp(argv[0], "drop")) {
+			if(argc != 2)
+				goto invalid;
+            continue;
+		}
+
 		if(!stricmp(argv[0], "trace")) {
 			if(argc != 2)
 				goto invalid;

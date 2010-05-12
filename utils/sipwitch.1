@@ -51,11 +51,23 @@ set concurrency level of the daemon.  See pthread_setconcurrency.
 \fBdown\fR
 stop and shutdown the running sipwitch daemon.
 .TP
+\fBdrop\fR \fIuser|callid\fR
+drop specified calls either by a user or call id.
+.TP
 \fBdump\fR
 dump server configuration to stdout.
 .TP
 \fBhistory\fR \fI[size]\fR
 set size or dump recent error log history.
+.TP
+\fBifdown\fR \fIiface\fR
+notify server interface went down.
+.TP
+\fBifdrop\fR \fIiface\fR
+notify server to drop calls on specified interface.
+.TP
+\fBifup\fR \fIiface\fR
+notify server interface came up.
 .TP
 \fBmessage\fR \fIext\fR \fI``Text''\fR
 send a short text message to a registered extension.

@@ -511,6 +511,32 @@ static void state(char **argv)
 	command(argv, 10);
 }
 
+static void iface(char **argv)
+{
+	if(!argv[1]) {
+		fprintf(stderr, "*** sipwitch: %s: interface missing\n", *argv);
+		exit(-1);
+	}
+	if(argv[2]) {
+		fprintf(stderr, "*** sipwitch: %s: too many arguments\n", *argv);
+		exit(-1);
+	}
+	command(argv, 20);
+}
+
+static void drop(char **argv)
+{
+	if(!argv[1]) {
+		fprintf(stderr, "*** sipwitch: drop: user or callid missing\n");
+		exit(-1);
+	}
+	if(argv[2]) {
+		fprintf(stderr, "*** sipwitch: drop: too many arguments\n");
+		exit(-1);
+	}
+	command(argv, 10);
+}
+
 static void release(char **argv)
 {
 	if(!argv[1]) {
@@ -575,13 +601,13 @@ extern "C" int main(int argc, char **argv)
 		usage();
 
 	++argv;
-	if(String::equal(*argv, "version") || String::equal(*argv, "-version") || String::equal(*argv, "--version"))
+	if(eq(*argv, "version") || eq(*argv, "-version") || eq(*argv, "--version"))
 		version();
-	else if(String::equal(*argv, "help") || String::equal(*argv, "-help") || String::equal(*argv, "--help"))
+	else if(eq(*argv, "help") || eq(*argv, "-help") || eq(*argv, "--help"))
 		usage();
-	else if(String::equal(*argv, "reload") || String::equal(*argv, "check") || String::equal(*argv, "snapshot") || String::equal(*argv, "dump") || String::equal(*argv, "siplog"))
+	else if(eq(*argv, "reload") || eq(*argv, "check") || eq(*argv, "snapshot") || eq(*argv, "dump") || eq(*argv, "siplog"))
 		single(argv, 30);
-	else if(String::equal(*argv, "history")) {
+	else if(eq(*argv, "history")) {
 		if(argc == 2)
 			single(argv, 30);
 		else
@@ -613,6 +639,8 @@ extern "C" int main(int argc, char **argv)
 		state(argv);
 	else if(String::equal(*argv, "status"))
 		status(argv);
+	else if(eq(*argv, "ifdown") || eq(*argv, "ifup") || eq(*argv, "ifdrop"))
+		iface(argv);
 	if(!argv[1])
 		fprintf(stderr, "use: sipwitch command [arguments...]\n");
 	else
