@@ -67,6 +67,7 @@ cidr(acl, addr, id)
 	unsigned bits = getMask();
 	char buf[256];
 
+	active = true;
 	String::set(netname, sizeof(netname), id);
 	memset(&us.dest, 0, sizeof(us.dest));
 	us.in.sin_family = family;

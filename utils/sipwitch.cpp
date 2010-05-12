@@ -433,7 +433,6 @@ static void usage(void)
 		"  history [bufsize]       Set buffer or dump error log\n"
 		"  ifup <iface>            Notify interface came up\n"
 		"  ifdown <iface>          Notify interface went down\n"
-		"  ifdrop <iface>          Drop all calls from interface\n"
 		"  message <ext> <text>    Send text message to extension\n"
 		"  period <interval>       Collect periodic statistics\n"
 		"  pstats                  Dump periodic statistics\n"
@@ -643,7 +642,7 @@ extern "C" int main(int argc, char **argv)
 		state(argv);
 	else if(String::equal(*argv, "status"))
 		status(argv);
-	else if(eq(*argv, "ifdown") || eq(*argv, "ifup") || eq(*argv, "ifdrop"))
+	else if(eq(*argv, "ifdown") || eq(*argv, "ifup"))
 		iface(argv);
 	if(!argv[1])
 		fprintf(stderr, "use: sipwitch command [arguments...]\n");

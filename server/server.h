@@ -389,6 +389,9 @@ private:
 public:
 	class __LOCAL subnet : public cidr
 	{
+	private:
+		bool active;
+
 	public:
 		subnet(cidr::policy **acl, const char *rule, const char *name);
 
@@ -396,6 +399,18 @@ public:
 
 		const char *getId(void)
 			{return netname;};
+
+		inline operator bool()
+			{return active;};
+
+		inline bool operator!()
+			{return !active;};
+
+		inline void up(void)
+			{active = true;};
+
+		inline void down(void)
+			{active = false;};
 
 	private:
 		char netname[MAX_NETWORK_SIZE];
