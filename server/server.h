@@ -390,6 +390,7 @@ public:
 	class __LOCAL subnet : public cidr
 	{
 	private:
+		char netname[MAX_NETWORK_SIZE];
 		bool active;
 
 	public:
@@ -412,8 +413,8 @@ public:
 		inline void down(void)
 			{active = false;};
 
-	private:
-		char netname[MAX_NETWORK_SIZE];
+		inline bool offline(void)
+			{return active == false;};
 	};
 
 	stack();

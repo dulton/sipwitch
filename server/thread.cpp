@@ -292,6 +292,11 @@ void thread::invite(void)
 		call->failed(this, session);
 		return;
 	}
+
+	if(access && access->offline()) {
+		send_reply(SIP_TEMPORARILY_UNAVAILABLE);
+		call->failed(this, session);
+	}
 	
 	if(extension)
 		snprintf(fromext, sizeof(fromext), "%u", extension);
