@@ -141,12 +141,15 @@ add:
 		char domain[256];
 		char prefix[32];
 		char range[32];
+		char uuid[64];
+
 		snprintf(domain, sizeof(domain), "domain=%s", sip_domain);
 		snprintf(prefix, sizeof(prefix), "prefix=%u", sip_prefix);
 		snprintf(range, sizeof(range), "range=%u", sip_range);
+		snprintf(uuid, sizeof(uuid), "uuid=%s", session_uuid);
 		ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, avifamily,
 			(AvahiPublishFlags)0, name, protocol, NULL, NULL, sip_port, 
-			"type=sipwitch", domain, prefix, range, NULL);
+			"type=sipwitch", domain, prefix, range, uuid, NULL);
 	}
 	else
 		ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, avifamily,

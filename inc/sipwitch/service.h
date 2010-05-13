@@ -151,6 +151,7 @@ public:
 		static const char *sip_domain;
 		static const char *sip_realm;
 		static unsigned sip_prefix, sip_range;
+		static char session_uuid[40];
 
         callback(int level = 0);
         virtual ~callback();

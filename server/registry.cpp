@@ -543,6 +543,7 @@ void registry::reload(service *cfg)
 #endif
 
 	if(!String::equal(realm, oldrealm)) {
+		process::uuid(session_uuid, sizeof(session_uuid), realm);
 		process::errlog(INFO, "new realm %s", realm);
 		digest::clear();
 	} else if(!String::equal(digest, olddigest)) {
