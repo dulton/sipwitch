@@ -4,7 +4,10 @@ set -e
 
 FIFO="/var/run/sipwitch/control"
 
+if [ ! -z "$ADDRFAM" ] && [ "$ADDRFAM" != inet ] && [ "$ADDRFAM" != inet6 ]; then
+		exit 0 ; fi
+
 if [ -p $FIFO ] ; then
 	echo "ifup $IFACE" >$FIFO ; fi
 
-
+exit 0
