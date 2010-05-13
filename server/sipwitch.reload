@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -e
+
+FIFO="/var/run/sipwitch/control"
+
+case "$1" in
+up)
+	IFACE="$2"
+	CNTRL="ifup"
+	;;
+down)
+	IFACE="$2"
+	CNTRL="ifdown"
+	;;
+esac
+
+case "$2" in
+up)
+	IFACE="$1"
+	CNTRL="ifup"
+	;;
+down)
+	IFACE="$1"
+	CNTRL="ifdown"
+	;;
+esac
+
+if [ -p $FIFO ] ; then
+	echo "$CTRL $IFACE" >$FIFO ; fi
+
+

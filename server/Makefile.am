@@ -11,7 +11,8 @@
 MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@ @LIBNOTIFY_CFLAGS@
 LDADD = ../common/libsipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ @DAEMON_LIBS@
-EXTRA_DIST = *.xml *-example *.conf *.log *.defaults *.init *.cron *.8
+EXTRA_DIST = *.xml *-example *.conf *.log *.defaults *.init *.cron *.8 \
+	sipwitch.ifup sipwitch.ifdown sipwitch.reload
 EXTRA_LTLIBRARIES =
 
 man_MANS = sipw.8
@@ -67,6 +68,12 @@ install-exec-local:
 		$(mkinstalldirs) $(DESTDIR)/$(sysconfdir)/default ; \
 		$(INSTALL_DATA) sipwitch.defaults $(DESTDIR)/$(sysconfdir)/default/sipwitch ; \
 	fi
+	if test "@NETWORK_UP@" != "none" ; then $(mkinstalldirs) $(DESTDIR)/@NETWORK_UP@ ; fi
+	if test "@NETWORK_UP@" != "none" ; then $(INSTALL) -m 0755 sipwitch.ifup $(DESTDIR)/@NETWORK_UP@/sipwitch ; fi
+	if test "@NETWORK_DOWN@" != "none" ; then $(mkinstalldirs) $(DESTDIR)/@NETWORK_DOWN@ ; fi
+	if test "@NETWORK_DOWN@" != "none" ; then $(INSTALL) -m 0755 sipwitch.ifdown $(DESTDIR)/@NETWORK_DOWN@/sipwitch ; fi
+	if test "@NETWORK_RELOAD@" != "none" ; then $(mkinstalldirs) $(DESTDIR)/@NETWORK_RELOAD@ ; fi
+	if test "@NETWORK_RELOAD@" != "none" ; then $(INSTALL) -m 0755 sipwitch.reload $(DESTDIR)/@NETWORK_RELOAD@/90sipwitch ; fi
 	if test "@INITRDDIR@" != "none" ; then $(mkinstalldirs) $(DESTDIR)/@INITRDDIR@ ; fi
 	if test "@INITRDDIR@" != "none" ; then $(INSTALL) -m 0755 sipwitch.init $(DESTDIR)/@INITRDDIR@/sipwitch ; fi
 	$(mkinstalldirs) $(DESTDIR)/$(sysconfdir)/cron.hourly 

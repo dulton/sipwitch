@@ -86,6 +86,21 @@ AC_ARG_WITH(initrddir,
 		INITRDDIR="$with_initrddir"
 ])
 
+# define network script paths
+AC_ARG_WITH(netscripting,
+	AC_HELP_STRING([--with-netscripting=type], [specify scripting type]),[
+		case "$with_netscripting" in
+		debian)
+			NETWORK_UP="/etc/network/if-up.d"
+			NETWORK_DOWN="/etc/network/if-down.d"
+			;;
+		nm|NetworkManager|nmanager)
+			NETWORK_RELOAD="/etc/NetworkManager/dispatcher.d"
+			;;
+		esac
+])
+
+
 # and cgi bin path
 AC_ARG_WITH(cgibindir,
 	AC_HELP_STRING([--with-cgibindir=path], [specific cgi-bin path]), [
@@ -327,6 +342,15 @@ AC_SUBST_DIR(default_incpath, includedir)
 AC_SUBST_DIR(default_libexec, libexecdir)
 AC_SUBST_DIR(prefix_libdir, libdir)
 
+if test -z "$NETWORK_UP" ; then
+	NETWORK_UP="none" ; fi
+
+if test -z "$NETWORK_DOWN" ; then
+	NETWORK_DOWN="none" ; fi
+
+if test -z "$NETWORK_RELOAD" ; then
+	NETWORK_RELOAD="none" ; fi
+
 if test -z "$INITRDDIR" ; then
 	INITRDDIR="$default_cfgpath/init.d" ; fi
 
@@ -394,6 +418,9 @@ AC_SUBST(cgibindir)
 AC_SUBST(plugindir)
 AC_SUBST(LT_VERSION)
 AC_SUBST(INITRDDIR)
+AC_SUBST(NETWORK_UP)
+AC_SUBST(NETWORK_DOWN)
+AC_SUBST(NETWORK_RELOAD)
 AC_SUBST(UCOMMON_REQUIRES)
 AC_SUBST(UCOMMON_MODEL)
 AC_SUBST(UCOMMON_CLINK)

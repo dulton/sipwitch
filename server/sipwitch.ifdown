@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+FIFO="/var/run/sipwitch/control"
+
+if [ -p $FIFO ] ; then
+	echo "ifdown $IFACE" >$FIFO ; fi
+
+
