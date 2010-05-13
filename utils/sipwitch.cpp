@@ -616,34 +616,36 @@ extern "C" int main(int argc, char **argv)
 		else
 			level(argv, 10);
 	}
-	else if(String::equal(*argv, "down") || String::equal(*argv, "restart") || String::equal(*argv, "abort"))
+	else if(eq(*argv, "down") || eq(*argv, "restart") || eq(*argv, "abort"))
 		single(argv, 0);
-	else if(String::equal(*argv, "verbose") || String::equal(*argv, "concurrency") || String::equal(*argv, "trace"))
+	else if(eq(*argv, "verbose") || eq(*argv, "concurrency") || eq(*argv, "trace"))
 		level(argv, 10);
-	else if(String::equal(*argv, "message"))
+	else if(eq(*argv, "message"))
 		message(argv);
-	else if(String::equal(*argv, "registry"))
+	else if(eq(*argv, "registry"))
 		registry(argv);
-	else if(String::equal(*argv, "stats"))
+	else if(eq(*argv, "stats"))
 		dumpstats(argv);
-	else if(String::equal(*argv, "calls"))
+	else if(eq(*argv, "calls"))
 		calls(argv);
-	else if(String::equal(*argv, "pstats"))
+	else if(eq(*argv, "pstats"))
 		periodic(argv);
-	else if(String::equal(*argv, "address"))
+	else if(eq(*argv, "address"))
 		address(argv);
-	else if(String::equal(*argv, "period"))
+	else if(eq(*argv, "period"))
 		period(argv);
-	else if(String::equal(*argv, "activate"))
+	else if(eq(*argv, "activate"))
 		activate(argv);
-	else if(String::equal(*argv, "release"))
+	else if(eq(*argv, "release"))
 		release(argv);
-	else if(String::equal(*argv, "state"))
+	else if(eq(*argv, "state"))
 		state(argv);
-	else if(String::equal(*argv, "status"))
+	else if(eq(*argv, "status"))
 		status(argv);
 	else if(eq(*argv, "ifdown") || eq(*argv, "ifup"))
 		iface(argv);
+	else if(eq(*argv, "drop"))
+		drop(argv);
 	if(!argv[1])
 		fprintf(stderr, "use: sipwitch command [arguments...]\n");
 	else
