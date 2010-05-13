@@ -149,6 +149,8 @@ public:
 		static int sip_family;
 		static int sip_tlsmode;
 		static const char *sip_domain;
+		static const char *sip_realm;
+		static unsigned sip_prefix, sip_range;
 
         callback(int level = 0);
         virtual ~callback();

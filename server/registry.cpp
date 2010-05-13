@@ -553,6 +553,10 @@ void registry::reload(service *cfg)
 	oldrealm = realm;
 	olddigest = digest;
 
+	sip_realm = realm;
+	sip_prefix = prefix;
+	sip_range = range;
+
 	if(isConfigured())
 		return;
 

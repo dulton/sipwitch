@@ -137,8 +137,21 @@ add:
         goto failed;
 
 	process::errlog(INFO, "zeroconf adding sip on port %d", sip_port);
-	ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC,
-		avifamily, (AvahiPublishFlags)0, name, protocol, NULL, NULL, sip_port, NULL);
+	if(sip_domain) {
+		char domain[256];
+		char prefix[32];
+		char range[32];
+		snprintf(domain, sizeof(domain), "domain=%s", sip_domain);
+		snprintf(prefix, sizeof(prefix), "prefix=%u", sip_prefix);
+		snprintf(range, sizeof(range), "range=%u", sip_range);
+		ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, avifamily,
+			(AvahiPublishFlags)0, name, protocol, NULL, NULL, sip_port, 
+			"type=sipwitch", domain, prefix, range, NULL);
+	}
+	else
+		ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, avifamily,
+			(AvahiPublishFlags)0, name, protocol, NULL, NULL, sip_port, 
+			"type=sipwitch", NULL);
 
 	if(ret < 0)
 		process::errlog(ERRLOG, "zeroconf %s failed; error=%s", 
