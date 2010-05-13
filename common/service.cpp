@@ -164,6 +164,10 @@ void service::callback::reload(service *keys)
 {
 }
 
+void service::callback::publish(service *keys)
+{
+}
+
 void service::callback::start(service *keys)
 {
 }
@@ -884,6 +888,15 @@ void service::commit(const char *user)
 	orig = cfg;
 	cfg = this;
 	locking.commit();
+
+	rl = 0;
+	while(rl < RUNLEVELS) {
+		cb = callback::runlevels[rl++];
+		while(is(cb)) {
+			cb->publish(this);
+			cb.next();
+		}
+	}
 
 	// let short-term volatile references settle before we delete it...
 	if(orig) {

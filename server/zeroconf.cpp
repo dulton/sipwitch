@@ -48,6 +48,7 @@ private:
 	void start(service *cfg);
 	void stop(service *cfg);
 	void reload(service *cfg);
+	void publish(service *cfg);
 
     AvahiThreadedPoll *poller;
     AvahiClient *client;
@@ -80,6 +81,7 @@ modules::generic()
 	protocol = "_sip._udp";
 	poller = NULL;
 	client = NULL;
+	group = NULL;
 	name = avahi_strdup("sipwitch");
 	process::errlog(ERRLOG, "zeroconf plugin using avahi");
 }
@@ -201,17 +203,43 @@ void zeroconf::start(service *cfg)
 
 void zeroconf::reload(service *cfg)
 {
-	assert(cfg != NULL);
-
-	static bool started = false;
-
-	if(started)
-		return;
-
-	started = true;
-
 	if(sip_protocol == IPPROTO_TCP)
         protocol = "_sip._tcp";
+}
+
+void zeroconf::publish(service *cfg)
+{
+	assert(cfg != NULL);
+
+	char domain[256];
+	char prefix[32];
+	char range[32];
+	char uuid[64];
+
+	static bool started = false;
+	AvahiProtocol avifamily = AVAHI_PROTO_UNSPEC;
+	int ret = 0;
+
+	if(started && group && sip_domain) {
+		snprintf(domain, sizeof(domain), "domain=%s", sip_domain);
+		snprintf(prefix, sizeof(prefix), "prefix=%u", sip_prefix);
+		snprintf(range, sizeof(range), "range=%u", sip_range);
+		snprintf(uuid, sizeof(uuid), "uuid=%s", session_uuid);
+		ret = avahi_entry_group_update_service_txt(group, AVAHI_IF_UNSPEC, avifamily,
+			(AvahiPublishFlags)0, name, protocol, NULL,  
+			"type=sipwitch", domain, prefix, range, uuid, NULL);
+	}
+	else if(started && group) {
+		ret = avahi_entry_group_update_service_txt(group, AVAHI_IF_UNSPEC, avifamily,
+			(AvahiPublishFlags)0, name, protocol, NULL, 
+			"type=sipwitch", NULL);
+	}
+
+	if(ret < 0)
+		process::errlog(ERRLOG, "zeroconf %s failed; error=%s", 
+			protocol, avahi_strerror(ret));
+
+	started = true;
 }
 
 #else

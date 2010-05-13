@@ -175,6 +175,7 @@ public:
 		virtual void start(service *cfg);
 		virtual void stop(service *cfg);
 		virtual void reload(service *cfg);
+		virtual void publish(service *cfg);
     };
     
 	service(const char *name, size_t s = 0);
