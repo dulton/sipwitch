@@ -201,13 +201,13 @@ void server::logging(MappedRegistry *rr, const char *reason)
 	process::printlog("%s %s %s\n", reason, rr->userid, (const char *)dt); 
 }
 
-bool server::publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body)
+bool server::announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body)
 {
 	linked_pointer<modules::sipwitch> cb = getModules();
 	bool rtn = false;
 
 	while(!rtn && is(cb)) {
-		rtn = cb->publish(rr, msgtype, event, expires, body);
+		rtn = cb->announce(rr, msgtype, event, expires, body);
 		cb.next();
 	}
 	return rtn;

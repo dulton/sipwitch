@@ -49,7 +49,7 @@ void modules::sipwitch::period(long slice)
 {
 }
 
-bool modules::sipwitch::publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *msgbody)
+bool modules::sipwitch::announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *msgbody)
 {
 	return false;
 }

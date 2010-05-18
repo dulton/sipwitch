@@ -506,7 +506,7 @@ public:
 	static caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
 	static unsigned allocate(void);
 
-	static bool publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body);
+	static bool announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body);
 	static void activate(MappedRegistry *rr);
 	static void expire(MappedRegistry *rr);
 	static void logging(MappedRegistry *rr, const char *reason);
@@ -550,7 +550,7 @@ public:
 
 	static void automatic(void);
 	static void update(const char *userid);
-	static int publish(const char *to, const char *reply, const char *from, caddr_t body, size_t size, const char *msgtype, const char *digest = NULL);
+	static int deliver(const char *to, const char *reply, const char *from, caddr_t body, size_t size, const char *msgtype, const char *digest = NULL);
 	static int system(const char *to, const char *message);
 };
 

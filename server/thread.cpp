@@ -99,7 +99,7 @@ void thread::publish(void)
 		content = NULL;
 
 	// publish event to forwarders...
-	server::publish(reginfo, content, event, expires, tmp);
+	server::announce(reginfo, content, event, expires, tmp);
 
 	// if not presence event, then skip local parsing...
 	if(event && stricmp(event, "presence")) {
@@ -257,7 +257,7 @@ void thread::message(void)
 		send_reply(SIP_BAD_REQUEST);
 		return;
 	}
-	send_reply(messages::publish(target, sysid, fromhdr, body->body, atoi(msglen), msgtype, digest));
+	send_reply(messages::deliver(target, sysid, fromhdr, body->body, atoi(msglen), msgtype, digest));
 	digest::release(hash);
 	osip_free(msglen);
 }

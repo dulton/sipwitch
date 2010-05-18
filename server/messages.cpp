@@ -143,7 +143,7 @@ void messages::update(const char *uid)
 	msglock.unlock();
 }
 
-int messages::publish(const char *to, const char *reply, const char *from, caddr_t text, size_t len, const char *msgtype, const char *digest)
+int messages::deliver(const char *to, const char *reply, const char *from, caddr_t text, size_t len, const char *msgtype, const char *digest)
 {
 	message *msg;
 
@@ -206,7 +206,7 @@ int messages::system(const char *to, const char *text)
 		snprintf(from, sizeof(from), "<%s:%s@%s:%u>", 
 			scheme, sysid, host, port);
 
-	return publish(to, sysid, from, (caddr_t)text, strlen(text), "text/plain");
+	return deliver(to, sysid, from, (caddr_t)text, strlen(text), "text/plain");
 }
 
 int messages::remote(const char *to, message *msg, const char *digest)

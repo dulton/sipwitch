@@ -62,7 +62,7 @@ private:
 	void activating(MappedRegistry *rr);
 	void expiring(MappedRegistry *rr);
 	void registration(int id, modules::regmode_t mode);
-	bool publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body);
+	bool announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body);
 	bool authenticate(int id, const char *remote_realm);
 	char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
 };
@@ -320,7 +320,7 @@ void forward::activating(MappedRegistry *rr)
 	}
 }
 
-bool forward::publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expiration, const char *body)
+bool forward::announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expiration, const char *body)
 {
 	char uri_to[MAX_URI_SIZE];
 	char contact[MAX_URI_SIZE];

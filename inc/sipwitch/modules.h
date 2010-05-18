@@ -52,7 +52,7 @@ public:
 
 	public:
 		virtual void period(long slice);
-		virtual bool publish(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *msgbody);
+		virtual bool announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *msgbody);
 		virtual void activating(MappedRegistry *rr);
 		virtual void expiring(MappedRegistry *rr);
 		virtual void registration(int id, regmode_t reg);
