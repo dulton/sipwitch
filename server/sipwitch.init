@@ -1,8 +1,8 @@
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:				sipwitch
-# Required-Start:		$named $network $syslog
-# Required-Stop:		$named $network $syslog
+# Required-Start:		$named $network $syslog $remote_fs
+# Required-Stop:		$named $network $syslog $remote_fs
 # Default-Start:		2 3 4 5
 # Default-Stop:			0 1 6
 # Short-Description:	Start and stop sipwitch service daemon.
