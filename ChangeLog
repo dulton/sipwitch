@@ -1,3 +1,6 @@
+From version 0.8.3 to 0.8.4
+- some minor adjustments to assure prack events
+
 From version 0.8.2 to 0.8.3
 - new server messages to drop calls and notify interface state changes
 - publish domain routing in zeroconf for future automatic route detection
