@@ -441,7 +441,8 @@ unconnected:
 		eXosip_lock();
 		eXosip_call_build_request(did, "INVITE", &reply);
 		if(reply != NULL) {
-			osip_message_set_supported(reply, "100rel,replaces");
+			if(stack::sip_protocol == IPPROTO_UDP)
+				osip_message_set_supported(reply, "100rel,replaces");
 			if(body && body->body) {
 				osip_message_set_body(reply, body->body, strlen(body->body));
 				osip_message_set_content_type(reply, "application/sdp");
@@ -589,7 +590,8 @@ void stack::call::relay(thread *thread, session *s)
 	eXosip_lock();
 	eXosip_call_build_answer(tid, status, &reply);
 	if(reply) {
-		osip_message_set_require(reply, "100rel");
+		if(stack::sip_protocol == IPPROTO_UDP)
+			osip_message_set_require(reply, "100rel");
 		osip_message_set_header(reply, "RSeq", "1");
 		if(body && body->body) {
 			osip_message_set_body(reply, body->body, strlen(body->body));

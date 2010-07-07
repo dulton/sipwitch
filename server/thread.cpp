@@ -1070,7 +1070,8 @@ void thread::send_reply(int error)
 	case CALL:
 		eXosip_call_build_answer(sevent->tid, error, &reply);
 		if(reply != NULL) {
-			osip_message_set_require(reply, "100rel");
+			if(stack::sip_protocol == IPPROTO_UDP)
+				osip_message_set_require(reply, "100rel");
 			stack::siplog(reply);
 			eXosip_call_send_answer(sevent->tid, error, reply);
 		}
@@ -1081,7 +1082,8 @@ void thread::send_reply(int error)
 	case MESSAGE:
 		eXosip_message_build_answer(sevent->tid, error, &reply);
 		if(reply != NULL) {
-			osip_message_set_require(reply, "100rel");
+			if(stack::sip_protocol == IPPROTO_UDP)
+				osip_message_set_require(reply, "100rel");
 			stack::siplog(reply);
 			eXosip_message_send_answer(sevent->tid, error, reply);
 		}
