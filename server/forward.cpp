@@ -309,6 +309,7 @@ void forward::activating(MappedRegistry *rr)
 		eXosip_lock();
 		rr->rid = eXosip_register_build_initial_register(uri, reg, contact, expires, &msg);
 		if(msg) {
+			osip_message_set_supported(msg, "100rel");
 			osip_message_set_header(msg, "Event", "Registration");
 			osip_message_set_header(msg, "Allow-Events", "presence");
 			eXosip_register_send_register(rr->rid, msg);
