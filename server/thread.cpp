@@ -733,6 +733,7 @@ bool thread::authorize(void)
 	request_address.set(uri_host, local_port);
 
 	if(request_address.getAddr() == NULL) {
+		process::errlog(ERRLOG, "unresolvable request: %s", uri_host);	
 		error = SIP_ADDRESS_INCOMPLETE;
 		goto invalid;
 	}
