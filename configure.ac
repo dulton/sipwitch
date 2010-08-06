@@ -230,7 +230,10 @@ AC_CHECK_HEADER(eXosip2/eXosip.h,,[
 	AC_ERROR("libeXosip2 must be installed or build --disable-sipwitch-server")
 ])
 AC_EGREP_HEADER(EXOSIP_OPT_DONT_SEND_101, eXosip2/eX_setup.h,[
-	AC_DEFINE(EXOSIP2_OPTION_SEND_101, 1, [new option])
+	AC_DEFINE(EXOSIP2_OPTION_SEND_101, 1, [new option 6])
+])
+AC_EGREP_HEADER(EXOSIP_OPT_USE_RPORT, eXosip2/eX_setup.h,[
+	AC_DEFINE(EXOSIP2_OPTION_RPORT, 1, [new option 7])
 ])
 PKG_CHECK_MODULES(LIBOSIP2, libosip2 >= 3.0.0)
 AC_DEFINE(OSIP2_LIST_PTR, [&], [define pointer mode])
