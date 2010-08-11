@@ -439,7 +439,7 @@ bool process::state(const char *state)
 FILE *process::output(const char *id)
 {
 #ifdef	_MSWINDOWS_
-	fopen(_STR(path("controls") + "/" + id + ".out", "w"));
+	fopen(_STR(path("controls") + "/" + id + ".out"), "w");
 #else
 	if(replytarget && isdigit(*replytarget))
 		return fopen(path("reply") + str((Unsigned)atol(replytarget)), "w");

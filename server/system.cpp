@@ -170,9 +170,9 @@ extern int main(int argc, char **argv)
     argv[0] = (char *)"sipwitch";
 
 #ifdef _MSWINDOWS_
-	rundir = strdup(str(args.getenv("APPDATA")) + "/sipwitch"); 
+	rundir = strdup(str(process::args.getenv("APPDATA")) + "/sipwitch"); 
 	prefix = "C:\\Program Files\\sipwitch";
-	plugins = "C:\\Program Files\\sipwitch\plugins";
+	plugins = "C:\\Program Files\\sipwitch\\plugins";
 	process::set("config", _STR(str(prefix) + "/sipwitch.ini"));
 	process::set("controls", rundir);
 	process::set("control", "\\\\.\\mailslot\\sipwitch_ctrl");
