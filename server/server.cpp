@@ -74,6 +74,7 @@ static bool activating(int argc, char **args)
 unsigned server::uid = 1000;
 const char *server::sipusers = "sipusers";
 const char *server::sipadmin = "wheel";
+shell::logmode_t server::logmode = shell::SYSTEM_LOG;
 
 server::server(const char *id) :
 service(id, PAGING_SIZE)
@@ -1033,37 +1034,58 @@ void server::run(void)
 
 		logtime.set();
 
-        if(!stricmp(cp, "reload")) {
+        if(ieq(cp, "reload")) {
 			process::printlog("server reloading %s\n", (const char *)logtime);
             reload();
             continue;
         }
 
-		if(!stricmp(cp, "check")) {
+		if(ieq(cp, "check")) {
 			if(!check())
 				process::reply("check failed");
 			continue;
 		}
 
-        if(!stricmp(cp, "stop") || !stricmp(cp, "down") || !strcmp(cp, "exit"))
+        if(ieq(cp, "stop") || ieq(cp, "down") || ieq(cp, "exit"))
             break;
 
-		if(!stricmp(cp, "restart")) {
+		if(ieq(cp, "restart")) {
 			exit_code = SIGABRT;
 			break;
 		}
 
-		if(!stricmp(cp, "snapshot")) {
+		if(ieq(cp, "snapshot")) {
 			service::snapshot();
 			continue;
 		}
 
-		if(!stricmp(cp, "dump")) {
+		if(ieq(cp, "dump")) {
 			service::dumpfile();
 			continue;
 		}
 
-		if(!stricmp(cp, "abort")) {
+		if(ieq(cp, "siplog")) {
+			FILE *out = process::output(NULL);
+			if(!out)
+				continue;
+			FILE *log = fopen(process::get("siplogs"), "r");
+			if(!log) {
+				fclose(out);
+				continue;
+			}
+
+			char buf[256];
+
+			while(fgets(buf, sizeof(buf), log) != NULL) {
+				cp = String::strip(buf, " \t\r\n");
+				fprintf(out, "%s\n", cp);
+			} 
+			fclose(out);
+			fclose(log);
+			continue;
+		}
+
+		if(ieq(cp, "abort")) {
 			abort();
 			continue;
 		}
@@ -1077,7 +1099,7 @@ void server::run(void)
 		if(argc < 1)
 			continue;
 
-		if(!stricmp(argv[0], "ifup")) {
+		if(ieq(argv[0], "ifup")) {
 			if(argc != 2)
 				goto invalid;
 			process::printlog("server reloading %s\n", (const char *)logtime);
@@ -1085,7 +1107,7 @@ void server::run(void)
             continue;
 		}
 	
-		if(!stricmp(argv[0], "ifdown")) {
+		if(ieq(argv[0], "ifdown")) {
 			if(argc != 2)
 				goto invalid;
 			process::printlog("server reloading %s\n", (const char *)logtime);
@@ -1093,13 +1115,13 @@ void server::run(void)
             continue;
 		}
 
-		if(!stricmp(argv[0], "drop")) {
+		if(ieq(argv[0], "drop")) {
 			if(argc != 2)
 				goto invalid;
             continue;
 		}
 
-		if(!stricmp(argv[0], "trace")) {
+		if(ieq(argv[0], "trace")) {
 			if(argc != 2)
 				goto invalid;
 			if(!stricmp(argv[1], "on"))
@@ -1113,7 +1135,7 @@ void server::run(void)
 			continue;
 		}
 
-		if(!stricmp(argv[0], "uid")) {
+		if(ieq(argv[0], "uid")) {
 			if(argc != 2) {
 invalid:
 				process::reply("invalid argument");
@@ -1125,7 +1147,14 @@ invalid:
 			continue;
 		}
 
-		if(!stricmp(argv[0], "digest")) {
+		if(ieq(argv[0], "verbose")) {
+			if(argc != 2)
+				goto invalid;
+			
+			shell::log("sipwitch", (shell::loglevel_t)(atoi(argv[1])), logmode);			continue;
+		}
+
+		if(ieq(argv[0], "digest")) {
 			if(argc != 3)
 				goto invalid;
 
@@ -1134,7 +1163,7 @@ invalid:
 			continue;
 		}
 
-		if(!stricmp(argv[0], "realm")) {
+		if(ieq(argv[0], "realm")) {
 			if(argc != 2)
 				goto invalid;
 
@@ -1143,7 +1172,7 @@ invalid:
             continue;
 		}
 
-		if(!stricmp(argv[0], "period")) {
+		if(ieq(argv[0], "period")) {
 			if(argc != 2)
 				goto invalid;
 			if(service::period(atol(argv[1]))) 
@@ -1151,7 +1180,7 @@ invalid:
 			continue;
 		}
 
-		if(!stricmp(argv[0], "address")) {
+		if(ieq(argv[0], "address")) {
 			if(argc != 2)
 				goto invalid;
 			state = String::unquote(argv[1], "\"\"\'\'()[]{}");
@@ -1160,7 +1189,7 @@ invalid:
 			continue;
 		}
 
-		if(!stricmp(argv[0], "state")) {
+		if(ieq(argv[0], "state")) {
 			if(argc != 2)
 				goto invalid;
 			state = String::unquote(argv[1], "\"\"\'\'()[]{}");
@@ -1177,14 +1206,14 @@ invalid:
 			continue;
 		}
 
-		if(!stricmp(argv[0], "concurrency")) {
+		if(ieq(argv[0], "concurrency")) {
 			if(argc != 2)
 				goto invalid;
 			Thread::concurrency(atoi(argv[1]));
 			continue;
 		}
 
-		if(!stricmp(argv[0], "message")) {
+		if(ieq(argv[0], "message")) {
 			if(argc != 3)
 				goto invalid;
 			if(messages::system(argv[1], argv[2]) != SIP_OK)
@@ -1192,13 +1221,13 @@ invalid:
 			continue;
 		}
 
-		if(!stricmp(argv[0], "activate")) {
+		if(ieq(argv[0], "activate")) {
 			if(!activating(argc, argv))
 				process::reply("cannot activate");
 			continue;
 		}
 
-		if(!stricmp(argv[0], "release")) {
+		if(ieq(argv[0], "release")) {
 			if(argc != 2)
 				goto invalid;
 			if(!registry::remove(argv[1]))

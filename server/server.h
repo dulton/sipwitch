@@ -478,6 +478,7 @@ private:
 	void dump(FILE *fp);
 
 public:
+	static shell::logmode_t logmode;
 	static unsigned uid;
 	static const char *sipusers;
 	static const char *sipadmin;

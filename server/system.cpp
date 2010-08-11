@@ -176,6 +176,8 @@ extern int main(int argc, char **argv)
 	process::set("config", _STR(str(prefix) + "/sipwitch.ini"));
 	process::set("controls", rundir);
 	process::set("control", "\\\\.\\mailslot\\sipwitch_ctrl");
+	process::set("logfiles", _STR(str(prefix) + "/logs"));
+	process::set("siplogs", _STR(str(prefix) + "/logs/siptrace.log"));
 	process::set("logfile", _STR(str(prefix) + "/logs/sipwitch.log"));
 	process::set("calls", _STR(str(prefix) + "/logs/sipwitch.calls"));
 	process::set("stats", _STR(str(prefix) + "/logs/sipwitch.stats"));
@@ -190,6 +192,8 @@ extern int main(int argc, char **argv)
 	process::set("controls", DEFAULT_VARPATH "/run/sipwitch");
 	process::set("control", DEFAULT_VARPATH "/run/sipwitch/control");
 	process::set("config", DEFAULT_CFGPATH "/sipwitch.conf");
+	process::set("logfiles", DEFAULT_VARPATH "/log");
+	process::set("siplogs", DEFAULT_VARPATH "/log/siptrace.log");
 	process::set("logfile", DEFAULT_VARPATH "/log/sipwitch.log");
 	process::set("calls", DEFAULT_VARPATH "/log/sipwitch.calls");
 	process::set("stats", DEFAULT_VARPATH "/log/sipwitch.stats");
@@ -218,6 +222,8 @@ extern int main(int argc, char **argv)
 		process::set("config", _STR(str(pwd->pw_dir) + "/.sipwitchrc"));
 		process::set("controls", rundir);
 		process::set("control", _STR(str(rundir) + "/control"));
+		process::set("logfiles", rundir);
+		process::set("siplogs", _STR(str(rundir) + "/siplogs"));
 		process::set("logfile", _STR(str(rundir) + "/logfile"));
 		process::set("calls", _STR(str(rundir) + "/calls"));
 		process::set("stats", _STR(str(rundir) + "/stats"));
@@ -401,10 +407,10 @@ extern int main(int argc, char **argv)
     // daemonify process....
     if(daemon) {
         process::args.detach();
-        shell::log("sipwitch", level, shell::CONSOLE_LOG);
-    }
-    else
-        shell::log("sipwitch", level, shell::SYSTEM_LOG);
+		server::logmode = shell::CONSOLE_LOG;
+	}
+
+    shell::log("sipwitch", level, server::logmode);
 
     if(!process::attach())
 		shell::errexit(1, "*** sipwitch: %s\n", 

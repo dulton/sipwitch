@@ -289,7 +289,6 @@ void stack::enableDumping(void)
 void stack::siplog(osip_message_t *msg)
 {
     fsys_t log;
-	char buf[128];
 	char *text = NULL;
 	size_t tlen;
 
@@ -298,11 +297,7 @@ void stack::siplog(osip_message_t *msg)
 
 	osip_message_to_str(msg, &text, &tlen);
 	if(text) {
-		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/sipdump.log");
-		fsys::create(log, _STR(process::path("logfiles") + "/sipdump.log"), fsys::ACCESS_APPEND, 0660);
-		if(!is(log))
-			fsys::create(log, _STR(process::path("controls") + "/sipdump.log"), fsys::ACCESS_APPEND, 0660);
-
+		fsys::create(log, process::get("siplogs"), fsys::ACCESS_APPEND, 0660);	
 		if(is(log)) {
 			Mutex::protect(&stack::sip.dumping);
 			fsys::write(log, text, tlen);
