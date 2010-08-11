@@ -439,11 +439,15 @@ bool process::state(const char *state)
 FILE *process::output(const char *id)
 {
 #ifdef	_MSWINDOWS_
+	if(!id)
+		return NULL;
+
 	fopen(_STR(path("controls") + "/" + id + ".out"), "w");
 #else
 	if(replytarget && isdigit(*replytarget))
 		return fopen(path("reply") + str((Unsigned)atol(replytarget)), "w");
-	printf("PATH IS %s\n", _STR(path("controls") + "/" + id));
+	if(!id)
+		return NULL;
 	return fopen(_STR(path("controls") + "/" + id), "w");
 #endif
 }
