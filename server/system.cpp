@@ -116,22 +116,21 @@ static void versioninfo(void)
 
 namespace SIPWITCH_NAMESPACE {
 
-static void up(void)
-{
-	server::reload();
-	server::startup();
+	static void up(void)
+	{
+		server::reload();
+		server::startup();
 
-	if(is(trace))
-		stack::enableDumping();
+		if(is(trace))
+			stack::enableDumping();
 
-	signals::start();
-	server::run();
+		signals::start();
+		server::run();
 
-	signals::stop();
-	service::shutdown();
-	process::release();
-};
-
+		signals::stop();
+		service::shutdown();
+		process::release();
+	}
 }
 
 extern int main(int argc, char **argv)

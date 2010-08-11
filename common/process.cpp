@@ -64,8 +64,6 @@ static void get_system_time(uuid_time_t *uuid_time)
 
 size_t process::attach(void)
 {
-	struct stat ino;
-
 	const char *home = args.getenv("HOME");
 
 	if(!home)
