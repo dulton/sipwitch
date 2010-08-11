@@ -47,7 +47,7 @@ modules::sipwitch()
 	g_set_prgname("sipwitch");
 	notify_init("sipwitch");
 
-	process::errlog(INFO, "notify plugin loaded");
+	shell::log(shell::INFO, "notify plugin loaded");
 }
 
 void notify::reload(service *cfg)

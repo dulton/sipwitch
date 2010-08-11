@@ -67,13 +67,13 @@ void thread::run(void)
 	LinkedObject *next;
 	FILE *fp;
 
-	process::errlog(DEBUG1, "starting cdr thread");
+	shell::log(DEBUG1, "starting cdr thread");
 
 	for(;;) {
 		Conditional::lock();
 		if(!running) {
 			Conditional::unlock();
-			process::errlog(DEBUG1, "stopped cdr thread");
+			shell::log(DEBUG1, "stopped cdr thread");
 			down = true;
 			return;
 		}
@@ -81,7 +81,7 @@ void thread::run(void)
 		cp = runlist;
 		fp = NULL;
 		if(runlist && logging)
-			fp = process::callfile();
+			fp = fopen(process::get("calls"), "a");
 		runlist = NULL;
 		logging = false;
 		Conditional::unlock();

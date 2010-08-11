@@ -39,7 +39,7 @@ static scripting scripting_plugin;
 scripting::scripting() :
 modules::sipwitch()
 {
-	process::errlog(INFO, "scripting plugin loaded");
+	shell::log(shell::INFO, "scripting plugin loaded");
 }
 
 void scripting::reload(service *cfg)
@@ -69,8 +69,7 @@ void scripting::start(service *cfg)
 	assert(cfg != NULL);
 	
 	static char buf[256];
-	service::keynode *env = cfg->getPath("environ");
-	const char *home = service::getValue(env, "HOME");
+	const char *home = process::get("HOME");
 
 	if(fsys::isdir(DEFAULT_CFGPATH "/sysconfig/sipwitch-scripts"))
 		dirpath = DEFAULT_CFGPATH "/sysconfig/sipwitch-scripts";
@@ -83,9 +82,9 @@ void scripting::start(service *cfg)
 	}
 
 	if(dirpath)
-		process::errlog(INFO, "scripting plugin path %s", dirpath);
+		shell::log(shell::INFO, "scripting plugin path %s", dirpath);
 	else
-		process::errlog(ERRLOG, "scripting plugin disabled; no script directory");
+		shell::log(shell::ERR, "scripting plugin disabled; no script directory");
 }
 
 void scripting::activating(MappedRegistry *rr)

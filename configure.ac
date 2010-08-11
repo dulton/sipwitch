@@ -10,9 +10,9 @@
 
 AC_INIT(autogen.sh)
 
-VERSION="0.8.4"
-LT_VERSION="0:41:0"
-UCOMMON_REQUIRES="2.1.3"
+VERSION="0.9.0"
+LT_VERSION="0:42:0"
+UCOMMON_REQUIRES="3.3.4"
 
 AC_CONFIG_AUX_DIR(autoconf)
 AC_CANONICAL_SYSTEM
@@ -290,23 +290,10 @@ for lib in $UCOMMON_CLINK ; do
 done
 
 AC_CHECK_HEADERS(sys/resource.h syslog.h net/if.h sys/sockio.h ioctl.h pwd.h)
-AC_CHECK_FUNCS(setrlimit)
+AC_CHECK_FUNCS(setrlimit setpgrp setrlimit getuid sigwait mkfifo)
 
 AC_LANG_CPLUSPLUS
 COMPILER_FLAGS=""
-
-flags="-Wno-variadic-macros"
-for flag in $flags ; do
-    AC_MSG_CHECKING([whether ${CXX} supports $flag])
-    echo 'void f(){}' >conftest.cpp
-    if test -z "`${CXX} $flag -c conftest.cpp 2>&1`"; then
-        EXPORT_FLAGS="$EXPORT_FLAGS $flag"
-        AC_MSG_RESULT(yes)
-    else
-        AC_MSG_RESULT(no)
-    fi
-    rm -f conftest*
-done
 
 for flag in $CXXFLAGS ; do
 	case "$flag" in

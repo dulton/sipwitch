@@ -250,7 +250,7 @@ void thread::message(void)
 		snprintf(fromhdr, sizeof(fromhdr),
 			"<%s>", address);
 
-	debug(3, "sending message from %s to %s\n", sysid, target);
+	shell::debug(3, "sending message from %s to %s\n", sysid, target);
 	osip_content_length_to_str(sevent->request->content_length, &msglen);
 	if(!msglen) {
 		digest::release(hash);
@@ -374,7 +374,7 @@ void thread::invite(void)
 			String::set(call->dialed, sizeof(call->dialed), target);
 
 		if(reginfo && !strcmp(reginfo->userid, identity)) {
-			debug(1, "calling self %08x:%u, id=%s\n", 
+			shell::debug(1, "calling self %08x:%u, id=%s\n", 
 				session->sequence, session->cid, getIdent());
 
 			String::set(call->subject, sizeof(call->subject), "calling self");
@@ -394,7 +394,7 @@ void thread::invite(void)
 
 		session->closed = false;
 		session->reg = registry::invite(identity, stats::INCOMING);
-		debug(1, "local call %08x:%u for %s from %s\n", 
+		shell::debug(1, "local call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, call->dialed, session->sysident);
 		break;
 	case PUBLIC:
@@ -412,7 +412,7 @@ void thread::invite(void)
 			snprintf(session->from, sizeof(session->from), 
 				"<%s>", session->identity);
 		}
-		debug(1, "incoming call %08x:%u for %s from %s\n", 
+		shell::debug(1, "incoming call %08x:%u for %s from %s\n", 
 			session->sequence, session->cid, call->dialed, session->sysident);
 
 		String::set(cdrnode->ident, sizeof(cdrnode->ident), session->sysident);
@@ -459,7 +459,7 @@ void thread::invite(void)
 			snprintf(session->from, sizeof(session->from),
 				"<%s>", session->identity);
 
-		debug(1, "outgoing call %08x:%u from %s to %s", 
+		shell::debug(1, "outgoing call %08x:%u from %s to %s", 
 			session->sequence, session->cid, getIdent(), requesting);
 
 		String::set(cdrnode->ident, sizeof(cdrnode->ident), session->sysident);
@@ -505,7 +505,7 @@ void thread::invite(void)
 
 		session->closed = false;
 		session->reg = registry::invite(identity, stats::INCOMING);
-		debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
+		shell::debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n", 
 			session->sequence, session->cid, target, getIdent(), dialing);
 		break;  	
 	default:
@@ -543,7 +543,7 @@ exit:
 	}
 
 	call->trying(this);
-	debug(2, "call proceeding %08x:%u\n", session->sequence, session->cid);
+	shell::debug(2, "call proceeding %08x:%u\n", session->sequence, session->cid);
 	return;
 
 // noproxy:
@@ -612,9 +612,9 @@ bool thread::unauthenticated(void)
 
 untrusted:
 	if(via_host)
-		debug(2, "challenge required for %s:%u", via_host, via_port);
+		shell::debug(2, "challenge required for %s:%u", via_host, via_port);
 	else
-		debug(2, "%s", "challenge request required");
+		shell::debug(2, "%s", "challenge request required");
 	challenge();
 	return false;
 }
@@ -708,7 +708,7 @@ bool thread::authorize(void)
 	if(!to_port)
 		to_port = 5060;
 
-/*	debug(3, "request from=%s:%s@%s:%d, uri=%s:%s@%s:%d, to=%s:%s@%s:%d\n",
+/*	shell::debug(3, "request from=%s:%s@%s:%d, uri=%s:%s@%s:%d, to=%s:%s@%s:%d\n",
 		from->url->scheme, from->url->username, from->url->host, from_port,
 		uri->scheme, uri->username, uri_host, local_port,
 		to->url->scheme, to->url->username, to->url->host, to_port);
@@ -733,7 +733,7 @@ bool thread::authorize(void)
 	request_address.set(uri_host, local_port);
 
 	if(request_address.getAddr() == NULL) {
-		process::errlog(ERRLOG, "unresolvable request: %s", uri_host);	
+		shell::log(shell::ERR, "unresolvable request: %s", uri_host);	
 		error = SIP_ADDRESS_INCOMPLETE;
 		goto invalid;
 	}
@@ -749,13 +749,13 @@ bool thread::authorize(void)
 	goto remote;
 
 local:
-	debug(2, "authorizing local; target=%s\n", uri->username);
+	shell::debug(2, "authorizing local; target=%s\n", uri->username);
 	target = uri->username;
 	destination = LOCAL;
 	String::set(dialing, sizeof(dialing), target);
 
 rewrite:
-	debug(3, "rewrite process; target=%s, dialing=%s\n", target, dialing);
+	shell::debug(3, "rewrite process; target=%s, dialing=%s\n", target, dialing);
 	error = SIP_NOT_FOUND;
 	if(!target || !*target || strlen(target) >= MAX_USERID_SIZE)
 		goto invalid;
@@ -773,7 +773,7 @@ rewrite:
 	reginfo = registry::dialing(target);
 	server::getDialing(target, dialed);
 
-	debug(4, "rewrite process; registry=%p, dialed=%p\n", (void *)reginfo, (void *)dialed.keys);
+	shell::debug(4, "rewrite process; registry=%p, dialed=%p\n", (void *)reginfo, (void *)dialed.keys);
 
 	if(!reginfo && !dialed.keys)
 		goto routing;
@@ -808,10 +808,10 @@ rewrite:
 		if(!stricmp(dialed.keys->getId(), "user") || !stricmp(dialed.keys->getId(), "admin")) {
 			if(MSG_IS_MESSAGE(sevent->request))
 				goto trying;
-			process::errlog(NOTIFY, "unregistered destination %s", target);
+			shell::log(shell::NOTIFY, "unregistered destination %s", target);
 		}
 		else
-			process::errlog(ERRLOG, "invalid destination %s, type=%s\n", target, dialed.keys->getId());
+			shell::log(shell::ERR, "invalid destination %s, type=%s\n", target, dialed.keys->getId());
 		error = SIP_GONE;	
 		goto invalid;
 	}
@@ -1045,11 +1045,11 @@ remote:
 
 invalid:
 	if(authorized.keys)
-		debug(1, "rejecting invite from %s; error=%d\n", getIdent(), error);
+		shell::debug(1, "rejecting invite from %s; error=%d\n", getIdent(), error);
 	else if(from->url && from->url->host && from->url->username)
-		debug(1, "rejecting invite from %s@%s; error=%d\n", from->url->username, from->url->host, error);
+		shell::debug(1, "rejecting invite from %s@%s; error=%d\n", from->url->username, from->url->host, error);
 	else
-		debug(1, "rejecting unknown invite; error=%d\n", error);
+		shell::debug(1, "rejecting unknown invite; error=%d\n", error);
 
 	send_reply(error);
 	return false;
@@ -1179,9 +1179,9 @@ bool thread::authenticate(void)
 	if(stack::sip.restricted) {
 		if(!getsource() || !access || !String::ifind(stack::sip.restricted, access->getName(), ",; \t\n")) {
 			if(via_host)
-				process::errlog(NOTICE, "rejecting restricted %s from %s:%u", auth->username, via_host, via_port);
+				shell::log(shell::NOTIFY, "rejecting restricted %s from %s:%u", auth->username, via_host, via_port);
 			else
-				process::errlog(NOTICE, "rejecting restricted %s", auth->username);
+				shell::log(shell::NOTIFY, "rejecting restricted %s", auth->username);
 			error = SIP_FORBIDDEN;
 			goto failed;
 		}
@@ -1190,7 +1190,7 @@ bool thread::authenticate(void)
 	server::getProvision(auth->username, authorized);
 	node = authorized.keys;
 	if(!node) {
-		process::errlog(NOTICE, "rejecting unknown %s", auth->username);
+		shell::log(shell::NOTIFY, "rejecting unknown %s", auth->username);
 		error = SIP_NOT_FOUND;
 		goto failed;
 	}
@@ -1200,7 +1200,7 @@ bool thread::authenticate(void)
 	// one doesn't want to loose configuration info
 
 	if(!stricmp(node->getId(), "reject")) {
-		process::errlog(NOTICE, "rejecting user %s", auth->username);
+		shell::log(shell::NOTIFY, "rejecting user %s", auth->username);
 		error = SIP_FORBIDDEN;
 		cp = service::getValue(node, "error");
 		if(cp)
@@ -1220,7 +1220,7 @@ bool thread::authenticate(void)
 	hash = digest::get(auth->username);
 	leaf = node->leaf("digest");
 	if(!hash && (!leaf || !leaf->getPointer())) {
-		process::errlog(NOTICE, "rejecting unsupported %s", auth->username);
+		shell::log(shell::NOTIFY, "rejecting unsupported %s", auth->username);
 		error = SIP_FORBIDDEN;
 		goto failed;
 	}
@@ -1249,7 +1249,7 @@ bool thread::authenticate(void)
 
 	// see if digests match 
 	if(stricmp(*digest, auth->response)) {
-		process::errlog(NOTICE, "rejecting unauthorized %s", auth->username);
+		shell::log(shell::NOTIFY, "rejecting unauthorized %s", auth->username);
 		goto failed;
 	}
 
@@ -1439,9 +1439,9 @@ void thread::validate(void)
 
 reply:
 	if(error == SIP_OK)
-		debug(2, "validating %s; expires=%lu", auth->username, registry::getExpires());
+		shell::debug(2, "validating %s; expires=%lu", auth->username, registry::getExpires());
 	else
-		debug(2, "rejecting %s; error=%d", auth->username, error);
+		shell::debug(2, "rejecting %s; error=%d", auth->username, error);
 
 	server::release(user);
 	eXosip_lock();
@@ -1491,7 +1491,7 @@ void thread::registration(void)
 			return;
 
 		if(!getsource()) {
-			process::errlog(ERRLOG, "cannot determine origin for registration");
+			shell::log(shell::ERR, "cannot determine origin for registration");
 			return;
 		}
 
@@ -1547,13 +1547,13 @@ void thread::registration(void)
 
 reply:
 		if(error == SIP_OK) {
-			debug(3, "querying %s", reguri->username);
+			shell::debug(3, "querying %s", reguri->username);
 			stack::sipPublish(&iface, temp + 1, reguri->username, sizeof(temp) - 2);
 			temp[0] = '<';
 			String::add(temp, sizeof(temp), ">");
 		}
 		else
-			debug(3, "query rejected for %s; error=%d", reguri->username, error);
+			shell::debug(3, "query rejected for %s; error=%d", reguri->username, error);
 		eXosip_lock();
 		eXosip_message_build_answer(sevent->tid, error, &reply);
 		if(reply != NULL) {
@@ -1596,7 +1596,7 @@ void thread::reregister(const char *contact, time_t interval)
 	bool refresh;
 
 	if(extension && (extension < registry::getPrefix() || extension >= registry::getPrefix() + registry::getRange())) {
-		debug(2, "rejecting %s, not in local dialing plan", getIdent());
+		shell::debug(2, "rejecting %s, not in local dialing plan", getIdent());
 		answer = SIP_NOT_ACCEPTABLE_HERE;
 		interval = 0;
 		goto reply;
@@ -1606,7 +1606,7 @@ void thread::reregister(const char *contact, time_t interval)
 	if(!reginfo) {
 		if(!warning_registry) {
 			warning_registry = true;
-			process::errlog(ERRLOG, "registry capacity reached");
+			shell::log(shell::ERR, "registry capacity reached");
 		}
 		answer = SIP_TEMPORARILY_UNAVAILABLE;
 		interval = 0;
@@ -1629,14 +1629,14 @@ void thread::reregister(const char *contact, time_t interval)
 			count = reginfo->setTarget(contact_address, expire, contact, network, (struct sockaddr *)&peering);
 	}
 	if(refresh) 
-		debug(2, "refreshing %s for %ld seconds from %s:%u", getIdent(), interval, contact_host, contact_port);
+		shell::debug(2, "refreshing %s for %ld seconds from %s:%u", getIdent(), interval, contact_host, contact_port);
 	else if(count) {
 		time(&reginfo->created);
 		server::activate(reginfo);
-		process::errlog(DEBUG1, "registering %s for %ld seconds from %s:%u", getIdent(), interval, contact_host, contact_port);
+		shell::log(DEBUG1, "registering %s for %ld seconds from %s:%u", getIdent(), interval, contact_host, contact_port);
 	}
 	else {
-		process::errlog(ERRLOG, "cannot register %s from %s", getIdent(), buffer);
+		shell::log(shell::ERR, "cannot register %s from %s", getIdent(), buffer);
 		answer = SIP_FORBIDDEN;
 		goto reply;
 	}		
@@ -1648,7 +1648,7 @@ void thread::reregister(const char *contact, time_t interval)
 		c = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
 		if(c && c->url && c->url->username) {
 			reginfo->addContact(c->url->username);
-			process::errlog(INFO, "registering service %s:%s@%s:%s",
+			shell::log(shell::INFO, "registering service %s:%s@%s:%s",
 				c->url->scheme, c->url->username, c->url->host, c->url->port);
 		}
 	}
@@ -1679,7 +1679,7 @@ void thread::deregister()
 		registry::detach(rr);
 	}
 	if(unreg)
-		process::errlog(DEBUG1, "unregister %s", getIdent());
+		shell::log(DEBUG1, "unregister %s", getIdent());
 }
 
 void thread::getDevice(registry::mapped *rr)
@@ -1762,7 +1762,7 @@ void thread::run(void)
 	osip_body_t *body;
 	
 	instance = ++startup_count;
-	process::errlog(DEBUG1, "starting thread %d", instance);
+	shell::log(DEBUG1, "starting thread %d", instance);
 
 	for(;;) {
 		assert(instance > 0);
@@ -1786,7 +1786,7 @@ void thread::run(void)
 		via_header = NULL;
 
 		if(shutdown_flag) {
-			process::errlog(DEBUG1, "stopping thread %d", instance);
+			shell::log(DEBUG1, "stopping thread %d", instance);
 			++shutdown_count;
 			return; // exits thread...
 		}
@@ -1795,13 +1795,13 @@ void thread::run(void)
 			continue;
 
 		++active_count;
-		debug(2, "sip: event %d; cid=%d, did=%d, instance=%d",
+		shell::debug(2, "sip: event %d; cid=%d, did=%d, instance=%d",
 			sevent->type, sevent->cid, sevent->did, instance);
 
 		switch(sevent->type) {
 		case EXOSIP_REGISTRATION_FAILURE:
 			stack::siplog(sevent->response);
-			debug(4, "sip: registration response %d", sevent->response->status_code); 
+			shell::debug(4, "sip: registration response %d", sevent->response->status_code); 
 			if(sevent->response && sevent->response->status_code == 401) {
 				sip_realm = NULL;
 				proxy_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->proxy_authenticates, 0);
@@ -1912,7 +1912,7 @@ void thread::run(void)
 			session = stack::access(sevent->cid);
 			if(!session)
 				break;
-			debug(4, "sip: call response %d\n", sevent->response->status_code);
+			shell::debug(4, "sip: call response %d\n", sevent->response->status_code);
 			switch(sevent->response->status_code) {
 			case SIP_DECLINE:
 			case SIP_MOVED_PERMANENTLY:
@@ -2100,7 +2100,7 @@ void thread::run(void)
 					publish();
 			}
 			else if(!MSG_IS_INFO(sevent->request)) {
-				debug(2, "unsupported %s in dialog", sevent->request->sip_method);
+				shell::debug(2, "unsupported %s in dialog", sevent->request->sip_method);
 				break;
 			}
 			if(sevent->cid > 0) {
@@ -2115,7 +2115,7 @@ void thread::run(void)
 				stack::siplog(sevent->response);
 			else
 				stack::siplog(sevent->request);
-			process::errlog(WARN, "unknown message");
+			shell::log(shell::WARN, "unknown message");
 		}
 
 		// release access locks for registry and sessions quickly...

@@ -169,7 +169,7 @@ public:
 			{return active_flag;};
 
 		virtual void cdrlog(cdr *call);
-		virtual void errlog(errlevel_t level, const char *text);
+		virtual void errlog(shell::loglevel_t level, const char *text);
 		virtual bool check(void);
 		virtual void snapshot(FILE *fp);
 		virtual void start(service *cfg);
@@ -210,13 +210,10 @@ public:
 	static void published(struct sockaddr_storage *peer);
 	static const char *getValue(keynode *base, const char *id);
 	static void dump(FILE *fp, keynode *node, unsigned level);
-	static void snapshot(const char *uid);
-	static void dumpfile(const char *uid);
-	static void history(const char *uid);
-	static void siplog(const char *uid);
+	static void snapshot(void);
+	static void dumpfile(void);
 	static bool period(long slice);
 	static void result(const char *value);
-	static FILE *open(const char *uid = NULL, const char *cfgpath = NULL);
 	static void startup(void);
 	static void shutdown(void);
 	static long uptime(void);
@@ -235,8 +232,8 @@ public:
 		{return &root;};
 
 	virtual void dump(FILE *fp);
-	virtual void confirm(const char *user);
-	void commit(const char *user);
+	virtual void confirm(void);
+	void commit(void);
 
 	static bool check(void);
 	static void release(keynode *node);

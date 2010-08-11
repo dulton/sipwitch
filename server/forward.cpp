@@ -72,7 +72,9 @@ static forward forward_plugin;
 forward::forward() :
 modules::sipwitch()
 {
-	process::errlog(INFO, "server forward plugin loaded");	
+	shell::log(shell::INFO, "%s\n",
+		_TEXT("server forward plugin loaded"));
+
 	enabled = false;
 	refer = NULL;
 	digest = (char *)"MD5";
@@ -171,7 +173,7 @@ void forward::remove(int id)
 				index[path] = (regmap *)mp->next;
 			mp->next = freelist;
 			freelist = *mp;
-			debug(3, "forward unmap %s from %d", mp->entry->userid, id);
+			shell::debug(3, "forward unmap %s from %d", mp->entry->userid, id);
 			--active;
 			locking.commit();
 			mp->entry->rid = -1;
@@ -179,7 +181,7 @@ void forward::remove(int id)
 		}
 		mp.next();
 	}
-	debug(3, "forward map %d not found", id);
+	shell::debug(3, "forward map %d not found", id);
 	locking.commit();
 }
 
@@ -199,7 +201,7 @@ void forward::add(MappedRegistry *rr)
 	map->next = index[path];
 	index[path] = map;
 	locking.commit();
-	debug(3, "forward mapped %s as %d", rr->userid, rr->rid);
+	shell::debug(3, "forward mapped %s as %d", rr->userid, rr->rid);
 	++active;
 }
 
@@ -235,20 +237,20 @@ void forward::reload(service *cfg)
 				if(uri::resolve(value, buffer, sizeof(buffer))) {
 					refer = cfg->dup(buffer);
 					refering = true;
-					debug(2, "forward refer resolved as %s", buffer);
+					shell::debug(2, "forward refer resolved as %s", buffer);
 				}
 				else {
-					process::errlog(ERRLOG, "forward: %s: cannot resolve", value);
+					shell::log(shell::ERR, "forward: %s: cannot resolve", value);
 					server = NULL;
 				}
 			}
 			else if(String::equal(key, "server")) {
 				if(uri::resolve(value, buffer, sizeof(buffer))) {
 					server = cfg->dup(buffer);
-					debug(2, "forward server resolved as %s", buffer);
+					shell::debug(2, "forward server resolved as %s", buffer);
 				}
 				else {
-					process::errlog(ERRLOG, "forward: %s: cannot resolve", value);
+					shell::log(shell::ERR, "forward: %s: cannot resolve", value);
 					server = NULL;
 				}
 				if(server && *server) {
@@ -274,9 +276,9 @@ void forward::reload(service *cfg)
 	digest = tmp_digest;
 
 	if(enable && !enabled)
-		process::errlog(INFO, "server forward plugin activated");
+		shell::log(shell::INFO, "server forward plugin activated");
 	else if(!enable && enabled)
-		process::errlog(INFO, "server forward plugin disabled");
+		shell::log(shell::INFO, "server forward plugin disabled");
 	enabled = enable;
 }
 
@@ -305,7 +307,7 @@ void forward::activating(MappedRegistry *rr)
 		Socket::getaddress((struct sockaddr *)&rr->contact, contact + len, sizeof(contact) - len);
 		len = strlen(contact);
 		snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::getservice((struct sockaddr *)&rr->contact));
-		debug(3, "registering %s with %s", contact, server);
+		shell::debug(3, "registering %s with %s", contact, server);
 		eXosip_lock();
 		rr->rid = eXosip_register_build_initial_register(uri, reg, contact, expires, &msg);
 		if(msg) {
@@ -337,7 +339,7 @@ bool forward::announce(MappedRegistry *rr, const char *msgtype, const char *even
 	Socket::getaddress((struct sockaddr *)&rr->contact, contact + len, sizeof(contact) - len);
 	len = strlen(contact);
 	snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::getservice((struct sockaddr *)&rr->contact));
-	debug(3, "publishing %s with %s", contact, server);
+	shell::debug(3, "publishing %s with %s", contact, server);
 
 	eXosip_lock();
 	eXosip_build_publish(&msg, uri_to, contact, NULL, event, expiration, msgtype, body);
@@ -403,9 +405,9 @@ bool forward::authenticate(int id, const char *remote_realm)
 	}
 
 	if(secret && *secret)
-		debug(3, "authorizing %s for %s", rr->userid, remote_realm);
+		shell::debug(3, "authorizing %s for %s", rr->userid, remote_realm);
 	else {
-		debug(3, "cannot authorize %s for %s", rr->userid, remote_realm);
+		shell::debug(3, "cannot authorize %s for %s", rr->userid, remote_realm);
 		service::release(node);
 		releaseMap(rr);
 		remove(id);

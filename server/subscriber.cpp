@@ -81,7 +81,7 @@ void listener::run(void)
 			service::publish((const char *)published);
 		}
 	}
-	process::errlog(DEBUG1, "stopping rtpproxy thread");
+	shell::log(DEBUG1, "stopping rtpproxy thread");
 }
 
 subscriber::subscriber() :
@@ -114,7 +114,7 @@ void subscriber::update(void)
 	Socket::getaddress((struct sockaddr *)&provider.contact, contact + len, sizeof(contact) - len);
 	len = strlen(contact);
 	snprintf(contact + len, sizeof(contact) - len, ":%u", sip_port);
-	debug(3, "registering %s with %s", contact, server);
+	shell::debug(3, "registering %s with %s", contact, server);
 		
 	eXosip_lock();
 	provider.rid = eXosip_register_build_initial_register(uri, reg, contact, refresh, &msg);
@@ -153,7 +153,7 @@ void subscriber::stop(service *cfg)
 
 	rtp_running = false;
 	if(thr) {
-		process::errlog(DEBUG1, "rtp proxy stopping");
+		shell::log(DEBUG1, "rtp proxy stopping");
 		delete thr;
 	}
 }
@@ -206,11 +206,11 @@ void subscriber::reload(service *cfg)
 				if(uri::resolve(value, buffer, sizeof(buffer))) {
 					changed = true;
 					server = cfg->dup(buffer);
-					debug(2, "subscriber provider is %s", buffer);
+					shell::debug(2, "subscriber provider is %s", buffer);
 				}
 				else {
 					changed = false;
-					process::errlog(ERRLOG, "subscriber: %s: cannot resolve", value);
+					shell::log(shell::ERR, "subscriber: %s: cannot resolve", value);
 				}
 			}
 			else if(!stricmp(key, "proxy")) {
@@ -252,18 +252,18 @@ void subscriber::registration(int id, modules::regmode_t mode)
 
 	switch(mode) {
 	case modules::REG_FAILED:
-		process::errlog(ERRLOG, "service provider offline");
+		shell::log(shell::ERR, "service provider offline");
 		provider.status = MappedRegistry::OFFLINE;
 		return;
 	case modules::REG_TERMINATED:
-		process::errlog(ERRLOG, "service provider failed");
+		shell::log(shell::ERR, "service provider failed");
 		provider.rid = -1;
 		provider.status = MappedRegistry::OFFLINE;
 		if(changed)
 			update();
 		return;
 	case modules::REG_SUCCESS:
-		process::errlog(NOTICE, "service provider active");
+		shell::log(shell::NOTIFY, "service provider active");
 		provider.status = MappedRegistry::IDLE;
 		return;
 	}
@@ -275,9 +275,9 @@ bool subscriber::authenticate(int id, const char *remote_realm)
 		return false;
 
 	if(secret && *secret)
-		debug(3, "authorizing %s for %s", userid, remote_realm);
+		shell::debug(3, "authorizing %s for %s", userid, remote_realm);
 	else {
-		debug(3, "cannot authorize %s for %s", userid, remote_realm);
+		shell::debug(3, "cannot authorize %s for %s", userid, remote_realm);
 		return false;
 	}
 

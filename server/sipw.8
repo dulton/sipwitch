@@ -24,12 +24,10 @@ sipw \- sipwitch service daemon
 .B sipw
 .B [--background]
 .BI [--concurrency=value]
-.BI [--config=file]
 .BI [--debug=level]
 .B [--foreground]
 .B [--gdb]
 .BI [--group=id]
-.BI [--history=limit]
 .B [--memcheck]
 .B [--memleak]
 .BI [--plugins=names]
@@ -64,10 +62,6 @@ Execute the \fBsipw\fR daemon detached in the background (default).
 .B --concurrency=level
 Set the pthread concurrency level for the \fBsipw\fR process.
 .TP
-.B --config=FILE
-Use specified \fIFILE\fR in place of default config, which is either 
-\fI/etc/sipwitch.conf\fR or \fI~/.sipwitchrc\fR.
-.TP
 .B --debug=LEVEL
 Specify debug logging \fILEVEL\fR (0-9).  When run in foreground debug
 messages are shown on the console.  When in background they are saved in
@@ -83,10 +77,6 @@ Execute the \fBsipw\fR daemon under control of gdb for full debugging.
 .B --group=ID
 Specify the group \fIID\fR that the \fBsipw\fR daemon will execute as for 
 receiving control messages or access to daemon managed shared memory.
-.TP
-.B --history=LIMIT
-Number of errlog events that will be kept in the history buffer.  The last
-LIMIT records at the time will be output whenever requested.
 .TP
 .B --memcheck
 Execute the \fBsipw\fR daemon under valgrind to validate basic memory management.

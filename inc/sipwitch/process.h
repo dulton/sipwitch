@@ -45,51 +45,34 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-typedef enum
-{
-	FAILURE = 0,
-	ERRLOG,
-	WARN,
-	NOTIFY,
-	NOTICE=NOTIFY,
-	INFO,
-	DEBUG1,
-	DEBUG2,
-	DEBUG3
-} errlevel_t;
+#define	DEBUG1	shell::DEBUG0
+#define	DEBUG2	(shell::loglevel_t(((unsigned)shell::DEBUG0 + 1)))
+#define	DEBUG3	(shell::loglevel_t(((unsigned)shell::DEBUG0 + 2)))
 
-class __EXPORT process
-{
-public:
-	static void setVerbose(errlevel_t idx);
-	static void setHistory(unsigned limit);
-	static const char *identity(void);
+class __EXPORT process { public: static shell_t args;
+
 	static void printlog(const char *fmt, ...) __PRINTF(1, 2);
-	static void errlog(errlevel_t log, const char *fmt, ...) __PRINTF(2, 3);
-	static bool control(const char *uid, const char *fmt, ...) __PRINTF(2, 3);
+	static bool control(const char *fmt, ...) __PRINTF(1, 2);
 	static void result(const char *value);
 	static char *receive(void);
 	static void reply(const char *err = NULL);
-	static size_t attach(const char *ident, const char *user);
+	static size_t attach(void);
 	static void release(void);
 	static bool state(const char *value);
 	static bool system(const char *fmt, ...) __PRINTF(1, 2);
-	static void histlog(const char *uid);
-	static void siplog(const char *uid);
-	static FILE *dumpfile(const char *uid);
-	static FILE *snapshot(const char *uid);
-	static FILE *statfile(void);
-	static FILE *callfile(void);
-	static FILE *config(const char *uid = NULL);
+	static FILE *output(const char *id);
 	static void uuid(char *buffer, size_t size, const char *node);
 	static void uuid(char *buffer, size_t size, unsigned short seq, unsigned callid);
-};
 
-#if defined(DEBUG) || defined(OLD_STDCPP) || defined(NEW_STDCPP)
-#define	debug(l, args...)	process::errlog((errlevel_t)(INFO + l), ## args)
-#else
-#define	debug(l, args...)
-#endif
+	inline static void set(const char *id, const char *value)
+		{args.setsym(id, value);}
+
+	inline static const char *get(const char *id)
+		{return args.getsym(id);}
+
+	inline static String path(const char *id)
+		{return (String)(args.getsym(id));}
+};
 
 END_NAMESPACE
 

@@ -83,7 +83,7 @@ modules::generic()
 	client = NULL;
 	group = NULL;
 	name = avahi_strdup("sipwitch");
-	process::errlog(ERRLOG, "zeroconf plugin using avahi");
+	shell::log(shell::ERR, "zeroconf plugin using avahi");
 }
 
 void zeroconf::setGroup(AvahiEntryGroupState state)
@@ -93,17 +93,17 @@ void zeroconf::setGroup(AvahiEntryGroupState state)
     switch(state)
     {
     case AVAHI_ENTRY_GROUP_ESTABLISHED:
-        process::errlog(INFO, "zeroconf %s service(s) established", name);
+        shell::log(shell::INFO, "zeroconf %s service(s) established", name);
         break;
     case AVAHI_ENTRY_GROUP_COLLISION:
         newname = avahi_alternative_service_name(name);
-        process::errlog(NOTICE, "zeroconf service %s renamed %s", name, newname);
+        shell::log(shell::NOTIFY, "zeroconf service %s renamed %s", name, newname);
         avahi_free(name);
         name = newname;
         setClient(AVAHI_CLIENT_S_RUNNING);
 		break;
     case AVAHI_ENTRY_GROUP_FAILURE:
-        process::errlog(ERRLOG, "zeroconf service failure; error=%s",
+        shell::log(shell::ERR, "zeroconf service failure; error=%s",
             avahi_strerror(avahi_client_errno(client)));
         // avahi_thread_poll_quit(poller);
     default:
@@ -121,7 +121,7 @@ void zeroconf::setClient(AvahiClientState state)
 		goto add;
 	case AVAHI_CLIENT_FAILURE:
 failed:
-		process::errlog(ERRLOG, "zeroconf failure; error=%s",
+		shell::log(shell::ERR, "zeroconf failure; error=%s",
             avahi_strerror(avahi_client_errno(client)));
 		break;
     case AVAHI_CLIENT_S_COLLISION:
@@ -138,7 +138,7 @@ add:
     if(!group)
         goto failed;
 
-	process::errlog(INFO, "zeroconf adding sip on port %d", sip_port);
+	shell::log(shell::INFO, "zeroconf adding sip on port %d", sip_port);
 	if(sip_domain) {
 		char domain[256];
 		char prefix[32];
@@ -159,14 +159,14 @@ add:
 			"type=sipwitch", NULL);
 
 	if(ret < 0)
-		process::errlog(ERRLOG, "zeroconf %s failed; error=%s", 
+		shell::log(shell::ERR, "zeroconf %s failed; error=%s", 
 			protocol, avahi_strerror(ret));
 
 	ret = avahi_entry_group_commit(group);
 	if(ret >= 0)
 		return;
 
-	process::errlog(ERRLOG, "zeroconf service commit failure; error=%s",
+	shell::log(shell::ERR, "zeroconf service commit failure; error=%s",
 		avahi_strerror(ret));
 }
 
@@ -190,14 +190,14 @@ void zeroconf::start(service *cfg)
 	poller = avahi_threaded_poll_new();
 
 	if(!poller) {
-		process::errlog(ERRLOG, "zeroconf service failed to start");
+		shell::log(shell::ERR, "zeroconf service failed to start");
 		return;
 	}
 
 	client = avahi_client_new(avahi_threaded_poll_get(poller),
         (AvahiClientFlags)0, client_callback, NULL, &error);
 
-	process::errlog(INFO, "zeroconf service started");
+	shell::log(shell::INFO, "zeroconf service started");
     avahi_threaded_poll_start(poller);
 }
 
@@ -236,7 +236,7 @@ void zeroconf::publish(service *cfg)
 	}
 
 	if(ret < 0)
-		process::errlog(ERRLOG, "zeroconf %s failed; error=%s", 
+		shell::log(shell::ERR, "zeroconf %s failed; error=%s", 
 			protocol, avahi_strerror(ret));
 
 	started = true;
@@ -255,7 +255,7 @@ public:
 zeroconf::zeroconf() :
 modules::generic()
 {
-	process::errlog(ERRLOG, "zeroconf plugin could not be built");
+	shell::log(shell::ERR, "zeroconf plugin could not be built");
 }
 
 #endif

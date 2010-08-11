@@ -83,7 +83,7 @@ char *modules::sipwitch::referRemote(MappedRegistry *rr, const char *target, cha
 	return NULL;
 }
 
-void modules::errlog(errlevel_t level, const char *text)
+void modules::errlog(shell::loglevel_t level, const char *text)
 {
 	linked_pointer<service::callback> cb = service::getModules();
 
@@ -99,7 +99,7 @@ void modules::cdrlog(FILE *fp, cdr *call)
 	const char *buf = dt.c_str();
 
 	if(call->type == cdr::STOP) {
-		debug(1, "call %08x:%u %s %s %s %ld %s %s %s %s",
+		shell::debug(1, "call %08x:%u %s %s %s %ld %s %s %s %s",
 			call->sequence, call->cid, call->network, call->reason, buf,
 			call->duration, call->ident, call->dialed, call->joined, call->display);
 	}

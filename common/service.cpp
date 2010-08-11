@@ -152,7 +152,7 @@ bool service::callback::check(void)
 	return true;
 }
 
-void service::callback::errlog(errlevel_t level, const char *text)
+void service::callback::errlog(shell::loglevel_t level, const char *text)
 {
 }
 
@@ -198,25 +198,11 @@ memalloc(s), root()
 {
 	assert(name != NULL && *name != 0);
 
-	keynode *env;
-	
-	static const char *vars[] = {"HOME", "USER", "IDENT", "PATH", "LANG", "PWD", "TZ", "TMP", "SHELL", "CFG", NULL};
-	const char **varp = vars;
-	const char *cp;
-
 	root.setId((char *)name);
 	root.setPointer(NULL);
 	if(!started) {
 		time(&started);
 		time(&periodic);
-	}
-
-	env = addNode(&root, "environ", NULL);
-	while(varp && *varp) {
-		cp = getenv(*varp);
-		if(cp)
-			addNode(env, *varp, dup(cp));
-		++varp;
 	}
 }
 
@@ -605,8 +591,8 @@ bool service::load(FILE *fp, keynode *node)
 
 			if(!strncmp(bp, "</", 2)) {
 				if(strcmp(bp + 2, node->getId())) {
-                                    process::errlog(ERRLOG, 
-					    "No matching opening token found for: %s", node->getId());		
+					shell::log(shell::ERR, "%s: %s\n",
+						_TEXT("No matching opening token found for"), node->getId());
 					goto exit;
                                 }
 
@@ -659,7 +645,7 @@ void service::startup(void)
 
 	memset(&peering, 0, sizeof(peering));
 
-	process::errlog(NOTICE, "startup");
+	shell::log(shell::NOTIFY, "startup");
 
 	cdr::start();
 
@@ -726,52 +712,18 @@ void service::dump(FILE *fp)
 	dump(fp, &root, 0);
 }
 
-void service::siplog(const char *uid)
+void service::dumpfile(void)
 {
-	assert(uid == NULL || *uid != 0);
-
-	keynode *env = getEnviron();
-
-	if(!uid)
-		uid = getValue(env, "USER");
-
-	process::siplog(uid);
-	release(env);
-}
-
-void service::history(const char *uid)
-{
-	assert(uid == NULL || *uid != 0);
-
-	keynode *env = getEnviron();
-
-	if(!uid)
-		uid = getValue(env, "USER");
-
-	process::histlog(uid);
-	release(env);
-}
-
-void service::dumpfile(const char *uid)
-{
-	assert(uid == NULL || *uid != 0);
-
-	linked_pointer<callback> cb;
-	keynode *env = getEnviron();
-
-	if(!uid)
-		uid = getValue(env, "USER");
-
-	FILE *fp = process::dumpfile(uid);
-
-	release(env);
+	FILE *fp = process::output("dumpfile");
 
 	if(!fp) {
-		process::errlog(ERRLOG, "dump cannot access file");
+		shell::log(shell::ERR, "%s\n", 
+			_TEXT("dump cannot access file"));
 		return;
 	}
 
-	process::errlog(DEBUG1, "dumping config");
+	shell::log(DEBUG1, "%s\n",
+		_TEXT("dumping config"));
 	locking.access();
 	if(cfg)
 		cfg->service::dump(fp);
@@ -793,7 +745,7 @@ bool service::period(long slice)
 
 	next = (now / slice) * slice;
 
-	FILE *fp = process::statfile();
+	FILE *fp = fopen(process::get("stats"), "a");
 
 	if(fp) {
 		DateTimeString dt(periodic);
@@ -812,26 +764,19 @@ bool service::period(long slice)
 	return true;
 }
 
-void service::snapshot(const char *uid)
+void service::snapshot(void)
 {
-	assert(uid == NULL || *uid != 0);
-
 	linked_pointer<callback> cb;
 	unsigned rl = 0;
-	keynode *env = getEnviron();
-
-	if(!uid)
-		uid = getValue(env, "USER");
-
-	FILE *fp = process::snapshot(uid);
-	release(env);
+	FILE *fp = process::output("snapshot");
 
 	if(!fp) {
-		process::errlog(ERRLOG, "snapshot; cannot access file");
+		shell::log(shell::ERR, "%s\n",
+			_TEXT("snapshot; cannot access file"));
 		return;
 	}
 
-	process::errlog(DEBUG1, "snapshot started");
+	shell::log(DEBUG1, "%s\n", _TEXT("snapshot started"));
 
 	while(rl < RUNLEVELS) {
 		cb = callback::runlevels[rl++];
@@ -845,10 +790,10 @@ void service::snapshot(const char *uid)
 		cfg->dump(fp);
 	locking.release();
 	fclose(fp);
-	process::errlog(DEBUG1, "snapshot completed");
+	shell::log(DEBUG1, "%s\n", _TEXT("snapshot completed"));
 }
 
-void service::confirm(const char *user)
+void service::confirm(void)
 {
 }
 
@@ -868,7 +813,7 @@ bool service::check(void)
 	return rtn;
 }
 
-void service::commit(const char *user)
+void service::commit(void)
 {
 	service *orig;
 	linked_pointer<callback> cb;
@@ -882,7 +827,7 @@ void service::commit(const char *user)
 		}
 	}
 
-	confirm(user);
+	confirm();
 
 	locking.modify();
 	orig = cfg;
@@ -903,22 +848,6 @@ void service::commit(const char *user)
 		Thread::sleep(1000);
 		delete orig;
 	}
-}
-
-FILE *service::open(const char *uid, const char *cfgfile)
-{
-	assert(cfgfile == NULL || *cfgfile != 0);
-	assert(uid == NULL || *uid != 0);
-
-	if(!cfgfile)
-		cfgfile = getenv("CFG");
-
-	if(cfgfile && *cfgfile) {
-		process::errlog(DEBUG1, "loading config from %s", cfgfile);
-		return fopen(cfgfile, "r");
-	}
-
-	return process::config(uid);
 }
 
 bool service::match(const char *digits, const char *match, bool partial)

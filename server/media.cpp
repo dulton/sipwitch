@@ -62,7 +62,7 @@ void media::thread::notify(void)
 #ifdef	_MSWINDOWS_
 #else
 	if(::write(control[1], &buf, 1) < 1)
-		process::errlog(ERRLOG, "media notify failure");
+		shell::log(shell::ERR, "media notify failure");
 #endif
 }
 
@@ -82,7 +82,7 @@ void media::thread::run(void)
 	fd_set session;
 	int max;
 
-	process::errlog(DEBUG1, "starting media thread");
+	shell::log(DEBUG1, "starting media thread");
 	running = true;
 	socket_t so;
 	char buf[1];
@@ -104,7 +104,7 @@ void media::thread::run(void)
 #else
 			if(so == control[0] && FD_ISSET(so, &session)) {
 				if(::read(so, buf, 1) < 1)
-					process::errlog(ERRLOG, "media control failure");
+					shell::log(shell::ERR, "media control failure");
 				continue;
 			}
 #endif
@@ -128,7 +128,7 @@ void media::thread::run(void)
 		}
 	}
 	
-	process::errlog(DEBUG1, "stopping media thread");
+	shell::log(DEBUG1, "stopping media thread");
 	running = true;	
 }
 
@@ -469,15 +469,15 @@ void media::reload(service *cfg)
 		mp.next();
 	}
 	if(portcount)
-		process::errlog(DEBUG2, "media proxy configured for %d ports", portcount);
+		shell::log(DEBUG2, "media proxy configured for %d ports", portcount);
 	else
-		process::errlog(DEBUG1, "media proxy disabled");
+		shell::log(DEBUG1, "media proxy disabled");
 }
 
 void media::start(service *cfg)
 {
 	if(portcount)
-		process::errlog(DEBUG1, "media proxy starting for %d ports", portcount);
+		shell::log(DEBUG1, "media proxy starting for %d ports", portcount);
 	else
 		return;
 
@@ -487,7 +487,7 @@ void media::start(service *cfg)
 #ifdef	_MSWINDOWS_
 #else
 	if(pipe(control)) {
-		process::errlog(ERRLOG, "media proxy startup failed");
+		shell::log(shell::ERR, "media proxy startup failed");
 		return;
 	}
 
@@ -503,7 +503,7 @@ void media::start(service *cfg)
 void media::stop(service *cfg)
 {
 	if(portcount)
-		process::errlog(DEBUG1, "media proxy stopping");
+		shell::log(DEBUG1, "media proxy stopping");
 	else
 		return;
 
@@ -649,7 +649,7 @@ char *media::reinvite(stack::session *session, const char *sdpin)
 		return session->sdp;
 	}
 
-	process::errlog(DEBUG3, "reinvite proxied %s to %s", session->network, target->network);
+	shell::log(DEBUG3, "reinvite proxied %s to %s", session->network, target->network);
 	sdp parser(sdpin, session->sdp, sizeof(session->sdp));
 	parser.peering = (struct sockaddr *)&peering;
 	parser.nat = nat;
@@ -679,7 +679,7 @@ char *media::answer(stack::session *session, const char *sdpin)
 		return session->sdp;
 	}
 
-	process::errlog(DEBUG3, "answer proxied %s to %s", session->network, target->network);
+	shell::log(DEBUG3, "answer proxied %s to %s", session->network, target->network);
 	sdp parser(sdpin, session->sdp, sizeof(session->sdp));
 	parser.peering = (struct sockaddr *)&peering;
 	parser.nat = nat;
@@ -701,7 +701,7 @@ char *media::invite(stack::session *session, const char *target, LinkedObject **
 		return sdpout;
 	}
 
-	process::errlog(DEBUG3, "invite proxied %s to %s", session->network, target);
+	shell::log(DEBUG3, "invite proxied %s to %s", session->network, target);
 	sdp parser(session->sdp, sdpout, size);
 	parser.peering = (struct sockaddr *)&peering;
 	parser.nat = nat;

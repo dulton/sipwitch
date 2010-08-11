@@ -474,7 +474,7 @@ private:
 	bool create(const char *id, keynode *node);
 	keynode *find(const char *id);
 
-	void confirm(const char *user);
+	void confirm(void);
 	void dump(FILE *fp);
 
 public:
@@ -496,12 +496,10 @@ public:
 	static void release(stack::subnet *access);
 	static void release(keynode *node);
 	static void release(usernode& user);
-	static void reload(const char *uid);
+	static void reload(void);
 	static Socket::address *getContact(const char *id);
 	static void plugins(const char *argv0, const char *names);
-	static void usage(void);
-	static void version(void);
-	static void run(const char *user);
+	static void run(void);
 	static void stop(void);
 	static caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
 	static unsigned allocate(void);
@@ -728,6 +726,41 @@ private:
 	// see if connected directly or if requires proxy
 	static bool isProxied(const char *source, const char *target, struct sockaddr_storage *peering);
 };
+
+#ifdef  HAVE_SIGWAIT
+#include <signal.h>
+
+class __LOCAL signals : private JoinableThread
+{
+private:
+    bool shutdown;
+    bool started;
+
+    sigset_t sigs;
+
+    void run(void);
+    void cancel(void);
+
+    signals();
+    ~signals();
+
+    static signals thread;
+
+public:
+    static void setup(void);
+    static void start(void);
+    static void stop(void);
+};
+
+#else
+class __LOCAL signals
+{
+public:
+    static void setup(void);
+    static void start(void);
+    static void stop(void);
+};
+#endif
 
 END_NAMESPACE
 

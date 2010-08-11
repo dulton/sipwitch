@@ -245,10 +245,8 @@ bool server::create(const char *id, keynode *node)
 	return false;
 }
 
-void server::confirm(const char *user)
+void server::confirm(void)
 {
-	assert(user == NULL || *user != 0);
-
 	fsys_t dir;
 	keynode *access = getPath("access");
 	char *id = NULL, *secret = NULL;
@@ -327,36 +325,14 @@ void server::confirm(const char *user)
 	pp->value.features = USER_PROFILE_ADMIN;
 
 #ifdef	_MSWINDOWS_
-	char dbuf[256];
-	unsigned len;
-	GetEnvironmentVariable("APPDATA", dbuf, 192);
-	len = strlen(dbuf);
-	snprintf(dbuf + len, sizeof(dbuf) - len, "\\sipwitch\\users");
-	fsys::open(dir, dbuf, fsys::ACCESS_DIRECTORY);
-	if(is(dir))
-		dirpath = dbuf;
-	else {
-		GetEnvironmentVariable("USERPROFILE", dbuf, 192);
-		len = strlen(dbuf);
-		snprintf(dbuf + len, sizeof(dbuf) - len, "\\gnutelephony\\sipusers");
-		dirpath = dbuf;
-		fsys::create(dir, dbuf, fsys::ACCESS_DIRECTORY, 0700);
-	} 
+	dirpath = _STR(process::path("prefix") + "\\users");
 #else
-	if(user) {
-		dirpath = DEFAULT_CFGPATH "/sipwitch.d";
-		fsys::open(dir, dirpath, fsys::ACCESS_DIRECTORY);
-		if(!is(dir) && fsys::isdir(DEFAULT_VARPATH "/lib/sipwitch"))
-			dirpath = DEFAULT_VARPATH "/lib/sipwitch";
-		else if(!is(dir))
-			dirpath = ".";
-	}	
-	if(!is(dir))
-		fsys::open(dir, dirpath, fsys::ACCESS_DIRECTORY);
+	dirpath = process::get("users");	// /etc/sipwitch.d
+	if(!dirpath)
+		dirpath = process::get("prefix");
 #endif
-	if(!stricmp(dirpath, "."))
-		dirpath = getenv("PWD");
-	process::errlog(DEBUG1, "scanning config from %s", dirpath);
+	fsys::open(dir, dirpath, fsys::ACCESS_DIRECTORY);
+	shell::log(DEBUG1, "scanning config from %s", dirpath);
 	while(is(dir) && fsys::read(dir, filename, sizeof(filename)) > 0) {
 		ext = strrchr(filename, '.');
 		if(!ext || !String::equal(ext, ".xml"))
@@ -378,9 +354,9 @@ void server::confirm(const char *user)
 			fn = buf;
 		if(fp) {
 			if(!load(fp, provision))
-				process::errlog(ERRLOG, "cannot load %s", fn);		
+				shell::log(shell::ERR, "cannot load %s", fn);		
 			else
-				process::errlog(DEBUG1, "loaded %s", fn);
+				shell::log(DEBUG1, "loaded %s", fn);
 		}
 	}
 
@@ -402,11 +378,11 @@ void server::confirm(const char *user)
 	int ifcount = 0, index = 0;
 	int ifd = ::socket(AF_INET, SOCK_DGRAM, 0);
 	if(ifd < 0)
-		process::errlog(FAILURE, "cannot access network");
+		shell::log(shell::FAIL, "cannot access network");
 	else if(ioctl(ifd, SIOCGIFCONF, &ifc) == -1) {
 		::close(ifd);
 		ifd = -1;
-		process::errlog(ERRLOG, "cannot list interfaces");
+		shell::log(shell::ERR, "cannot list interfaces");
 	}
 	if(ifd > 0)
 		ifcount = ifc.ifc_len / sizeof(ifreq);
@@ -457,18 +433,18 @@ void server::confirm(const char *user)
 			leaf = node->leaf("trs");
 			if(leaf && leaf->getPointer())
 				pp->value.level = atoi(leaf->getPointer());
-			debug(2, "adding profile %s", id);
+			shell::debug(2, "adding profile %s", id);
 			if(!stricmp(id, "*"))
 				ppd = pp;
 		}
 		else if(leaf && id) {
 			id = leaf->getPointer();
 			if(create(id, *node)) {
-				process::errlog(WARN, "duplicate identity %s", id);
+				shell::log(shell::WARN, "duplicate identity %s", id);
 				node->setPointer((char *)"duplicate");
 			}
 			else {
-				debug(2, "adding %s %s", node->getId(), id);
+				shell::debug(2, "adding %s %s", node->getId(), id);
 				if(!stricmp(node->getId(), "reject"))
 					registry::remove(id);
 			}
@@ -517,7 +493,10 @@ void server::confirm(const char *user)
 		grp = getgrnam(sipadmin);
 
 	if(grp && !grp->gr_mem)
-		return;
+		goto final;
+
+	if(uid || grp)
+		shell::log(DEBUG1, "scanning users and groups");
 
 	// if no groups at all, try to add base user if enabled....
 	// this allows fully automated service for primary desktop user...
@@ -593,7 +572,7 @@ void server::confirm(const char *user)
 			}
 		}
 		
-		debug(2, "adding %s %s", node->getId(), pwd->pw_name);
+		shell::debug(2, "adding %s %s", node->getId(), pwd->pw_name);
 
 		clone = (keyclone *)getPath(tempname);
 		if(!clone)
@@ -611,6 +590,7 @@ skip:
 		node.next();
 	}	
 	
+final:
 	endpwent();
 	endgrent();
 #endif
@@ -861,15 +841,15 @@ void server::getProvision(const char *cuid, usernode& user)
 
 bool server::check(void)
 {
-	process::errlog(INFO, "checking config...");
+	shell::log(shell::INFO, "checking config...");
 	locking.modify();
 	locking.commit();
-	process::errlog(INFO, "checking components...");
+	shell::log(shell::INFO, "checking components...");
 	if(service::check()) {
-		process::errlog(INFO, "checking complete");
+		shell::log(shell::INFO, "checking complete");
 		return true;
 	}
-	process::errlog(WARN, "checking failed");
+	shell::log(shell::WARN, "checking failed");
 	return false;
 }
 
@@ -894,10 +874,8 @@ void server::dump(FILE *fp)
 	}
 }
 		
-void server::reload(const char *cuid)
+void server::reload(void)
 {
-	assert(cuid == NULL || *cuid != 0);
-
 	char buf[256];
 	FILE *state = NULL;
 	const char *cp;
@@ -917,26 +895,27 @@ void server::reload(const char *cuid)
 	crit(cfgp != NULL, "reload without config");
 
 	if(state) {
-		process::errlog(DEBUG1, "pre-loading state configuration");
+		shell::log(DEBUG1, "pre-loading state configuration");
 		if(!cfgp->load(state))
-			process::errlog(ERRLOG, "invalid state");
+			shell::log(shell::ERR, "invalid state");
 	}
 
-	FILE *fp = service::open(cuid);
+	FILE *fp = fopen(process::get("config"), "r");
+	shell::log(shell::INFO, "loading config from %s", process::get("config"));
 	if(fp)
 		if(!cfgp->load(fp)) {
-			process::errlog(ERRLOG, "invalid config");
+			shell::log(shell::ERR, "invalid config");
 			delete cfgp;
 			return;
 		}
 
 	cp = cfgp->root.getPointer();
 	if(cp)
-		process::errlog(INFO, "activating for state \"%s\"", cp);
+		shell::log(shell::INFO, "activating for state \"%s\"", cp);
 
-	cfgp->commit(cuid);
+	cfgp->commit();
 	if(!cfg) {
-		process::errlog(FAILURE, "no configuration");
+		shell::log(shell::FAIL, "no configuration");
 		exit(2);
 	}
 }
@@ -999,9 +978,9 @@ void server::plugins(const char *argv0, const char *list)
 			if(!ep || stricmp(ep, DLL_SUFFIX))
 				continue;
 			snprintf(path + el, sizeof(path) - el, "/%s", buffer);
-			process::errlog(INFO, "loading %s" DLL_SUFFIX, buffer);
+			shell::log(shell::INFO, "loading %s" DLL_SUFFIX, buffer);
 			if(fsys::load(path)) 
-				process::errlog(ERRLOG, "failed loading %s", path);
+				shell::log(shell::ERR, "failed loading %s", path);
 		}
 		fsys::close(dir);
 	}
@@ -1015,15 +994,15 @@ void server::plugins(const char *argv0, const char *list)
 				String::add(path, sizeof(path), cp);
 				String::add(path, sizeof(path), DLL_SUFFIX);
 				if(fsys::isfile(path)) {
-					process::errlog(INFO, "loading %s" DLL_SUFFIX " locally", cp);
+					shell::log(shell::INFO, "loading %s" DLL_SUFFIX " locally", cp);
 					goto loader;
 				}
 			}
 			snprintf(path, sizeof(path), DEFAULT_LIBPATH "/sipwitch/%s" DLL_SUFFIX, cp);
-			process::errlog(INFO, "loading %s" DLL_SUFFIX, cp);
+			shell::log(shell::INFO, "loading %s" DLL_SUFFIX, cp);
 loader:
 			if(fsys::load(path)) 
-				process::errlog(ERRLOG, "failed loading %s", path);
+				shell::log(shell::ERR, "failed loading %s", path);
 		}
 	}
 }
@@ -1033,7 +1012,7 @@ void server::stop(void)
 	running = false;
 }
 
-void server::run(const char *user)
+void server::run(void)
 {
 	int argc;
 	char *argv[65];
@@ -1050,13 +1029,13 @@ void server::run(const char *user)
 	process::printlog("server starting %s\n", (const char *)logtime);
 
 	while(running && NULL != (cp = process::receive())) {
-		debug(9, "received request %s\n", cp);
+		shell::debug(9, "received request %s\n", cp);
 
 		logtime.set();
 
         if(!stricmp(cp, "reload")) {
 			process::printlog("server reloading %s\n", (const char *)logtime);
-            reload(user);
+            reload();
             continue;
         }
 
@@ -1075,17 +1054,12 @@ void server::run(const char *user)
 		}
 
 		if(!stricmp(cp, "snapshot")) {
-			service::snapshot(user);
-			continue;
-		}
-
-		if(!stricmp(cp, "siplog")) {
-			service::siplog(user);
+			service::snapshot();
 			continue;
 		}
 
 		if(!stricmp(cp, "dump")) {
-			service::dumpfile(user);
+			service::dumpfile();
 			continue;
 		}
 
@@ -1103,21 +1077,11 @@ void server::run(const char *user)
 		if(argc < 1)
 			continue;
 
-		if(!stricmp(argv[0], "history")) {
-			if(argc > 2)
-				goto invalid;
-			else if(argc == 2)
-				process::setHistory(atoi(argv[1]));
-			else
-				service::history(user);
-			continue;
-		}
-
 		if(!stricmp(argv[0], "ifup")) {
 			if(argc != 2)
 				goto invalid;
 			process::printlog("server reloading %s\n", (const char *)logtime);
-            reload(user);
+            reload();
             continue;
 		}
 	
@@ -1125,7 +1089,7 @@ void server::run(const char *user)
 			if(argc != 2)
 				goto invalid;
 			process::printlog("server reloading %s\n", (const char *)logtime);
-            reload(user);
+            reload();
             continue;
 		}
 
@@ -1149,22 +1113,15 @@ void server::run(const char *user)
 			continue;
 		}
 
-		if(!stricmp(argv[0], "verbose")) {
+		if(!stricmp(argv[0], "uid")) {
 			if(argc != 2) {
 invalid:
 				process::reply("invalid argument");
 				continue;
 			}
-			process::setVerbose(errlevel_t(atoi(argv[1])));
-			continue;
-		}
-
-		if(!stricmp(argv[0], "uid")) {
-			if(argc != 2)
-				goto invalid;
 			server::uid = atoi(argv[1]);
 			process::printlog("uid %d %s\n", server::uid, (const char *)logtime);
-			reload(user);
+			reload();
 			continue;
 		}
 
@@ -1182,7 +1139,7 @@ invalid:
 				goto invalid;
 
 			process::printlog("realm %s %s\n", argv[1], (const char *)logtime);
-            reload(user);
+            reload();
             continue;
 		}
 
@@ -1199,7 +1156,7 @@ invalid:
 				goto invalid;
 			state = String::unquote(argv[1], "\"\"\'\'()[]{}");
 			service::publish(state);
-			process::errlog(NOTICE, "published address is %s", state);
+			shell::log(shell::NOTIFY, "published address is %s", state);
 			continue;
 		}
 
@@ -1215,8 +1172,8 @@ invalid:
 				fclose(fp);
 			}
 			process::printlog("state %s %s\n", state, (const char *)logtime);
-			process::errlog(NOTICE, "state changed to %s", state);
-			reload(user);
+			shell::log(shell::NOTIFY, "state changed to %s", state);
+			reload();
 			continue;
 		}
 
@@ -1254,52 +1211,6 @@ invalid:
 
 	logtime.set();
 	process::printlog("server shutdown %s\n", (const char *)logtime);
-}
-
-void server::version(void)
-{
-	printf("SIP Witch " VERSION "\n"
-        "Copyright (C) 2007,2008,2009 David Sugar, Tycho Softworks\n"
-		"License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
-		"This is free software: you are free to change and redistribute it.\n"
-        "There is NO WARRANTY, to the extent permitted by law.\n");
-    exit(0);
-}
-
-void server::usage(void)
-{
-#if !defined(_MSWINDOWS_)
-	printf("Usage: sipw [debug] [options]\n"
-#else
-	printf("Usage: sipw [options]\n"
-#endif
-		"Options:\n"
-		"  -help                Display this information\n"
-		"  -foreground           Run server in foreground\n"
-		"  -background           Run server as daemon\n"
-#ifndef _MSWINDOWS_
-		"  -restartable			 Run server as restartable daemon\n"
-#endif
-		"  -trace                Trace/dump sip messages\n"
-		"  -config=<cfgfile>     Use cfgfile in place of default one\n"
-#ifndef	_MSWINDOWS
-		"  -plugins=<list>       List of plugins to load\n"
-#endif
-		"  -user=<userid>        Change to effective user from root\n" 
-#ifndef	_MSWINDOWS_
-		"  -concurrency=<level>  Increase thread concurrency\n"
-#endif
-		"  -priority=<level>     Increase process priority\n"
-		"  -v[vv], -x<n>         Select verbosity or debug level\n"
-#if !defined(_MSWINDOWS_)
-		"Debug Option:\n"
-		"  -gdb                  Run server from gdb\n"
-		"  -memcheck             Check for memory leaks with valgrind\n"
-		"  -memleak              Find where leaks are with valgrind\n"
-#endif
-	);
-	printf("Report bugs to sipwitch-devel@gnu.org\n");
-	exit(0);
 }
 
 END_NAMESPACE

@@ -46,7 +46,7 @@ service::callback(2)
 
 bool messages::check(void)
 {
-	process::errlog(INFO, "checking messages...");
+	shell::log(shell::INFO, "checking messages...");
 	msglock.lock();
 	msglock.release();
 	return true;
@@ -211,7 +211,7 @@ int messages::system(const char *to, const char *text)
 
 int messages::remote(const char *to, message *msg, const char *digest)
 {
-	debug(3, "instant message delivered to %s from %s", to, msg->reply);
+	shell::debug(3, "instant message delivered to %s from %s", to, msg->reply);
 
 	osip_message_t *im = NULL;
 	int error = SIP_BAD_REQUEST;
@@ -282,11 +282,11 @@ int messages::deliver(message *msg)
 		error = SIP_NOT_FOUND;
 
 	if(!rr || (rr->expires && rr->expires < now)) {
-		debug(3, "instant message failed for %s from %s; error=%d", msg->user, msg->reply, error);
+		shell::debug(3, "instant message failed for %s from %s; error=%d", msg->user, msg->reply, error);
 		goto final;
 	}
 
-	debug(3, "instant message delivered to %s from %s", msg->user, msg->reply);
+	shell::debug(3, "instant message delivered to %s from %s", msg->user, msg->reply);
 	tp = rr->source.internal.targets;
 	while(tp) {
 		if(!rr->expires || tp->expires > now) {

@@ -208,17 +208,17 @@ void registry::start(service *cfg)
 {
 	assert(cfg != NULL);
 
-	process::errlog(DEBUG1, "registry starting; mapping %d entries", mapped_entries);
+	shell::log(DEBUG1, "registry starting; mapping %d entries", mapped_entries);
 	create(REGISTRY_MAP, mapped_entries);
 	if(!reg)
-		process::errlog(FAILURE, "registry could not be mapped");
+		shell::log(shell::FAIL, "registry could not be mapped");
 	initialize();
 	statmap = stats::create();
 }
 
 bool registry::check(void)
 {
-	process::errlog(INFO, "checking registry...");
+	shell::log(shell::INFO, "checking registry...");
 	locking.modify();
 	locking.commit();
 	return true;
@@ -228,7 +228,7 @@ void registry::stop(service *cfg)
 {
 	assert(cfg != NULL);
 
-	process::errlog(DEBUG1, "registry stopping");
+	shell::log(DEBUG1, "registry stopping");
 	MappedMemory::release();
 	MappedMemory::remove(REGISTRY_MAP);
 }
@@ -419,7 +419,7 @@ void registry::expire(mapped *rr)
 	rr->status = MappedRegistry::OFFLINE;
 	if(rr->ext && rr->ext >= reg.prefix && rr->ext < (reg.prefix + reg.range) && extmap[rr->ext - reg.prefix] == rr)
 		extmap[rr->ext - reg.prefix] = NULL;
-	process::errlog(INFO, "expiring %s; extension=%d", rr->userid, rr->ext);
+	shell::log(shell::INFO, "expiring %s; extension=%d", rr->userid, rr->ext);
 	path = NamedObject::keyindex(rr->userid, keysize);
 	rr->display[0] = 0;
 	rr->userid[0] = 0;
@@ -544,10 +544,10 @@ void registry::reload(service *cfg)
 
 	if(!String::equal(realm, oldrealm)) {
 		process::uuid(session_uuid, sizeof(session_uuid), realm);
-		process::errlog(INFO, "new realm %s", realm);
+		shell::log(shell::INFO, "new realm %s", realm);
 		digest::clear();
 	} else if(!String::equal(digest, olddigest)) {
-		process::errlog(INFO, "digest changed to %s", digest);
+		shell::log(shell::INFO, "digest changed to %s", digest);
 		digest::clear();
 	}
 
@@ -823,12 +823,12 @@ registry::mapped *registry::allocate(const char *id)
 	if(ext >= reg.prefix && ext < (reg.prefix + reg.range)) {
 		prior = extmap[ext - reg.prefix];
 		if(prior && prior != rr) {
-			process::errlog(INFO, "releasing %s from extension %d", prior->userid, ext);
+			shell::log(shell::INFO, "releasing %s from extension %d", prior->userid, ext);
 			prior->ext = 0;
 		}
 		extmap[ext - reg.prefix] = rr;
 		rr->ext = ext;
-		process::errlog(INFO, "activating %s; extension=%d", rr->userid, ext);
+		shell::log(shell::INFO, "activating %s; extension=%d", rr->userid, ext);
 	}
 	++active_entries;
 
@@ -1261,7 +1261,7 @@ void registry::mapped::update(void)
 	if(status == prior)
 		return;
 
-	debug(3, "update: %s changed to %s", userid, text);	
+	shell::debug(3, "update: %s changed to %s", userid, text);	
 }
 		
 bool registry::mapped::expire(Socket::address& saddr)

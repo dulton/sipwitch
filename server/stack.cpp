@@ -198,7 +198,7 @@ void stack::background::notify(void)
 
 void stack::background::run(void)
 {
-	process::errlog(DEBUG1, "starting background thread");
+	shell::log(DEBUG1, "starting background thread");
 	timeout_t timeout, current;
 	Timer expiration = interval;
 	stack::call *next;
@@ -207,7 +207,7 @@ void stack::background::run(void)
 		Conditional::lock();
 		if(cancelled) {
 			Conditional::unlock();
-			process::errlog(DEBUG1, "stopping background thread");
+			shell::log(DEBUG1, "stopping background thread");
 			thread = NULL;
 			return;	// exits thread...
 		}
@@ -276,20 +276,8 @@ void stack::disableDumping(void)
 
 void stack::clearDumping(void)
 {
-	char buf[128];
-	const char *uid = NULL;
-	service::keynode *env = service::getEnviron();
-
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/sipdump.log");
-	fsys::remove(buf);
-	if(env)
-		uid = service::getValue(env, "USER");
-	if(uid) {
-		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/sipdump", uid);
-		fsys::remove(buf);
-
-	}
-	service::release(env);
+	::remove(DEFAULT_VARPATH "/log/sipdump.log");
+	::remove(_STR(process::path("controls") + "/sipdump.log"));
 }
 
 void stack::enableDumping(void) 
@@ -301,8 +289,6 @@ void stack::enableDumping(void)
 void stack::siplog(osip_message_t *msg)
 {
     fsys_t log;
-    const char *uid;
-    service::keynode *env;
 	char buf[128];
 	char *text = NULL;
 	size_t tlen;
@@ -312,17 +298,11 @@ void stack::siplog(osip_message_t *msg)
 
 	osip_message_to_str(msg, &text, &tlen);
 	if(text) {
-		env = service::getEnviron();
-		uid = service::getValue(env, "USER");
-
 		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/sipdump.log");
-		fsys::create(log, buf, fsys::ACCESS_APPEND, 0660);
-		if(!is(log)) {
-			snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/sipdump", uid);
-			fsys::create(log, buf, fsys::ACCESS_APPEND, 0660);
-		}
+		fsys::create(log, _STR(process::path("logfiles") + "/sipdump.log"), fsys::ACCESS_APPEND, 0660);
+		if(!is(log))
+			fsys::create(log, _STR(process::path("controls") + "/sipdump.log"), fsys::ACCESS_APPEND, 0660);
 
-		service::release(env);
 		if(is(log)) {
 			Mutex::protect(&stack::sip.dumping);
 			fsys::write(log, text, tlen);
@@ -386,7 +366,7 @@ void stack::clear(session *s)
 	Mutex::protect(cr);
 
 	if(--cr->count == 0) {
-		debug(4, "clearing call %08x:%u\n", 
+		shell::debug(4, "clearing call %08x:%u\n", 
 			cr->source->sequence, cr->source->cid);
 		Mutex::release(cr);
 		destroy(cr);
@@ -396,7 +376,7 @@ void stack::clear(session *s)
 	if(s->cid > 0) {
 		Mutex::release(cr);
 		locking.exclusive();
-		debug(4, "clearing call %08x:%u session %08x:%u\n", 
+		shell::debug(4, "clearing call %08x:%u session %08x:%u\n", 
 			cr->source->sequence, cr->source->cid, s->sequence, s->cid); 
 		if(s->state != session::CLOSED) {
 			s->state = session::CLOSED;
@@ -718,12 +698,12 @@ void stack::start(service *cfg)
 	 
 	thread *thr; 
 	unsigned thidx = 0;
-	process::errlog(DEBUG1, "stack starting; %d maps and %d threads at priority %d", mapped_calls, threading, priority); 
+	shell::log(DEBUG1, "stack starting; %d maps and %d threads at priority %d", mapped_calls, threading, priority); 
 	eXosip_init();
 
 	mapped_array<MappedCall>::create(CALL_MAP, mapped_calls);
 	if(!sip)
-		process::errlog(FAILURE, "calls could not be mapped");
+		shell::log(shell::FAIL, "calls could not be mapped");
 	initialize();
 #ifdef	AF_INET6
 	if(sip_family == AF_INET6) {
@@ -741,7 +721,7 @@ void stack::start(service *cfg)
 #endif
 		if(!iface)
 			iface = "*";
-		process::errlog(FAILURE, "sip cannot bind interface %s, port %d", iface, sip_port);
+		shell::log(shell::FAIL, "sip cannot bind interface %s, port %d", iface, sip_port);
 	}
 
 	osip_trace_initialize_syslog(TRACE_LEVEL0, (char *)"sipwitch");
@@ -764,7 +744,7 @@ void stack::stop(service *cfg)
 {
 	assert(cfg != NULL);
 
-	process::errlog(DEBUG1, "stopping sip stack");
+	shell::log(DEBUG1, "stopping sip stack");
 	background::cancel();
 	thread::shutdown();
 	Thread::yield();
@@ -774,7 +754,7 @@ void stack::stop(service *cfg)
 
 bool stack::check(void)
 {
-	process::errlog(INFO, "checking sip stack...");
+	shell::log(shell::INFO, "checking sip stack...");
 	eXosip_lock();
 	eXosip_unlock();
 	return true;
@@ -1222,7 +1202,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
 	eXosip_lock();
 	if(eXosip_call_build_initial_invite(&invite, touri, s->from, NULL, call->subject)) {
-		process::errlog(ERRLOG, "cannot invite %s; build failed", uri_target);
+		shell::log(shell::ERR, "cannot invite %s; build failed", uri_target);
 		eXosip_unlock();
 		return icount;
 	}
@@ -1281,7 +1261,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 	LinkedObject *nat = NULL;
 
 	if(media::invite(s, network, &nat, sdp) == NULL) {
-		process::errlog(ERRLOG, "cannot assign media proxy for %s", uri_target);
+		shell::log(shell::ERR, "cannot assign media proxy for %s", uri_target);
 		eXosip_unlock();
 		return icount;
 	}
@@ -1298,7 +1278,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 	}
 	else {
 		media::release(&nat);
-		process::errlog(ERRLOG, "invite failed for %s", uri_target);
+		shell::log(shell::ERR, "invite failed for %s", uri_target);
 		eXosip_unlock();
 		return icount;
 	}
@@ -1318,7 +1298,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 	else
 		snprintf(invited->sysident, sizeof(invited->sysident), "%s@unknown", username);
 
-	debug(3, "inviting %s\n", uri_target);
+	shell::debug(3, "inviting %s\n", uri_target);
 	return icount;
 }
 
@@ -1366,7 +1346,7 @@ repeat:
 	target = cr->forward;
 	server::release(user);
 
-	debug(3, "call forward <%s> to %s", forwarding, target);
+	shell::debug(3, "call forward <%s> to %s", forwarding, target);
 
 	rr = registry::access(target);
 	if(rr) {
@@ -1388,7 +1368,7 @@ remote:
 		String::set(buffer, sizeof(buffer), target);
 	target = buffer;
 	server::release(user);
-	debug(3, "call forward <%s> to %s", forwarding, target);
+	shell::debug(3, "call forward <%s> to %s", forwarding, target);
 	inviteRemote(cr->source, target);
 	goto test;
 
@@ -1468,7 +1448,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
 		eXosip_lock();
 		if(eXosip_call_build_initial_invite(&invite, touri, s->from, route, call->subject)) {
 			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
-			process::errlog(ERRLOG, "cannot invite %s; build failed", route);
+			shell::log(shell::ERR, "cannot invite %s; build failed", route);
 			goto unlock;
 		}
 
@@ -1499,7 +1479,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
 		nat = NULL;
 		if(media::invite(s, tp->network, &nat, sdp) == NULL) {
 			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
-			process::errlog(ERRLOG, "no media proxy available for %s", route);
+			shell::log(shell::ERR, "no media proxy available for %s", route);
 			goto unlock;
 		}
 
@@ -1516,7 +1496,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
 		else {
 			media::release(&nat);
 			stack::sipPublish(&tp->address, route, NULL, sizeof(route));
-			process::errlog(ERRLOG, "invite failed for %s", route);
+			shell::log(shell::ERR, "invite failed for %s", route);
 			goto unlock;
 		}
 		
@@ -1552,10 +1532,10 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
 		stack::sipPublish(&tp->address, route, NULL, sizeof(route));
 		switch(dest) {
 		case ROUTED:
-			debug(3, "routing to %s\n", route);
+			shell::debug(3, "routing to %s\n", route);
 			break;
 		default:
-			debug(3, "inviting %s\n", route);
+			shell::debug(3, "inviting %s\n", route);
 		}
 		goto next;	 
 unlock:

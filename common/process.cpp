@@ -28,87 +28,9 @@
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
-class __EXPORT history : public OrderedObject, public process
-{
-public:
-	char text[128];
-	
-	history(errlevel_t lid, const char *msg);
-
-	void set(errlevel_t lid, const char *msg);
-
-	static void add(errlevel_t lid, const char *msg);
-};
-
 static const char *replytarget = NULL;
-static const char *ident = "sipwitch";
-static mutex_t histlock;
-static OrderedIndex histindex;
-static unsigned histcount = 0;
-static unsigned histlimit = 0;
-static errlevel_t verbose = FAILURE;
 
-history::history(errlevel_t lid, const char *msg) :
-OrderedObject(&histindex)
-{
-	++histcount;
-	set(lid, msg);
-}
-
-void history::set(errlevel_t lid, const char *msg)
-{
-	DateTimeString now(DateTimeString::TIME);
-
-	snprintf(text, sizeof(text), "%s %d %s",
-		(const char *)now, (int)lid, msg);
-
-	char *cp = strchr(text, '\n');
-	if(cp)
-		*cp = 0;
-}
-
-void history::add(errlevel_t lid, const char *msg)
-{
-	history *reuse;
-	
-	// if no logging active, nothing to add...
-	if(!histlimit)
-		return;
-
-	histlock.acquire();
-	// if not to buffer limit, start by allocating
-	// maybe we could use a pager heap....
-	if(histcount < histlimit) {
-		new history(lid, msg);
-		histlock.release();
-		return;
-	}
-
-	reuse = (history *)histindex.begin();
-	reuse->delist(&histindex);
-	reuse->set(lid, msg);
-	reuse->enlist(&histindex);
-	histlock.release();
-}
-
-void process::setVerbose(errlevel_t level)
-{
-	verbose = level;
-}
-
-void process::setHistory(unsigned limit)
-{
-	history *reuse;
-
-	histlock.acquire();
-	while(histcount > limit) {
-		reuse = (history *)histindex.begin();
-		reuse->delist(&histindex);
-		delete reuse;
-	}
-	histlimit = limit;
-	histlock.release();
-}
+shell_t process::args;
 
 #ifndef	_MSWINDOWS_
 
@@ -140,22 +62,18 @@ static void get_system_time(uuid_time_t *uuid_time)
         + 0x01B21DD213814000ll;
 }
 
-size_t process::attach(const char *id, const char *uid)
+size_t process::attach(void)
 {
-	assert(id != NULL && *id != 0);
-	assert(uid != NULL && *uid != 0);
-
 	struct stat ino;
 
-	if(!uid)
-		uid = process::identity();
-	ident = id;
-	snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/%s", ident);
-	if(!stat(fifopath, &ino) && S_ISDIR(ino.st_mode) && !access(fifopath, W_OK)) 
-		snprintf(fifopath, sizeof(fifopath), DEFAULT_VARPATH "/run/%s/control", ident);
-	else
-		snprintf(fifopath, sizeof(fifopath), "/tmp/%s-%s/control", ident, uid);
+	const char *home = args.getenv("HOME");
 
+	if(!home)
+		home = get("prefix");
+
+	set("HOME", home);
+
+	String::set(fifopath, sizeof(fifopath), process::get("control"));
 	remove(fifopath);
 	if(mkfifo(fifopath, 0660)) {
 		fifopath[0] = 0;
@@ -169,50 +87,9 @@ size_t process::attach(const char *id, const char *uid)
 	return 0;
 }
 
-static void logfile(fsys_t &fs)
-{
-	char buf[128];
-
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/%s.log", ident);
-	fsys::create(fs, buf, fsys::ACCESS_APPEND, 0660);
-	if(is(fs))
-		return;
-
-	snprintf(buf, sizeof(buf), "/tmp/%s-%s/logfile", ident, process::identity());
-	fsys::create(fs, buf, fsys::ACCESS_APPEND, 0660); 
-}
-
-FILE *process::callfile(void)
-{
-	char buf[128];
-	FILE *fp;
-
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/%s.calls", ident);
-	fp = fopen(buf, "a");
-	if(fp)
-		return fp;
-
-	snprintf(buf, sizeof(buf), "/tmp/%s-%s/calls", ident, process::identity());
-	return fopen(buf, "a");
-}
-
-FILE *process::statfile(void)
-{
-	char buf[128];
-	FILE *fp;
-
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/%s.stats", ident);
-	fp = fopen(buf, "a");
-	if(fp)
-		return fp;
-
-	snprintf(buf, sizeof(buf), "/tmp/%s-%s/stats", ident, process::identity());
-	return fopen(buf, "a");
-}
-
 void process::release(void)
 {
-	errlog(INFO, "shutdown");
+	shell::log(shell::INFO, "shutdown");
 	if(fifopath[0]) {
 		::remove(fifopath);
 		char *cp = strrchr(fifopath, '/');
@@ -256,66 +133,6 @@ retry:
 	return cp;
 }
 
-void process::errlog(errlevel_t loglevel, const char *fmt, ...)
-{
-	assert(fmt != NULL && *fmt != 0);
-
-	char buf[256];
-	int level = LOG_ERR;
-	va_list args;	
-
-	va_start(args, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, args);
-	va_end(args);
-
-	switch(loglevel)
-	{
-	case DEBUG1:
-	case DEBUG2:
-	case DEBUG3:
-		if((getppid() > 1) && (loglevel <= verbose)) {
-			if(fmt[strlen(fmt) - 1] == '\n') 
-				fprintf(stderr, "sipw: %s", buf);
-			else
-				fprintf(stderr, "sipw: %s\n", buf);
-		}
-		return;
-	case INFO:
-		level = LOG_INFO;
-		break;
-	case NOTIFY:
-		level = LOG_NOTICE;
-		break;
-	case WARN:
-		level = LOG_WARNING;
-		break;
-	case ERRLOG:
-		level = LOG_ERR;
-		break;
-	case FAILURE:
-		level = LOG_CRIT;
-		break;
-	default:
-		level = LOG_ERR;
-	}
-
-	if(loglevel <= verbose) {
-		if(getppid() > 1) {
-			if(fmt[strlen(fmt) - 1] == '\n') 
-				fprintf(stderr, "sipw: %s", buf);
-			else
-				fprintf(stderr, "sipw: %s\n", buf);
-		}
-		::syslog(level, "%s", buf);
-		modules::errlog(loglevel, buf);
-		history::add(loglevel, buf);
-	}
-	
-	if(level == LOG_CRIT)
-		cpr_runtime_error(buf);
-}
-
-
 #else
 
 static HANDLE hFifo = INVALID_HANDLE_VALUE;
@@ -342,49 +159,21 @@ static void get_system_time(uuid_time_t *uuid_time)
     *uuid_time = time.QuadPart;
 }
 
-FILE *process::callfile(void)
-{
-	char buf[256];
-	unsigned len;
-
-	GetEnvironmentVariable("APPDATA", buf, 192);
-	len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\%s\\service.calls", ident);
-	
-	return fopen(buf, "a");
-}
-
-FILE *process::statfile(void)
-{
-	char buf[256];
-	unsigned len;
-
-	GetEnvironmentVariable("APPDATA", buf, 192);
-	len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\%s\\service.stats", ident);
-	
-	return fopen(buf, "a");
-}
-
-
-static void logfile(fsys_t& fd)
-{
-	char buf[256];
-	unsigned len;
-
-	GetEnvironmentVariable("APPDATA", buf, 192);
-	len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\%s\\service.log", ident);
-	
-	fsys::create(fd, buf, fsys::ACCESS_APPEND, 0660);
-}
-
-size_t process::attach(const char *id, const char *uid)
+size_t process::attach(void)
 {
 	char buf[64];
 
-	ident = id;
-	snprintf(buf, sizeof(buf), "\\\\.\\mailslot\\%s_ctrl", ident);
+	const char *home = args.getenv("HOME");
+
+	if(!home)
+		home = args.getenv("USERPROFILE");
+
+	if(!home)
+		home = get("prefix");
+
+	set("HOME", home);
+
+	String::set(buf, sizeof(buf), process::get("control"));
 	hFifo = CreateMailslot(buf, 0, MAILSLOT_WAIT_FOREVER, NULL);
 	if(hFifo == INVALID_HANDLE_VALUE)
 		return 0;
@@ -447,35 +236,9 @@ retry:
 	return cp;
 } 
 
-void process::errlog(errlevel_t loglevel, const char *fmt, ...)
-{
-	assert(fmt != NULL && *fmt != 0);
-
-	char buf[256];
-	va_list args;	
-
-	va_start(args, fmt);
-
-	assert(fmt != NULL);
-	vsnprintf(buf, sizeof(buf), fmt, args);
-	va_end(args);
-
-	if(loglevel <= verbose) {
-		if(fmt[strlen(fmt) - 1] == '\n') 
-			fprintf(stderr, "%s: %s", getenv("IDENT"), buf);
-		else
-			fprintf(stderr, "%s: %s\n", getenv("IDENT"), buf);
-		modules::errlog(loglevel, buf);
-		history::add(loglevel, buf);
-	}
-	
-	if(loglevel == FAILURE)
-		cpr_runtime_error(buf);
-}
-
 void process::release(void)
 {
-	errlog(INFO, "shutdown");
+	shell::log(shell::INFO, "shutdown");
 
 	if(hFifo != INVALID_HANDLE_VALUE) {
 		CloseHandle(hFifo);
@@ -486,82 +249,6 @@ void process::release(void)
 }
 
 #endif
-
-void process::siplog(const char *uid)
-{
-	FILE *fp, *log;
-	char buf[256];
-
-#ifndef	_MSWINDOWS_
-	if(!replytarget || !isdigit(*replytarget))
-		return;
-
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/log/sipdump.log");
-	log = fopen(buf, "r");
-	if(log == NULL) {
-		snprintf(buf, sizeof(buf), "/tmp/sipwitch-%s/sipdump", uid);
-		log = fopen(buf, "r");
-	}
-
-	if(!log)
-		return;
-
-	snprintf(buf, sizeof(buf), "/tmp/.sipwitch.%d", atoi(replytarget));
-	fp = fopen(buf, "w");
-
-	while(fp != NULL && NULL != fgets(buf, sizeof(buf), log)) {
-		if(feof(log))
-			break;
-		fputs(buf, fp);
-	}
-	if(fp)
-		fclose(fp);
-
-	if(log)
-		fclose(log);
-#endif
-}
-
-void process::histlog(const char *uid)
-{
-	FILE *fp;
-	char buf[256];
-
-	linked_pointer<history> hp;
-
-	if(!histlimit)
-		return;
-
-#ifdef	_MSWINDOWS_
-	GetEnvironmentVariable("APPDATA", buf, 192);
-	unsigned len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\%s\\history.log", ident);	 
-#else
-	if(replytarget && isdigit(*replytarget))
-		snprintf(buf, sizeof(buf), "/tmp/.sipwitch.%d", atoi(replytarget));
-	else
-		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/history", ident);
-#endif
-	fp = fopen(buf, "w");
-#ifndef	_MSWINDOWS_
-	if(!fp) {
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s/history", ident, uid);
-		fp = fopen(buf, "w");
-	}
-#endif
-
-	if(!fp)
-		return;
-
-	histlock.acquire();
-	hp = histindex.begin();
-	while(is(hp)) {
-		fprintf(fp, "%s\n", hp->text);
-		hp.next();
-	}
-	histlock.release();
-	fclose(fp);
-}
 
 void process::printlog(const char *fmt, ...)
 {
@@ -575,8 +262,7 @@ void process::printlog(const char *fmt, ...)
 
 	va_start(args, fmt);
 
-	logfile(log);
-
+	fsys::create(log, process::get("logfile"), fsys::ACCESS_APPEND, 0660);
 	vsnprintf(buf, sizeof(buf) - 1, fmt, args);
 	len = strlen(buf);
 	if(buf[len - 1] != '\n')
@@ -590,7 +276,7 @@ void process::printlog(const char *fmt, ...)
 	if(cp)
 		*cp = 0;
 
-	debug(2, "logfile: %s", buf);
+	shell::debug(2, "logfile: %s", buf);
 	va_end(args);
 }
 
@@ -604,7 +290,7 @@ void process::reply(const char *msg)
 	char buffer[256];
 
 	if(msg)
-		errlog(ERRLOG, "control failed; %s", msg);
+		shell::log(shell::ERR, "control failed; %s", msg);
 
 	if(!replytarget)
 		return;
@@ -650,7 +336,7 @@ bool process::system(const char *fmt, ...)
 		vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 
-	debug(5, "executing %s", buf);
+	shell::debug(5, "executing %s", buf);
 
 #ifdef	_MSWINDOWS_
 #else
@@ -685,31 +371,8 @@ bool process::system(const char *fmt, ...)
 	return true;
 }
 
-const char *process::identity(void)
+bool process::control(const char *fmt, ...)
 {
-	static const char *userid = NULL;
-
-#ifdef	_MSWINDOWS_
-	return "telephony";
-#else
-	if(!userid)
-		userid = getenv("USER");
-	if(userid)
-		return userid;
-
-	struct passwd *pwd = getpwuid(getuid());
-	if(pwd)
-		userid = strdup(pwd->pw_name);
-	else 
-		userid = "nobody";
-	endpwent();
-	return userid;
-#endif
-}
-
-bool process::control(const char *uid, const char *fmt, ...)
-{
-	assert(uid == NULL || *uid != 0);
 	assert(fmt != NULL && *fmt != 0);
 
 	char buf[512];
@@ -720,21 +383,12 @@ bool process::control(const char *uid, const char *fmt, ...)
 
 	va_start(args, fmt);
 #ifdef	_MSWINDOWS_
-	snprintf(buf, sizeof(buf), "\\\\.\\mailslot\\%s_ctrl", ident);
-	fd = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	fd = CreateFile(process::get("control"), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if(fd == INVALID_HANDLE_VALUE)
 		return false;
 
 #else
-	if(!uid)
-		uid = identity();
-
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/control", ident);
-	fd = ::open(buf, O_WRONLY | O_NONBLOCK);
-	if(fd < 0) {
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s/control", ident, uid);
-		fd = ::open(buf, O_WRONLY | O_NONBLOCK);
-	}
+	fd = ::open(process::get("control"), O_WRONLY | O_NONBLOCK);
 	if(fd < 0)
 		return false;
 #endif
@@ -765,19 +419,18 @@ bool process::state(const char *state)
 #ifdef	_MSWINDOWS_
 	return false;
 #else
-	snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s-states/%s.xml", ident, state);
+	String::set(buf, sizeof(buf), _STR(process::path("prefix") + "/states/" + state + ".xml"));
 	if(!fsys::isfile(buf))
 		return false;
-	snprintf(buf1, sizeof(buf1), DEFAULT_VARPATH "/run/%s/state.xml", ident);
+	String::set(buf1, sizeof(buf1), _STR(process::path("prefix") + "state.xml"));
 	remove(buf1);
 	if(!stricmp(state, "up") || !stricmp(state, "none"))
 		return true;
+
 #ifdef	HAVE_SYMLINK
-	snprintf(buf1, sizeof(buf1), DEFAULT_VARPATH "/run/%s/state.xml", ident);
 	if(symlink(buf, buf1))
 		return false;
 #else
-	snprintf(buf1, sizeof(buf1), DEFAULT_VARPATH "/run/%s/state.xml", ident);
 	if(link(buf, buf1))
 		return false;
 #endif
@@ -785,95 +438,16 @@ bool process::state(const char *state)
 #endif
 }
 
-FILE *process::dumpfile(const char *uid)
+FILE *process::output(const char *id)
 {
-	FILE *fp;
-	char buf[256];
-
 #ifdef	_MSWINDOWS_
-	GetEnvironmentVariable("APPDATA", buf, 192);
-	unsigned len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\%s\\dumpfile.log", ident);	 
+	fopen(_STR(path("controls") + "/" + id + ".out", "w"));
 #else
 	if(replytarget && isdigit(*replytarget))
-		snprintf(buf, sizeof(buf), "/tmp/.sipwitch.%d", atoi(replytarget));
-	else
-		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/dumpfile", ident);
+		return fopen(path("reply") + str((Unsigned)atol(replytarget)), "w");
+	printf("PATH IS %s\n", _STR(path("controls") + "/" + id));
+	return fopen(_STR(path("controls") + "/" + id), "w");
 #endif
-	fp = fopen(buf, "w");
-#ifndef	_MSWINDOWS_
-	if(!fp) {
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s/dumpfile", ident, uid);
-		fp = fopen(buf, "w");
-	}
-#endif
-	return fp;
-}
-
-FILE *process::snapshot(const char *uid)
-{
-	FILE *fp;
-	char buf[256];
-
-#ifdef	_MSWINDOWS_
-	GetEnvironmentVariable("APPDATA", buf, 192);
-	unsigned len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\%s\\snapshot.log", ident);	 
-#else
-	if(replytarget && isdigit(*replytarget))
-		snprintf(buf, sizeof(buf), "/tmp/.sipwitch.%d", atoi(replytarget));
-	else
-		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/snapshot", ident);
-#endif
-	fp = fopen(buf, "w");
-#ifndef	_MSWINDOWS_
-	if(!fp) {
-		snprintf(buf, sizeof(buf), "/tmp/%s-%s/snapshot", ident, uid);
-		fp = fopen(buf, "w");
-	}
-#endif
-	return fp;
-}
-
-FILE *process::config(const char *uid)
-{
-	FILE *fp = NULL;
-	char buf[256];
-
-#ifdef _MSWINDOWS_
-	GetEnvironmentVariable("APPDATA", buf, 192);
-	unsigned len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\%s\\config.xml", ident);
-	fp = fopen(buf, "r");
-	if(fp) {
-			process::errlog(DEBUG1, "loading config from %s", buf);
-			return fp;
-	}
-	GetEnvironmentVariable("USERPROFILE", buf, 192);
-	len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, "\\gnutelephony\\%s.xml", ident);
-#else
-	struct stat ino;
-	bool root = false;
-
-	snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s", ident);
-	if(uid && !stat(buf, &ino) && S_ISDIR(ino.st_mode) && !::access(buf, W_OK)) {
-		root = true;
-		snprintf(buf, sizeof(buf), DEFAULT_VARPATH "/run/%s/config.xml", ident);
-		fp = fopen(buf, "r");
-		if(fp) {
-			process::errlog(DEBUG1, "loading config from %s", buf);
-			return fp;
-		}
-	}
-
-	if(uid && root)
-		snprintf(buf, sizeof(buf), DEFAULT_CFGPATH "/%s.conf", ident);
-	else
-		snprintf(buf, sizeof(buf), "%s/.%src", getenv("HOME"), ident); 
-#endif
-	process::errlog(DEBUG1, "loading config from %s", buf);
-	return fopen(buf, "r");
 }
 
 void process::uuid(char *buffer, size_t size, unsigned short seq, unsigned callid)

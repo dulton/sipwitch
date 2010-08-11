@@ -70,7 +70,7 @@ public:
 	};
 
 	static void cdrlog(FILE *fp, cdr *call);	
-	static void errlog(errlevel_t level, const char *text);
+	static void errlog(shell::loglevel_t level, const char *text);
 };
 
 END_NAMESPACE

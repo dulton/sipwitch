@@ -59,7 +59,7 @@ void stack::call::cancelLocked(void)
 	linked_pointer<segment> sp = segments.begin();
 	session *s;
 
-	debug(2, "cancelling call %08x:%u", source->sequence, source->cid);
+	shell::debug(2, "cancelling call %08x:%u", source->sequence, source->cid);
 	while(sp) {
 		s = &(sp->sid);
 		if(s != source) {
@@ -89,7 +89,7 @@ void stack::call::joinLocked(session *join)
 	if(target)
 		return;
 
-	debug(2, "joining call %08x:%u with session %08x:%u",
+	shell::debug(2, "joining call %08x:%u with session %08x:%u",
 		source->sequence, source->cid, join->sequence, join->cid);
 
 	String::set(map->target, sizeof(map->target), join->sysident);
@@ -122,7 +122,7 @@ void stack::call::joinLocked(session *join)
 
 void stack::call::disconnectLocked(void)
 {
-	debug(4, "disconnecting call %08x:%u\n", source->sequence, source->cid);
+	shell::debug(4, "disconnecting call %08x:%u\n", source->sequence, source->cid);
 
 	switch(state) {
 	case RINGING:
@@ -209,7 +209,7 @@ void stack::call::reply_source(int error)
 {
 	osip_message_t *reply = NULL;
 
-	debug(3, "sip: sending source reply %d", error);
+	shell::debug(3, "sip: sending source reply %d", error);
 
 	if(error == SIP_CALL_IS_BEING_FORWARDED && answering)
 		answering = 16;
@@ -221,7 +221,7 @@ void stack::call::reply_source(int error)
 		eXosip_call_send_answer(source->tid, error, reply);
 	}
 	else {
-		debug(3, "sip: source reply %d failed", error);
+		shell::debug(3, "sip: source reply %d failed", error);
 		eXosip_call_send_answer(source->tid, SIP_BAD_REQUEST, NULL);
 	}
 	eXosip_unlock();
@@ -460,7 +460,7 @@ unconnected:
 	}
 	Mutex::release(this);
 failed:
-	debug(2, "reinvite failed for call %08x:%u",
+	shell::debug(2, "reinvite failed for call %08x:%u",
 			source->sequence, source->cid);
 		failed(thread, s);
 }
@@ -476,7 +476,7 @@ void stack::call::answer(thread *thread, session *s)
 	Mutex::protect(this);
 	if(s == source || (target != NULL && target != s)) {
 		Mutex::release(this);
-		debug(2, "cannot answer call %08x:%u from specified session", 
+		shell::debug(2, "cannot answer call %08x:%u from specified session", 
 			source->sequence, source->cid);
 		return;
 	} 
@@ -507,7 +507,7 @@ void stack::call::answer(thread *thread, session *s)
 		return;	
 	default:
 		Mutex::release(this);
-		debug(2, "cannot answer non-ringing call %08x:%u",
+		shell::debug(2, "cannot answer non-ringing call %08x:%u",
 			source->sequence, source->cid);
 		return;
 	}
@@ -523,7 +523,7 @@ void stack::call::answer(thread *thread, session *s)
 	}
 	else {
 		eXosip_unlock();
-		debug(2, "answer failed for call %08x:%u",
+		shell::debug(2, "answer failed for call %08x:%u",
 			source->sequence, source->cid);
 		failed(thread, source);
 	}
@@ -614,7 +614,7 @@ void stack::call::confirm(thread *thread, session *s)
 	Mutex::protect(this);
 	if(target == NULL) {
 		Mutex::release(this);
-		debug(2, "cannot confirm call %08x:%u from session %08x:%u\n", 
+		shell::debug(2, "cannot confirm call %08x:%u from session %08x:%u\n", 
 			source->sequence, source->cid, s->sequence, s->cid); 
 		return;
 	}
@@ -640,7 +640,7 @@ void stack::call::confirm(thread *thread, session *s)
 		break;
 	default:
 		Mutex::release(this);
-		debug(2, "cannot confirm unanswered call %08x:%u",
+		shell::debug(2, "cannot confirm unanswered call %08x:%u",
 			source->sequence, source->cid);
 		return;
 	}
@@ -652,7 +652,7 @@ void stack::call::confirm(thread *thread, session *s)
 		eXosip_call_send_ack(did, ack);
 	}
 	else {
-		debug(2, "confirm failed to send for call %08x:%u",
+		shell::debug(2, "confirm failed to send for call %08x:%u",
 			source->sequence, source->cid);
 	}
 	eXosip_unlock();
@@ -738,7 +738,7 @@ void stack::call::trying(thread *thread)
 	// busy or one or more to start ringing...
 	//
 	if(state == INITIAL) {
-		debug(3, "sip: sending initial ring %d", SIP_RINGING);
+		shell::debug(3, "sip: sending initial ring %d", SIP_RINGING);
 		reply_source(SIP_RINGING);
 		time_t now;
 		time(&now);
@@ -806,7 +806,7 @@ void stack::call::expired(void)
 	case FINAL:		// session expired that expects to be recycled.
 	case INITIAL:	// never used session recycled.
 		// The call record is garbage collected
-		debug(4, "expiring call %08x:%u\n", source->sequence, source->cid);
+		shell::debug(4, "expiring call %08x:%u\n", source->sequence, source->cid);
 		stack::destroy(this);
 		return;
 	default:
