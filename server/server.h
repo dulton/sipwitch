@@ -728,6 +728,20 @@ private:
 	static bool isProxied(const char *source, const char *target, struct sockaddr_storage *peering);
 };
 
+class __LOCAL history : public OrderedObject, public process
+{
+public:
+    char text[128];
+
+    history(shell::loglevel_t lid, const char *msg);
+
+    void set(shell::loglevel_t lid, const char *msg);
+
+    static void add(shell::loglevel_t lid, const char *msg);
+	static void set(unsigned size);
+	static void out(void);
+};
+
 #ifdef HAVE_SIGWAIT
 #include <signal.h>
 

@@ -41,6 +41,7 @@ static shell::flagopt foreflag('f', "--foreground", _TEXT("run in foreground"));
 #ifdef  HAVE_PWD_H
 static shell::stringopt group('g', "--group", _TEXT("use specified group permissions"), "groupid", "nobody");
 #endif
+static shell::numericopt histbuf('h', "--history", _TEXT("set history buffer"), "count", 0);
 static shell::stringopt loglevel('L', "--logging", _TEXT("set log level"), "level", "err");
 static shell::stringopt loading('l', "--plugins", _TEXT("specify modules to load"), "names", "none");
 static shell::counteropt priority('p', "--priority", _TEXT("set priority level"), "level");
@@ -112,6 +113,13 @@ static void versioninfo(void)
         "This is free software: you are free to change and redistribute it.\n"
         "There is NO WARRANTY, to the extent permitted by law.\n"));
     exit(0);
+}
+
+static bool errlog(shell::loglevel_t level, const char *text)
+{
+	modules::errlog(level, text);
+	history::add(level, text);
+	return false;
 }
 
 namespace SIPWITCH_NAMESPACE {
@@ -282,6 +290,10 @@ extern int main(int argc, char **argv)
     if(cp && *cp)
         loglevel.set(strdup(cp));
 
+	cp = process::args.getenv("LOGGING");
+    if(cp && *cp)
+        histbuf.set(atoi(cp));
+
 	cp = process::args.getenv("PLUGINS");
 	if(cp && *cp)
 		loading.set(strdup(cp));
@@ -297,8 +309,12 @@ extern int main(int argc, char **argv)
 	// check validity of some options...
 
     if(*concurrency < 0)
-        shell::errexit(1, "apennine: concurrency: %ld: %s\n",
+        shell::errexit(1, "sipwitch: concurrency: %ld: %s\n",
             *concurrency, _TEXT("negative levels invalid"));
+
+	if(*histbuf < 0)
+        shell::errexit(1, "sipwitch: history: %ld: %s\n",
+            *histbuf, _TEXT("negative buffer limit invalid"));
 
 	// set threading properties...
 
@@ -401,7 +417,7 @@ extern int main(int argc, char **argv)
             prefix, _TEXT("data directory unavailable"));
 
     shell::loglevel_t level = (shell::loglevel_t)*verbose;
-
+	history::set(*histbuf);
 	server::plugins(plugins, *loading);
 
     // daemonify process....
@@ -410,7 +426,7 @@ extern int main(int argc, char **argv)
 		server::logmode = shell::CONSOLE_LOG;
 	}
 
-    shell::log("sipwitch", level, server::logmode);
+    shell::log("sipwitch", level, server::logmode, &errlog);
 
     if(!process::attach())
 		shell::errexit(1, "*** sipwitch: %s\n", 

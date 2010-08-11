@@ -36,7 +36,7 @@ EXTRA_LTLIBRARIES += notify.la
 endif
 
 sipw_SOURCES = server.cpp registry.cpp stack.cpp thread.cpp \
-	call.cpp messages.cpp media.cpp system.cpp signals.cpp
+	call.cpp messages.cpp media.cpp system.cpp signals.cpp history.cpp
 sipw_LDADD = $(LDADD) $(DLOPEN)
 
 sysconf_DATA = sipwitch.conf

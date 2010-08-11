@@ -1147,6 +1147,16 @@ invalid:
 			continue;
 		}
 
+		if(ieq(argv[0], "history")) {
+            if(argc > 2)
+                goto invalid;
+            else if(argc == 2)
+                history::set(atoi(argv[1]));
+            else
+                history::out();
+            continue;
+        }
+
 		if(ieq(argv[0], "verbose")) {
 			if(argc != 2)
 				goto invalid;
