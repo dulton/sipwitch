@@ -727,7 +727,7 @@ private:
 	static bool isProxied(const char *source, const char *target, struct sockaddr_storage *peering);
 };
 
-#ifdef  HAVE_SIGWAIT
+#if defined(HAVE_SIGWAIT) || defined(HAVE_SIGWAIT2)
 #include <signal.h>
 
 class __LOCAL signals : private JoinableThread
