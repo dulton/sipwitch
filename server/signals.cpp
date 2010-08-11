@@ -17,7 +17,7 @@
 
 NAMESPACE_SIPWITCH
 
-#if defined(HAVE_SIGWAIT) || defined(HAVE_SIGWAIT2)
+#ifdef HAVE_SIGWAIT
 
 signals signals::thread;
 

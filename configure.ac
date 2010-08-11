@@ -260,6 +260,26 @@ AC_CACHE_CHECK(whether sigwait has 2 arguments,
 )
 if test "$ac_cv_libc_sigwait2" = "yes" ; then
 	AC_DEFINE(HAVE_SIGWAIT2, [1], [2 argument form])
+	AC_DEFINE(HAVE_SIGWAIT, [1], [have sigwait])
+else
+	AC_CACHE_CHECK(whether has any sigwait support,
+		ac_cv_libc_sigwait,
+		AC_TRY_COMPILE([
+			#define _POSIX_PTHREAD_SEMANTICS
+			#define	_GNU_SOURCE
+			#include <stdio.h>
+			#include <signal.h>],
+			[sigset_t sigs; int signo = sigwait(&sigs);],
+			ac_cv_libc_sigwait2=yes,
+			ac_cv_libc_sigwait2=no
+		)	
+	)
+
+	if test "$ac_cv_libc_sigwait" = "yes" ; then
+		AC_DEFINE(HAVE_SIGWAIT, [1], [have sigwait])
+	else
+		AC_CHECK_FUNCS(sigwait)
+	fi
 fi
 
 if test "$UCOMMON_MODEL" = "CC" ; then
@@ -290,7 +310,7 @@ for lib in $UCOMMON_CLINK ; do
 done
 
 AC_CHECK_HEADERS(sys/resource.h syslog.h net/if.h sys/sockio.h ioctl.h pwd.h)
-AC_CHECK_FUNCS(setrlimit setpgrp setrlimit getuid sigwait mkfifo)
+AC_CHECK_FUNCS(setrlimit setpgrp setrlimit getuid mkfifo)
 
 AC_LANG_CPLUSPLUS
 COMPILER_FLAGS=""
