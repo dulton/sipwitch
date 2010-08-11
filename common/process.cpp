@@ -253,15 +253,15 @@ void process::printlog(const char *fmt, ...)
 	assert(fmt != NULL && *fmt != 0);
 
 	fsys_t log;
-	va_list args;
+	va_list vargs;
 	char buf[1024];
 	int len;
 	char *cp;
 
-	va_start(args, fmt);
+	va_start(vargs, fmt);
 
 	fsys::create(log, process::get("logfile"), fsys::ACCESS_APPEND, 0660);
-	vsnprintf(buf, sizeof(buf) - 1, fmt, args);
+	vsnprintf(buf, sizeof(buf) - 1, fmt, vargs);
 	len = strlen(buf);
 	if(buf[len - 1] != '\n')
 		buf[len++] = '\n';
@@ -275,7 +275,7 @@ void process::printlog(const char *fmt, ...)
 		*cp = 0;
 
 	shell::debug(2, "logfile: %s", buf);
-	va_end(args);
+	va_end(vargs);
 }
 
 void process::reply(const char *msg)
@@ -326,13 +326,13 @@ bool process::system(const char *fmt, ...)
 {
 	assert(fmt != NULL);
 
-	va_list args;
+	va_list vargs;
 	char buf[256];
 
-	va_start(args, fmt);
+	va_start(vargs, fmt);
 	if(fmt)
-		vsnprintf(buf, sizeof(buf), fmt, args);
-	va_end(args);
+		vsnprintf(buf, sizeof(buf), fmt, vargs);
+	va_end(vargs);
 
 	shell::debug(5, "executing %s", buf);
 
@@ -377,9 +377,9 @@ bool process::control(const char *fmt, ...)
 	fd_t fd;
 	int len;
 	bool rtn = true;
-	va_list args;
+	va_list vargs;
 
-	va_start(args, fmt);
+	va_start(vargs, fmt);
 #ifdef	_MSWINDOWS_
 	fd = CreateFile(process::get("control"), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if(fd == INVALID_HANDLE_VALUE)
@@ -391,8 +391,8 @@ bool process::control(const char *fmt, ...)
 		return false;
 #endif
 
-	vsnprintf(buf, sizeof(buf) - 1, fmt, args);
-	va_end(args);
+	vsnprintf(buf, sizeof(buf) - 1, fmt, vargs);
+	va_end(vargs);
 	len = strlen(buf);
 	if(buf[len - 1] != '\n')
 		buf[len++] = '\n';
