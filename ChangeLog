@@ -1,6 +1,7 @@
 From version 0.8.4 to 0.9.0
 - uses ucommon 3.3.4 or later
 - error logging uses ucommon
+- some internationalization work
 
 From version 0.8.3 to 0.8.4
 - some minor adjustments to assure prack events
