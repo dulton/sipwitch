@@ -33,7 +33,7 @@ Group: Development/Libraries
 Summary: Runtime library support for sipwitch
 
 %package devel
-Requires: ucommon-devel >= 2.1.1
+Requires: ucommon-devel >= 3.3.4
 Requires: %{name}-runtime = %{version}-%{release}
 Group: Development/Libraries
 Summary: Headers for building sipwitch plugins
