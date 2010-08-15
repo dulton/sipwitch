@@ -43,6 +43,6 @@ extern "C" int main()
 	// constructors built
 	assert(init_callback == 2);
 	// test reloading
-	cfg->commit(NULL);
+	cfg->commit();
 	assert(load_callback == 2);
 }
