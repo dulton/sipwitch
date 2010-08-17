@@ -88,7 +88,7 @@ static void usage(void)
 #else
     printf("%s\n", _TEXT("Usage: sipw [options]"));
 #endif
-    printf("%s\n\n", _TEXT("Start httpd/xmlrpc service"));
+    printf("%s\n\n", _TEXT("Start sipwitch service"));
     printf("%s\n", _TEXT("Options:"));
     shell::help();
 	#if defined(DEBUG)
