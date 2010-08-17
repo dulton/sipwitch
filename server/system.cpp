@@ -51,7 +51,7 @@ static shell::flagopt trace('t', "--trace", _TEXT("trace sip messages"));
 static shell::stringopt user('u', "--user", _TEXT("user to run as"), "userid", "nobody");
 #endif
 static shell::flagopt verbose('v', NULL, _TEXT("set verbosity, can be used multiple times"), false);
-static shell::flagopt version(0, "--verson", _TEXT("show version information"));
+static shell::flagopt version(0, "--version", _TEXT("show version information"));
 static shell::numericopt debuglevel('x', "--debug", _TEXT("set debug level directly"), "level", 0);
 
 #if defined(HAVE_SETRLIMIT) && defined(DEBUG)
