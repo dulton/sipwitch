@@ -1,4 +1,4 @@
-// Copyright (C) 2006-2008 David Sugar, Tycho Softworks.
+// Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ void modules::sipwitch::period(long slice)
 
 bool modules::sipwitch::announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *msgbody)
 {
-	return false;
+    return false;
 }
 
 void modules::sipwitch::registration(int id, regmode_t mode)
@@ -60,63 +60,63 @@ void modules::sipwitch::registration(int id, regmode_t mode)
 
 bool modules::sipwitch::authenticate(int id, const char *realm)
 {
-	return false;
+    return false;
 }
 
 MappedRegistry *modules::sipwitch::redirect(const char *target)
 {
-	return NULL;
+    return NULL;
 }
 
 MappedRegistry *modules::sipwitch::accept(const char *request_uri)
 {
-	return NULL;
+    return NULL;
 }
 
 char *modules::sipwitch::referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size)
 {
-	return NULL;
+    return NULL;
 }
 
 char *modules::sipwitch::referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size)
 {
-	return NULL;
+    return NULL;
 }
 
 void modules::errlog(shell::loglevel_t level, const char *text)
 {
-	linked_pointer<service::callback> cb = service::getModules();
+    linked_pointer<service::callback> cb = service::getModules();
 
-	while(is(cb)) {
-		cb->errlog(level, text);
-		cb.next();
-	}
+    while(is(cb)) {
+        cb->errlog(level, text);
+        cb.next();
+    }
 }
 
 void modules::cdrlog(FILE *fp, cdr *call)
 {
-	DateTimeString dt(call->starting);
-	const char *buf = dt.c_str();
+    DateTimeString dt(call->starting);
+    const char *buf = dt.c_str();
 
-	if(call->type == cdr::STOP) {
-		shell::debug(1, "call %08x:%u %s %s %s %ld %s %s %s %s",
-			call->sequence, call->cid, call->network, call->reason, buf,
-			call->duration, call->ident, call->dialed, call->joined, call->display);
-	}
+    if(call->type == cdr::STOP) {
+        shell::debug(1, "call %08x:%u %s %s %s %ld %s %s %s %s",
+            call->sequence, call->cid, call->network, call->reason, buf,
+            call->duration, call->ident, call->dialed, call->joined, call->display);
+    }
 
-	linked_pointer<service::callback> cb = service::getModules();
+    linked_pointer<service::callback> cb = service::getModules();
 
-	while(is(cb)) {
-		cb->cdrlog(call);
-		cb.next();
-	}
+    while(is(cb)) {
+        cb->cdrlog(call);
+        cb.next();
+    }
 
-	if(!fp || call->type != cdr::STOP)
-		return;
+    if(!fp || call->type != cdr::STOP)
+        return;
 
-	fprintf(fp, "%08x:%u %s %s %s %ld %s %s %s %s\n",
-		call->sequence, call->cid, call->network, call->reason, buf,
-		call->duration, call->ident, call->dialed, call->joined, call->display);
+    fprintf(fp, "%08x:%u %s %s %s %ld %s %s %s %s\n",
+        call->sequence, call->cid, call->network, call->reason, buf,
+        call->duration, call->ident, call->dialed, call->joined, call->display);
 }
- 
+
 

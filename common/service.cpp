@@ -1,4 +1,4 @@
-// Copyright (C) 2006-2008 David Sugar, Tycho Softworks.
+// Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 
-#define	RUNLEVELS	(sizeof(callback::runlevels) / sizeof(LinkedObject *))
+#define RUNLEVELS   (sizeof(callback::runlevels) / sizeof(LinkedObject *))
 
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
@@ -52,95 +52,95 @@ static time_t periodic = 0l;
 
 static size_t xmldecode(char *out, size_t limit, const char *src)
 {
-	assert(out != NULL);
-	assert(limit > 0);
-	assert(src != NULL);
+    assert(out != NULL);
+    assert(limit > 0);
+    assert(src != NULL);
 
-	char *ret = out;
+    char *ret = out;
 
-	if(*src == '\'' || *src == '\"')
-		++src;
-	while(src && limit-- > 1 && !strchr("<\'\">", *src)) {
-		if(!strncmp(src, "&amp;", 5)) {
-			*(out++) = '&';
-			src += 5;
-		}
-		else if(!strncmp(src, "&lt;", 4)) {
-			src += 4;
-			*(out++) = '<';
-		}
-		else if(!strncmp(src, "&gt;", 4)) {
-			src += 4;
-			*(out++) = '>';
-		}
-		else if(!strncmp(src, "&quot;", 6)) {
-			src += 6;
-			*(out++) = '\"';
-		}
-		else if(!strncmp(src, "&apos;", 6)) {
-			src += 6;
-			*(out++) = '\'';
-		}
-		else
-			*(out++) = *(src++);
-	}
-	*out = 0;
-	return out - ret;
+    if(*src == '\'' || *src == '\"')
+        ++src;
+    while(src && limit-- > 1 && !strchr("<\'\">", *src)) {
+        if(!strncmp(src, "&amp;", 5)) {
+            *(out++) = '&';
+            src += 5;
+        }
+        else if(!strncmp(src, "&lt;", 4)) {
+            src += 4;
+            *(out++) = '<';
+        }
+        else if(!strncmp(src, "&gt;", 4)) {
+            src += 4;
+            *(out++) = '>';
+        }
+        else if(!strncmp(src, "&quot;", 6)) {
+            src += 6;
+            *(out++) = '\"';
+        }
+        else if(!strncmp(src, "&apos;", 6)) {
+            src += 6;
+            *(out++) = '\'';
+        }
+        else
+            *(out++) = *(src++);
+    }
+    *out = 0;
+    return out - ret;
 }
 
 service::usernode::usernode()
 {
-	keys = NULL;
-	heap = NULL;
+    keys = NULL;
+    heap = NULL;
 }
 
 service::pointer::pointer()
 {
-	node = NULL;
+    node = NULL;
 }
 
 service::pointer::pointer(const char *id)
 {
-	assert(id != NULL && *id != 0);
+    assert(id != NULL && *id != 0);
 
-	locking.access();
-	node = service::path(id);
+    locking.access();
+    node = service::path(id);
 }
 
 service::pointer::pointer(pointer const &copy)
 {
-	node = copy.node;
-	locking.access();
+    node = copy.node;
+    locking.access();
 }
 
 service::pointer::~pointer()
 {
-	service::release(node);
+    service::release(node);
 }
 
 void service::pointer::operator=(keynode *p)
 {
-	service::release(node);
-	node = p;
-}	
+    service::release(node);
+    node = p;
+}
 
 service::callback::callback(int rl) :
 OrderedObject()
 {
-	crit(rl < (int)RUNLEVELS, "service runlevel invalid");
-	if(rl < 0) {
-		rl += RUNLEVELS;
-		crit(rl > 0, "service runlevel invalid");
-	}
-	LinkedObject::enlist(&runlevels[rl]);
-	active_flag = false;
-	runlevel = rl;
-	++count;
+    crit(rl < (int)RUNLEVELS, "service runlevel invalid");
+    if(rl < 0) {
+        rl += RUNLEVELS;
+        crit(rl > 0, "service runlevel invalid");
+    }
+    LinkedObject::enlist(&runlevels[rl]);
+    active_flag = false;
+    runlevel = rl;
+    ++count;
 }
 
 service::callback::~callback()
 {
-	LinkedObject::delist(&runlevels[runlevel]);
+    LinkedObject::delist(&runlevels[runlevel]);
 }
 
 void service::callback::snapshot(FILE *fp)
@@ -149,7 +149,7 @@ void service::callback::snapshot(FILE *fp)
 
 bool service::callback::check(void)
 {
-	return true;
+    return true;
 }
 
 void service::callback::errlog(shell::loglevel_t level, const char *text)
@@ -178,619 +178,619 @@ void service::callback::stop(service *keys)
 
 service::instance::instance()
 {
-	service::locking.access();
+    service::locking.access();
 }
 
 service::instance::~instance()
 {
-	service::locking.release();
+    service::locking.release();
 }
 
 void service::keyclone::splice(keyclone *trunk)
 {
-	parent = trunk;
-	if(parent)
-		enlistTail(&trunk->child);
+    parent = trunk;
+    if(parent)
+        enlistTail(&trunk->child);
 }
 
 service::service(const char *name, size_t s) :
 memalloc(s), root()
 {
-	assert(name != NULL && *name != 0);
+    assert(name != NULL && *name != 0);
 
-	root.setId((char *)name);
-	root.setPointer(NULL);
-	if(!started) {
-		time(&started);
-		time(&periodic);
-	}
+    root.setId((char *)name);
+    root.setPointer(NULL);
+    if(!started) {
+        time(&started);
+        time(&periodic);
+    }
 }
 
 service::~service()
 {
-	// we must zap the xml tree root node, lest it try to delete it's "id"
-	// or child nodes, since all was allocated from the "pager" heap.
-	memset(&root, 0, sizeof(root));
-	memalloc::purge();
+    // we must zap the xml tree root node, lest it try to delete it's "id"
+    // or child nodes, since all was allocated from the "pager" heap.
+    memset(&root, 0, sizeof(root));
+    memalloc::purge();
 }
 
 void service::setHeader(const char *h)
 {
-	String::set(header, sizeof(header) - 1, h);
+    String::set(header, sizeof(header) - 1, h);
 }
 
 void service::publish(const char *addr)
 {
-	Socket::address resolver;
-	struct sockaddr *host;
+    Socket::address resolver;
+    struct sockaddr *host;
 
-	if(!addr)
-		memset(&peering, 0, sizeof(peering));
-	
-	int i = 0;
-	resolver.set(addr, i);
-	host = resolver.getAddr();
-	if(host)
-		Socket::store(&peering, host);
+    if(!addr)
+        memset(&peering, 0, sizeof(peering));
+
+    int i = 0;
+    resolver.set(addr, i);
+    host = resolver.getAddr();
+    if(host)
+        Socket::store(&peering, host);
 }
-	
+
 void service::published(struct sockaddr_storage *peer)
 {
-	memcpy(peer, &peering, sizeof(peering));
+    memcpy(peer, &peering, sizeof(peering));
 }
 
 long service::uptime(void)
 {
-	time_t now;
-	time(&now);
-	if(!started)
-		return 0l;
+    time_t now;
+    time(&now);
+    if(!started)
+        return 0l;
 
-	return now - started;
+    return now - started;
 }
 
 service::keynode *service::path(const char *id)
 {
-	assert(id != NULL && *id != 0);
+    assert(id != NULL && *id != 0);
 
-	if(!cfg)
-		return NULL;
+    if(!cfg)
+        return NULL;
 
-	return cfg->getPath(id);
+    return cfg->getPath(id);
 }
 
 service::keynode *service::list(const char *id)
 {
-	assert(id != NULL && *id != 0);
+    assert(id != NULL && *id != 0);
 
-	keynode *node;
+    keynode *node;
 
-	if(!cfg)
-		return NULL;
+    if(!cfg)
+        return NULL;
 
-	node = cfg->getPath(id);
-	if(node)
-		return node->getFirst();
-	return NULL;
+    node = cfg->getPath(id);
+    if(node)
+        return node->getFirst();
+    return NULL;
 }
 
 service::keynode *service::getUser(const char *id)
 {
-	assert(id != NULL && *id != 0);
-	unsigned path;
-	linked_pointer<keymap> map;
+    assert(id != NULL && *id != 0);
+    unsigned path;
+    linked_pointer<keymap> map;
 
-	if(!cfg)
-		goto bail;
+    if(!cfg)
+        goto bail;
 
-	locking.access();
+    locking.access();
 
-	path = NamedObject::keyindex(id, CONFIG_KEY_SIZE);
-	map = cfg->keys[path];
-	
-	while(map) {
-		if(!stricmp(map->id, id))
-			return map->node;
-		map.next();
-	}
+    path = NamedObject::keyindex(id, CONFIG_KEY_SIZE);
+    map = cfg->keys[path];
+
+    while(map) {
+        if(!stricmp(map->id, id))
+            return map->node;
+        map.next();
+    }
 
 bail:
-	locking.release();
-	return NULL;
+    locking.release();
+    return NULL;
 }
 
 service::keynode *service::getProtected(const char *id)
 {
-	assert(id != NULL && *id != 0);
-	
-	keynode *node;
+    assert(id != NULL && *id != 0);
 
-	if(!cfg)
-		return NULL;
+    keynode *node;
 
-	locking.access();
-	node = cfg->getPath(id);
-	if(!node)
-		locking.release();
-	return node;
+    if(!cfg)
+        return NULL;
+
+    locking.access();
+    node = cfg->getPath(id);
+    if(!node)
+        locking.release();
+    return node;
 }
 
 service::keynode *service::getList(const char *path)
 {
-	assert(path != NULL && *path != 0);
+    assert(path != NULL && *path != 0);
 
-	keynode *base = getPath(path);
-	if(!base)
-		return NULL;
+    keynode *base = getPath(path);
+    if(!base)
+        return NULL;
 
-	return base->getFirst();
+    return base->getFirst();
 }
 
 service::keynode *service::get(void)
 {
-	if(cfg)
-		locking.access();
-	return &cfg->root;
+    if(cfg)
+        locking.access();
+    return &cfg->root;
 }
 
 void service::release(keynode *node)
 {
-	if(node)
-		locking.release();
+    if(node)
+        locking.release();
 }
 
 service::keynode *service::getPath(const char *id)
 {
-	assert(id != NULL && *id != 0);
+    assert(id != NULL && *id != 0);
 
-	const char *np;
-	char buf[65];
-	char *ep;
-	keynode *node = &root, *child;
+    const char *np;
+    char buf[65];
+    char *ep;
+    keynode *node = &root, *child;
 
-	while(id && *id && node) {
-		String::set(buf, sizeof(buf), id);
-		ep = strchr(buf, '.');
-		if(ep)
-			*ep = 0;
-		np = strchr(id, '.');
-		if(np)
-			id = ++np;
-		else
-			id = NULL;
-		child = node->getChild(buf);
-		if(!child) 
-			child = addNode(node, buf, NULL);
-		node = child;			
-	}
-	return node;
+    while(id && *id && node) {
+        String::set(buf, sizeof(buf), id);
+        ep = strchr(buf, '.');
+        if(ep)
+            *ep = 0;
+        np = strchr(id, '.');
+        if(np)
+            id = ++np;
+        else
+            id = NULL;
+        child = node->getChild(buf);
+        if(!child)
+            child = addNode(node, buf, NULL);
+        node = child;
+    }
+    return node;
 }
 
 service::keynode *service::addNode(keynode *base, const char *id, const char *value)
 {
-	assert(base != NULL);
-	assert(id != NULL && *id != 0);
+    assert(base != NULL);
+    assert(id != NULL && *id != 0);
 
-	caddr_t mp;
-	keynode *node;
-	char *cp;
+    caddr_t mp;
+    keynode *node;
+    char *cp;
 
-	mp = (caddr_t)memalloc::alloc(sizeof(keynode));
-	cp = dup(id);
-	node = new(mp) keynode(base, cp);
-	if(value)
-		node->setPointer(dup(value));
-	else
-		node->setPointer(NULL);
-	return node;
+    mp = (caddr_t)memalloc::alloc(sizeof(keynode));
+    cp = dup(id);
+    node = new(mp) keynode(base, cp);
+    if(value)
+        node->setPointer(dup(value));
+    else
+        node->setPointer(NULL);
+    return node;
 }
 
 const char *service::getValue(keynode *node, const char *id)
 {
-	assert(node != NULL);
-	assert(id != NULL && *id != 0);
+    assert(node != NULL);
+    assert(id != NULL && *id != 0);
 
-	node = node->getChild(id);
-	if(!node)
-		return NULL;
+    node = node->getChild(id);
+    if(!node)
+        return NULL;
 
-	return node->getPointer();
+    return node->getPointer();
 }
 
 service::keynode *service::addNode(keynode *base, define *defs)
 {
-	assert(base != NULL);
-	assert(defs != NULL);
+    assert(base != NULL);
+    assert(defs != NULL);
 
-	keynode *node = getNode(base, defs->key, defs->value);
-	if(!node)
-		node = addNode(base, defs->key, defs->value);
+    keynode *node = getNode(base, defs->key, defs->value);
+    if(!node)
+        node = addNode(base, defs->key, defs->value);
 
-	for(;;) {
-		++defs;
-		if(!defs->key)
-			return base;
-		if(node->getChild(defs->key))
-			continue;
-		addNode(node, defs->key, defs->value);
-	}
-	return node;
+    for(;;) {
+        ++defs;
+        if(!defs->key)
+            return base;
+        if(node->getChild(defs->key))
+            continue;
+        addNode(node, defs->key, defs->value);
+    }
+    return node;
 }
 
 service::keynode *service::getNode(keynode *base, const char *id, const char *attr, const char *value)
 {
-	assert(base != NULL);
-	assert(id != NULL && *id != 0);
-	assert(attr != NULL);
-	assert(value != NULL);
+    assert(base != NULL);
+    assert(id != NULL && *id != 0);
+    assert(attr != NULL);
+    assert(value != NULL);
 
-	linked_pointer<keynode> node = base->getFirst();
-	keynode *leaf;
-	char *cp;
+    linked_pointer<keynode> node = base->getFirst();
+    keynode *leaf;
+    char *cp;
 
-	while(node) {
-		if(!strcmp(id, node->getId())) {
-			leaf = node->getLeaf(attr);
-			if(leaf) {
-				cp = leaf->getPointer();
-				if(cp && !stricmp(cp, value))
-					return *node;
-			}
-		}
-		node.next();
-	}
-	return NULL;
+    while(node) {
+        if(!strcmp(id, node->getId())) {
+            leaf = node->getLeaf(attr);
+            if(leaf) {
+                cp = leaf->getPointer();
+                if(cp && !stricmp(cp, value))
+                    return *node;
+            }
+        }
+        node.next();
+    }
+    return NULL;
 }
 
 service::keynode *service::getNode(keynode *base, const char *id, const char *text)
 {
-	assert(base != NULL);
-	assert(id != NULL && *id != 0);
-	assert(text != NULL && *text != 0);
+    assert(base != NULL);
+    assert(id != NULL && *id != 0);
+    assert(text != NULL && *text != 0);
 
-	linked_pointer<keynode> node = base->getFirst();
-	char *cp;
-	
-	while(node) {
-		if(!strcmp(id, node->getId())) {
-			cp = node->getPointer();
-			if(cp && !stricmp(cp, text))
-				return *node;
-		}
-		node.next();
-	}
-	return NULL;
-} 
+    linked_pointer<keynode> node = base->getFirst();
+    char *cp;
+
+    while(node) {
+        if(!strcmp(id, node->getId())) {
+            cp = node->getPointer();
+            if(cp && !stricmp(cp, text))
+                return *node;
+        }
+        node.next();
+    }
+    return NULL;
+}
 
 void service::addAttributes(keynode *node, char *attr)
 {
-	assert(node != NULL);
-	assert(attr != NULL);
+    assert(node != NULL);
+    assert(attr != NULL);
 
-	char *ep, *qt;
-	char *id;
-	int len;
+    char *ep, *qt;
+    char *id;
+    int len;
 
-	while(attr && *attr && *attr != '>') {
-		while(isspace(*attr))
-			++attr;
+    while(attr && *attr && *attr != '>') {
+        while(isspace(*attr))
+            ++attr;
 
-		if(!*attr || *attr == '>')
-			return;		
-	
-		id = attr;
-		while(*attr && *attr != '=' && *attr != '>')
-			++attr;
+        if(!*attr || *attr == '>')
+            return;
 
-		if(*attr != '=')
-			return;
+        id = attr;
+        while(*attr && *attr != '=' && *attr != '>')
+            ++attr;
 
-		*(attr++) = 0;
-		id = String::trim(id, " \t\r\n");
-		while(isspace(*attr))
-			++attr;
-	
-		qt = attr;
-		ep = strchr(++attr, *qt);
-		if(!ep)
-			return;
+        if(*attr != '=')
+            return;
 
-		*(ep++) = 0;
-		len = strlen(attr);
-		qt = (char *)memalloc::alloc(len + 1);
-		xmldecode(qt, len + 1, attr);
-		addNode(node, id, qt);
-		attr = ep;
-	}
+        *(attr++) = 0;
+        id = String::trim(id, " \t\r\n");
+        while(isspace(*attr))
+            ++attr;
+
+        qt = attr;
+        ep = strchr(++attr, *qt);
+        if(!ep)
+            return;
+
+        *(ep++) = 0;
+        len = strlen(attr);
+        qt = (char *)memalloc::alloc(len + 1);
+        xmldecode(qt, len + 1, attr);
+        addNode(node, id, qt);
+        attr = ep;
+    }
 }
 
 bool service::load(FILE *fp, keynode *node)
 {
-	assert(fp != NULL);
+    assert(fp != NULL);
 
-	char *cp, *ep, *bp, *id;
-	ssize_t len = 0;
-	bool rtn = false;
-	bool document = false, empty;
-	keynode *top;
+    char *cp, *ep, *bp, *id;
+    ssize_t len = 0;
+    bool rtn = false;
+    bool document = false, empty;
+    keynode *top;
 
-	if(!node) {
-		node = &root;
-		top = NULL;
-	}
-	else
-		top = node->getParent();
+    if(!node) {
+        node = &root;
+        top = NULL;
+    }
+    else
+        top = node->getParent();
 
-	if(!fp)
-		return false;
+    if(!fp)
+        return false;
 
-	buffer = "";
+    buffer = "";
 
-	while(node != top) {
-		cp = buffer.c_mem() + buffer.len();
-		if(buffer.len() < 1024 - 5) {
-			len = fread(cp, 1, 1024 - buffer.len() - 1, fp);
-		}
-		else
-			len = 0;
+    while(node != top) {
+        cp = buffer.c_mem() + buffer.len();
+        if(buffer.len() < 1024 - 5) {
+            len = fread(cp, 1, 1024 - buffer.len() - 1, fp);
+        }
+        else
+            len = 0;
 
-		if(len < 0)
-			goto exit;
+        if(len < 0)
+            goto exit;
 
-		cp[len] = 0;
-		if(!buffer.chr('<'))
-			goto exit;
+        cp[len] = 0;
+        if(!buffer.chr('<'))
+            goto exit;
 
-		cp = buffer.c_mem();
+        cp = buffer.c_mem();
 
-		while(node != top && cp && *cp)
-		{
-			cp = String::trim(cp, " \t\r\n");
+        while(node != top && cp && *cp)
+        {
+            cp = String::trim(cp, " \t\r\n");
 
-			if(cp && *cp && !node)
-				goto exit;
+            if(cp && *cp && !node)
+                goto exit;
 
-			bp = strchr(cp, '<');
-			if(bp == cp && String::equal(bp, "<!--", 4)) {
-				ep = strstr(cp, "-->");
-				if(ep) {
-					cp = ep + 3;
-					break;
-				}
-			}
-			else
-				ep = strchr(cp, '>');
-			if(!ep && bp == cp)
-				break;
-			if(!bp ) {
-				cp = cp + strlen(cp);
-				break;
-			}
-			if(bp > cp) {
-				if(node->getPointer() != NULL)
-					goto exit;
+            bp = strchr(cp, '<');
+            if(bp == cp && String::equal(bp, "<!--", 4)) {
+                ep = strstr(cp, "-->");
+                if(ep) {
+                    cp = ep + 3;
+                    break;
+                }
+            }
+            else
+                ep = strchr(cp, '>');
+            if(!ep && bp == cp)
+                break;
+            if(!bp ) {
+                cp = cp + strlen(cp);
+                break;
+            }
+            if(bp > cp) {
+                if(node->getPointer() != NULL)
+                    goto exit;
 
-				*bp = 0;
-				cp = String::chop(cp, " \r\n\t");
-				len = strlen(cp);
-				ep = (char *)memalloc::alloc(len + 1);
-				xmldecode(ep, len + 1, cp);
-				node->setPointer(ep);
-				*bp = '<';
-				cp = bp;
-				continue;
-			}
+                *bp = 0;
+                cp = String::chop(cp, " \r\n\t");
+                len = strlen(cp);
+                ep = (char *)memalloc::alloc(len + 1);
+                xmldecode(ep, len + 1, cp);
+                node->setPointer(ep);
+                *bp = '<';
+                cp = bp;
+                continue;
+            }
 
-			empty = false;	
-			*ep = 0;
-			if(*(ep - 1) == '/') {
-				*(ep - 1) = 0;
-				empty = true;
-			}
-			cp = ++ep;
+            empty = false;
+            *ep = 0;
+            if(*(ep - 1) == '/') {
+                *(ep - 1) = 0;
+                empty = true;
+            }
+            cp = ++ep;
 
-			if(!strncmp(bp, "</", 2)) {
-				if(strcmp(bp + 2, node->getId())) {
-					shell::log(shell::ERR, "%s: %s\n",
-						_TEXT("No matching opening token found for"), node->getId());
-					goto exit;
+            if(!strncmp(bp, "</", 2)) {
+                if(strcmp(bp + 2, node->getId())) {
+                    shell::log(shell::ERR, "%s: %s\n",
+                        _TEXT("No matching opening token found for"), node->getId());
+                    goto exit;
                                 }
 
-				node = node->getParent();
-				continue;
-			}		
+                node = node->getParent();
+                continue;
+            }
 
-			++bp;
+            ++bp;
 
-			// if comment/control field...
-			if(!isalnum(*bp))
-				continue;
+            // if comment/control field...
+            if(!isalnum(*bp))
+                continue;
 
-			ep = bp;
-			while(isalnum(*ep))
-				++ep;
+            ep = bp;
+            while(isalnum(*ep))
+                ++ep;
 
-			id = NULL;
-			if(isspace(*ep))
-				id = ep;
+            id = NULL;
+            if(isspace(*ep))
+                id = ep;
 
-			while(id && *id && isspace(*id))
-				*(id++) = 0;
+            while(id && *id && isspace(*id))
+                *(id++) = 0;
 
-			if(!document) {
-				if(strcmp(node->getId(), bp))
-					goto exit;
-				document = true;
-				continue;
-			}
+            if(!document) {
+                if(strcmp(node->getId(), bp))
+                    goto exit;
+                document = true;
+                continue;
+            }
 
-			node = addNode(node, bp, NULL);
-			if(id)
-				addAttributes(node, id);
-			if(empty)
-				node = node->getParent();
-		}
-		buffer = cp;
-	}
-	if(node == top)
-		rtn = true;
+            node = addNode(node, bp, NULL);
+            if(id)
+                addAttributes(node, id);
+            if(empty)
+                node = node->getParent();
+        }
+        buffer = cp;
+    }
+    if(node == top)
+        rtn = true;
 exit:
-	fclose(fp);
-	return rtn;
+    fclose(fp);
+    return rtn;
 }
 
 void service::startup(void)
 {
-	linked_pointer<callback> sp;
+    linked_pointer<callback> sp;
 
-	memset(&peering, 0, sizeof(peering));
+    memset(&peering, 0, sizeof(peering));
 
-	shell::log(shell::NOTIFY, "startup");
+    shell::log(shell::NOTIFY, "startup");
 
-	cdr::start();
+    cdr::start();
 
-	for(unsigned int level = 0;level < (sizeof(callback::runlevels) / sizeof(LinkedObject *));++level) {
-		sp = callback::runlevels[level];
-		while(sp) {
-			sp->start(cfg);
-			sp.next();
-		}
-	}
+    for(unsigned int level = 0;level < (sizeof(callback::runlevels) / sizeof(LinkedObject *));++level) {
+        sp = callback::runlevels[level];
+        while(sp) {
+            sp->start(cfg);
+            sp.next();
+        }
+    }
 }
 
 void service::shutdown(void)
 {
-	linked_pointer<callback> sp;
-	unsigned level = RUNLEVELS;
+    linked_pointer<callback> sp;
+    unsigned level = RUNLEVELS;
 
-	while(level--) {
-		sp = callback::runlevels[level];
-		while(sp) {
-			sp->stop(cfg);
-			sp.next();
-		}
-	}
+    while(level--) {
+        sp = callback::runlevels[level];
+        while(sp) {
+            sp->stop(cfg);
+            sp.next();
+        }
+    }
 
-	cdr::stop();
+    cdr::stop();
 }
 
 void service::dump(FILE *fp, service::keynode *root, unsigned level)
 {
-	assert(fp != NULL);
-	assert(root != NULL);
+    assert(fp != NULL);
+    assert(root != NULL);
 
-	unsigned offset;
-	const char *id, *value;
-	service::keynode *child;
-	linked_pointer<service::keynode> node = root;
-	while(node) {
-		id = node->getId();
-		value = node->getPointer();
-		child = node->getFirst();
-		offset = level;
-		while(offset--)
-			fputc(' ', fp);
-		if(child && value && id)
-			fprintf(fp, "%s(%s):\n", id, value);
-		else if(child && id)
-			fprintf(fp, "%s:\n", id);
-		else if(value && id)
-			fprintf(fp, "%s=%s\n", id, value);
-		else if(id)
-			fprintf(fp, "%s\n", id);
-		if(child)
-			dump(fp, child, level + 2);		
-		node.next();
-	}
+    unsigned offset;
+    const char *id, *value;
+    service::keynode *child;
+    linked_pointer<service::keynode> node = root;
+    while(node) {
+        id = node->getId();
+        value = node->getPointer();
+        child = node->getFirst();
+        offset = level;
+        while(offset--)
+            fputc(' ', fp);
+        if(child && value && id)
+            fprintf(fp, "%s(%s):\n", id, value);
+        else if(child && id)
+            fprintf(fp, "%s:\n", id);
+        else if(value && id)
+            fprintf(fp, "%s=%s\n", id, value);
+        else if(id)
+            fprintf(fp, "%s\n", id);
+        if(child)
+            dump(fp, child, level + 2);
+        node.next();
+    }
 }
 
 void service::dump(FILE *fp)
 {
-	assert(fp != NULL);
+    assert(fp != NULL);
 
-	fprintf(fp, "Config ");
-	dump(fp, &root, 0);
+    fprintf(fp, "Config ");
+    dump(fp, &root, 0);
 }
 
 void service::dumpfile(void)
 {
-	FILE *fp = process::output("dumpfile");
+    FILE *fp = process::output("dumpfile");
 
-	if(!fp) {
-		shell::log(shell::ERR, "%s\n", 
-			_TEXT("dump cannot access file"));
-		return;
-	}
+    if(!fp) {
+        shell::log(shell::ERR, "%s\n",
+            _TEXT("dump cannot access file"));
+        return;
+    }
 
-	shell::log(DEBUG1, "%s\n",
-		_TEXT("dumping config"));
-	locking.access();
-	if(cfg)
-		cfg->service::dump(fp);
-	locking.release();
-	fclose(fp);
+    shell::log(DEBUG1, "%s\n",
+        _TEXT("dumping config"));
+    locking.access();
+    if(cfg)
+        cfg->service::dump(fp);
+    locking.release();
+    fclose(fp);
 }
 
 bool service::period(long slice)
 {
-	assert(slice > 0);
+    assert(slice > 0);
 
-	time_t now, next;
+    time_t now, next;
 
-	slice *= 60l;	// convert to minute intervals...
-	time(&now);
-	next = ((periodic / slice) + 1l) * slice;
-	if(now < next)
-		return false;
+    slice *= 60l;   // convert to minute intervals...
+    time(&now);
+    next = ((periodic / slice) + 1l) * slice;
+    if(now < next)
+        return false;
 
-	next = (now / slice) * slice;
+    next = (now / slice) * slice;
 
-	FILE *fp = fopen(process::get("stats"), "a");
+    FILE *fp = fopen(process::get("stats"), "a");
 
-	if(fp) {
-		DateTimeString dt(periodic);
-		fprintf(fp, "%s %ld\n", (const char *)dt, next - periodic);
-	}
-	periodic = next;
-	stats::period(fp);
-	if(fp)
-		fclose(fp);
+    if(fp) {
+        DateTimeString dt(periodic);
+        fprintf(fp, "%s %ld\n", (const char *)dt, next - periodic);
+    }
+    periodic = next;
+    stats::period(fp);
+    if(fp)
+        fclose(fp);
 
-	linked_pointer<modules::sipwitch> cb = service::getModules();
-	while(is(cb)) {
-		cb->period(slice);
-		cb.next();
-	}
-	return true;
+    linked_pointer<modules::sipwitch> cb = service::getModules();
+    while(is(cb)) {
+        cb->period(slice);
+        cb.next();
+    }
+    return true;
 }
 
 void service::snapshot(void)
 {
-	linked_pointer<callback> cb;
-	unsigned rl = 0;
-	FILE *fp = process::output("snapshot");
+    linked_pointer<callback> cb;
+    unsigned rl = 0;
+    FILE *fp = process::output("snapshot");
 
-	if(!fp) {
-		shell::log(shell::ERR, "%s\n",
-			_TEXT("snapshot; cannot access file"));
-		return;
-	}
+    if(!fp) {
+        shell::log(shell::ERR, "%s\n",
+            _TEXT("snapshot; cannot access file"));
+        return;
+    }
 
-	shell::log(DEBUG1, "%s\n", _TEXT("snapshot started"));
+    shell::log(DEBUG1, "%s\n", _TEXT("snapshot started"));
 
-	while(rl < RUNLEVELS) {
-		cb = callback::runlevels[rl++];
-		while(cb) {
-			cb->snapshot(fp);
-			cb.next();
-		}
-	}
-	locking.access();
-	if(cfg)
-		cfg->dump(fp);
-	locking.release();
-	fclose(fp);
-	shell::log(DEBUG1, "%s\n", _TEXT("snapshot completed"));
+    while(rl < RUNLEVELS) {
+        cb = callback::runlevels[rl++];
+        while(cb) {
+            cb->snapshot(fp);
+            cb.next();
+        }
+    }
+    locking.access();
+    if(cfg)
+        cfg->dump(fp);
+    locking.release();
+    fclose(fp);
+    shell::log(DEBUG1, "%s\n", _TEXT("snapshot completed"));
 }
 
 void service::confirm(void)
@@ -799,147 +799,147 @@ void service::confirm(void)
 
 bool service::check(void)
 {
-	linked_pointer<callback> cb;
-	unsigned rl = 0;
-	bool rtn = true;
+    linked_pointer<callback> cb;
+    unsigned rl = 0;
+    bool rtn = true;
 
-	while(rtn && rl < RUNLEVELS) {
-		cb = callback::runlevels[rl++];
-		while(rtn && is(cb)) {
-			rtn = cb->check();
-			cb.next();
-		}
-	}
-	return rtn;
+    while(rtn && rl < RUNLEVELS) {
+        cb = callback::runlevels[rl++];
+        while(rtn && is(cb)) {
+            rtn = cb->check();
+            cb.next();
+        }
+    }
+    return rtn;
 }
 
 void service::commit(void)
 {
-	service *orig;
-	linked_pointer<callback> cb;
-	unsigned rl = 0;
+    service *orig;
+    linked_pointer<callback> cb;
+    unsigned rl = 0;
 
-	while(rl < RUNLEVELS) {
-		cb = callback::runlevels[rl++];
-		while(is(cb)) {
-			cb->reload(this);
-			cb.next();
-		}
-	}
+    while(rl < RUNLEVELS) {
+        cb = callback::runlevels[rl++];
+        while(is(cb)) {
+            cb->reload(this);
+            cb.next();
+        }
+    }
 
-	confirm();
+    confirm();
 
-	locking.modify();
-	orig = cfg;
-	cfg = this;
-	locking.commit();
+    locking.modify();
+    orig = cfg;
+    cfg = this;
+    locking.commit();
 
-	rl = 0;
-	while(rl < RUNLEVELS) {
-		cb = callback::runlevels[rl++];
-		while(is(cb)) {
-			cb->publish(this);
-			cb.next();
-		}
-	}
+    rl = 0;
+    while(rl < RUNLEVELS) {
+        cb = callback::runlevels[rl++];
+        while(is(cb)) {
+            cb->publish(this);
+            cb.next();
+        }
+    }
 
-	// let short-term volatile references settle before we delete it...
-	if(orig) {
-		Thread::sleep(1000);
-		delete orig;
-	}
+    // let short-term volatile references settle before we delete it...
+    if(orig) {
+        Thread::sleep(1000);
+        delete orig;
+    }
 }
 
 bool service::match(const char *digits, const char *match, bool partial)
 {
-	assert(digits != NULL);
-	assert(match != NULL);
+    assert(digits != NULL);
+    assert(match != NULL);
 
-	unsigned len = strlen(match);
-	unsigned dlen = 0;
-	bool inc;
-	const char *d = digits;
-	char dbuf[32];
+    unsigned len = strlen(match);
+    unsigned dlen = 0;
+    bool inc;
+    const char *d = digits;
+    char dbuf[32];
 
-	if(*d == '+')
-		++d;
+    if(*d == '+')
+        ++d;
 
-	while(*d && dlen < sizeof(dbuf) - 1) {
-		if(isdigit(*d) || *d == '*' || *d == '#') {
-			dbuf[dlen++] = *(d++);
-			continue;
-		}
+    while(*d && dlen < sizeof(dbuf) - 1) {
+        if(isdigit(*d) || *d == '*' || *d == '#') {
+            dbuf[dlen++] = *(d++);
+            continue;
+        }
 
-		if(*d == ' ' || *d == ',') {
-			++d;
-			continue;
-		}
+        if(*d == ' ' || *d == ',') {
+            ++d;
+            continue;
+        }
 
-		if(*d == '!')
-			break;
+        if(*d == '!')
+            break;
 
-		if(!stricmp(digits, match))
-			return true;
+        if(!stricmp(digits, match))
+            return true;
 
-		return false;
-	}
+        return false;
+    }
 
-	if(*d && *d != '!')
-		return false;
+    if(*d && *d != '!')
+        return false;
 
-	digits = dbuf;
-	dbuf[dlen] = 0;
+    digits = dbuf;
+    dbuf[dlen] = 0;
 
-	if(*match == '+') {
-		++match;
-		--len;
-		if(dlen < len)
-			return false;
-		digits += (len - dlen);
-	}
+    if(*match == '+') {
+        ++match;
+        --len;
+        if(dlen < len)
+            return false;
+        digits += (len - dlen);
+    }
 
-	while(*match && *digits) {
-		inc = true;
-		switch(*match) {
-		case 'x':
-		case 'X':
-			if(!isdigit(*digits))
-				return false;
-			break;
-		case 'N':
-		case 'n':
-			if(*digits < '2' || *digits > '9')
-				return false;
-			break;
-		case 'O':
-		case 'o':
-			if(*digits && *digits != '1')
-				inc = false;
-			break;
-		case 'Z':
-		case 'z':
-			if(*digits < '1' || *digits > '9')
-				return false;
-			break;
-		case '?':
-			if(!*digits)
-				return false;
-			break;
-		default:
-			if(*digits != *match)
-				return false;
-		}
-		if(*digits && inc)
-			++digits;
-		++match;
-	}
-	if(*match && !*digits)
-		return partial;
+    while(*match && *digits) {
+        inc = true;
+        switch(*match) {
+        case 'x':
+        case 'X':
+            if(!isdigit(*digits))
+                return false;
+            break;
+        case 'N':
+        case 'n':
+            if(*digits < '2' || *digits > '9')
+                return false;
+            break;
+        case 'O':
+        case 'o':
+            if(*digits && *digits != '1')
+                inc = false;
+            break;
+        case 'Z':
+        case 'z':
+            if(*digits < '1' || *digits > '9')
+                return false;
+            break;
+        case '?':
+            if(!*digits)
+                return false;
+            break;
+        default:
+            if(*digits != *match)
+                return false;
+        }
+        if(*digits && inc)
+            ++digits;
+        ++match;
+    }
+    if(*match && !*digits)
+        return partial;
 
-	if(*match && *digits)
-		return false;
+    if(*match && *digits)
+        return false;
 
-	return true;
+    return true;
 }
 
 

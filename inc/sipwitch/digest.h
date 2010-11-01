@@ -1,4 +1,4 @@
-// Copyright (C) 2006-2008 David Sugar, Tycho Softworks.
+// Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,33 +22,33 @@
  */
 
 #ifndef _SIPWITCH_DIGEST_H_
-#define	_SIPWITCH_DIGEST_H_
+#define _SIPWITCH_DIGEST_H_
 
-#ifndef	_UCOMMON_STRING_H_
+#ifndef _UCOMMON_STRING_H_
 #include <ucommon/string.h>
 #endif
 
-#ifndef	__SIPWITCH_NAMESPACE_H_
+#ifndef __SIPWITCH_NAMESPACE_H_
 #include <sipwitch/namespace.h>
 #endif
 
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-class __EXPORT digest 
+class __EXPORT digest
 {
 public:
-	static unsigned md5(unsigned char *buf, const char *str);
-	static unsigned md5(string_t &d, const char *str = NULL);
-	static unsigned sha1(unsigned char *buf, const char *str);
-	static unsigned sha1(string_t &d, const char *str = NULL);
-	static unsigned rmd160(unsigned char *buf, const char *str);
-	static unsigned rmd160(string_t &d, const char *str = NULL);
-	static void clear(void);
-	static const char *get(const char *id);
-	static bool set(const char *id, const char *hash);
-	static void release(const char *hash);
-	static void load(void);
+    static unsigned md5(unsigned char *buf, const char *str);
+    static unsigned md5(string_t &d, const char *str = NULL);
+    static unsigned sha1(unsigned char *buf, const char *str);
+    static unsigned sha1(string_t &d, const char *str = NULL);
+    static unsigned rmd160(unsigned char *buf, const char *str);
+    static unsigned rmd160(string_t &d, const char *str = NULL);
+    static void clear(void);
+    static const char *get(const char *id);
+    static bool set(const char *id, const char *hash);
+    static void release(const char *hash);
+    static void load(void);
 };
 
 END_NAMESPACE

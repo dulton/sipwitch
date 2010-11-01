@@ -1,4 +1,4 @@
-// Copyright (C) 2006-2008 David Sugar, Tycho Softworks.
+// Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,54 +24,54 @@
  */
 
 #ifndef _SIPWITCH_PROCESS_H_
-#define	_SIPWITCH_PROCESS_H_
+#define _SIPWITCH_PROCESS_H_
 
 #ifndef _UCOMMON_LINKED_H_
 #include <ucommon/linked.h>
 #endif
 
-#ifndef	_UCOMMON_THREAD_H_
+#ifndef _UCOMMON_THREAD_H_
 #include <ucommon/thread.h>
 #endif
 
-#ifndef	_UCOMMON_STRING_H_
+#ifndef _UCOMMON_STRING_H_
 #include <ucommon/string.h>
 #endif
 
-#ifndef	_SIPWITCH_NAMESPACE_H_
+#ifndef _SIPWITCH_NAMESPACE_H_
 #include <sipwitch/namespace.h>
 #endif
 
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-#define	DEBUG1	shell::DEBUG0
-#define	DEBUG2	(shell::loglevel_t(((unsigned)shell::DEBUG0 + 1)))
-#define	DEBUG3	(shell::loglevel_t(((unsigned)shell::DEBUG0 + 2)))
+#define DEBUG1  shell::DEBUG0
+#define DEBUG2  (shell::loglevel_t(((unsigned)shell::DEBUG0 + 1)))
+#define DEBUG3  (shell::loglevel_t(((unsigned)shell::DEBUG0 + 2)))
 
 class __EXPORT process { public: static shell_t args;
 
-	static void printlog(const char *fmt, ...) __PRINTF(1, 2);
-	static bool control(const char *fmt, ...) __PRINTF(1, 2);
-	static void result(const char *value);
-	static char *receive(void);
-	static void reply(const char *err = NULL);
-	static size_t attach(void);
-	static void release(void);
-	static bool state(const char *value);
-	static bool system(const char *fmt, ...) __PRINTF(1, 2);
-	static FILE *output(const char *id);
-	static void uuid(char *buffer, size_t size, const char *node);
-	static void uuid(char *buffer, size_t size, unsigned short seq, unsigned callid);
+    static void printlog(const char *fmt, ...) __PRINTF(1, 2);
+    static bool control(const char *fmt, ...) __PRINTF(1, 2);
+    static void result(const char *value);
+    static char *receive(void);
+    static void reply(const char *err = NULL);
+    static size_t attach(void);
+    static void release(void);
+    static bool state(const char *value);
+    static bool system(const char *fmt, ...) __PRINTF(1, 2);
+    static FILE *output(const char *id);
+    static void uuid(char *buffer, size_t size, const char *node);
+    static void uuid(char *buffer, size_t size, unsigned short seq, unsigned callid);
 
-	inline static void set(const char *id, const char *value)
-		{args.setsym(id, value);}
+    inline static void set(const char *id, const char *value)
+        {args.setsym(id, value);}
 
-	inline static const char *get(const char *id)
-		{return args.getsym(id);}
+    inline static const char *get(const char *id)
+        {return args.getsym(id);}
 
-	inline static String path(const char *id)
-		{return (String)(args.getsym(id));}
+    inline static String path(const char *id)
+        {return (String)(args.getsym(id));}
 };
 
 END_NAMESPACE

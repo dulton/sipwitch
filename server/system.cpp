@@ -91,7 +91,7 @@ static void usage(void)
     printf("%s\n\n", _TEXT("Start sipwitch service"));
     printf("%s\n", _TEXT("Options:"));
     shell::help();
-	#if defined(DEBUG)
+    #if defined(DEBUG)
     printf("%s", _TEXT(
         "\nDebug Options:\n"
         "  --dbg            execute command in debugger\n"
@@ -117,28 +117,28 @@ static void versioninfo(void)
 
 static bool errlog(shell::loglevel_t level, const char *text)
 {
-	modules::errlog(level, text);
-	history::add(level, text);
-	return false;
+    modules::errlog(level, text);
+    history::add(level, text);
+    return false;
 }
 
 namespace SIPWITCH_NAMESPACE {
 
-	static void up(void)
-	{
-		server::reload();
-		server::startup();
+    static void up(void)
+    {
+        server::reload();
+        server::startup();
 
-		if(is(trace))
-			stack::enableDumping();
+        if(is(trace))
+            stack::enableDumping();
 
-		signals::start();
-		server::run();
+        signals::start();
+        server::run();
 
-		signals::stop();
-		service::shutdown();
-		process::release();
-	}
+        signals::stop();
+        service::shutdown();
+        process::release();
+    }
 }
 
 extern int main(int argc, char **argv)
@@ -146,12 +146,12 @@ extern int main(int argc, char **argv)
 
     bool daemon = true;
     const char *cp;
-	const char *prefix;
-	const char *rundir;
-	const char *plugins = argv[0];
+    const char *prefix;
+    const char *rundir;
+    const char *plugins = argv[0];
 
-	shell::bind("sipwitch");
-	corefiles();
+    shell::bind("sipwitch");
+    corefiles();
 
 #if defined(DEBUG)
     if(eq(argv[1], "-gdb") || eq(argv[1], "--gdb") || eq(argv[1], "-dbg") || eq(argv[1], "--dbg")) {
@@ -178,35 +178,35 @@ extern int main(int argc, char **argv)
     argv[0] = (char *)"sipwitch";
 
 #ifdef _MSWINDOWS_
-	rundir = strdup(str(process::args.getenv("APPDATA")) + "/sipwitch"); 
-	prefix = "C:\\Program Files\\sipwitch";
-	plugins = "C:\\Program Files\\sipwitch\\plugins";
-	process::set("config", _STR(str(prefix) + "/sipwitch.ini"));
-	process::set("controls", rundir);
-	process::set("control", "\\\\.\\mailslot\\sipwitch_ctrl");
-	process::set("logfiles", _STR(str(prefix) + "/logs"));
-	process::set("siplogs", _STR(str(prefix) + "/logs/siptrace.log"));
-	process::set("logfile", _STR(str(prefix) + "/logs/sipwitch.log"));
-	process::set("calls", _STR(str(prefix) + "/logs/sipwitch.calls"));
-	process::set("stats", _STR(str(prefix) + "/logs/sipwitch.stats"));
-	process::set("prefix", rundir);
-	process::set("shell", "cmd.exe");
-	prefix = rundir;
+    rundir = strdup(str(process::args.getenv("APPDATA")) + "/sipwitch");
+    prefix = "C:\\Program Files\\sipwitch";
+    plugins = "C:\\Program Files\\sipwitch\\plugins";
+    process::set("config", _STR(str(prefix) + "/sipwitch.ini"));
+    process::set("controls", rundir);
+    process::set("control", "\\\\.\\mailslot\\sipwitch_ctrl");
+    process::set("logfiles", _STR(str(prefix) + "/logs"));
+    process::set("siplogs", _STR(str(prefix) + "/logs/siptrace.log"));
+    process::set("logfile", _STR(str(prefix) + "/logs/sipwitch.log"));
+    process::set("calls", _STR(str(prefix) + "/logs/sipwitch.calls"));
+    process::set("stats", _STR(str(prefix) + "/logs/sipwitch.stats"));
+    process::set("prefix", rundir);
+    process::set("shell", "cmd.exe");
+    prefix = rundir;
 #else
-	prefix = DEFAULT_VARPATH "/lib/sipwitch";
-	rundir = DEFAULT_VARPATH "/run/sipwitch";
-	process::set("reply", "/tmp/.sipwitch.");
-	process::set("config", DEFAULT_CFGPATH "/sipwitch.conf");
-	process::set("controls", DEFAULT_VARPATH "/run/sipwitch");
-	process::set("control", DEFAULT_VARPATH "/run/sipwitch/control");
-	process::set("config", DEFAULT_CFGPATH "/sipwitch.conf");
-	process::set("logfiles", DEFAULT_VARPATH "/log");
-	process::set("siplogs", DEFAULT_VARPATH "/log/siptrace.log");
-	process::set("logfile", DEFAULT_VARPATH "/log/sipwitch.log");
-	process::set("calls", DEFAULT_VARPATH "/log/sipwitch.calls");
-	process::set("stats", DEFAULT_VARPATH "/log/sipwitch.stats");
-	process::set("prefix", DEFAULT_VARPATH "/lib/sipwitch");
-	process::set("shell", "/bin/sh");
+    prefix = DEFAULT_VARPATH "/lib/sipwitch";
+    rundir = DEFAULT_VARPATH "/run/sipwitch";
+    process::set("reply", "/tmp/.sipwitch.");
+    process::set("config", DEFAULT_CFGPATH "/sipwitch.conf");
+    process::set("controls", DEFAULT_VARPATH "/run/sipwitch");
+    process::set("control", DEFAULT_VARPATH "/run/sipwitch/control");
+    process::set("config", DEFAULT_CFGPATH "/sipwitch.conf");
+    process::set("logfiles", DEFAULT_VARPATH "/log");
+    process::set("siplogs", DEFAULT_VARPATH "/log/siptrace.log");
+    process::set("logfile", DEFAULT_VARPATH "/log/sipwitch.log");
+    process::set("calls", DEFAULT_VARPATH "/log/sipwitch.calls");
+    process::set("stats", DEFAULT_VARPATH "/log/sipwitch.stats");
+    process::set("prefix", DEFAULT_VARPATH "/lib/sipwitch");
+    process::set("shell", "/bin/sh");
 #endif
 
 #ifdef  HAVE_PWD_H
@@ -214,30 +214,30 @@ extern int main(int argc, char **argv)
     umask(007);
 
     if(getuid() && pwd && pwd->pw_dir && *pwd->pw_dir == '/') {
-		process::set("prefix", pwd->pw_dir);
+        process::set("prefix", pwd->pw_dir);
         if(!eq(pwd->pw_shell, "/bin/false") && !eq(pwd->pw_dir, "/var/", 5) && !eq(pwd->pw_dir, "/srv/", 5)) {
             umask(077);
             daemon = false;
         };
     }
-	
-	if(!getuid())
-		plugins = DEFAULT_LIBPATH "/sipwitch";
 
-	if(!daemon && pwd) {
-		rundir = strdup(str("/tmp/sipwitch-") + str(pwd->pw_name));
-		prefix = strdup(str(pwd->pw_dir) + "/.sipwitch");
-		process::set("config", _STR(str(pwd->pw_dir) + "/.sipwitchrc"));
-		process::set("controls", rundir);
-		process::set("control", _STR(str(rundir) + "/control"));
-		process::set("logfiles", rundir);
-		process::set("siplogs", _STR(str(rundir) + "/siplogs"));
-		process::set("logfile", _STR(str(rundir) + "/logfile"));
-		process::set("calls", _STR(str(rundir) + "/calls"));
-		process::set("stats", _STR(str(rundir) + "/stats"));
-		process::set("prefix", prefix);
-		process::set("shell", pwd->pw_shell);
-	}
+    if(!getuid())
+        plugins = DEFAULT_LIBPATH "/sipwitch";
+
+    if(!daemon && pwd) {
+        rundir = strdup(str("/tmp/sipwitch-") + str(pwd->pw_name));
+        prefix = strdup(str(pwd->pw_dir) + "/.sipwitch");
+        process::set("config", _STR(str(pwd->pw_dir) + "/.sipwitchrc"));
+        process::set("controls", rundir);
+        process::set("control", _STR(str(rundir) + "/control"));
+        process::set("logfiles", rundir);
+        process::set("siplogs", _STR(str(rundir) + "/siplogs"));
+        process::set("logfile", _STR(str(rundir) + "/logfile"));
+        process::set("calls", _STR(str(rundir) + "/calls"));
+        process::set("stats", _STR(str(rundir) + "/stats"));
+        process::set("prefix", prefix);
+        process::set("shell", pwd->pw_shell);
+    }
 
 #else
     if(argv[1])
@@ -253,24 +253,24 @@ extern int main(int argc, char **argv)
     if(cp && *cp)
         user.set(cp);
 
-	// root gets these from default to act as user daemon...
+    // root gets these from default to act as user daemon...
 
-	if(!getuid()) {
-		cp = getenv("FIRSTUID");
-		if(!cp)
-			cp = getenv("UID");
+    if(!getuid()) {
+        cp = getenv("FIRSTUID");
+        if(!cp)
+            cp = getenv("UID");
 
-		if(cp && *cp)
-			server::uid = atoi(cp);
+        if(cp && *cp)
+            server::uid = atoi(cp);
 
-		cp = getenv("SIPUSERS");
-		if(cp && *cp)
-			server::sipusers = strdup(cp);
+        cp = getenv("SIPUSERS");
+        if(cp && *cp)
+            server::sipusers = strdup(cp);
 
-		cp = getenv("SIPADMIN");
-		if(cp && *cp)
-			server::sipadmin = strdup(cp);
-	}
+        cp = getenv("SIPADMIN");
+        if(cp && *cp)
+            server::sipadmin = strdup(cp);
+    }
 
 #endif
 
@@ -290,33 +290,33 @@ extern int main(int argc, char **argv)
     if(cp && *cp)
         loglevel.set(strdup(cp));
 
-	cp = process::args.getenv("LOGGING");
+    cp = process::args.getenv("LOGGING");
     if(cp && *cp)
         histbuf.set(atoi(cp));
 
-	cp = process::args.getenv("PLUGINS");
-	if(cp && *cp)
-		loading.set(strdup(cp));
+    cp = process::args.getenv("PLUGINS");
+    if(cp && *cp)
+        loading.set(strdup(cp));
 
-	// parse and check for help
-	process::args.parse(argc, argv);
+    // parse and check for help
+    process::args.parse(argc, argv);
     if(is(helpflag) || is(althelp) || process::args.argc() > 0)
         usage();
 
-	if(is(version))
-		versioninfo();
+    if(is(version))
+        versioninfo();
 
-	// check validity of some options...
+    // check validity of some options...
 
     if(*concurrency < 0)
         shell::errexit(1, "sipwitch: concurrency: %ld: %s\n",
             *concurrency, _TEXT("negative levels invalid"));
 
-	if(*histbuf < 0)
+    if(*histbuf < 0)
         shell::errexit(1, "sipwitch: history: %ld: %s\n",
             *histbuf, _TEXT("negative buffer limit invalid"));
 
-	// set threading properties...
+    // set threading properties...
 
     if(*concurrency > 0)
         Thread::concurrency(*concurrency);
@@ -328,7 +328,7 @@ extern int main(int argc, char **argv)
         Thread::policy(SCHED_RR);
 #endif
 
-	// fore and background...
+    // fore and background...
 
     if(is(backflag))
         daemon = true;
@@ -408,29 +408,29 @@ extern int main(int argc, char **argv)
 
 #endif
 
-	signals::setup();
+    signals::setup();
 
-	fsys::createDir(rundir, 0770);
-	fsys::createDir(prefix, 0770);
+    fsys::createDir(rundir, 0770);
+    fsys::createDir(prefix, 0770);
     if(fsys::changeDir(prefix))
         shell::errexit(3, "*** sipwitch: %s: %s\n",
             prefix, _TEXT("data directory unavailable"));
 
     shell::loglevel_t level = (shell::loglevel_t)*verbose;
-	history::set(*histbuf);
-	server::plugins(plugins, *loading);
+    history::set(*histbuf);
+    server::plugins(plugins, *loading);
 
     // daemonify process....
     if(daemon) {
         process::args.detach();
-		server::logmode = shell::CONSOLE_LOG;
-	}
+        server::logmode = shell::CONSOLE_LOG;
+    }
 
     shell::log("sipwitch", level, server::logmode, &errlog);
 
     if(!process::attach())
-		shell::errexit(1, "*** sipwitch: %s\n", 
-			_TEXT("no control file; exiting"));
+        shell::errexit(1, "*** sipwitch: %s\n",
+            _TEXT("no control file; exiting"));
 
     // drop root privilege
 #ifdef  HAVE_PWD_H
@@ -438,11 +438,11 @@ extern int main(int argc, char **argv)
         setuid(uid);
 #endif
 
-	if(is(restart))
-		process::args.restart();
+    if(is(restart))
+        process::args.restart();
 
-	up();
-		
-	return 0;
+    up();
+
+    return 0;
 }
 

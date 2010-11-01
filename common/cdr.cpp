@@ -1,4 +1,4 @@
-// Copyright (C) 2006-2008 David Sugar, Tycho Softworks.
+// Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,20 +27,20 @@ using namespace UCOMMON_NAMESPACE;
 class __LOCAL thread : public DetachedThread, public Conditional
 {
 public:
-	thread();
+    thread();
 
-	inline void lock(void)
-		{Conditional::lock();};
+    inline void lock(void)
+        {Conditional::lock();};
 
-	inline void unlock(void)
-		{Conditional::unlock();};
+    inline void unlock(void)
+        {Conditional::unlock();};
 
-	inline void signal(void)
-		{Conditional::signal();};
+    inline void signal(void)
+        {Conditional::signal();};
 
 private:
-	void exit(void);
-	void run(void);
+    void exit(void);
+    void run(void);
 };
 
 static LinkedObject *freelist = NULL;
@@ -62,89 +62,89 @@ void thread::exit(void)
 
 void thread::run(void)
 {
-	running = true;
-	linked_pointer<cdr> cp;
-	LinkedObject *next;
-	FILE *fp;
+    running = true;
+    linked_pointer<cdr> cp;
+    LinkedObject *next;
+    FILE *fp;
 
-	shell::log(DEBUG1, "starting cdr thread");
+    shell::log(DEBUG1, "starting cdr thread");
 
-	for(;;) {
-		Conditional::lock();
-		if(!running) {
-			Conditional::unlock();
-			shell::log(DEBUG1, "stopped cdr thread");
-			down = true;
-			return;
-		}
-		Conditional::wait();
-		cp = runlist;
-		fp = NULL;
-		if(runlist && logging)
-			fp = fopen(process::get("calls"), "a");
-		runlist = NULL;
-		logging = false;
-		Conditional::unlock();
-		while(is(cp)) {
-			next = cp->getNext();
-			modules::cdrlog(fp, *cp);
-			locking.lock();
-			cp->enlist(&freelist);
-			locking.release();
-			cp = next;
-		}
-		if(fp)
-			fclose(fp);
-	}
+    for(;;) {
+        Conditional::lock();
+        if(!running) {
+            Conditional::unlock();
+            shell::log(DEBUG1, "stopped cdr thread");
+            down = true;
+            return;
+        }
+        Conditional::wait();
+        cp = runlist;
+        fp = NULL;
+        if(runlist && logging)
+            fp = fopen(process::get("calls"), "a");
+        runlist = NULL;
+        logging = false;
+        Conditional::unlock();
+        while(is(cp)) {
+            next = cp->getNext();
+            modules::cdrlog(fp, *cp);
+            locking.lock();
+            cp->enlist(&freelist);
+            locking.release();
+            cp = next;
+        }
+        if(fp)
+            fclose(fp);
+    }
 }
 
 void cdr::post(cdr *rec)
 {
-	run.lock();
-	rec->enlist(&runlist);
-	if(rec->type == STOP)
-		logging = true;
-	run.signal();
-	run.unlock();
+    run.lock();
+    rec->enlist(&runlist);
+    if(rec->type == STOP)
+        logging = true;
+    run.signal();
+    run.unlock();
 }
-	
-cdr *cdr::get(void) {
-	cdr *rec;
 
-	locking.lock();
-	if(freelist) {
-		rec = (cdr *)freelist;
-		freelist = rec->next;
-		locking.release();
-		rec->uuid[0] = 0;
-		rec->ident[0] = 0;
-		rec->dialed[0] = 0;
-		rec->joined[0] = 0;
-		rec->display[0] = 0;
-		rec->network[0] = 0;
-		rec->reason[0] = 0;
-		rec->cid = rec->sequence = 0;
-		rec->starting = 0;
-		rec->duration = 0;
-		return rec;
-	}
-	locking.release();
-	return (cdr *)(heap.zalloc(sizeof(cdr)));
+cdr *cdr::get(void) {
+    cdr *rec;
+
+    locking.lock();
+    if(freelist) {
+        rec = (cdr *)freelist;
+        freelist = rec->next;
+        locking.release();
+        rec->uuid[0] = 0;
+        rec->ident[0] = 0;
+        rec->dialed[0] = 0;
+        rec->joined[0] = 0;
+        rec->display[0] = 0;
+        rec->network[0] = 0;
+        rec->reason[0] = 0;
+        rec->cid = rec->sequence = 0;
+        rec->starting = 0;
+        rec->duration = 0;
+        return rec;
+    }
+    locking.release();
+    return (cdr *)(heap.zalloc(sizeof(cdr)));
 }
 
 void cdr::start(void)
 {
-	run.start();
+    run.start();
 }
 
 void cdr::stop(void)
 {
-	run.lock();
-	running = false;
-	run.signal();
-	run.unlock();
+    run.lock();
+    running = false;
+    run.signal();
+    run.unlock();
 
-	while(!down)
-		Thread::sleep(20);
+    while(!down)
+        Thread::sleep(20);
 }
-				
+

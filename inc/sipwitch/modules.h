@@ -1,4 +1,4 @@
-// Copyright (C) 2006-2008 David Sugar, Tycho Softworks.
+// Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,21 +19,21 @@
  */
 
 #ifndef _SIPWITCH_MODULES_H_
-#define	_SIPWITCH_MODULES_H_
+#define _SIPWITCH_MODULES_H_
 
-#ifndef	_UCOMMON_STRING_H_
+#ifndef _UCOMMON_STRING_H_
 #include <ucommon/string.h>
 #endif
 
-#ifndef	__SIPWITCH_SERVICE_H_
+#ifndef __SIPWITCH_SERVICE_H_
 #include <sipwitch/service.h>
 #endif
 
-#ifndef	__SIPWITCH_CDR_H_
+#ifndef __SIPWITCH_CDR_H_
 #include <sipwitch/cdr.h>
 #endif
 
-#ifndef	_SIPWITCH_PROCESS_H_
+#ifndef _SIPWITCH_PROCESS_H_
 #include <sipwitch/process.h>
 #endif
 
@@ -43,34 +43,34 @@ using namespace UCOMMON_NAMESPACE;
 class __EXPORT modules
 {
 public:
-	typedef enum {REG_FAILED, REG_SUCCESS, REG_TERMINATED} regmode_t;
-	
-	class __EXPORT sipwitch : public service::callback
-	{
-	protected:
-		sipwitch();
+    typedef enum {REG_FAILED, REG_SUCCESS, REG_TERMINATED} regmode_t;
 
-	public:
-		virtual void period(long slice);
-		virtual bool announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *msgbody);
-		virtual void activating(MappedRegistry *rr);
-		virtual void expiring(MappedRegistry *rr);
-		virtual void registration(int id, regmode_t reg);
-		virtual bool authenticate(int id, const char *realm);
-		virtual MappedRegistry *redirect(const char *target);
-		virtual MappedRegistry *accept(const char *request_uri);
-		virtual char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
-		virtual char *referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size);
-	};
+    class __EXPORT sipwitch : public service::callback
+    {
+    protected:
+        sipwitch();
 
-	class __EXPORT generic : public service::callback
-	{
-	protected:
-		generic();
-	};
+    public:
+        virtual void period(long slice);
+        virtual bool announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *msgbody);
+        virtual void activating(MappedRegistry *rr);
+        virtual void expiring(MappedRegistry *rr);
+        virtual void registration(int id, regmode_t reg);
+        virtual bool authenticate(int id, const char *realm);
+        virtual MappedRegistry *redirect(const char *target);
+        virtual MappedRegistry *accept(const char *request_uri);
+        virtual char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
+        virtual char *referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size);
+    };
 
-	static void cdrlog(FILE *fp, cdr *call);	
-	static void errlog(shell::loglevel_t level, const char *text);
+    class __EXPORT generic : public service::callback
+    {
+    protected:
+        generic();
+    };
+
+    static void cdrlog(FILE *fp, cdr *call);
+    static void errlog(shell::loglevel_t level, const char *text);
 };
 
 END_NAMESPACE

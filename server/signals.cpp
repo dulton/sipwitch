@@ -24,18 +24,18 @@ signals signals::thread;
 signals::signals() :
 JoinableThread()
 {
-	shutdown = started = false;
+    shutdown = started = false;
 }
 
 signals::~signals()
 {
-	if(!shutdown)
-		cancel();
+    if(!shutdown)
+        cancel();
 }
 
 void signals::cancel(void)
 {
-	if(started) {
+    if(started) {
         shutdown = true;
 #ifdef  __FreeBSD__
         raise(SIGINT);
@@ -47,45 +47,45 @@ void signals::cancel(void)
 
 void signals::run(void)
 {
-	int signo;
-	unsigned period = 900;
+    int signo;
+    unsigned period = 900;
 
-	started = true;
-	shell::log(DEBUG1, "starting signal handler");
+    started = true;
+    shell::log(DEBUG1, "starting signal handler");
 
-	for(;;) {
-		alarm(period);
-#ifdef	HAVE_SIGWAIT2
-		sigwait(&sigs, &signo);
+    for(;;) {
+        alarm(period);
+#ifdef  HAVE_SIGWAIT2
+        sigwait(&sigs, &signo);
 #else
-		signo = sigwait(&sigs);
+        signo = sigwait(&sigs);
 #endif
-		alarm(0);
-		if(shutdown)
-			return;
+        alarm(0);
+        if(shutdown)
+            return;
 
-		shell::log(DEBUG1, "received signal %d", signo);
+        shell::log(DEBUG1, "received signal %d", signo);
 
-		switch(signo) {
-		case SIGALRM:
+        switch(signo) {
+        case SIGALRM:
             shell::log(shell::INFO, "system housekeeping");
             registry::cleanup(period);
             break;
-		case SIGINT:
-		case SIGTERM:
-			process::control("down");
-			break;
-		case SIGUSR1:
+        case SIGINT:
+        case SIGTERM:
+            process::control("down");
+            break;
+        case SIGUSR1:
             process::control("snapshot");
-			break;
-		case SIGHUP:
+            break;
+        case SIGHUP:
             process::control("reload");
-			break;
-		default:
-			break;
-		}
-	}
-	shell::log(DEBUG1, "stopping signal handler");
+            break;
+        default:
+            break;
+        }
+    }
+    shell::log(DEBUG1, "stopping signal handler");
 }
 
 void signals::setup(void)

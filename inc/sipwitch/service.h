@@ -1,4 +1,4 @@
-// Copyright (C) 2006-2008 David Sugar, Tycho Softworks.
+// Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  * parsed from XML configuration files.  The service class also offers a
  * callback bus for attaching server components and for controlling
  * component startup and shutdown.  This service bus can be extended through
- * plugins as well as local objects in your server, all of which derive from 
+ * plugins as well as local objects in your server, all of which derive from
  * the callback member class of service.  Other features include support of
  * snapshot dumps and checking functions to determine state of running
  * servers.
@@ -27,41 +27,41 @@
  */
 
 #ifndef _SIPWITCH_SERVICE_H_
-#define	_SIPWITCH_SERVICE_H_
+#define _SIPWITCH_SERVICE_H_
 
 #ifndef _UCOMMON_LINKED_H_
 #include <ucommon/linked.h>
 #endif
 
-#ifndef	_UCOMMON_THREAD_H_
+#ifndef _UCOMMON_THREAD_H_
 #include <ucommon/thread.h>
 #endif
 
-#ifndef	_UCOMMON_STRING_H_
+#ifndef _UCOMMON_STRING_H_
 #include <ucommon/string.h>
 #endif
 
-#ifndef	_UCOMMON_FSYS_H_
+#ifndef _UCOMMON_FSYS_H_
 #include <ucommon/fsys.h>
 #endif
 
-#ifndef	_SIPWITCH_NAMESPACE_H_
+#ifndef _SIPWITCH_NAMESPACE_H_
 #include <sipwitch/namespace.h>
 #endif
 
-#ifndef	_SIPWITCH_MAPPED_H_
+#ifndef _SIPWITCH_MAPPED_H_
 #include <sipwitch/mapped.h>
 #endif
 
-#ifndef	_SIPWITCH_PROCESS_H_
+#ifndef _SIPWITCH_PROCESS_H_
 #include <sipwitch/process.h>
 #endif
 
-#ifndef	_SIPWITCH_CDR_H_
+#ifndef _SIPWITCH_CDR_H_
 #include <sipwitch/cdr.h>
 #endif
 
-#define	CONFIG_KEY_SIZE 177
+#define CONFIG_KEY_SIZE 177
 
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
@@ -69,200 +69,200 @@ using namespace UCOMMON_NAMESPACE;
 class __EXPORT service : public memalloc
 {
 public:
-	typedef treemap<char *>keynode;
-	typedef	enum {EXT_DIALING, USER_DIALING, ALL_DIALING} dialmode_t;
+    typedef treemap<char *>keynode;
+    typedef enum {EXT_DIALING, USER_DIALING, ALL_DIALING} dialmode_t;
 
-	typedef struct {
-		const char *key;
-		const char *value;
-	} define;
+    typedef struct {
+        const char *key;
+        const char *value;
+    } define;
 
-	class __EXPORT keyclone : public treemap<char *>
-	{
-	public:
-		void splice(keyclone *trunk);
-
-		inline void reset(const char *tag)
-			{id = (char *)tag;};
-	};
-
-	class __EXPORT usernode
-	{
-	public:
-		service::keynode *keys;
-		service *heap;
-		usernode();
-	};
-
-	class __EXPORT pointer 
-	{
-	private:
-		keynode *node;
-
-	public:
-		pointer();
-		pointer(const char *path);
-		pointer(pointer const&);
-		~pointer();
-		
-		inline operator bool() const
-			{return node != NULL;};
-
-		inline bool operator!() const
-			{return node == NULL;};
-
-		void operator=(keynode *node);
-
-		inline keynode *operator*() const
-			{return node;};
-
-		inline keynode *operator->() const
-			{return node;};
-	};
-
-	class __EXPORT instance
-	{
-	private:
-		int state;
-	
-	public:
-		instance();
-		~instance();
-		
-		inline const service *operator->() const
-			{return service::cfg;};
-	};
-
-	class __EXPORT callback : public OrderedObject
+    class __EXPORT keyclone : public treemap<char *>
     {
-	protected:
-		friend class service;
-		friend class modules;
+    public:
+        void splice(keyclone *trunk);
 
-		unsigned runlevel;
-		bool active_flag;
+        inline void reset(const char *tag)
+            {id = (char *)tag;};
+    };
 
-		static LinkedObject *runlevels[4];
-		static unsigned count;
-		static unsigned short sip_port;
-		static int sip_protocol;
-		static int sip_family;
-		static int sip_tlsmode;
-		static const char *sip_domain;
-		static const char *sip_realm;
-		static unsigned sip_prefix, sip_range;
-		static char session_uuid[40];
+    class __EXPORT usernode
+    {
+    public:
+        service::keynode *keys;
+        service *heap;
+        usernode();
+    };
+
+    class __EXPORT pointer
+    {
+    private:
+        keynode *node;
+
+    public:
+        pointer();
+        pointer(const char *path);
+        pointer(pointer const&);
+        ~pointer();
+
+        inline operator bool() const
+            {return node != NULL;};
+
+        inline bool operator!() const
+            {return node == NULL;};
+
+        void operator=(keynode *node);
+
+        inline keynode *operator*() const
+            {return node;};
+
+        inline keynode *operator->() const
+            {return node;};
+    };
+
+    class __EXPORT instance
+    {
+    private:
+        int state;
+
+    public:
+        instance();
+        ~instance();
+
+        inline const service *operator->() const
+            {return service::cfg;};
+    };
+
+    class __EXPORT callback : public OrderedObject
+    {
+    protected:
+        friend class service;
+        friend class modules;
+
+        unsigned runlevel;
+        bool active_flag;
+
+        static LinkedObject *runlevels[4];
+        static unsigned count;
+        static unsigned short sip_port;
+        static int sip_protocol;
+        static int sip_family;
+        static int sip_tlsmode;
+        static const char *sip_domain;
+        static const char *sip_realm;
+        static unsigned sip_prefix, sip_range;
+        static char session_uuid[40];
 
         callback(int level = 0);
         virtual ~callback();
 
-		inline static void *alloc(service *cfgp, size_t size)
-			{return cfgp->alloc(size);};
+        inline static void *alloc(service *cfgp, size_t size)
+            {return cfgp->alloc(size);};
 
-		inline static char *dup(service *cfgp, const char *s)
-			{return cfgp->dup(s);};
+        inline static char *dup(service *cfgp, const char *s)
+            {return cfgp->dup(s);};
 
-		inline static bool isConfigured(void) 
-			{return service::cfg != NULL;};
+        inline static bool isConfigured(void)
+            {return service::cfg != NULL;};
 
-		inline bool isActive(void) const
-			{return active_flag;};
+        inline bool isActive(void) const
+            {return active_flag;};
 
-		virtual void cdrlog(cdr *call);
-		virtual void errlog(shell::loglevel_t level, const char *text);
-		virtual bool check(void);
-		virtual void snapshot(FILE *fp);
-		virtual void start(service *cfg);
-		virtual void stop(service *cfg);
-		virtual void reload(service *cfg);
-		virtual void publish(service *cfg);
+        virtual void cdrlog(cdr *call);
+        virtual void errlog(shell::loglevel_t level, const char *text);
+        virtual bool check(void);
+        virtual void snapshot(FILE *fp);
+        virtual void start(service *cfg);
+        virtual void stop(service *cfg);
+        virtual void reload(service *cfg);
+        virtual void publish(service *cfg);
     };
-    
-	service(const char *name, size_t s = 0);
-	virtual ~service();
 
-	static volatile dialmode_t dialmode;
+    service(const char *name, size_t s = 0);
+    virtual ~service();
 
-	bool load(FILE *fp, keynode *node = NULL);
-	keynode *getPath(const char *path);
-	keynode *getNode(keynode *base, const char *id, const char *value);	
-	keynode *addNode(keynode *base, define *defs);
-	keynode *addNode(keynode *base, const char *id, const char *value);
-	keynode *getNode(keynode *base, const char *grp, const char *attr, const char *value);
-	keynode *getList(const char *path);
+    static volatile dialmode_t dialmode;
 
-	inline static LinkedObject *getModules(void)
-		{return service::callback::runlevels[3];};
+    bool load(FILE *fp, keynode *node = NULL);
+    keynode *getPath(const char *path);
+    keynode *getNode(keynode *base, const char *id, const char *value);
+    keynode *addNode(keynode *base, define *defs);
+    keynode *addNode(keynode *base, const char *id, const char *value);
+    keynode *getNode(keynode *base, const char *grp, const char *attr, const char *value);
+    keynode *getList(const char *path);
 
-	inline static bool isLinked(keynode *node) 
-		{return node->isLeaf();};
+    inline static LinkedObject *getModules(void)
+        {return service::callback::runlevels[3];};
 
-	inline static bool isValue(keynode *node)
-		{return (node->getPointer() != NULL);};
+    inline static bool isLinked(keynode *node)
+        {return node->isLeaf();};
 
-	inline static bool isUndefined(keynode *node)
-		{return !isLinked(node) && !isValue(node);};
+    inline static bool isValue(keynode *node)
+        {return (node->getPointer() != NULL);};
 
-	inline static bool isNode(keynode *node)
-		{return isLinked(node) && isValue(node);};
-	
-	static void publish(const char *addr);
-	static void published(struct sockaddr_storage *peer);
-	static const char *getValue(keynode *base, const char *id);
-	static void dump(FILE *fp, keynode *node, unsigned level);
-	static void snapshot(void);
-	static void dumpfile(void);
-	static bool period(long slice);
-	static void result(const char *value);
-	static void startup(void);
-	static void shutdown(void);
-	static long uptime(void);
-	static bool match(const char *digits, const char *pattern, bool partial);
-	static keynode *get(void);
+    inline static bool isUndefined(keynode *node)
+        {return !isLinked(node) && !isValue(node);};
 
-	static keynode *getProtected(const char *path);
-	static keynode *getUser(const char *uid);
-	static keynode *path(const char *p);
-	static keynode *list(const char *p);
+    inline static bool isNode(keynode *node)
+        {return isLinked(node) && isValue(node);};
 
-	inline static keynode *getEnviron(void)
-		{return getProtected("environ");};
+    static void publish(const char *addr);
+    static void published(struct sockaddr_storage *peer);
+    static const char *getValue(keynode *base, const char *id);
+    static void dump(FILE *fp, keynode *node, unsigned level);
+    static void snapshot(void);
+    static void dumpfile(void);
+    static bool period(long slice);
+    static void result(const char *value);
+    static void startup(void);
+    static void shutdown(void);
+    static long uptime(void);
+    static bool match(const char *digits, const char *pattern, bool partial);
+    static keynode *get(void);
 
-	inline keynode *getRoot(void)
-		{return &root;};
+    static keynode *getProtected(const char *path);
+    static keynode *getUser(const char *uid);
+    static keynode *path(const char *p);
+    static keynode *list(const char *p);
 
-	virtual void dump(FILE *fp);
-	virtual void confirm(void);
-	void commit(void);
+    inline static keynode *getEnviron(void)
+        {return getProtected("environ");};
 
-	static bool check(void);
-	static void release(keynode *node);
+    inline keynode *getRoot(void)
+        {return &root;};
+
+    virtual void dump(FILE *fp);
+    virtual void confirm(void);
+    void commit(void);
+
+    static bool check(void);
+    static void release(keynode *node);
 
 protected:
-	friend class instance;
+    friend class instance;
 
-	class __LOCAL keymap : public LinkedObject
-	{
-	public:
-		service::keynode *node;
-		const char *id;
-	};
-	
-	keynode root;
-	stringbuf<1024> buffer;
-	LinkedObject *keys[CONFIG_KEY_SIZE];
+    class __LOCAL keymap : public LinkedObject
+    {
+    public:
+        service::keynode *node;
+        const char *id;
+    };
 
-	static service *cfg;
-	static condlock_t locking;
+    keynode root;
+    stringbuf<1024> buffer;
+    LinkedObject *keys[CONFIG_KEY_SIZE];
 
-	void setHeader(const char *header);
-	void clearId(void);
-	void addAttributes(keynode *node, char *astr);
+    static service *cfg;
+    static condlock_t locking;
+
+    void setHeader(const char *header);
+    void clearId(void);
+    void addAttributes(keynode *node, char *astr);
 };
 
-#define	RUNLEVELS	(sizeof(callback::runlevels) / sizeof(LinkedObject *))
-#define	MODULE_RUNLEVEL	(RUNLEVELS - 1)
-#define	GENERIC_RUNLEVEL (RUNLEVELS - 2)
+#define RUNLEVELS   (sizeof(callback::runlevels) / sizeof(LinkedObject *))
+#define MODULE_RUNLEVEL (RUNLEVELS - 1)
+#define GENERIC_RUNLEVEL (RUNLEVELS - 2)
 
 
 END_NAMESPACE

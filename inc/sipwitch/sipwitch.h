@@ -1,4 +1,4 @@
-// Copyright (C) 2006-2008 David Sugar, Tycho Softworks.
+// Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@
  * @file sipwitch/sipwitch.h
  */
 
-#ifndef	_SIPWITCH_SIPWITCH_H_
-#define	_SIPWITCH_SIPWITCH_H_
+#ifndef _SIPWITCH_SIPWITCH_H_
+#define _SIPWITCH_SIPWITCH_H_
 
 #include <ucommon/ucommon.h>
 

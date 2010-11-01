@@ -1,4 +1,4 @@
-// Copyright (C) 2006-2008 David Sugar, Tycho Softworks.
+// Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,33 +23,33 @@
  */
 
 #ifndef _SIPWITCH_URI_H_
-#define	_SIPWITCH_URI_H_
+#define _SIPWITCH_URI_H_
 
-#ifndef	_UCOMMON_STRING_H_
+#ifndef _UCOMMON_STRING_H_
 #include <ucommon/string.h>
 #endif
 
-#ifndef	_UCOMMON_SOCKET_H_
+#ifndef _UCOMMON_SOCKET_H_
 #include <ucommon/socket.h>
 #endif
 
-#ifndef	__SIPWITCH_NAMESPACE_H_
+#ifndef __SIPWITCH_NAMESPACE_H_
 #include <sipwitch/namespace.h>
 #endif
 
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-class __EXPORT uri 
+class __EXPORT uri
 {
 public:
-	static bool resolve(const char *sipuri, char *buffer, size_t size);
-	static bool rewrite(const char *sipuri, char *buffer, size_t size);
-	static void serviceid(const char *sipuri, char *buffer, size_t size);
-	static bool userid(const char *sipuri, char *buffer, size_t size);
-	static bool hostid(const char *sipuri, char *buffer, size_t size);
-	static void identity(struct sockaddr *address, char *buffer, const char *user, size_t size);
-	static void publish(const char *uri, char *buffer, const char *user, size_t size);
+    static bool resolve(const char *sipuri, char *buffer, size_t size);
+    static bool rewrite(const char *sipuri, char *buffer, size_t size);
+    static void serviceid(const char *sipuri, char *buffer, size_t size);
+    static bool userid(const char *sipuri, char *buffer, size_t size);
+    static bool hostid(const char *sipuri, char *buffer, size_t size);
+    static void identity(struct sockaddr *address, char *buffer, const char *user, size_t size);
+    static void publish(const char *uri, char *buffer, const char *user, size_t size);
 };
 
 END_NAMESPACE

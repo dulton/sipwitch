@@ -1,4 +1,4 @@
-// Copyright (C) 2006-2007 David Sugar, Tycho Softworks.
+// Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,8 +14,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
-#ifndef	DEBUG
-#define	DEBUG
+#ifndef DEBUG
+#define DEBUG
 #endif
 
 #include <sipwitch/sipwitch.h>
@@ -30,19 +30,19 @@ static int load_callback = 0;
 static class testCallback : public service::callback
 {
 public:
-	testCallback() : service::callback(1) 
-		{if(++init_callback == 2) active_flag = true;};
-	void reload(service *cfg) 
-		{++load_callback;};
-}	testcalls, extra;
+    testCallback() : service::callback(1)
+        {if(++init_callback == 2) active_flag = true;};
+    void reload(service *cfg)
+        {++load_callback;};
+}   testcalls, extra;
 
 extern "C" int main()
 {
-	service *cfg = new service("test");
-	assert(cfg != NULL);
-	// constructors built
-	assert(init_callback == 2);
-	// test reloading
-	cfg->commit();
-	assert(load_callback == 2);
+    service *cfg = new service("test");
+    assert(cfg != NULL);
+    // constructors built
+    assert(init_callback == 2);
+    // test reloading
+    cfg->commit();
+    assert(load_callback == 2);
 }

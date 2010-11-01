@@ -1,4 +1,4 @@
-// Copyright (C) 2008 David Sugar, Tycho Softworks.
+// Copyright (C) 2008-2010 David Sugar, Tycho Softworks.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,130 +19,130 @@
 
 using namespace UCOMMON_NAMESPACE;
 using namespace SIPWITCH_NAMESPACE;
-	
+
 extern "C" int main(int argc, char **argv)
 {
-	char *realm = NULL;
-	const char *user, *secret;
-	const char *mode = "md5";
-	char buffer[128];
-	string_t digestbuf;
+    char *realm = NULL;
+    const char *user, *secret;
+    const char *mode = "md5";
+    char buffer[128];
+    string_t digestbuf;
 
-	while(NULL != *(++argv)) {
-		if(!strcmp(*argv, "--")) {
-			++argv;
-			break;
-		}
+    while(NULL != *(++argv)) {
+        if(!strcmp(*argv, "--")) {
+            ++argv;
+            break;
+        }
 
-		if(!strncmp(*argv, "--", 2))
-			++*argv;
+        if(!strncmp(*argv, "--", 2))
+            ++*argv;
 
-		if(!strcmp(*argv, "-version")) {
-			printf("sipdigest 0.1\n"
-				"Copyright (C) 2008 David Sugar, Tycho Softworks\n"
-				"License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
-				"This is free software: you are free to change and redistribute it.\n"
-				"There is NO WARRANTY, to the extent permitted by law.\n");
-			exit(0);
-		}
+        if(!strcmp(*argv, "-version")) {
+            printf("sipdigest 0.1\n"
+                "Copyright (C) 2008 David Sugar, Tycho Softworks\n"
+                "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
+                "This is free software: you are free to change and redistribute it.\n"
+                "There is NO WARRANTY, to the extent permitted by law.\n");
+            exit(0);
+        }
 
-		if(!strcmp(*argv, "-r") || !strcmp(*argv, "-realm")) {
-			if(NULL == *(++argv)) {
-				fprintf(stderr, "*** sipdigest: realm option missing\n");
-				exit(3);
-			}
-			realm = strdup(*argv);
-			continue;
-		}
+        if(!strcmp(*argv, "-r") || !strcmp(*argv, "-realm")) {
+            if(NULL == *(++argv)) {
+                fprintf(stderr, "*** sipdigest: realm option missing\n");
+                exit(3);
+            }
+            realm = strdup(*argv);
+            continue;
+        }
 
-		if(String::equal(*argv, "-md5") || String::equal(*argv, "-sha1") || String::equal(*argv, "-rmd160"))
-		{
-			mode = strdup(*argv + 1);
-			continue;
-		}
+        if(String::equal(*argv, "-md5") || String::equal(*argv, "-sha1") || String::equal(*argv, "-rmd160"))
+        {
+            mode = strdup(*argv + 1);
+            continue;
+        }
 
-		if(!strncmp(*argv, "-realm=", 7)) {
-			realm = strdup(*argv + 7);
-			continue;
-		}
+        if(!strncmp(*argv, "-realm=", 7)) {
+            realm = strdup(*argv + 7);
+            continue;
+        }
 
-		if(!strcmp(*argv, "-?") || !strcmp(*argv, "-h") || !strcmp(*argv, "-help")) {
+        if(!strcmp(*argv, "-?") || !strcmp(*argv, "-h") || !strcmp(*argv, "-help")) {
 usage:
-			fprintf(stderr, "usage: sipdigest [options] userid secret\n"
-				"[options]\n"
-				"  -md5                 specify md5 computation\n"
-				"  -realm \"string\"    specify realm for digest\n"
-				"  -rmd160              specify rmd160 computation\n"
-				"  -sha1                specify sha1 computation\n"
-				"Report bugs to sipwitch-devel@gnu.org\n");
-			exit(3);
-		}
+            fprintf(stderr, "usage: sipdigest [options] userid secret\n"
+                "[options]\n"
+                "  -md5                 specify md5 computation\n"
+                "  -realm \"string\"    specify realm for digest\n"
+                "  -rmd160              specify rmd160 computation\n"
+                "  -sha1                specify sha1 computation\n"
+                "Report bugs to sipwitch-devel@gnu.org\n");
+            exit(3);
+        }
 
-		if(**argv == '-') {
-			fprintf(stderr, "*** sipdigest: %s: unknown option\n", *argv);
-			exit(3);
-		}
+        if(**argv == '-') {
+            fprintf(stderr, "*** sipdigest: %s: unknown option\n", *argv);
+            exit(3);
+        }
 
-		break;
-	}
+        break;
+    }
 
-	user = *(argv++);
-	if(!user) {
-		fprintf(stderr, "*** sipdigest: userid missing\n");
-		exit(3);
-	}
+    user = *(argv++);
+    if(!user) {
+        fprintf(stderr, "*** sipdigest: userid missing\n");
+        exit(3);
+    }
 
-	secret = *(argv++);
-	if(!secret) {
-		fprintf(stderr, "*** sipdigest: secret missing\n");
-		exit(3);
-	}
+    secret = *(argv++);
+    if(!secret) {
+        fprintf(stderr, "*** sipdigest: secret missing\n");
+        exit(3);
+    }
 
-	if(!realm) {
-		fsys_t fs;
-		fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
-		if(!is(fs))
-			fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
+    if(!realm) {
+        fsys_t fs;
+        fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+        if(!is(fs))
+            fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
 
-		if(!is(fs)) {
-			fprintf(stderr, "*** sipdigest: no public realm known\n");
-			exit(4);
-		}
-		memset(buffer, 0, sizeof(buffer));
-		fsys::read(fs, buffer, sizeof(buffer) - 1);
-		fsys::close(fs);
+        if(!is(fs)) {
+            fprintf(stderr, "*** sipdigest: no public realm known\n");
+            exit(4);
+        }
+        memset(buffer, 0, sizeof(buffer));
+        fsys::read(fs, buffer, sizeof(buffer) - 1);
+        fsys::close(fs);
 
-		char *cp = strchr(buffer, '\n');
-		if(cp)
-			*cp = 0;
+        char *cp = strchr(buffer, '\n');
+        if(cp)
+            *cp = 0;
 
-		cp = strchr(buffer, ':');
-		if(cp)
-			*(cp++) = 0;
+        cp = strchr(buffer, ':');
+        if(cp)
+            *(cp++) = 0;
 
-		if(cp && *cp)
-			mode = cp;
-		realm = strdup(buffer);
-	}
+        if(cp && *cp)
+            mode = cp;
+        realm = strdup(buffer);
+    }
 
-	if(*argv)
-		goto usage;
+    if(*argv)
+        goto usage;
 
-	digestbuf = (string_t)user + ":" + (string_t)realm + ":" + (string_t)secret;
+    digestbuf = (string_t)user + ":" + (string_t)realm + ":" + (string_t)secret;
 
-	if(!stricmp(mode, "sha1"))
-		digest::sha1(digestbuf);
-	else if(!stricmp(mode, "rmd160"))
-		digest::rmd160(digestbuf);
-	else
-		digest::md5(digestbuf);
+    if(!stricmp(mode, "sha1"))
+        digest::sha1(digestbuf);
+    else if(!stricmp(mode, "rmd160"))
+        digest::rmd160(digestbuf);
+    else
+        digest::md5(digestbuf);
 
-	if(digestbuf[0] == 0)  {
-		fprintf(stderr, "*** sipdigest: unsupported computation\n");
-		exit(6);
-	}
+    if(digestbuf[0] == 0)  {
+        fprintf(stderr, "*** sipdigest: unsupported computation\n");
+        exit(6);
+    }
 
-	printf("%s\n", *digestbuf);
-	exit(0);
+    printf("%s\n", *digestbuf);
+    exit(0);
 }
 

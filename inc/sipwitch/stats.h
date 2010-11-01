@@ -1,4 +1,4 @@
-// Copyright (C) 2009 David Sugar, Tycho Softworks.
+// Copyright (C) 2009-2010 David Sugar, Tycho Softworks.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,60 +15,60 @@
 
 /**
  * Basic server call statistics.
- * This provides the interface for managing server call statistics, which are 
+ * This provides the interface for managing server call statistics, which are
  * kept in shared memory.
  * @file sipwitch/stats.h
  */
 
 #ifndef _SIPWITCH_STATS_H_
-#define	_SIPWITCH_STATS_H_
+#define _SIPWITCH_STATS_H_
 
 #ifndef _UCOMMON_LINKED_H_
 #include <ucommon/linked.h>
 #endif
 
-#ifndef	_UCOMMON_THREAD_H_
+#ifndef _UCOMMON_THREAD_H_
 #include <ucommon/thread.h>
 #endif
 
-#ifndef	_UCOMMON_STRING_H_
+#ifndef _UCOMMON_STRING_H_
 #include <ucommon/string.h>
 #endif
 
-#ifndef	_SIPWITCH_NAMESPACE_H_
+#ifndef _SIPWITCH_NAMESPACE_H_
 #include <sipwitch/namespace.h>
 #endif
 
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-#define	STAT_MAP	"sipwitch.stats"
+#define STAT_MAP    "sipwitch.stats"
 
 class __EXPORT stats
 {
 public:
-	char id[12];
+    char id[12];
 
-	typedef	enum {INCOMING = 0, OUTGOING = 1} stat_t;
+    typedef enum {INCOMING = 0, OUTGOING = 1} stat_t;
 
-	struct
-	{
-		unsigned long total, period, pperiod;
-		unsigned short current, peak, min, max, pmin, pmax;
-	} data[2];
+    struct
+    {
+        unsigned long total, period, pperiod;
+        unsigned short current, peak, min, max, pmin, pmax;
+    } data[2];
 
-	time_t lastcall;
-	unsigned short limit;
+    time_t lastcall;
+    unsigned short limit;
 
-	void assign(stat_t element);
-	void release(stat_t element);
+    void assign(stat_t element);
+    void release(stat_t element);
 
-	unsigned active(void) const;
+    unsigned active(void) const;
 
-	static void period(FILE *fp = NULL);
-	static stats *create(void);
-	static stats *request(const char *id);
-	static void allocate(unsigned count);
+    static void period(FILE *fp = NULL);
+    static stats *create(void);
+    static stats *request(const char *id);
+    static void allocate(unsigned count);
 };
 
 END_NAMESPACE

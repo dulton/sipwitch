@@ -83,13 +83,13 @@ void history::set(unsigned limit)
 
 void history::out(void)
 {
-	if(!histlimit)
-		return;
+    if(!histlimit)
+        return;
 
-	FILE *fp = process::output("history");
+    FILE *fp = process::output("history");
 
-	if(!fp)
-		return;
+    if(!fp)
+        return;
 
     histlock.acquire();
     linked_pointer<history> hp = histindex.begin();

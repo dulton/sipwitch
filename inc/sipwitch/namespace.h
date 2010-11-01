@@ -1,4 +1,4 @@
-// Copyright (C) 2006-2008 David Sugar, Tycho Softworks.
+// Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  * @file sipwitch/namespace.h
  */
 
-#ifndef	_SIPWITCH_NAMESPACE_H_
-#define	_SIPWITCH_NAMESPACE_H_
+#ifndef _SIPWITCH_NAMESPACE_H_
+#define _SIPWITCH_NAMESPACE_H_
 
 #define SIPWITCH_NAMESPACE   sipwitch
 #define NAMESPACE_SIPWITCH   namespace sipwitch {
@@ -29,7 +29,7 @@
  * Common namespace for sipwitch server.
  * We use a sipwitch specific namespace to easily seperate sipwitch
  * interfaces from other parts of GNU Telephony.  This namespace
- * is controlled by the namespace macros (SIPWITCH_NAMESPACE and 
+ * is controlled by the namespace macros (SIPWITCH_NAMESPACE and
  * NAMESPACE_SIPWITCH) and are used in place of direct namespace
  * declarations to make parsing of tab levels simpler and to allow easy
  * changes to the namespace name later if needed.
