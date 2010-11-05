@@ -48,6 +48,23 @@ static char fifopath[128] = "";
 
 typedef unsigned long long uuid_time_t;
 
+#ifdef  HAVE_ATEXIT
+extern "C" {
+    static void exit_handler(void)
+    {
+        if(fifopath[0]) {
+            remove(fifopath);
+            fifopath[0] = 0;
+        }
+    }
+
+    static void abort_handler(int signo)
+    {
+        exit_handler();
+    }
+};
+#endif
+
 static void get_system_time(uuid_time_t *uuid_time)
 {
     struct timeval tp;
@@ -77,6 +94,13 @@ size_t process::attach(void)
         fifopath[0] = 0;
         return 0;
     }
+#ifdef  HAVE_ATEXIT
+    else {
+        ::signal(SIGABRT, abort_handler);
+        atexit(exit_handler);
+    }
+#endif
+
 
     fifo = fopen(fifopath, "r+");
     if(fifo)
@@ -350,6 +374,7 @@ bool process::system(const char *fmt, ...)
         waitpid(pid, NULL, 0);
         return true;
     }
+    ::signal(SIGABRT, SIG_DFL);
     ::signal(SIGQUIT, SIG_DFL);
     ::signal(SIGINT, SIG_DFL);
     ::signal(SIGCHLD, SIG_DFL);

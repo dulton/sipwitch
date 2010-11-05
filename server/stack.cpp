@@ -801,75 +801,75 @@ void stack::reload(service *cfg)
         key = sp->getId();
         value = sp->getPointer();
         if(key && value) {
-            if(!stricmp(key, "threading") && !isConfigured())
+            if(eq(key, "threading") && !isConfigured())
                 threading = atoi(value);
-            else if(!stricmp(key, "priority") && !isConfigured())
+            else if(eq(key, "priority") && !isConfigured())
                 priority = atoi(value);
-            else if(!stricmp(key, "timing"))
+            else if(eq(key, "timing"))
                 timing = atoi(value);
-            else if(!stricmp(key, "incoming"))
+            else if(eq(key, "incoming"))
                 incoming = tobool(value);
-            else if(!stricmp(key, "outgoing"))
+            else if(eq(key, "outgoing"))
                 outgoing = tobool(value);
-            else if(!stricmp(key, "trace") || !stricmp(key, "dumping"))
+            else if(eq(key, "trace") || eq(key, "dumping"))
                 dumping = tobool(value);
-            else if(!stricmp(key, "keysize") && !isConfigured())
+            else if(eq(key, "keysize") && !isConfigured())
                 keysize = atoi(value);
-            else if(!stricmp(key, "interface") && !isConfigured()) {
+            else if(eq(key, "interface") && !isConfigured()) {
 #ifdef  AF_INET6
                 if(strchr(value, ':') != NULL)
                     sip_family = AF_INET6;
 #endif
-                if(!strcmp(value, ":::") || !strcmp(value, "::0") || !strcmp(value, "::*") || !stricmp(value, "*") || !*value)
+                if(eq(value, ":::") || eq(value, "::0") || eq(value, "::*") || eq(value, "*") || eq(value, "0.0.0.0") || !*value)
                     value = NULL;
                 if(value)
                     value = strdup(value);
                 iface = value;
             }
-            else if(!stricmp(key, "send101") && !isConfigured() && tobool(value))
+            else if(eq(key, "send101") && !isConfigured() && tobool(value))
                 send101 = 0;
-            else if(!stricmp(key, "keepalive") && !isConfigured()) {
+            else if(eq(key, "keepalive") && !isConfigured()) {
                 val = atoi(value);
                 eXosip_set_option(EXOSIP_OPT_UDP_KEEP_ALIVE, &val);
             }
-            else if(!stricmp(key, "learn") && !isConfigured()) {
+            else if(eq(key, "learn") && !isConfigured()) {
                 val = tobool(value);
                 eXosip_set_option(EXOSIP_OPT_UDP_LEARN_PORT, &val);
             }
-            else if(!stricmp(key, "restricted")) {
-                if(String::equal(value, "none"))
+            else if(eq(key, "restricted")) {
+                if(eq(value, "none"))
                     restricted = NULL;
                 else
                     restricted = cfg->dup(value);
             }
-            else if(!stricmp(key, "localnames"))
+            else if(eq(key, "localnames"))
                 localhosts = cfg->dup(value);
-            else if(!stricmp(key, "trusted")) {
-                if(String::equal(value, "none"))
+            else if(eq(key, "trusted")) {
+                if(eq(value, "none"))
                     trusted = NULL;
                 else
                     trusted = cfg->dup(value);
             }
-            else if(!stricmp(key, "system"))
+            else if(eq(key, "system"))
                 system = value;
-            else if(!stricmp(key, "anon"))
+            else if(eq(key, "anon"))
                 anon = value;
-            else if(!stricmp(key, "published") || !stricmp(key, "public"))
+            else if(eq(key, "published") || eq(key, "public"))
                 published = cfg->dup(value);
-            else if(!stricmp(key, "peering") || !stricmp(key, "gateway"))
+            else if(eq(key, "peering") || eq(key, "gateway"))
                 service::publish(value);
-            else if(!stricmp(key, "proxy") || !stricmp(key, "outbound"))
+            else if(eq(key, "proxy") || eq(key, "outbound"))
                 new_proxy = cfg->dup(value);
-            else if(!stricmp(key, "agent") && !isConfigured())
+            else if(eq(key, "agent") && !isConfigured())
                 agent = value;
-            else if(!stricmp(key, "port") && !isConfigured())
+            else if(eq(key, "port") && !isConfigured())
                 sip_port = atoi(value);
-            else if(!stricmp(key, "mapped") && !isConfigured())
+            else if(eq(key, "mapped") && !isConfigured())
                 mapped_calls = atoi(value);
-            else if(!stricmp(key, "transport") && !isConfigured()) {
-                if(!stricmp(value, "tcp") || !stricmp(value, "tls"))
+            else if(eq(key, "transport") && !isConfigured()) {
+                if(eq(value, "tcp") || eq(value, "tls"))
                     sip_protocol = IPPROTO_TCP;
-                else if(!stricmp(value, "tls"))
+                else if(eq(value, "tls"))
                     sip_tlsmode = 1;
             }
         }
@@ -880,13 +880,13 @@ void stack::reload(service *cfg)
         key = tp->getId();
         value = tp->getPointer();
         if(key && value) {
-            if(!stricmp(key, "ring"))
+            if(eq(key, "ring"))
                 ring_value = atoi(value);
-            else if(!stricmp(key, "cfna"))
+            else if(eq(key, "cfna"))
                 cfna_value = atoi(value);
-            else if(!stricmp(key, "reset"))
+            else if(eq(key, "reset"))
                 reset_value = atoi(value);
-            else if(!stricmp(key, "invite"))
+            else if(eq(key, "invite"))
                 invite_expires = atoi(value);
         }
         tp.next();

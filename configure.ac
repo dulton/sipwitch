@@ -10,8 +10,8 @@
 
 AC_INIT(autogen.sh)
 
-VERSION="0.9.1"
-LT_VERSION="0:42:0"
+VERSION="0.9.2"
+LT_VERSION="0:43:0"
 UCOMMON_REQUIRES="3.3.4"
 
 AC_CONFIG_AUX_DIR(autoconf)
@@ -296,6 +296,9 @@ for lib in $UCOMMON_CLINK ; do
         libc=`echo $lib | sed -e "s/^-l//"`
         AC_CHECK_LIB($libc, mkfifo, [
             AC_DEFINE(HAVE_MKFIFO, [1], [fifo control port])
+        ])
+        AC_CHECK_LIB($libc, atexit, [
+            AC_DEFINE(HAVE_ATEXIT, [1], [have atexit handling])
         ])
         AC_CHECK_LIB($libc, setpgrp, [
             AC_DEFINE(HAVE_SETPGR, [1], [process set group])
