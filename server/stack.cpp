@@ -693,7 +693,8 @@ void stack::start(service *cfg)
 
     thread *thr;
     unsigned thidx = 0;
-    shell::log(DEBUG1, "stack starting; %d maps and %d threads at priority %d", mapped_calls, threading, priority);
+    shell::log(DEBUG1, "stack starting; %d maps and %d threads at priority %d",
+        mapped_calls, threading, priority);
     eXosip_init();
 
     mapped_array<MappedCall>::create(CALL_MAP, mapped_calls);
@@ -705,6 +706,30 @@ void stack::start(service *cfg)
         eXosip_enable_ipv6(1);
         if(!iface)
             iface = "::0";
+    }
+#endif
+
+#ifdef  HAVE_TLS
+    if(sip_tlsmode) {
+        eXosip_tls_ctx_t ctx;
+        int ctx_error;
+
+        memset(&ctx, 0, sizeof(ctx));
+        String::set(ctx.random_file, sizeof(ctx.random_file),
+            sip_tlsdev);
+        String::set(ctx.dh_param, sizeof(ctx.dh_param),
+            sip_tlsdh);
+        String::set(ctx.root_ca_cert, sizeof(ctx.root_ca_cert),
+            sip_tlsca);
+        String::set(ctx.server.cert, sizeof(ctx.server.cert),
+            sip_tlscert);
+        String::set(ctx.server.priv_key, sizeof(ctx.server.priv_key),
+            sip_tlskey);
+        String::set(ctx.server.priv_key_pw, sizeof(ctx.server.priv_key_pw),
+            sip_tlspwd);
+        if ((ctx_error = eXosip_set_tls_ctx(&ctx)) != TLS_OK)
+            shell::log(shell::FAIL,
+                "sip set tls credentials failed %i", ctx_error);
     }
 #endif
 
@@ -866,10 +891,22 @@ void stack::reload(service *cfg)
                 sip_port = atoi(value);
             else if(eq(key, "mapped") && !isConfigured())
                 mapped_calls = atoi(value);
+            else if(eq(key, "password") && !isConfigured())
+                sip_tlspwd = strdup(value);
+            else if(eq(key, "keyfile") && !isConfigured())
+                sip_tlskey = strdup(value);
+            else if(eq(key, "random") && !isConfigured())
+                sip_tlsdev = strdup(value);
+            else if(eq(key, "certfile") && !isConfigured())
+                sip_tlscert = strdup(value);
+            else if(eq(key, "dhfile") && !isConfigured())
+                sip_tlsdh = strdup(value);
+            else if(eq(key, "authfile") && !isConfigured())
+                sip_tlsca = strdup(value);
             else if(eq(key, "transport") && !isConfigured()) {
                 if(eq(value, "tcp") || eq(value, "tls"))
                     sip_protocol = IPPROTO_TCP;
-                else if(eq(value, "tls"))
+                if(eq(value, "tls"))
                     sip_tlsmode = 1;
             }
         }

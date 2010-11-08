@@ -60,6 +60,21 @@ SIPWITCH_FLAGS=""
 SERVER_FLAGS=""
 SERVER_LIBS=""
 
+AC_ARG_ENABLE(openssl,
+    [  --enable-openssl        enable support for openssl],
+    enable_openssl=$enableval,enable_openssl="auto")
+
+if test "$enable_openssl" = "yes" ; then
+    AC_DEFINE(HAVE_TLS, [1], [have exosip tls support in sipwitch])
+    test -z "$ac_with_crypto"  && ac_with_crypto="openssl"
+fi
+
+if test "$enable_openssl" = "auto" ; then
+    AC_CHECK_HEADER(openssl/openssl.h, [
+        AC_DEFINE(HAVE_TLS, [1], [have exosip tls support in sipwitch])
+    ])
+fi
+
 test -z "$ac_with_malloc" && ac_with_malloc=""
 test -z "$ac_with_crypto" && ac_with_crypto="auto"
 test -z "$plugindir" && plugindir='${libdir}'

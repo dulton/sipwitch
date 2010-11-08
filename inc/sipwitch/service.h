@@ -150,6 +150,12 @@ public:
         static int sip_tlsmode;
         static const char *sip_domain;
         static const char *sip_realm;
+        static const char *sip_tlspwd;
+        static const char *sip_tlsdev;
+        static const char *sip_tlsca;
+        static const char *sip_tlsdh;
+        static const char *sip_tlskey;
+        static const char *sip_tlscert;
         static unsigned sip_prefix, sip_range;
         static char session_uuid[40];
 
