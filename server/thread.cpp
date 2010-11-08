@@ -1472,7 +1472,6 @@ void thread::registration(void)
     int interval = -1;
     int pos = 0;
     int error = SIP_ADDRESS_INCOMPLETE;
-    char temp[MAX_URI_SIZE];
     osip_message_t *reply = NULL;
     struct sockaddr_internet iface;
 
@@ -1485,6 +1484,14 @@ void thread::registration(void)
             break;
         }
     }
+
+    if(registry::getDomain())
+        String::set(binding, sizeof(binding), registry::getDomain());
+    else if(sevent->request->req_uri->port && !eq(sevent->request->req_uri->port, "5060"))
+        snprintf(binding, sizeof(binding), "%s:%s",
+            sevent->request->req_uri->host, sevent->request->req_uri->port);
+    else
+        String::set(binding, sizeof(binding), sevent->request->req_uri->host);
 
     if(contact && contact->url && contact->url->username && contact->url->username[0]) {
         if(!authenticate())
@@ -1546,19 +1553,18 @@ void thread::registration(void)
             error = SIP_OK;
 
 reply:
-        if(error == SIP_OK) {
+        if(error == SIP_OK)
             shell::debug(3, "querying %s", reguri->username);
-            stack::sipPublish(&iface, temp + 1, reguri->username, sizeof(temp) - 2);
-            temp[0] = '<';
-            String::add(temp, sizeof(temp), ">");
-        }
         else
             shell::debug(3, "query rejected for %s; error=%d", reguri->username, error);
         eXosip_lock();
         eXosip_message_build_answer(sevent->tid, error, &reply);
         if(reply != NULL) {
-            if(error == SIP_OK)
-                osip_message_set_contact(reply, temp);
+            if(error == SIP_OK) {
+                snprintf(buftemp, sizeof(buftemp), "<%s:%s@%s>",
+                    stack::getScheme(), reguri->username, binding);
+                osip_message_set_contact(reply, buftemp);
+            }
             osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
             osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
             stack::siplog(reply);
@@ -1656,6 +1662,18 @@ reply:
     eXosip_lock();
     eXosip_message_build_answer(sevent->tid, answer, &reply);
     if(reply != NULL) {
+
+        if(answer == SIP_OK) {
+            if(reginfo->ext) {
+                snprintf(buftemp, sizeof(buftemp), "<%s:%d@%s>;expires=%d",
+                    stack::getScheme(), reginfo->ext, binding, interval);
+                osip_message_set_contact(reply, buftemp);
+            }
+
+            snprintf(buftemp, sizeof(buftemp), "<%s:%s@%s>;expires=%d",
+                stack::getScheme(), reginfo->userid, binding, interval);
+            osip_message_set_contact(reply, buftemp);
+        }
         osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
         osip_message_set_header(reply, ALLOW_EVENTS, "talk, hold, refer");
         stack::siplog(reply);

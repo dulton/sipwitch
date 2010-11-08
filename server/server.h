@@ -571,6 +571,7 @@ private:
     registry::mapped *reginfo;
     MappedRegistry *accepted;
     eXosip_event_t *sevent;
+    char binding[MAX_URI_SIZE];
     char buffer[MAX_URI_SIZE];
     char buftemp[MAX_URI_SIZE];
     char identbuf[MAX_USERID_SIZE + 12];
