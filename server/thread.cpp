@@ -1665,13 +1665,13 @@ reply:
 
         if(answer == SIP_OK) {
             if(reginfo->ext) {
-                snprintf(buftemp, sizeof(buftemp), "<%s:%d@%s>;expires=%d",
-                    stack::getScheme(), reginfo->ext, binding, interval);
+                snprintf(buftemp, sizeof(buftemp), "<%s:%d@%s>;expires=%ld",
+                    stack::getScheme(), reginfo->ext, binding, (long)interval);
                 osip_message_set_contact(reply, buftemp);
             }
 
-            snprintf(buftemp, sizeof(buftemp), "<%s:%s@%s>;expires=%d",
-                stack::getScheme(), reginfo->userid, binding, interval);
+            snprintf(buftemp, sizeof(buftemp), "<%s:%s@%s>;expires=%ld",
+                stack::getScheme(), reginfo->userid, binding, (long)interval);
             osip_message_set_contact(reply, buftemp);
         }
         osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");

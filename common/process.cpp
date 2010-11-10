@@ -62,7 +62,7 @@ extern "C" {
     {
         exit_handler();
     }
-};
+}
 #endif
 
 static void get_system_time(uuid_time_t *uuid_time)
