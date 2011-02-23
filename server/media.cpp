@@ -25,7 +25,7 @@ static LinkedObject *runlist = NULL;
 static mutex_t lock;
 static media::proxy *list = NULL;
 static fd_set connections;
-static media::proxy *map[sizeof(connections) * 8];
+static media::proxy *proxymap[sizeof(connections) * 8];
 static volatile bool running = false;
 static volatile int hiwater = 0;
 
@@ -113,9 +113,9 @@ void media::thread::run(void)
                 continue;
 
             lock.acquire();
-            mp = map[so];
+            mp = proxymap[so];
             if(mp->so == INVALID_SOCKET) {
-                map[so] = NULL;
+                proxymap[so] = NULL;
                 mp = NULL;
             }
 
@@ -213,7 +213,7 @@ bool media::proxy::activate(media::sdp *parser)
     FD_SET(so, &connections);
     if(so >= hiwater)
         hiwater = so + 1;
-    map[so] = this;
+    proxymap[so] = this;
     return true;
 }
 
@@ -224,7 +224,7 @@ void media::proxy::release(time_t expire)
         return;
 
     FD_CLR(so, &connections);
-    map[so] = NULL;
+    proxymap[so] = NULL;
     Socket::release(so);
     so = INVALID_SOCKET;
 }
@@ -481,7 +481,7 @@ void media::start(service *cfg)
     else
         return;
 
-    memset(map, 0, sizeof(map));
+    memset(proxymap, 0, sizeof(proxymap));
     memset(&connections, 0, sizeof(connections));
 
 #ifdef  _MSWINDOWS_

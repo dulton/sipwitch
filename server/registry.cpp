@@ -114,10 +114,23 @@ service::callback(0), mapped_array<MappedRegistry>()
 
 const char *registry::getDomain(void)
 {
-    if(!strchr(reg.realm, '.'))
+    if(!reg.realm || strchr(reg.realm, ' ')) {
+#ifdef  HAVE_GETHOSTNAME
+        static char hostbuf[256] = {0};
+        if(!hostbuf[0])
+            gethostname(hostbuf, sizeof(hostbuf));
+        if(hostbuf[0])
+            return hostbuf;
+        return NULL;
+#else
+        return NULL;
+#endif
+    }
+
+    if(eq(reg.realm, "no"))
         return NULL;
 
-    if(strchr(reg.realm, ' '))
+    if(eq(reg.realm, "none"))
         return NULL;
 
     return reg.realm;

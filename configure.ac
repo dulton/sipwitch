@@ -309,6 +309,9 @@ for lib in $UCOMMON_CLINK ; do
     case "$lib" in
     -l*)
         libc=`echo $lib | sed -e "s/^-l//"`
+        AC_CHECK_LIB($libc, gethostname, [
+            AC_DEFINE(HAVE_GETHOSTNAME, [1], [hostname self lookup])
+        ])
         AC_CHECK_LIB($libc, mkfifo, [
             AC_DEFINE(HAVE_MKFIFO, [1], [fifo control port])
         ])

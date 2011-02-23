@@ -1,3 +1,6 @@
+from version 0.9.2 to 0.9.3
+- use gethostname for default domain name if not otherwise set.
+
 From version 0.9.1 to 0.9.2
 - trap aborts and exits to kill fifo and treat "0.0.0.0" as NULL (Bug: #4).
 - add contact: and expires param to registration (Bug: #5).
