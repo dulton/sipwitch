@@ -279,9 +279,9 @@ char *media::sdp::get(char *buffer, size_t len)
             ++bufdata;
             continue;
         }
-        else if(*buffer == '\n') {
-            *buffer = 0;
-            return base;
+        else if(*bufdata == '\n') {
+            ++bufdata;
+            break;
         }
         *(buffer++) = *(bufdata++);
         --len;
@@ -366,8 +366,6 @@ void media::sdp::check_media(char *buffer, size_t len)
 
     mediacount = align(mediacount);
 }
-
-
 
 void media::sdp::check_connect(char *buffer, size_t len)
 {
