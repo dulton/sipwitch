@@ -21,7 +21,6 @@ BuildRequires: ucommon-devel >= 4.1.0
 BuildRequires: libeXosip2-devel >= 3.0.0
 BuildRequires: avahi-devel
 BuildRequires: libgcrypt-devel
-BuildRequires: libnotify-devel
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts
@@ -46,10 +45,6 @@ Summary: cgi web interface to control sipwitch server
 %package plugin-zeroconf
 Requires: %{name} = %{version}-%{release}
 Summary: Zeroconf plugin for sipwitch
-
-%package plugin-libnotify
-Requires: %{name} = %{version}-%{release}
-Summary: libnotify plugin for sipwitch
 
 %package plugin-scripting
 Requires: %{name} = %{version}-%{release}
@@ -89,10 +84,6 @@ This package offers a means to perform remote management of a sipwitch
 server using the cgi interface of an installed web server.  The primary
 service this offers is xmlrpc access to sipwitch shared memory and
 control interfaces in a manner analgolous to the sipwitch command utility.
-
-%description plugin-libnotify
-This plugin sends notification events to the desktop using the libnotify
-library.
 
 %description plugin-zeroconf
 This plugin activates zeroconf network services for sipwitch and publishes
@@ -166,10 +157,6 @@ echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
 %files runtime
 %defattr(-,root,root,-)
 %{_libdir}/*.so.*
-
-%files plugin-libnotify
-%defattr(-,root,root,-)
-%{_libdir}/sipwitch/notify.so
 
 %files plugin-zeroconf
 %defattr(-,root,root,-)
