@@ -558,10 +558,10 @@ void registry::reload(service *cfg)
     if(!String::equal(realm, oldrealm)) {
         process::uuid(session_uuid, sizeof(session_uuid), realm);
         shell::log(shell::INFO, "new realm %s", realm);
-        digest::clear();
+        digests::clear();
     } else if(!String::equal(digest, olddigest)) {
         shell::log(shell::INFO, "digest changed to %s", digest);
-        digest::clear();
+        digests::clear();
     }
 
     oldrealm = realm;

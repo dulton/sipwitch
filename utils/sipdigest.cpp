@@ -14,7 +14,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <ucommon/ucommon.h>
-#include <sipwitch/digest.h>
+#include <ucommon/secure.h>
+#include <sipwitch/sipwitch.h>
 #include <config.h>
 
 using namespace UCOMMON_NAMESPACE;
@@ -128,19 +129,11 @@ usage:
     if(*argv)
         goto usage;
 
-    digestbuf = (string_t)user + ":" + (string_t)realm + ":" + (string_t)secret;
-
-    if(!stricmp(mode, "sha1"))
-        digest::sha1(digestbuf);
-    else if(!stricmp(mode, "rmd160"))
-        digest::rmd160(digestbuf);
+    digest_t digest = mode;
+    if(digest.puts((string_t)user + ":" + (string_t)realm + ":" + (string_t)secret))
+        digestbuf = *digest;
     else
-        digest::md5(digestbuf);
-
-    if(digestbuf[0] == 0)  {
-        fprintf(stderr, "*** sipdigest: unsupported computation\n");
-        exit(6);
-    }
+        shell::errexit(6, "** sipdigest: unsupported computation");
 
     printf("%s\n", *digestbuf);
     exit(0);

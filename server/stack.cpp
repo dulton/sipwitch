@@ -1254,21 +1254,17 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
         osip_uri_to_str(invite->req_uri, &req);
         snprintf(authbuf, 1024, "%s:%s", invite->sip_method, req);
         process::uuid(nounce, sizeof(nounce), "auth");
-        digest::md5(once, nounce);
-        if(!stricmp(registry::getDigest(), "sha1"))
-            digest::sha1(response, authbuf);
-        else if(!stricmp(registry::getDigest(), "rmd160"))
-            digest::rmd160(response, authbuf);
-        else
-            digest::md5(response, authbuf);
-        snprintf(authbuf, 1024, "%s:%s:%s", digest, *once, *response);
-        if(!stricmp(registry::getDigest(), "sha1"))
-            digest::sha1(response, authbuf);
-        else if(!stricmp(registry::getDigest(), "rmd160"))
-            digest::rmd160(response, authbuf);
-        else
-            digest::md5(response, authbuf);
 
+        digest_t auth = "md5";
+        auth.puts(nounce);
+        once = *auth;
+        auth = registry::getDigest();
+        auth.puts(authbuf);
+        response = *auth;
+        snprintf(authbuf, 1024, "%s:%s:%s", digest, *once, *response);
+        auth.reset();
+        auth.puts(authbuf);
+        response = *auth;
         snprintf(authbuf, 1024,
             "Digest username=\"%s\""
             ",realm=\"%s\""

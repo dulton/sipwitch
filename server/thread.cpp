@@ -202,7 +202,7 @@ void thread::message(void)
     case REDIRECTED:
         // -digest-: get user digest into "digest" buffer
         if(authorized.keys) {
-            hash = digest::get(server::getValue(authorized.keys, "id"));
+            hash = digests::get(server::getValue(authorized.keys, "id"));
             if(hash)
                 digest = hash;
             else
@@ -223,7 +223,7 @@ void thread::message(void)
     ct = sevent->request->content_type;
     if(!body || !ct || !ct->type) {
         send_reply(SIP_BAD_REQUEST);
-        digest::release(hash);
+        digests::release(hash);
         return;
     }
 
@@ -253,12 +253,12 @@ void thread::message(void)
     shell::debug(3, "sending message from %s to %s\n", sysid, target);
     osip_content_length_to_str(sevent->request->content_length, &msglen);
     if(!msglen) {
-        digest::release(hash);
+        digests::release(hash);
         send_reply(SIP_BAD_REQUEST);
         return;
     }
     send_reply(messages::deliver(target, sysid, fromhdr, body->body, atoi(msglen), msgtype, digest));
-    digest::release(hash);
+    digests::release(hash);
     osip_free(msglen);
 }
 
@@ -1158,6 +1158,7 @@ bool thread::authenticate(void)
     int error = SIP_PROXY_AUTHENTICATION_REQUIRED;
     const char *cp;
     const char *hash = NULL;
+    digest_t calc = registry::getDigest();
 
     if(authorized.keys != NULL)
         return true;
@@ -1217,7 +1218,7 @@ bool thread::authenticate(void)
         String::set(display, sizeof(display), leaf->getPointer());
 
     // -digest-: fetch from leaf node...
-    hash = digest::get(auth->username);
+    hash = digests::get(auth->username);
     leaf = node->leaf("digest");
     if(!hash && (!leaf || !leaf->getPointer())) {
         shell::log(shell::NOTIFY, "rejecting unsupported %s", auth->username);
@@ -1227,25 +1228,20 @@ bool thread::authenticate(void)
 
     // compute service request digest string
     snprintf(buffer, sizeof(buffer), "%s:%s", sevent->request->sip_method, auth->uri);
-    if(!stricmp(registry::getDigest(), "sha1"))
-        digest::sha1(digest, buffer);
-    else if(!stricmp(registry::getDigest(), "rmd160"))
-        digest::rmd160(digest, buffer);
-    else
-        digest::md5(digest, buffer);
+
+    calc.puts(buffer);
+    digest = *calc;
 
     // apply user digest pointer with nonce, and service digest string
     if(hash)
         snprintf(buffer, sizeof(buffer), "%s:%s:%s", hash, auth->nonce, *digest);
     else
         snprintf(buffer, sizeof(buffer), "%s:%s:%s", leaf->getPointer(), auth->nonce, *digest);
-    digest::release(hash);
-    if(!stricmp(registry::getDigest(), "sha1"))
-        digest::sha1(digest, buffer);
-    else if(!stricmp(registry::getDigest(), "rmd160"))
-        digest::rmd160(digest, buffer);
-    else
-        digest::md5(digest, buffer);
+    digests::release(hash);
+
+    calc.reset();
+    calc.puts(buffer);
+    digest = *calc;
 
     // see if digests match
     if(stricmp(*digest, auth->response)) {
@@ -1373,6 +1369,7 @@ void thread::validate(void)
     osip_message_t *reply = NULL;
     service::usernode user;
     const char *hash = NULL;
+    digest_t calc = registry::getDigest();
 
     if(!sevent->request || osip_message_get_authorization(sevent->request, 0, &auth) != 0 || !auth || !auth->username || !auth->response) {
         challenge();
@@ -1404,7 +1401,7 @@ void thread::validate(void)
     }
 
     // -digest-: get a leaf pointer
-    hash = digest::get(auth->username);
+    hash = digests::get(auth->username);
     leaf = node->leaf("digest");
     if(!hash && (!leaf || !leaf->getPointer())) {
         error = SIP_FORBIDDEN;
@@ -1413,12 +1410,8 @@ void thread::validate(void)
 
     // compute a method/uri hash
     snprintf(buffer, sizeof(buffer), "%s:%s", sevent->request->sip_method, auth->uri);
-    if(!stricmp(registry::getDigest(), "sha1"))
-        digest::sha1(digest, buffer);
-    else if(!stricmp(registry::getDigest(), "rmd160"))
-        digest::rmd160(digest, buffer);
-    else
-        digest::md5(digest, buffer);
+    calc.puts(buffer);
+    digest = *calc;
 
     // compute with user digest
     if(hash)
@@ -1426,13 +1419,11 @@ void thread::validate(void)
     else
         snprintf(buffer, sizeof(buffer), "%s:%s:%s", leaf->getPointer(), auth->nonce, *digest);
 
-    digest::release(hash);
-    if(!stricmp(registry::getDigest(), "sha1"))
-        digest::sha1(digest, buffer);
-    else if(!stricmp(registry::getDigest(), "rmd160"))
-        digest::rmd160(digest, buffer);
-    else
-        digest::md5(digest, buffer);
+    digests::release(hash);
+
+    calc.reset();
+    calc.puts(buffer);
+    digest = *calc;
 
     if(!stricmp(*digest, auth->response))
         error = SIP_OK;

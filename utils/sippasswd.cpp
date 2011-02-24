@@ -14,7 +14,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <ucommon/ucommon.h>
-#include <sipwitch/digest.h>
+#include <ucommon/secure.h>
+#include <sipwitch/sipwitch.h>
 #include <config.h>
 #ifdef  HAVE_PWD_H
 #include <pwd.h>
@@ -112,18 +113,12 @@ extern "C" int main(int argc, char **argv)
         exit(0);
     }
 
-    digestbuf = (string_t)user + ":" + (string_t)realm + ":" + (string_t)secret;
-    if(!stricmp(mode, "sha1"))
-        digest::sha1(digestbuf);
-    else if(!stricmp(mode, "rmd160"))
-        digest::rmd160(digestbuf);
-    else
-        digest::md5(digestbuf);
+    digest_t digest = mode;
 
-    if(digestbuf[0] == 0) {
-        fprintf(stderr, "*** sippasswd: cannot compute\n");
-        exit(1);
-    }
+    if(!digest.puts((string_t)user + ":" + (string_t)realm + ":" + (string_t)secret))
+        shell::errexit(1, "*** sippasswd: cannot compute");
+    else
+        digestbuf = *digest;
 
     snprintf(replace, sizeof(replace), "%s:%s\n", user, *digestbuf);
 

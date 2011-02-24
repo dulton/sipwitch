@@ -14,6 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <sipwitch/sipwitch.h>
+#include <ucommon/secure.h>
 #include <eXosip2/eXosip.h>
 #include <config.h>
 #include <ctype.h>

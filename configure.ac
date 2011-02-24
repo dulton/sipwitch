@@ -12,7 +12,7 @@ AC_INIT(autogen.sh)
 
 VERSION="0.9.3"
 LT_VERSION="0:44:0"
-UCOMMON_REQUIRES="3.3.4"
+UCOMMON_REQUIRES="4.1.0"
 
 AC_CONFIG_AUX_DIR(autoconf)
 AC_CANONICAL_SYSTEM
@@ -66,7 +66,6 @@ AC_ARG_ENABLE(openssl,
 
 if test "$enable_openssl" = "yes" ; then
     AC_DEFINE(HAVE_TLS, [1], [have exosip tls support in sipwitch])
-    test -z "$ac_with_crypto"  && ac_with_crypto="openssl"
 fi
 
 if test "$enable_openssl" = "auto" ; then
@@ -76,7 +75,6 @@ if test "$enable_openssl" = "auto" ; then
 fi
 
 test -z "$ac_with_malloc" && ac_with_malloc=""
-test -z "$ac_with_crypto" && ac_with_crypto="auto"
 test -z "$plugindir" && plugindir='${libdir}'
 
 AC_DEFUN([AC_SUBST_DIR], [
@@ -126,76 +124,6 @@ if test -z "$cgibindir" ; then
     cgibindir='${libdir}/cgi-bin' ; fi
 
 # make list that is parsed...
-
-AC_ARG_WITH(crypto,
-    AC_HELP_STRING([--with-crypto=lib],[specify crypto library]),[
-    case "$with_crypto" in
-    libcrypto|crypto)
-        ac_with_crypto="openssl"
-        ;;
-    gnutls|libgcrypt)
-        ac_with_crypto="gcrypt"
-        ;;
-    none|openssl|gcrypt|crypto|sasl)
-        ac_with_crypto="$with_crypto"
-        ;;
-    *)
-        AC_ERROR("unrecognized crypto library $with_crypto specified")
-        ;;
-    esac
-])
-
-if test "$ac_with_crypto" = "auto" ; then
-    AC_CHECK_HEADER(gcrypt/gcrypt.h, [ac_with_crypto="gcrypt"])
-    AC_DEFINE(HAVE_GRYCPT_GRYPT_H, [1], [alternate header])
-fi
-
-if test "$ac_with_crypto" = "auto" ; then
-    AC_CHECK_HEADER(gcrypt.h, [ac_with_crypto="gcrypt"])
-    AC_DEFINE(HAVE_GRYCPT_H, [1], [standard header])
-fi
-
-if test "$ac_with_crypto" = "auto" ; then
-    AC_CHECK_HEADER(openssl/md5.h, [ac_with_crypto="openssl"])
-fi
-
-if test "$ac_with_crypto" = "auto" ; then
-    AC_CHECK_HEADER(sasl/md5global.h, [ac_with_crypto="sasl"])
-fi
-
-if test "$ac_with_crypto" = "auto" ; then
-    ac_with_crypto="none" ; fi
-
-case "$ac_with_crypto" in
-gcrypt)
-    AC_CHECK_LIB(gcrypt, gcry_control, [
-        AC_DEFINE(HAVE_GCRYPT_CRYPTO, [1], [gcrypt crypto used])
-        EXPORT_LIBS="$EXPORT_LIBS -lgcrypt"
-    ],[
-        ac_with_crypto="none"
-    ])
-    ;;
-openssl|crypto)
-    AC_CHECK_LIB(crypto, MD5_Init, [
-        AC_DEFINE(HAVE_OPENSSL_CRYPTO, [1], [openssl crypto used])
-        EXPORT_LIBS="$EXPORT_LIBS -lcrypto"
-    ],[
-        ac_with_crypto="none"
-    ])
-    ;;
-sasl)
-    AC_CHECK_LIB(sasl2, _sasl_MD5Init, [
-        AC_DEFINE(HAVE_SASL_CRYPTO, [1], [sasl crypto used])
-        EXPORT_LIBS="$EXPORT_LIBS -lsasl2"
-    ],[
-        ac_with_crypto="none"
-    ])
-    ;;
-esac
-
-if test "$ac_with_crypto" = "none" ; then
-    AC_DEFINE(HAVE_NO_CRYPTO, [1], [use local])
-fi
 
 AC_ARG_ENABLE(debug,
     AC_HELP_STRING([--enable-debug],[compile for debugging]))

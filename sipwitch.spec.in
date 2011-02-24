@@ -17,7 +17,7 @@ URL: http://www.gnu.org/software/sipwitch
 Group: Applications/Communications
 Source: http://www.gnutelephony.org/dist/tarballs/sipwitch-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildRequires: ucommon-devel >= 3.3.4
+BuildRequires: ucommon-devel >= 4.1.0
 BuildRequires: libeXosip2-devel >= 3.0.0
 BuildRequires: avahi-devel
 BuildRequires: libgcrypt-devel
@@ -33,7 +33,7 @@ Group: Development/Libraries
 Summary: Runtime library support for sipwitch
 
 %package devel
-Requires: ucommon-devel >= 3.3.4
+Requires: ucommon-devel >= 4.1.0
 Requires: %{name}-runtime = %{version}-%{release}
 Group: Development/Libraries
 Summary: Headers for building sipwitch plugins
@@ -64,18 +64,18 @@ Requires: %{name} = %{version}-%{release}
 Summary: Subscriber gateway plugin for sipwitch
 
 %description
-GNU SIP Witch is a secure peer-to-peer VoIP server.  Calls can be made even 
+GNU SIP Witch is a secure peer-to-peer VoIP server.  Calls can be made even
 behind NAT firewalls, and without needing a service provider.  SIP Witch can
 be used on the desktop to create bottom-up secure calling networks as a
 free software alternative to Skype.  SIP Witch can also be used as a stand-
-alone SIP-based office telephone server, or to create secure VoIP networks 
+alone SIP-based office telephone server, or to create secure VoIP networks
 for an existing IP-PBX such as Asterisk, FreeSWITCH, or Yate.
 
 %description devel
-Header files for building plugins that interface with sipwitch. This might be 
-used for externally creating sipwitch modules, though normally modules are 
-found or added to the core distribution directly.  This may also be for 
-developing external application services which need to communicate with a 
+Header files for building plugins that interface with sipwitch. This might be
+used for externally creating sipwitch modules, though normally modules are
+found or added to the core distribution directly.  This may also be for
+developing external application services which need to communicate with a
 running sipwitch daemon instance.
 
 %description runtime
@@ -85,13 +85,13 @@ with the required devel package does not also require installing a server
 image.
 
 %description cgi
-This package offers a means to perform remote management of a sipwitch 
+This package offers a means to perform remote management of a sipwitch
 server using the cgi interface of an installed web server.  The primary
 service this offers is xmlrpc access to sipwitch shared memory and
 control interfaces in a manner analgolous to the sipwitch command utility.
 
 %description plugin-libnotify
-This plugin sends notification events to the desktop using the libnotify 
+This plugin sends notification events to the desktop using the libnotify
 library.
 
 %description plugin-zeroconf
@@ -99,7 +99,7 @@ This plugin activates zeroconf network services for sipwitch and publishes
 sipwitch as a sip server.
 
 %description plugin-scripting
-This plugin enables shell scripting in connection with specific sipwitch 
+This plugin enables shell scripting in connection with specific sipwitch
 events.
 
 %description plugin-forward
@@ -108,13 +108,13 @@ for unknown numbers so that one can create a "secure" peer to peer media
 domain managed by sipwitch and still access an "insecure" b2bua based ip-pbx.
 
 %description plugin-subscriber
-This module is meant to eventually offer generic support for premise 
+This module is meant to eventually offer generic support for premise
 routers when used by providers to offer sip/voip service to a subscriber.
 It offers rtp proxying and routing based on the assumption that all calls
 will be handed off to an external voip provider and automatic rtp
 proxy bridging between a subscribers local subnet and an isp.  In theory
-this would be deployed in an isp supplied premise router to enable a 
-local user to subscribe a series of local softphone/sip devices with a 
+this would be deployed in an isp supplied premise router to enable a
+local user to subscribe a series of local softphone/sip devices with a
 remote voip service provider.
 
 %prep
@@ -122,7 +122,7 @@ remote voip service provider.
 %build
 %configure --with-pkg-config --disable-static --with-initrddir=%{_initrddir}
 
-%{__make} %{?_smp_mflags} 
+%{__make} %{?_smp_mflags}
 
 %install
 %{__rm} -rf %{buildroot}
@@ -134,7 +134,7 @@ echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
 %clean
 %{__rm} -rf %{buildroot}
 
-%files 
+%files
 %defattr(-,root,root,-)
 %doc README COPYING NEWS FEATURES SUPPORT TODO NOTES AUTHORS MODULES ChangeLog
 %{_mandir}/man1/sipwitch.1*
@@ -207,7 +207,7 @@ if [ $1 = 0 ] ; then
     /sbin/chkconfig --del sipwitch
 fi
 
-%postun 
+%postun
 if [ "$1" -ge "1" ] ; then
     /sbin/service sipwitch condrestart >/dev/null 2>&1 || :
 fi
