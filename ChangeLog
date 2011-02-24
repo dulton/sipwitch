@@ -1,5 +1,7 @@
 from version 0.9.3 to 0.10.0
 - use of digest functions from usecure.
+- notify removed, will be part of new switchview gui.
+- cmake build added.
 
 from version 0.9.2 to 0.9.3
 - use gethostname for default domain name if not otherwise set.
