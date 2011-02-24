@@ -32,45 +32,45 @@ public:
     char *hash;
 };
 
-static memalloc cache;
-static LinkedObject *paths[INDEX_KEYSIZE];
-static condlock_t locking;
+static memalloc private_cache;
+static LinkedObject *private_paths[INDEX_KEYSIZE];
+static condlock_t private_lock;
 
 key::key(const char *keyid, const char *keyhash) :
-LinkedObject(&paths[NamedObject::keyindex(keyid, INDEX_KEYSIZE)])
+LinkedObject(&private_paths[NamedObject::keyindex(keyid, INDEX_KEYSIZE)])
 {
-    id = cache.dup(keyid);
-    hash = cache.dup(keyhash);
+    id = private_cache.dup(keyid);
+    hash = private_cache.dup(keyhash);
 }
 
 void digests::clear(void)
 {
-    locking.modify();
-    memset(paths, 0, sizeof(paths));
-    cache.purge();
-    locking.commit();
+    private_lock.modify();
+    memset(private_paths, 0, sizeof(private_paths));
+    private_cache.purge();
+    private_lock.commit();
 }
 
 const char *digests::get(const char *id)
 {
     assert(id != NULL);
 
-    locking.access();
+    private_lock.access();
     unsigned path = NamedObject::keyindex(id, INDEX_KEYSIZE);
-    linked_pointer<key> keys = paths[path];
+    linked_pointer<key> keys = private_paths[path];
     while(is(keys)) {
         if(String::equal(id, keys->id))
             return keys->hash;
         keys.next();
     }
-    locking.release();
+    private_lock.release();
     return NULL;
 }
 
 void digests::release(const char *id)
 {
     if(id)
-        locking.release();
+        private_lock.release();
 }
 
 bool digests::set(const char *id, const char *hash)
@@ -80,23 +80,23 @@ bool digests::set(const char *id, const char *hash)
     caddr_t mp;
     size_t len = strlen(hash);
 
-    locking.access();
+    private_lock.access();
     unsigned path = NamedObject::keyindex(id, INDEX_KEYSIZE);
-    linked_pointer<key> keys = paths[path];
+    linked_pointer<key> keys = private_paths[path];
     while(is(keys)) {
         if(String::equal(id, keys->id)) {
             if(len == strlen(keys->hash)) {
                 String::set(keys->hash, ++len, hash);
-                locking.commit();
+                private_lock.commit();
                 return true;
             }
             return false;
         }
         keys.next();
     }
-    mp = (caddr_t)cache.alloc(sizeof(key));
+    mp = (caddr_t)private_cache.alloc(sizeof(key));
     new(mp) key(id, hash);
-    locking.commit();
+    private_lock.commit();
     return true;
 }
 

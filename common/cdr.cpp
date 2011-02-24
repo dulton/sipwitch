@@ -45,8 +45,8 @@ private:
 
 static LinkedObject *freelist = NULL;
 static LinkedObject *runlist = NULL;
-static Mutex locking;
-static memalloc heap;
+static Mutex private_lock;
+static memalloc private_heap;
 static thread run;
 static bool running = false;
 static bool down = false;
@@ -88,9 +88,9 @@ void thread::run(void)
         while(is(cp)) {
             next = cp->getNext();
             modules::cdrlog(fp, *cp);
-            locking.lock();
+            private_lock.acquire();
             cp->enlist(&freelist);
-            locking.release();
+            private_lock.release();
             cp = next;
         }
         if(fp)
@@ -111,11 +111,11 @@ void cdr::post(cdr *rec)
 cdr *cdr::get(void) {
     cdr *rec;
 
-    locking.lock();
+    private_lock.acquire();
     if(freelist) {
         rec = (cdr *)freelist;
         freelist = rec->next;
-        locking.release();
+        private_lock.release();
         rec->uuid[0] = 0;
         rec->ident[0] = 0;
         rec->dialed[0] = 0;
@@ -128,8 +128,8 @@ cdr *cdr::get(void) {
         rec->duration = 0;
         return rec;
     }
-    locking.release();
-    return (cdr *)(heap.zalloc(sizeof(cdr)));
+    private_lock.release();
+    return (cdr *)(private_heap.zalloc(sizeof(cdr)));
 }
 
 void cdr::start(void)
