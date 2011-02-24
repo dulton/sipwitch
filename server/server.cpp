@@ -266,7 +266,6 @@ void server::confirm(void)
     unsigned number;
     const char *dirpath = ".";
     const char *fn;
-    char *cp;
     digest_t digest = registry::getDigest();
 
     snprintf(buf, sizeof(buf), "- welcome prefix=%d range=%d", prefix, range);
@@ -476,6 +475,7 @@ void server::confirm(void)
     keynode *base = getPath("accounts");
     keyclone *clone, *entry;
     linked_pointer<keynode> temp;
+    char *cp;
 
     struct passwd *pwd;
     struct group *grp = NULL;

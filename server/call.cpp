@@ -743,7 +743,7 @@ void stack::call::trying(thread *thread)
         time_t now;
         time(&now);
         if(answering)
-            answering -= (now - starting);
+            answering -= (unsigned)(now - starting);
     }
 
     Mutex::protect(this);
@@ -836,7 +836,7 @@ void stack::call::log(void)
     node->starting = starting;
     node->sequence = source->sequence;
     node->cid = source->cid;
-    node->duration = ending - starting;
+    node->duration = (unsigned long)(ending - starting);
     String::set(node->uuid, sizeof(node->uuid), source->uuid);
     String::set(node->reason, sizeof(node->reason), reason);
     String::set(node->ident, sizeof(node->ident), source->sysident);

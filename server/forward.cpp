@@ -309,7 +309,7 @@ void forward::activating(MappedRegistry *rr)
         snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::getservice((struct sockaddr *)&rr->contact));
         shell::debug(3, "registering %s with %s", contact, server);
         eXosip_lock();
-        rr->rid = eXosip_register_build_initial_register(uri, reg, contact, expires, &msg);
+        rr->rid = eXosip_register_build_initial_register(uri, reg, contact, (int)expires, &msg);
         if(msg) {
             osip_message_set_supported(msg, "100rel");
             osip_message_set_header(msg, "Event", "Registration");
@@ -354,7 +354,7 @@ void forward::expiring(MappedRegistry *rr)
     osip_message_t *msg = NULL;
     int id = rr->rid;
 
-    if(!id == -1)
+    if(id == -1)
         return;
 
     remove(rr->rid);

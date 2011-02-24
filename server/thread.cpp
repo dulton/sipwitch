@@ -1570,7 +1570,7 @@ reply:
     if(interval < 0)
         interval = header_expires;
     if(interval < 0)
-        interval = registry::getExpires();
+        interval = (int)registry::getExpires();
     if(!interval || !contact) {
         deregister();
         return;

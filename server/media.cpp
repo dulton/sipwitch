@@ -57,10 +57,9 @@ void media::thread::startup(void)
 
 void media::thread::notify(void)
 {
-    char buf[1];
-
 #ifdef  _MSWINDOWS_
 #else
+    char buf[1];
     if(::write(control[1], &buf, 1) < 1)
         shell::log(shell::ERR, "media notify failure");
 #endif
@@ -80,12 +79,11 @@ void media::thread::shutdown(void)
 void media::thread::run(void)
 {
     fd_set session;
-    int max;
+    socket_t max;
 
     shell::log(DEBUG1, "starting media thread");
     running = true;
     socket_t so;
-    char buf[1];
     media::proxy *mp;
     time_t now;
 
@@ -102,6 +100,7 @@ void media::thread::run(void)
         for(so = 0; so < max; ++so) {
 #ifdef  _MSWINDOWS_
 #else
+            char buf[1];
             if(so == control[0] && FD_ISSET(so, &session)) {
                 if(::read(so, buf, 1) < 1)
                     shell::log(shell::ERR, "media control failure");
@@ -211,7 +210,7 @@ bool media::proxy::activate(media::sdp *parser)
     Socket::store(&peering, iface);
     Socket::bindto(so, iface);
     FD_SET(so, &connections);
-    if(so >= hiwater)
+    if(so >= (socket_t)hiwater)
         hiwater = so + 1;
     proxymap[so] = this;
     return true;
