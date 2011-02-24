@@ -114,7 +114,7 @@ elseif(HAVE_EXOSIP2)
     set(EXOSIP2_LIBS eXosip2 osip2 osipparser2)
 endif()
 
-if(WIN32 AND NOT CYGWIN)
+if(HAVE_EXOSIP2 AND WIN32 AND NOT CYGWIN)
     set(EXOSIP2_LIBS ${EXOSIP2_LIBS} Iphlpapi dnsapi)
 endif()
 
