@@ -171,9 +171,14 @@ if(HAVE_EXOSIP2)
     set_target_properties(sipwitch-query PROPERTIES OUTPUT_NAME sipquery)
 
     add_executable(sipwitch-realm utils/siprealm.cpp)
-    add_dependencies(sipwitch-realm sipwitch-runtime usecure ucommon)
+    add_dependencies(sipwitch-realm sipwitch-runtime ucommon)
     target_link_libraries(sipwitch-realm sipwitch-runtime ucommon ${UCOMMON_LIBS})
     set_target_properties(sipwitch-realm PROPERTIES OUTPUT_NAME siprealm)
+
+    add_executable(sipwitch-control utils/sipwitch.cpp)
+    add_dependencies(sipwitch-control sipwitch-runtime ucommon)
+    target_link_libraries(sipwitch-control sipwitch-runtime ucommon ${UCOMMON_LIBS})
+    set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipwitch)
 endif()
 
 if(NOT BUILD_STATIC AND HAVE_EXOSIP2)
