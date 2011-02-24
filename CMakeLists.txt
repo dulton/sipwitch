@@ -123,7 +123,7 @@ endif()
 
 file(GLOB runtime_src common/*.cpp)
 file(GLOB runtime_inc inc/sipwitch/*.h)
-file(GLOB server_src server/*.cpp)
+set(server_src server/server.cpp server/registry.cpp server/stack.cpp server/thread.cpp server/call.cpp server/messages.cpp server/media.cpp server/system.cpp server/signals.cpp server/history.cpp)
 
 if(BUILD_STATIC)
     set(server_src ${server_src} server/forward.cpp server/scripting.cpp)
@@ -138,6 +138,7 @@ set_target_properties(sipwitch-runtime PROPERTIES OUTPUT_NAME sipwitch)
 add_executable(sipwitch ${server_src})
 add_dependencies(sipwitch sipwitch-runtime usecure ucommon)
 target_link_libraries(sipwitch sipwitch-runtime usecure ucommon ${EXOSIP2_LIBS} ${SECURE_LIBS} ${UCOMMON_LIBS})
+set_target_properties(sipwitch PROPERTIES OUTPUT_NAME sipw)
 
 add_executable(sipwitch-cgi utils/cgiserver.cpp)
 add_dependencies(sipwitch-cgi sipwitch-runtime usecure ucommon)
