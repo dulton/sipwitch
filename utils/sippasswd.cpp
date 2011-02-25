@@ -24,6 +24,28 @@
 using namespace UCOMMON_NAMESPACE;
 using namespace SIPWITCH_NAMESPACE;
 
+#ifdef  _MSWINDOWS_
+static char *getpass(const char *prompt)
+{
+    static char buf[128];
+    size_t i;
+
+    fputs(prompt, stderr);
+    fflush(stderr);
+    for (i = 0; i < sizeof(buf) - 1; i++) {
+        buf[i] = _getch();
+        if (buf[i] == '\r')
+            break;
+        fputs("*", stderr);
+        fflush(stderr);
+    }
+    buf[i] = 0;
+    fputs("\n", stderr);
+    fflush(stderr);
+    return buf;
+}
+#endif
+
 extern "C" int main(int argc, char **argv)
 {
     char *realm = NULL, *secret, *verify;
