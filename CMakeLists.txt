@@ -1,9 +1,19 @@
+# Copyright (C) 2011 David Sugar, Tycho Softworks.
+#
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without
+# modifications, as long as this notice is preserved.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+#
+
 cmake_minimum_required(VERSION 2.6)
 PROJECT(sipwitch)
 INCLUDE(CheckIncludeFiles)
 INCLUDE(CheckFunctionExists)
-set (VERSION 2.0.1)
-set (SOVERSION 2)
+set (VERSION 0.10.0)
+set (SOVERSION 0)
 
 if (WIN32)
     # too broken to build dll's with const static members...
