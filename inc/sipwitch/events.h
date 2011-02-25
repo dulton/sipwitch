@@ -14,9 +14,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Stream events to local clients.  This is commonly used by GUI apps to
- * receive events from the server.  The server also uses methods to
- * dispatch events to the client.
+ * Stream events to local clients.  This defines server side support for
+ * streaming events to clients.  The client side code is not implemented
+ * here to avoid the need to link with sipwitch runtime.
  * @file sipwitch/events.h
  */
 
@@ -52,8 +52,10 @@ using namespace UCOMMON_NAMESPACE;
 
 class __EXPORT events
 {
+protected:
+    bool put(events *event);
+
 public:
-    typedef enum {SERVER, CLIENT} service_t;
     typedef enum {NOTICE, WARNING, FAILURE, TERMINATE, STATE, CALL, REGISTER, RELEASE} type_t;
 
     type_t type;
@@ -73,11 +75,8 @@ public:
         char reason[160];
     };
 
-    static bool create(service_t service);
+    static bool startup(void);
     static void shutdown(void);
-    static bool get(events *buffer, timeout_t timeout = Timer::inf);
-    static bool put(events *buffer);
-    static bool control(char **args);
 };
 
 typedef events event_t;

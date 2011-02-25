@@ -33,20 +33,44 @@ using namespace UCOMMON_NAMESPACE;
 
 #ifdef  AF_UNIX
 
+static class __LOCAL event_thread : public JoinableThread
+{
+private:
+    void run(void);
+
+public:
+    event_thread();
+
+} _thread_;
+
 static socket_t ipc = INVALID_SOCKET;
 
-static struct sockaddr_un *addr(const char *path)
+event_thread::event_thread() : JoinableThread()
 {
-    static struct sockaddr_un abuf;
-    memset(&abuf, 0, sizeof(abuf));
-    abuf.sun_family = AF_UNIX;
-    String::set(abuf.sun_path, sizeof(abuf.sun_path), path);
-    return &abuf;
 }
 
-bool events::create(service_t service)
+void event_thread::run(void)
 {
-    struct sockaddr_un *ap;
+    socket_t client;
+
+    shell::log(DEBUG1, "starting event dispatcher");
+
+    for(;;) {
+        // when shutdown closes ipc, we exit the thread...
+        client = ::accept(ipc, NULL, NULL);
+        if(client < 0)
+            break;
+
+        // later enlist client queue
+        Socket::release(client);
+    }
+
+    shell::log(DEBUG1, "stopping event dispatcher");
+}
+
+bool events::startup(void)
+{
+    struct sockaddr_un abuf;
 
     if(ipc != INVALID_SOCKET)
         return false;
@@ -55,83 +79,43 @@ bool events::create(service_t service)
     if(ipc == INVALID_SOCKET)
         return false;
 
-    switch(service) {
-    case CLIENT:
-        ap = addr(DEFAULT_VARPATH "/run/sipwitch/events");
+    memset(&abuf, 0, sizeof(abuf));
+    abuf.sun_family = AF_UNIX;
+    String::set(abuf.sun_path, sizeof(abuf.sun_path), process::get("events"));
 
-        if(::connect(ipc, (struct sockaddr *)ap, SUN_LEN(ap)) >= 0)
-            return true;
-
-        char buffer[256];
-        struct passwd *pwd = getpwuid(getuid());
-
-        if(!pwd)
-            return false;
-
-        snprintf(buffer, sizeof(buffer), "/tmp/sipwitch-%s/events", pwd->pw_name);
-        ap = addr(buffer);
-        if(::connect(ipc, (struct sockaddr *)ap, SUN_LEN(ap)) > 0)
-            return true;
-
+    ::remove(process::get("events"));
+    if(::bind(ipc, (struct sockaddr *)&abuf, SUN_LEN(&abuf)) < 0) {
+failed:
         Socket::release(ipc);
-        ipc = -1;
         return false;
-    };
+    }
+
+    if(::listen(ipc, 10) < 0)
+        goto failed;
+
+    _thread_.start();
+    return true;
+}
+
+void events::shutdown(void)
+{
+    if(ipc == INVALID_SOCKET)
+        return;
+
+    Socket::release(ipc);
+    ::remove(process::get("events"));
+    ipc = INVALID_SOCKET;
 }
 
 #else
 
-bool events::create(service_t service)
+bool events::startup(void)
 {
     return false;
 }
 
-#endif
-
-bool events::control(char **argv)
+void events::shutdown(void)
 {
-    char buffer[512];
-    size_t len;
-    fd_t fd;
-
-#ifdef  _MSWINDOWS_
-    snprintf(buffer, sizeof(buffer), "\\\\.\\mailslot\\sipwitch_ctrl");
-    fd = CreateFile(buffer, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-#else
-    fd = ::open(DEFAULT_VARPATH "/run/sipwitch/control", O_WRONLY | O_NONBLOCK);
-    if(fd < 0) {
-        struct passwd *pwd = getpwuid(getuid());
-        if(!pwd)
-            return false;
-
-        snprintf(buffer, sizeof(buffer), "/tmp/sipwitch-%s/control", pwd->pw_name);
-        fd = ::open(buffer, O_WRONLY | O_NONBLOCK);
-    }
-#endif
-
-    if(fd == INVALID_HANDLE_VALUE)
-        return false;
-
-    buffer[0] = 0;
-
-    while(*argv) {
-        len = strlen(buffer);
-        snprintf(buffer + len, sizeof(buffer) - len - 1, " %s", *(argv++));
-    }
-
-#ifdef  _MSWINDOWS_
-    if(!WriteFile(fd, buffer, (DWORD)strlen(buffer) + 1, NULL, NULL))
-        return false;
-#else
-    len = strlen(buffer);
-    buffer[len++] = '\n';
-    buffer[len] = 0;
-
-    if(::write(fd, buffer, len) < (int)len)
-        return false;
-
-#endif
-    return true;
 }
 
-
+#endif
