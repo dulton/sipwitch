@@ -28,6 +28,7 @@
 
 #include <sipwitch/namespace.h>
 #include <sipwitch/mapped.h>
+#include <sipwitch/events.h>
 #include <sipwitch/service.h>
 #include <sipwitch/modules.h>
 #include <sipwitch/process.h>

@@ -16,6 +16,6 @@ lib_LTLIBRARIES = libsipwitch.la
 
 libsipwitch_la_LDFLAGS = @SIPWITCH_LIBS@ $(RELEASE) 
 libsipwitch_la_SOURCES = service.cpp db.cpp process.cpp \
-	uri.cpp stats.cpp modules.cpp cdr.cpp
+	events.cpp uri.cpp stats.cpp modules.cpp cdr.cpp
 
 

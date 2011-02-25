@@ -199,6 +199,7 @@ extern int main(int argc, char **argv)
     process::set("config", DEFAULT_CFGPATH "/sipwitch.conf");
     process::set("controls", DEFAULT_VARPATH "/run/sipwitch");
     process::set("control", DEFAULT_VARPATH "/run/sipwitch/control");
+    process::set("events", DEFAULT_VARPATH "/run/sipwitch/events");
     process::set("config", DEFAULT_CFGPATH "/sipwitch.conf");
     process::set("logfiles", DEFAULT_VARPATH "/log");
     process::set("siplogs", DEFAULT_VARPATH "/log/siptrace.log");
@@ -230,6 +231,7 @@ extern int main(int argc, char **argv)
         process::set("config", _STR(str(pwd->pw_dir) + "/.sipwitchrc"));
         process::set("controls", rundir);
         process::set("control", _STR(str(rundir) + "/control"));
+        process::set("events", _STR(str(rundir) + "/events"));
         process::set("logfiles", rundir);
         process::set("siplogs", _STR(str(rundir) + "/siplogs"));
         process::set("logfile", _STR(str(rundir) + "/logfile"));
