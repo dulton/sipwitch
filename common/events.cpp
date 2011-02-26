@@ -33,6 +33,26 @@ using namespace UCOMMON_NAMESPACE;
 
 #ifdef  AF_UNIX
 
+static mutex_t private_locking;
+
+class __LOCAL dispatch : public LinkedObject
+{
+public:
+    socket_t session;
+
+    dispatch();
+
+    void assign(socket_t so);
+    void release(void);
+
+    static void add(socket_t so);
+    static void stop(void);
+    static void send(events *message);
+};
+
+static LinkedObject *root = NULL;
+static dispatch *freelist = NULL;
+
 static class __LOCAL event_thread : public JoinableThread
 {
 private:
@@ -44,6 +64,68 @@ public:
 } _thread_;
 
 static socket_t ipc = INVALID_SOCKET;
+
+dispatch::dispatch() : LinkedObject()
+{
+}
+
+void dispatch::assign(socket_t so)
+{
+    enlist(&root);
+    session = so;
+}
+
+void dispatch::release(void)
+{
+    ::close(session);
+    delist(&root);
+}
+
+void dispatch::add(socket_t so)
+{
+    dispatch *node;
+
+    private_locking.acquire();
+    if(freelist) {
+        node = freelist;
+        freelist = (dispatch *)node->getNext();
+    }
+    else
+        node = new dispatch;
+    node->assign(so);
+    private_locking.release();
+}
+
+void dispatch::stop(void)
+{
+    private_locking.acquire();
+    linked_pointer<dispatch> dp = root;
+    while(is(dp)) {
+        ::close(dp->session);
+        dp.next();
+    }
+    freelist = NULL;
+    root = NULL;
+    private_locking.release();
+}
+
+void dispatch::send(events *msg)
+{
+    private_locking.acquire();
+    linked_pointer<dispatch> dp = root;
+    LinkedObject *next;
+    while(is(dp)) {
+        next = dp->next;
+        if(::send(dp->session, msg, sizeof(events), 0) < sizeof(events)) {
+            shell::log(DEBUG3, "releasing client events for %d", dp->session);
+            dp->release();
+            dp->next = freelist;
+            freelist = *dp;
+        }
+        dp = next;
+    }
+    private_locking.release();
+}
 
 event_thread::event_thread() : JoinableThread()
 {
@@ -61,8 +143,8 @@ void event_thread::run(void)
         if(client < 0)
             break;
 
-        // later enlist client queue
-        Socket::release(client);
+        shell::log(DEBUG3, "connecting client events for %d", client);
+        dispatch::add(client);
     }
 
     shell::log(DEBUG1, "stopping event dispatcher");
@@ -103,6 +185,7 @@ void events::shutdown(void)
         return;
 
     Socket::release(ipc);
+    dispatch::stop();
     ::remove(process::get("events"));
     ipc = INVALID_SOCKET;
 }
