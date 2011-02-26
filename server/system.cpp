@@ -134,10 +134,10 @@ namespace SIPWITCH_NAMESPACE {
             stack::enableDumping();
 
         signals::start();
-        events::startup();
+        events::start();
         server::run();
 
-        events::shutdown();
+        events::stop();
         signals::stop();
         service::shutdown();
         process::release();

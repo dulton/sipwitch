@@ -75,8 +75,8 @@ public:
         char reason[160];
     };
 
-    static bool startup(void);
-    static void shutdown(void);
+    static bool start(void);
+    static void stop(void);
 };
 
 typedef events event_t;

@@ -143,6 +143,7 @@ void event_thread::run(void)
         if(client < 0)
             break;
 
+        ::shutdown(client, SHUT_RD);
         shell::log(DEBUG3, "connecting client events for %d", client);
         dispatch::add(client);
     }
@@ -150,7 +151,7 @@ void event_thread::run(void)
     shell::log(DEBUG1, "stopping event dispatcher");
 }
 
-bool events::startup(void)
+bool events::start(void)
 {
     struct sockaddr_un abuf;
 
@@ -179,7 +180,7 @@ failed:
     return true;
 }
 
-void events::shutdown(void)
+void events::stop(void)
 {
     if(ipc == INVALID_SOCKET)
         return;
@@ -192,12 +193,12 @@ void events::shutdown(void)
 
 #else
 
-bool events::startup(void)
+bool events::start(void)
 {
     return false;
 }
 
-void events::shutdown(void)
+void events::stop(void)
 {
 }
 
