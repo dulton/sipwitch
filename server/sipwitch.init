@@ -1,16 +1,16 @@
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides:				sipwitch
-# Required-Start:		$named $network $syslog $remote_fs
-# Required-Stop:		$named $network $syslog $remote_fs
-# Default-Start:		2 3 4 5
-# Default-Stop:			0 1 6
-# Short-Description:	Start and stop sipwitch service daemon.
-# Description:			This script manages startup and shutdown for
-#						GNU SIP Witch, a SIP telephony service daemon.
+# Provides:             sipwitch
+# Required-Start:       $named $network $syslog $remote_fs
+# Required-Stop:        $named $network $syslog $remote_fs
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    Start and stop sipwitch service daemon.
+# Description:          This script manages startup and shutdown for
+#                       GNU SIP Witch, a SIP telephony service daemon.
 ### END INIT INFO
 #
-# Copyright (C) 2008 David Sugar, Tycho Softworks.  
+# Copyright (C) 2008 David Sugar, Tycho Softworks.
 #
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without
@@ -44,103 +44,116 @@ test -x "$DAEMON" || exit 0
 set -e
 
 if [ -f /etc/sysconfig/sipwitch ] ; then
-	DEFAULT="/etc/sysconfig/sipwitch"
-	. /etc/sysconfig/sipwitch
+    DEFAULT="/etc/sysconfig/sipwitch"
+    . /etc/sysconfig/sipwitch
 elif [ -f /etc/default/sipwitch ] ; then
-	. /etc/default/sipwitch
+    . /etc/default/sipwitch
 elif [ -f /etc/conf.d/sipwitch ] ; then
-	. /etc/conf.d/sipwitch
+    . /etc/conf.d/sipwitch
 elif [ -f /etc/site-start.d/sipwitch ] ; then
-	. /etc/site-start.d/sipwitch
+    . /etc/site-start.d/sipwitch
 fi
 
 if [ ! -z "$PLUGINS" ] ; then
-	export PLUGINS
+    export PLUGINS
 else
-	START="0"
+    START="0"
 fi
 
 if [ ! -z "$GROUP" ] ; then
-	export GROUP ; fi
+    export GROUP ; fi
 
 if [ ! -z "$CONCURRENCY" ] ; then
-	export CONCURRENCY ; fi
+    export CONCURRENCY ; fi
 
 if [ ! -z "$PRIORITY" ] ; then
-	export PRIORITY ; fi
+    export PRIORITY ; fi
 
-if [ ! -z "$PRELOAD" ] ; then		
-	if [ -z "$LD_PRELOAD" ] ; then
-		LD_PRELOAD="$PRELOAD"
-	else
-		LD_PRELOAD="$LD_PRELOAD:$PRELOAD"
-	fi
-	export LD_PRELOAD
+if [ ! -z "$PRELOAD" ] ; then
+    if [ -z "$LD_PRELOAD" ] ; then
+        LD_PRELOAD="$PRELOAD"
+    else
+        LD_PRELOAD="$LD_PRELOAD:$PRELOAD"
+    fi
+    export LD_PRELOAD
 fi
+
+case "$START" in
+n|no|N|NO|disable*|DISABLE*)
+    START="0"
+    ;;
+y|yes|Y|YES|server|SERVER|s|S|secure|SECURE)
+    START="1"
+    ;;
+d|desktop|D|DESKTOP)
+    OPTIONS="$OPTIONS --desktop"
+    START="1"
+    ;;
+esac
 
 case "$1" in
 start)
-	if [ "$START" = "0" ] ; then
-		if test -z "$PLUGINS" ; then
-			echo "You have to define PLUGINS in $DEFAULT before running sipwitch"
-		else
-			echo "You have to modify config and START in $DEFAULT before running"
-		fi
-		exit 0
-	fi
-	
-	if [ -p $FIFO ] ; then
-		echo "already started"
-		exit 1
-	fi
+    if [ "$START" = "0" ] ; then
+        if test -z "$PLUGINS" ; then
+            echo "You have to define PLUGINS in $DEFAULT before running sipwitch"
+        else
+            echo "You have to modify config and START in $DEFAULT before running"
+        fi
+        exit 0
+    fi
 
-	echo -n "Starting $DESC: "
-	$DAEMON $OPTIONS
-	echo "$NAME."
-	if test -d /var/lock/subsys ; then
-		touch /var/lock/subsys/sipwitch ; fi
-	;;
+    if [ -p $FIFO ] ; then
+        echo "already started"
+        exit 1
+    fi
+
+    echo -n "Starting $DESC: "
+    $DAEMON $OPTIONS
+    echo "$NAME."
+    if test -d /var/lock/subsys ; then
+        touch /var/lock/subsys/sipwitch ; fi
+    ;;
 stop)
-	if [ ! -p $FIFO ] ; then
-		exit 0 ; fi
+    if [ ! -p $FIFO ] ; then
+        exit 0 ; fi
 
-	echo -n "Stopping $DESC: "
-	echo "down" >$FIFO
-	echo "$NAME."
-	if test -d /var/lock/subsys ; then
-		rm -f /var/lock/subsys/sipwitch ; fi
-	;;
+    echo -n "Stopping $DESC: "
+    echo "down" >$FIFO
+    echo "$NAME."
+    if test -d /var/lock/subsys ; then
+        rm -f /var/lock/subsys/sipwitch ; fi
+    ;;
 status)
-	sipwitch status
-	;;
+    sipwitch status
+    ;;
 condrestart|try-restart)
-	if [ -p $FIFO ] ; then
-		echo "down" >$FIFO
-		sleep 3
-		$DAEMON $OPTIONS
-	fi
-	;;
+    if [ -p $FIFO ] ; then
+        echo "down" >$FIFO
+        sleep 3
+        $DAEMON $OPTIONS
+    fi
+    ;;
 reload)
-	if [ ! -p $FIFO ] ; then
-		exit 0 ; fi
-	echo -n "Reloading $DESC: "
-	echo "reload" >$FIFO
-	echo "$NAME."
-	;;
+    if [ ! -p $FIFO ] ; then
+        exit 0 ; fi
+    echo -n "Reloading $DESC: "
+    echo "reload" >$FIFO
+    echo "$NAME."
+    ;;
 restart|force-reload)
-	echo -n "Restarting $DESC: "
-	if [ -p $FIFO ] ; then
-		echo "down" >$FIFO
-		sleep 3
-	fi
-	$DAEMON $OPTIONS
-	echo "$NAME."
-	;;
+    echo -n "Restarting $DESC: "
+    if [ -p $FIFO ] ; then
+        echo "down" >$FIFO
+        sleep 3
+    fi
+    $DAEMON $OPTIONS
+    echo "$NAME."
+    ;;
 *)
-	N=/etc/init.d/$NAME
-	echo "Usage: $N {start|stop|restart|force-reload}" >&2
-	exit 1
-	;;
+    N=/etc/init.d/$NAME
+    echo "Usage: $N {start|stop|restart|force-reload}" >&2
+    exit 1
+    ;;
 esac
 
 exit 0

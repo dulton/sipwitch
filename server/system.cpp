@@ -37,6 +37,7 @@ static shell::flagopt helpflag('h',"--help",    _TEXT("display this list"));
 static shell::flagopt althelp('?', NULL, NULL);
 static shell::flagopt backflag('b', "--background", _TEXT("run in background"));
 static shell::numericopt concurrency('c', "--concurrency", _TEXT("process concurrency"), "level");
+static shell::flagopt desktop(0, "--desktop", _TEXT("enable desktop access"));
 static shell::flagopt foreflag('f', "--foreground", _TEXT("run in foreground"));
 #ifdef  HAVE_PWD_H
 static shell::stringopt group('g', "--group", _TEXT("use specified group permissions"), "groupid", "nobody");
@@ -410,11 +411,13 @@ extern int main(int argc, char **argv)
     endgrent();
     endpwent();
 
+    if(is(desktop))
+        umask(002);
 #endif
 
     signals::setup();
 
-    fsys::createDir(rundir, 0770);
+    fsys::createDir(rundir, 0775);
     fsys::createDir(prefix, 0770);
     if(fsys::changeDir(prefix))
         shell::errexit(3, "*** sipwitch: %s: %s\n",
