@@ -1,3 +1,7 @@
+from version 0.10.0 to 0.10.1
+- allow adm group access to local sipwitch ipc (an ubuntuism) unless modified
+- events dispatch ipc service added
+
 from version 0.9.3 to 0.10.0
 - use of digest functions from usecure.
 - notify removed, will be part of new switchview gui.

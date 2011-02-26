@@ -39,7 +39,7 @@ static shell::flagopt backflag('b', "--background", _TEXT("run in background"));
 static shell::numericopt concurrency('c', "--concurrency", _TEXT("process concurrency"), "level");
 static shell::flagopt foreflag('f', "--foreground", _TEXT("run in foreground"));
 #ifdef  HAVE_PWD_H
-static shell::stringopt group('g', "--group", _TEXT("use specified group permissions"), "groupid", "nobody");
+static shell::stringopt group('g', "--group", _TEXT("use specified group permissions"), "groupid", "adm");
 #endif
 static shell::numericopt histbuf('h', "--history", _TEXT("set history buffer"), "count", 0);
 static shell::stringopt loglevel('L', "--logging", _TEXT("set log level"), "level", "err");
@@ -378,18 +378,18 @@ extern int main(int argc, char **argv)
             else
                 pwd = getpwnam(*user);
             if(!pwd)
-                shell::errexit(2, "*** apennine: %s: %s\n", *user,
+                shell::errexit(2, "*** sipw: %s: %s\n", *user,
                     _TEXT("unknown or invalid user id"));
         }
     }
 
-    if(is(group)) {
+    if(!getuid() || is(group)) {
         if(atoi(*group))
             grp = getgrgid(atoi(*group));
         else
             grp = getgrnam(*group);
-        if(!grp)
-            shell::errexit(2, "*** apennine: %s: %s\n", *group,
+        if(is(group) && !grp)
+            shell::errexit(2, "*** sipw: %s: %s\n", *group,
                 _TEXT("unknown or invalid group id"));
     }
 
