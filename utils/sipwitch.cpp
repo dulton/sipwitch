@@ -195,6 +195,7 @@ static void showevents(char **argv)
     socket_t ipc = ::socket(AF_UNIX, SOCK_STREAM, 0);
     struct sockaddr_un addr;
     struct passwd *pwd = getpwuid(getuid());
+    char abuf[256];
 
     if(argv[1])
         shell::errexit(1, "*** sipwitch: events: no arguments used\n");
@@ -231,6 +232,32 @@ static void showevents(char **argv)
         case events::TERMINATE:
             printf("exiting: %s\n", event.reason);
             exit(0);
+        case events::CALL:
+            printf("connecting %s to %s\n",
+                event.call.caller, event.call.dialed);
+            break;
+        case events::DROP:
+            printf("disconnect %s from %s\n",
+                event.call.caller, event.call.dialed);
+            break;
+        case events::RELEASE:
+            Socket::getaddress((struct sockaddr *)&event.user.source, abuf, sizeof(abuf));
+            if(event.user.extension)
+                printf("releasing %s on %d from %s\n",
+                    event.user.id, event.user.extension, abuf);
+            else
+                printf("releasing %s from %s\n",
+                    event.user.id, abuf);
+            break;
+        case events::ACTIVATE:
+            Socket::getaddress((struct sockaddr *)&event.user.source, abuf, sizeof(abuf));
+            if(event.user.extension)
+                printf("activating %s on %d from %s\n",
+                    event.user.id, event.user.extension, abuf);
+            else
+                printf("activating %s from %s\n",
+                    event.user.id, abuf);
+            break;
         }
     }
     shell::errexit(11, "*** sipwitch: events: connection lost\n");

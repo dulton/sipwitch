@@ -56,7 +56,7 @@ protected:
     bool put(events *event);
 
 public:
-    typedef enum {NOTICE, WARNING, FAILURE, TERMINATE, STATE, CALL, REGISTER, RELEASE} type_t;
+    typedef enum {NOTICE, WARNING, FAILURE, TERMINATE, STATE, CALL, DROP, ACTIVATE, RELEASE} type_t;
 
     type_t type;
 
@@ -69,9 +69,9 @@ public:
         char state[64];
         struct {
             unsigned extension;
-            char userid[MAX_USERID_SIZE];
-            char source[128];
-        };
+            char id[MAX_USERID_SIZE];
+            struct sockaddr_storage source;
+        } user;
         char reason[160];
     };
 
