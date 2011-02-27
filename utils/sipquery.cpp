@@ -13,9 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <ucommon/ucommon.h>
-#include <eXosip2/eXosip.h>
 #include <config.h>
+#include <eXosip2/eXosip.h>
+#include <ucommon/ucommon.h>
 
 static int verbose = 0;
 static int port = 0;
@@ -31,11 +31,12 @@ static int tls = 0;
 #if defined(_MSWINDOWS_) && defined(__GNUC__)
 // binds addrinfo for mingw32 linkage since otherwise mingw32 cannot
 // cannot link proper getaddrinfo/freeaddrinfo calls that eXosip uses.
-using namespace UCOMMON_NAMESPACE;
 static Socket::address localhost("127.0.0.1");
 #endif
 
-extern "C" int main(int argc, char **argv)
+using namespace UCOMMON_NAMESPACE;
+
+PROGRAM_MAIN(argc, argv)
 {
     int error = 2;
     eXosip_event_t *sevent;
@@ -88,55 +89,46 @@ extern "C" int main(int argc, char **argv)
 
 
         if(!strcmp(*argv, "-t") || !strcmp(*argv, "-timeout")) {
-            if(NULL == *(++argv)) {
-                fprintf(stderr, "*** sipuser: timeout option missing timeout\n");
-                exit(3);
-            }
+            if(NULL == *(++argv))
+                shell::errexit(3, "*** sipuser: timeout option missing timeout\n");
             timeout = atoi(*argv) * 1000;
-            if(!timeout) {
-                fprintf(stderr, "*** sipuser: timeout option invalid\n");
-                exit(3);
-            }
+            if(!timeout)
+                shell::errexit(3, "*** sipuser: timeout option invalid\n");
+
             continue;
         }
 
         if(!strncmp(*argv, "-timeout=", 9)) {
             timeout = atoi(*argv + 9) * 1000;
-            if(!timeout) {
-                fprintf(stderr, "*** sipuser: timeout option invalid\n");
-                exit(3);
-            }
+            if(!timeout)
+                shell::errexit(3, "*** sipuser: timeout option invalid\n");
+
             continue;
         }
 
         if(!strcmp(*argv, "-p") || !strcmp(*argv, "-port")) {
-            if(NULL == *(++argv)) {
-                fprintf(stderr, "*** sipuser: port option missing port\n");
-                exit(3);
-            }
+            if(NULL == *(++argv))
+                shell::errexit(3, "*** sipuser: port option missing port\n");
+
             port = atoi(*argv);
-            if(!port) {
-                fprintf(stderr, "*** sipuser: port option invalid number\n");
-                exit(3);
-            }
+            if(!port)
+                shell::errexit(3, "*** sipuser: port option invalid number\n");
+
             continue;
         }
 
         if(!strncmp(*argv, "-port=", 6)) {
             port = atoi(*argv + 6);
-             if(!port) {
-                fprintf(stderr, "*** sipuser: port option invalid number\n");
-                exit(3);
-            }
+             if(!port)
+                shell::errexit(3, "*** sipuser: port option invalid number\n");
+
             continue;
         }
 
         if(!strcmp(*argv, "-proxy")) {
             proxy = *(++argv);
-            if(!proxy) {
-                fprintf(stderr, "*** sipuser: proxy option missing proxy\n");
-                exit(3);
-            }
+            if(!proxy)
+                shell::errexit(3, "*** sipuser: proxy option missing proxy\n");
             continue;
         }
 
@@ -147,10 +139,8 @@ extern "C" int main(int argc, char **argv)
 
         if(!strcmp(*argv, "-server")) {
             server = *(++argv);
-            if(!server) {
-                fprintf(stderr, "*** sipuser: server option missing proxy\n");
-                exit(3);
-            }
+            if(!server)
+                shell::errexit(3, "*** sipuser: server option missing proxy\n");
             continue;
         }
 
@@ -161,10 +151,8 @@ extern "C" int main(int argc, char **argv)
 
         if(!strcmp(*argv, "-forward")) {
             forwarded = *(++argv);
-            if(!forwarded) {
-                fprintf(stderr, "*** sipuser: forwarding option missing interface\n");
-                exit(3);
-            }
+            if(!forwarded)
+                shell::errexit(3, "*** sipuser: forwarding option missing interface\n");
             continue;
         }
 
@@ -186,18 +174,15 @@ extern "C" int main(int argc, char **argv)
             exit(3);
         }
 
-        if(**argv == '-') {
-            fprintf(stderr, "*** sipuser: %s: unknown option\n", *argv);
-            exit(3);
-        }
+        if(**argv == '-')
+            shell::errexit(3, "*** sipuser: %s: unknown option\n", *argv);
 
         break;
     }
 
     if(!*argv) {
 usage:
-        fprintf(stderr, "use: sipuser [options] userid\n");
-        exit(3);
+        shell::errexit(3, "use: sipuser [options] userid\n");
     }
 
     user = *(argv++);
@@ -212,10 +197,8 @@ usage:
         port = 5060 + getuid();
 #endif
 
-    if(eXosip_init()) {
-        fprintf(stderr, "*** sipuser: failed exosip init\n");
-        exit(3);
-    }
+    if(eXosip_init())
+        shell::errexit(3, "*** sipuser: failed exosip init\n");
 
 #ifdef  AF_INET6
     if(family == AF_INET6) {
@@ -232,8 +215,7 @@ usage:
 #endif
         if(!binding)
             binding = "*";
-        fprintf(stderr, "*** sipuser: failed to listen %s:%d\n", binding, port);
-        exit(3);
+        shell::errexit(3, "*** sipuser: failed to listen %s:%d\n", binding, port);
     }
 
     if(forwarded)
@@ -291,10 +273,8 @@ usage:
     eXosip_lock();
     rid = eXosip_register_build_initial_register(buffer, proxy, NULL, 60, &msg);
     if(!msg) {
-        error = 1;
-        fprintf(stderr, "*** sipuser: cannot create query for %s\n", user);
         eXosip_unlock();
-        exit(3);
+        shell::errexit(3, "*** sipuser: cannot create query for %s\n", user);
     }
     snprintf(tbuffer, sizeof(tbuffer), "<%s>", buffer);
     osip_message_set_to(msg, tbuffer);
@@ -304,10 +284,8 @@ usage:
 
     while(!stop) {
         sevent = eXosip_event_wait(0, timeout);
-        if(!sevent) {
-            fprintf(stderr, "*** sipuser: timed out\n");
-            break;
-        }
+        if(!sevent)
+            shell::errexit(2, "*** sipuser: timed out\n");
 
         if(sevent->type == EXOSIP_REGISTRATION_FAILURE) {
             error = 1;
@@ -331,6 +309,6 @@ usage:
     }
     eXosip_register_remove(rid);
     eXosip_quit();
-    return error;
+    PROGRAM_EXIT(error);
 }
 

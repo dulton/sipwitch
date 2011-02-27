@@ -1869,7 +1869,7 @@ use:
     exit(0);
 }
 
-extern "C" int main(int argc, char **argv)
+PROGRAM_MAIN(argc, argv)
 {
     if(argc > 1) {
         if(String::equal(argv[1], "-version") || String::equal(argv[1], "--version"))
@@ -1917,10 +1917,8 @@ extern "C" int main(int argc, char **argv)
     cgi_content = getenv("CONTENT_TYPE");
 #endif
 
-    if(!cgi_version) {
-        fprintf(stderr, "*** sipwitch.cgi must execute from http server on password protected resource\n");
-        exit(-1);
-    }
+    if(!cgi_version)
+        shell::errexit(1, "*** sipwitch.cgi must execute from http server on password protected resource\n");
 
     if(!cgi_remuser || !*cgi_remuser)
         error(403, "Unauthorized to access sipwitch interface");
@@ -1984,6 +1982,7 @@ extern "C" int main(int argc, char **argv)
     }
 
     config();
+    PROGRAM_EXIT(0);
 }
 
 

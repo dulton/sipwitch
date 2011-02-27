@@ -46,7 +46,7 @@ static char *getpass(const char *prompt)
 }
 #endif
 
-extern "C" int main(int argc, char **argv)
+PROGRAM_MAIN(argc, argv)
 {
     char *realm = NULL, *secret, *verify;
     const char *mode = "md5";
@@ -74,27 +74,22 @@ extern "C" int main(int argc, char **argv)
     }
 
 #ifdef  HAVE_PWD_H
-    if(user && getuid() != 0) {
-        fprintf(stderr, "*** sippasswd: only root can change other user's digests\n");
-        exit(1);
-    }
+    if(user && getuid() != 0)
+        shell::errexit(3, "*** sippasswd: only root can change other user's digests\n");
+
     if(!user) {
         struct passwd *pwd = getpwuid(getuid());
-        if(!pwd) {
-            fprintf(stderr, "*** sippasswd: user id cannot be determined\n");
-            exit(3);
-        }
+        if(!pwd)
+            shell::errexit(3, "*** sippasswd: user id cannot be determined\n");
+
         user = strdup(pwd->pw_name);
     }
-    if(geteuid() != 0) {
-        fprintf(stderr, "*** sippasswd: root privilege required\n");
-        exit(3);
-    }
+    if(geteuid() != 0)
+        shell::errexit(3, "*** sippasswd: root privilege required\n");
 #else
-    if(!user) {
-        fprintf(stderr, "*** sippasswd: user id not specified\n");
-        exit(3);
-    }
+    if(!user)
+        shell::errexit(3, "*** sippasswd: user id not specified\n");
+
 #endif
 
     fsys_t fs;
@@ -103,10 +98,9 @@ extern "C" int main(int argc, char **argv)
     if(!is(fs))
         fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
 
-    if(!is(fs)) {
-        fprintf(stderr, "*** sippasswd: no realm active\n");
-        exit(4);
-    }
+    if(!is(fs))
+        shell::errexit(4, "*** sippasswd: no realm active\n");
+
     memset(buffer, 0, sizeof(buffer));
     fsys::read(fs, buffer, sizeof(buffer) - 1);
     fsys::close(fs);
@@ -153,10 +147,8 @@ extern "C" int main(int argc, char **argv)
     fsys::close(fs);
 
     fp = fopen(DEFAULT_VARPATH "/lib/sipwitch/digests.db", "r+");
-    if(!fp) {
-        fprintf(stderr, "*** sippasswd: cannot access digest");
-        exit(1);
-    }
+    if(!fp)
+        shell::errexit(1, "*** sippasswd: cannot access digest");
 
     for(;;) {
         fgetpos(fp, &pos);
@@ -191,6 +183,6 @@ extern "C" int main(int argc, char **argv)
     }
 
     printf("digest updated\n");
-    exit(0);
+    PROGRAM_EXIT(0);
 }
 

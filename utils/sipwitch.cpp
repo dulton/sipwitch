@@ -21,6 +21,10 @@
 #endif
 #include <config.h>
 
+#ifdef  AF_UNIX
+#include <sys/un.h>
+#endif
+
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
@@ -95,20 +99,16 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 
 static void status(char **argv)
 {
-    if(argv[1]) {
-        fprintf(stderr, "*** sipwitch: calls: no arguments used\n");
-        exit(-1);
-    }
+    if(argv[1])
+        shell::errexit(1, "*** sipwitch: status: no arguments used\n");
 
     mapped_view<MappedCall> calls(CALL_MAP);
     unsigned count = calls.getCount();
     unsigned index = 0;
     const volatile MappedCall *map;
 
-    if(!count) {
-        fprintf(stderr, "*** sipwitch: offline\n");
-        exit(-1);
-    }
+    if(!count)
+        shell::errexit(10, "*** sipwitch: status: offline\n");
 
     while(index < count) {
         map = (const volatile MappedCall *)(calls(index++));
@@ -124,20 +124,17 @@ static void status(char **argv)
 
 static void calls(char **argv)
 {
-    if(argv[1]) {
-        fprintf(stderr, "*** sipwitch: calls: no arguments used\n");
-        exit(-1);
-    }
+    if(argv[1])
+        shell::errexit(1, "*** sipwitch: calls: no arguments used\n");
+
     mapped_view<MappedCall> calls(CALL_MAP);
     unsigned count = calls.getCount();
     unsigned index = 0;
     const volatile MappedCall *map;
     time_t now;
 
-    if(!count) {
-        fprintf(stderr, "*** sipwitch: offline\n");
-        exit(-1);
-    }
+    if(!count)
+        shell::errexit(10, "*** sipwitch: calls: offline\n");
 
     time(&now);
     while(index < count) {
@@ -158,19 +155,17 @@ static void periodic(char **argv)
 {
     char text[80];
 
-    if(argv[1]) {
-        fprintf(stderr, "*** sipwitch: pstats: no arguments used\n");
-        exit(-1);
-    }
+    if(argv[1])
+        shell::errexit(1, "*** sipwitch: pstats: no arguments used\n");
+
     mapped_view<stats> sta(STAT_MAP);
     unsigned count = sta.getCount();
     unsigned index = 0;
     const volatile stats *map;
 
-    if(!count) {
-        fprintf(stderr, "*** sipwitch: offline\n");
-        exit(-1);
-    }
+    if(!count)
+        shell::errexit(10, "*** sipwitch: pstats: offline\n");
+
     while(index < count) {
         map = (const volatile stats *)(sta(index++));
 
@@ -194,15 +189,50 @@ static void periodic(char **argv)
     exit(0);
 }
 
+#ifdef  AF_UNIX
+static void showevents(char **argv)
+{
+    socket_t ipc = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    struct sockaddr_un addr;
+    struct passwd *pwd = getpwuid(getuid());
+
+    if(argv[1])
+        shell::errexit(1, "*** sipwitch: events: no arguments used\n");
+
+    if(ipc == INVALID_SOCKET)
+        shell::errexit(9, "*** sipwitch: events: cannot create event socket\n");
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+    String::set(addr.sun_path, sizeof(addr.sun_path), DEFAULT_VARPATH "/run/sipwitch/events");
+    if(::connect(ipc, (struct sockaddr *)&addr, SUN_LEN(&addr)) < 0) {
+        if(!pwd)
+            shell::errexit(4, "*** sipwitch: events: invalid login\n");
+
+        memset(&addr, 0, sizeof(addr));
+        addr.sun_family = AF_UNIX;
+        snprintf(addr.sun_path, sizeof(addr.sun_path), "/tmp/sipwitch-%s/events", pwd->pw_name);
+        if(::connect(ipc, (struct sockaddr *)&addr, SUN_LEN(&addr)) < 0)
+            shell::errexit(10, "*** sipwitch: events: server offline\n");
+    }
+
+    event_t buffer;
+    while(::recv(ipc, &buffer, sizeof(buffer), 0)) {
+
+    }
+
+    exit(0);
+}
+#endif
+
 static void dumpstats(char **argv)
 {
     char text[80];
     time_t now;
 
-    if(argv[1]) {
-        fprintf(stderr, "*** sipwitch: stats: no arguments used\n");
-        exit(-1);
-    }
+    if(argv[1])
+        shell::errexit(1, "*** sipwitch: stats: no arguments used\n");
+
     mapped_view<stats> sta(STAT_MAP);
     unsigned count = sta.getCount();
     unsigned index = 0;
@@ -210,10 +240,9 @@ static void dumpstats(char **argv)
     unsigned current;
     stats buffer;
 
-    if(!count) {
-        fprintf(stderr, "*** sipwitch: offline\n");
-        exit(-1);
-    }
+    if(!count)
+        shell::errexit(10, "*** sipwitch: stats: offline\n");
+
     time(&now);
     while(index < count) {
         map = const_cast<const stats *>(sta(index++));
@@ -266,15 +295,11 @@ static void registry(char **argv)
     char ext[8], exp[8], use[8];
     const char *type;
 
-    if(argv[1]) {
-        fprintf(stderr, "*** sipwitch: registry: too many arguments\n");
-        exit(-1);
-    }
+    if(argv[1])
+        shell::errexit(1, "*** sipwitch: registry: too many arguments\n");
 
-    if(!count) {
-        fprintf(stderr, "*** sipwitch: offline\n");
-        exit(-1);
-    }
+    if(!count)
+        shell::errexit(10, "*** sipwitch: registry: offline\n");
 
     time(&now);
     while(index < count) {
@@ -348,15 +373,16 @@ static void command(char **argv, unsigned timeout)
 
     fd = ::open(DEFAULT_VARPATH "/run/sipwitch/control", O_WRONLY | O_NONBLOCK);
     if(fd < 0) {
+        if(!pwd)
+            shell::errexit(4, "*** sipwitch: events: invalid login\n");
+
         snprintf(buffer, sizeof(buffer), "/tmp/sipwitch-%s/control", pwd->pw_name);
         fd = ::open(buffer, O_WRONLY | O_NONBLOCK);
     }
 #endif
 
-    if(fd == INVALID_HANDLE_VALUE) {
-        fprintf(stderr, "*** sipwitch: offline\n");
-        exit(2);
-    }
+    if(fd == INVALID_HANDLE_VALUE)
+        shell::errexit(10, "*** sipwitch: command: offline\n");
 
 #ifndef _MSWINDOWS_
     if(timeout)
@@ -371,19 +397,15 @@ static void command(char **argv, unsigned timeout)
     }
 
 #ifdef  _MSWINDOWS_
-    if(!WriteFile(fd, buffer, (DWORD)strlen(buffer) + 1, NULL, NULL)) {
-        fprintf(stderr, "*** sipwitch: control failed\n");
-        exit(4);
-    }
+    if(!WriteFile(fd, buffer, (DWORD)strlen(buffer) + 1, NULL, NULL))
+        shell::errexit(11, "*** sipwitch: control failed\n");
 #else
     len = strlen(buffer);
     buffer[len++] = '\n';
     buffer[len] = 0;
 
-    if(::write(fd, buffer, len) < (int)len) {
-        fprintf(stderr, "*** sipwitch: control failed\n");
-        exit(4);
-    }
+    if(::write(fd, buffer, len) < (int)len)
+        shell::errexit(11, "*** sipwitch: control failed\n");
 
     if(!timeout)
         exit(0);
@@ -398,12 +420,10 @@ static void command(char **argv, unsigned timeout)
         capture();
         exit(0);
     }
-    if(signo == SIGALRM) {
-        fprintf(stderr, "*** sipwitch: timed out\n");
-        exit(1);
-    }
-    fprintf(stderr, "*** sipwitch: request failed\n");
-    exit(3);
+    if(signo == SIGALRM)
+        shell::errexit(12, "*** sipwitch: command: timed out\n");
+
+    shell::errexit(20, "*** sipwitch: command: request failed\n");
 #endif
 }
 
@@ -430,6 +450,9 @@ static void usage(void)
         "  down                    Shut down server\n"
         "  drop <user|callid>      Drop an active call\n"
         "  dump                    Dump server configuration\n"
+#ifdef  AF_UNIX
+        "  events                  Display server events\n"
+#endif
         "  history [bufsize]       Set buffer or dump error log\n"
         "  ifup <iface>            Notify interface came up\n"
         "  ifdown <iface>          Notify interface went down\n"
@@ -455,120 +478,100 @@ static void usage(void)
 
 static void single(char **argv, int timeout)
 {
-    if(argv[1]) {
-        fprintf(stderr, "*** sipwitch: %s: too many arguments\n", *argv);
-        exit(-1);
-    }
+    if(argv[1])
+        shell::errexit(1, "*** sipwitch: %s: too many arguments\n", *argv);
+
     command(argv, timeout);
 }
 
 static void level(char **argv, int timeout)
 {
-    if(!argv[1]) {
-        fprintf(stderr, "*** sipwitch: %s: level missing\n", *argv);
-        exit(-1);
-    }
-    if(argv[2]) {
-        fprintf(stderr, "*** sipwitch: %s: too many arguments\n", *argv);
-        exit(-1);
-    }
+    if(!argv[1])
+        shell::errexit(1, "*** sipwitch: %s: level missing\n", *argv);
+
+    if(argv[2])
+        shell::errexit(1, "*** sipwitch: %s: too many arguments\n", *argv);
+
     command(argv, timeout);
 }
 
 static void period(char **argv)
 {
-    if(!argv[1]) {
-        fprintf(stderr, "*** sipwitch: period: interval missing\n");
-        exit(-1);
-    }
-    if(argv[2]) {
-        fprintf(stderr, "*** sipwitch: period: too many arguments\n");
-        exit(-1);
-    }
+    if(!argv[1])
+        shell::errexit(1, "*** sipwitch: period: interval missing\n");
+
+    if(argv[2])
+        shell::errexit(1, "*** sipwitch: period: too many arguments\n");
+
     command(argv, 10);
 }
 
 static void address(char **argv)
 {
-    if(!argv[1]) {
-        fprintf(stderr, "*** sipwitch: address: ipaddr missing\n");
-        exit(-1);
-    }
-    if(argv[2]) {
-        fprintf(stderr, "*** sipwitch: address: too many arguments\n");
-        exit(-1);
-    }
+    if(!argv[1])
+        shell::errexit(1, "*** sipwitch: address: ipaddr missing\n");
+
+    if(argv[2])
+        shell::errexit(1, "*** sipwitch: address: too many arguments\n");
+
     command(argv, 10);
 }
 
 static void state(char **argv)
 {
-    if(!argv[1]) {
-        fprintf(stderr, "*** sipwitch: state: value missing\n");
-        exit(-1);
-    }
-    if(argv[2]) {
-        fprintf(stderr, "*** sipwitch: state: too many arguments\n");
-        exit(-1);
-    }
+    if(!argv[1])
+        shell::errexit(1, "*** sipwitch: state: value missing\n");
+
+    if(argv[2])
+        shell::errexit(1, "*** sipwitch: state: too many arguments\n");
+
     command(argv, 10);
 }
 
 static void iface(char **argv)
 {
-    if(!argv[1]) {
-        fprintf(stderr, "*** sipwitch: %s: interface missing\n", *argv);
-        exit(-1);
-    }
-    if(argv[2]) {
-        fprintf(stderr, "*** sipwitch: %s: too many arguments\n", *argv);
-        exit(-1);
-    }
+    if(!argv[1])
+        shell::errexit(1, "*** sipwitch: %s: interface missing\n", *argv);
+
+    if(argv[2])
+        shell::errexit(1, "*** sipwitch: %s: too many arguments\n", *argv);
+
     command(argv, 20);
 }
 
 static void drop(char **argv)
 {
-    if(!argv[1]) {
-        fprintf(stderr, "*** sipwitch: drop: user or callid missing\n");
-        exit(-1);
-    }
-    if(argv[2]) {
-        fprintf(stderr, "*** sipwitch: drop: too many arguments\n");
-        exit(-1);
-    }
+    if(!argv[1])
+        shell::errexit(1, "*** sipwitch: drop: user or callid missing\n");
+
+    if(argv[2])
+        shell::errexit(1, "*** sipwitch: drop: too many arguments\n");
+
     command(argv, 10);
 }
 
 static void release(char **argv)
 {
-    if(!argv[1]) {
-        fprintf(stderr, "*** sipwitch: release: extension missing\n");
-        exit(-1);
-    }
-    if(argv[2]) {
-        fprintf(stderr, "*** sipwitch: release: too many arguments\n");
-        exit(-1);
-    }
+    if(!argv[1])
+        shell::errexit(1, "*** sipwitch: release: extension missing\n");
+
+    if(argv[2])
+        shell::errexit(1, "*** sipwitch: release: too many arguments\n");
+
     command(argv, 10);
 }
 
 static void activate(char **argv)
 {
-    if(!argv[1]) {
-        fprintf(stderr, "*** sipwitch: activate: extension missing\n");
-        exit(-1);
-    }
+    if(!argv[1])
+        shell::errexit(1, "*** sipwitch: activate: extension missing\n");
 
-    if(!argv[2]) {
-        fprintf(stderr, "*** sipwitch: activate: ipaddr missing\n");
-        exit(-1);
-    }
+    if(!argv[2])
+        shell::errexit(1, "*** sipwitch: activate: ipaddr missing\n");
 
-    if(argv[3]) {
-        fprintf(stderr, "*** sipwitch: activate: too many arguments\n");
-        exit(-1);
-    }
+    if(argv[3])
+        shell::errexit(1, "*** sipwitch: activate: too many arguments\n");
+
     command(argv, 10);
 }
 
@@ -576,20 +579,14 @@ static void message(char **argv)
 {
     char buffer[500];
 
-    if(!argv[1]) {
-        fprintf(stderr, "*** sipwitch: message: extension missing\n");
-        exit(-1);
-    }
+    if(!argv[1])
+        shell::errexit(1, "*** sipwitch: message: extension missing\n");
 
-    if(!argv[2]) {
-        fprintf(stderr, "*** sipwitch: message: \"text\" missing\n");
-        exit(-1);
-    }
+    if(!argv[2])
+        shell::errexit(1, "*** sipwitch: message: \"text\" missing\n");
 
-    if(argv[3]) {
-        fprintf(stderr, "*** sipwitch: message: too many arguments\n");
-        exit(-1);
-    }
+    if(argv[3])
+        shell::errexit(1, "*** sipwitch: message: too many arguments\n");
 
     if(argv[2][0] != '{') {
         snprintf(buffer, sizeof(buffer), "{%s}", argv[2]);
@@ -598,7 +595,7 @@ static void message(char **argv)
     command(argv, 10);
 }
 
-extern "C" int main(int argc, char **argv)
+PROGRAM_MAIN(argc, argv)
 {
     if(argc < 2)
         usage();
@@ -646,10 +643,14 @@ extern "C" int main(int argc, char **argv)
         iface(argv);
     else if(eq(*argv, "drop"))
         drop(argv);
+#ifdef  AF_UNIX
+    if(eq(*argv, "events"))
+        showevents(argv);
+#endif
     if(!argv[1])
-        fprintf(stderr, "use: sipwitch command [arguments...]\n");
+        shell::errexit(1, "use: sipwitch command [arguments...]\n");
     else
-        fprintf(stderr, "*** sipwitch: %s: unknown command or option\n", argv[0]);
-    exit(1);
+        shell::errexit(1, "*** sipwitch: %s: unknown command or option\n", argv[0]);
+    PROGRAM_EXIT(1);
 }
 

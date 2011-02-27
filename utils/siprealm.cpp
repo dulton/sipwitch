@@ -38,11 +38,9 @@ static void show(void)
     if(!is(fs))
         fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
 
-    if(!is(fs)) {
+    if(!is(fs))
 error:
-        fprintf(stderr, "*** siprealm: no public realm known\n");
-        exit(1);
-    }
+        shell::errexit(1, "*** siprealm: no public realm known\n");
 
     memset(buffer, 0, sizeof(buffer));
     fsys::read(fs, buffer, sizeof(buffer) - 1);
@@ -63,7 +61,7 @@ error:
     exit(0);
 }
 
-extern "C" int main(int argc, char **argv)
+PROGRAM_MAIN(argc, argv)
 {
     char *realm = NULL;
     const char *mode = NULL;
@@ -109,10 +107,9 @@ extern "C" int main(int argc, char **argv)
     }
     else if(String::equal(*argv, "-?") || String::equal(*argv, "-help"))
         usage();
-    else if(**argv == '-') {
-        fprintf(stderr, "*** %s: unknown digest mode", *argv);
+    else if(**argv == '-')
+        shell::errexit(2, "*** %s: unknown digest mode", *argv);
         exit(2);
-    }
 
     fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
     memset(buffer, 0, sizeof(buffer));
@@ -156,10 +153,8 @@ extern "C" int main(int argc, char **argv)
         fsys::write(fs, replace, strlen(replace));
         fsys::close(fs);
     }
-    else {
-        fprintf(stderr, "*** siprealm: root permission required\n");
-        exit(0);
-    }
+    else
+        shell::errexit(3, "*** siprealm: root permission required\n");
 
     // if previous digests cached, clear them as they are now invalid...
     ::remove(DEFAULT_VARPATH "/lib/sipwitch/digests.db");
@@ -173,6 +168,6 @@ extern "C" int main(int argc, char **argv)
 
 exit:
     printf("%s\n", realm);
-    exit(0);
+    PROGRAM_EXIT(0);
 }
 

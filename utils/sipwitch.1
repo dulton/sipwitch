@@ -57,6 +57,9 @@ drop specified calls either by a user or call id.
 \fBdump\fR
 dump server configuration to stdout.
 .TP
+\fBevents\fR
+display server events as received.
+.TP
 \fBhistory\fR \fI[size]\fR
 set size or dump recent error log history.
 .TP
@@ -109,10 +112,10 @@ Set or clear server sip message tracing.
 set daemon error logging verbosity.
 .SH "EXIT STATUS"
 Normally exit status is 0 if the request was successfully processed by the
-sipwitch service daemon.  An exit status of 1 indicates the request timed
-out and 2 indicates the server is offline.  If the request failed, then a
-3 is returned.  A 255 (\-1) indicates a syntax error in the command request
-or arguments. 
+sipwitch service daemon.  An exit status of 0x indicates an error in the
+sipwitch utility, such as invalid argument parsing.  An error of 1x indicates
+some communication failure with the server, and a error of 2x is related to
+errors on server processed requests.
 .SH AUTHOR
 .B sipwitch
 was written by David Sugar <dyfet@gnutelephony.org>.
@@ -123,5 +126,5 @@ Copyright \(co 2009 David Sugar, Tycho Softworks.
 .br
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-PURPOSE. 
+PURPOSE.
 
