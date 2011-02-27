@@ -76,7 +76,7 @@ public:
     };
 
     static bool start(void);
-    static void stop(void);
+    static void stop(const char *reason);
 };
 
 typedef events event_t;

@@ -46,7 +46,7 @@ public:
     void release(void);
 
     static void add(socket_t so);
-    static void stop(void);
+    static void stop(events *message);
     static void send(events *message);
 };
 
@@ -96,11 +96,14 @@ void dispatch::add(socket_t so)
     private_locking.release();
 }
 
-void dispatch::stop(void)
+void dispatch::stop(events *msg)
 {
     private_locking.acquire();
     linked_pointer<dispatch> dp = root;
+
     while(is(dp)) {
+        if(msg)
+            ::send(dp->session, msg, sizeof(events), 0);
         ::close(dp->session);
         dp.next();
     }
@@ -180,13 +183,18 @@ failed:
     return true;
 }
 
-void events::stop(void)
+void events::stop(const char *reason)
 {
+    events msg;
+
     if(ipc == INVALID_SOCKET)
         return;
 
+    msg.type = TERMINATE;
+    String::set(msg.reason, sizeof(msg.reason), reason);
+
     Socket::release(ipc);
-    dispatch::stop();
+    dispatch::stop(&msg);
     ::remove(process::get("events"));
     ipc = INVALID_SOCKET;
 }
@@ -198,7 +206,7 @@ bool events::start(void)
     return false;
 }
 
-void events::stop(void)
+void events::stop(const char *reason)
 {
 }
 
