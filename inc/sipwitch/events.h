@@ -70,13 +70,14 @@ public:
         struct {
             unsigned extension;
             char id[MAX_USERID_SIZE];
-            struct sockaddr_storage source;
         } user;
         char reason[160];
     };
 
     static bool start(void);
 
+    static void activate(MappedRegistry *rr);
+    static void release(MappedRegistry *rr);
     static void notice(const char *reason);
     static void warning(const char *reason);
     static void failure(const char *reason);

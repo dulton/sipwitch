@@ -18,6 +18,7 @@
 #include <ucommon/export.h>
 #include <sipwitch/events.h>
 #include <sipwitch/process.h>
+#include <sipwitch/mapped.h>
 
 #ifdef  AF_UNIX
 #include <sys/un.h>
@@ -194,6 +195,26 @@ failed:
     return true;
 }
 
+void events::activate(MappedRegistry *rr)
+{
+    events msg;
+
+    msg.type = ACTIVATE;
+    String::set(msg.user.id, sizeof(msg.user.id), rr->userid);
+    msg.user.extension  = rr->ext;
+    dispatch::send(&msg);
+}
+
+void events::release(MappedRegistry *rr)
+{
+    events msg;
+
+    msg.type = RELEASE;
+    String::set(msg.user.id, sizeof(msg.user.id), rr->userid);
+    msg.user.extension  = rr->ext;
+    dispatch::send(&msg);
+}
+
 void events::notice(const char *reason)
 {
     events msg;
@@ -257,6 +278,14 @@ void events::failure(const char *reason)
 }
 
 void events::notice(const char *reason)
+{
+}
+
+void events::activate(MappedRegistry *rr)
+{
+}
+
+void events::release(MappedRegistry *rr)
 {
 }
 

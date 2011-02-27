@@ -178,6 +178,8 @@ void server::activate(MappedRegistry *rr)
     linked_pointer<modules::sipwitch> cb = getModules();
     logging(rr, "activating");
 
+    events::activate(rr);
+
     while(is(cb)) {
         cb->activating(rr);
         cb.next();
@@ -189,6 +191,8 @@ void server::expire(MappedRegistry *rr)
     linked_pointer<modules::sipwitch> cb = getModules();
 
     logging(rr, "releasing");
+
+    events::release(rr);
 
     while(is(cb)) {
         cb->expiring(rr);

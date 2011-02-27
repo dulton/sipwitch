@@ -195,7 +195,6 @@ static void showevents(char **argv)
     socket_t ipc = ::socket(AF_UNIX, SOCK_STREAM, 0);
     struct sockaddr_un addr;
     struct passwd *pwd = getpwuid(getuid());
-    char abuf[256];
 
     if(argv[1])
         shell::errexit(1, "*** sipwitch: events: no arguments used\n");
@@ -241,22 +240,18 @@ static void showevents(char **argv)
                 event.call.caller, event.call.dialed);
             break;
         case events::RELEASE:
-            Socket::getaddress((struct sockaddr *)&event.user.source, abuf, sizeof(abuf));
             if(event.user.extension)
-                printf("releasing %s on %d from %s\n",
-                    event.user.id, event.user.extension, abuf);
+                printf("releasing %s, extension %d\n",
+                    event.user.id, event.user.extension);
             else
-                printf("releasing %s from %s\n",
-                    event.user.id, abuf);
+                printf("releasing %s\n", event.user.id);
             break;
         case events::ACTIVATE:
-            Socket::getaddress((struct sockaddr *)&event.user.source, abuf, sizeof(abuf));
             if(event.user.extension)
-                printf("activating %s on %d from %s\n",
-                    event.user.id, event.user.extension, abuf);
+                printf("activating %s, extension %d\n",
+                    event.user.id, event.user.extension);
             else
-                printf("activating %s from %s\n",
-                    event.user.id, abuf);
+                printf("activating %s\n", event.user.id);
             break;
         }
     }
