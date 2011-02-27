@@ -114,17 +114,29 @@ void dispatch::stop(events *msg)
 
 void dispatch::send(events *msg)
 {
+    fd_set detect;
+    struct timeval timeout;
+    if(ipc == INVALID_SOCKET)
+        return;
+
     private_locking.acquire();
     linked_pointer<dispatch> dp = root;
     LinkedObject *next;
     while(is(dp)) {
         next = dp->next;
         if(::send(dp->session, msg, sizeof(events), 0) < sizeof(events)) {
+disconnect:
             shell::log(DEBUG3, "releasing client events for %d", dp->session);
             dp->release();
             dp->next = freelist;
             freelist = *dp;
         }
+        // disconnect detection...
+        memset(&timeout, 0, sizeof(timeout));
+        memset(&detect, 0, sizeof(detect));
+        FD_SET(dp->session, &detect);
+        if(select(dp->session + 1, &detect, NULL, &detect, &timeout) > 0)
+            goto disconnect;
         dp = next;
     }
     private_locking.release();
@@ -146,7 +158,6 @@ void event_thread::run(void)
         if(client < 0)
             break;
 
-        ::shutdown(client, SHUT_RD);
         shell::log(DEBUG3, "connecting client events for %d", client);
         dispatch::add(client);
     }
@@ -183,7 +194,34 @@ failed:
     return true;
 }
 
-void events::stop(const char *reason)
+void events::notice(const char *reason)
+{
+    events msg;
+
+    msg.type = NOTICE;
+    String::set(msg.reason, sizeof(msg.reason), reason);
+    dispatch::send(&msg);
+}
+
+void events::warning(const char *reason)
+{
+    events msg;
+
+    msg.type = WARNING;
+    String::set(msg.reason, sizeof(msg.reason), reason);
+    dispatch::send(&msg);
+}
+
+void events::failure(const char *reason)
+{
+    events msg;
+
+    msg.type = FAILURE;
+    String::set(msg.reason, sizeof(msg.reason), reason);
+    dispatch::send(&msg);
+}
+
+void events::terminate(const char *reason)
 {
     events msg;
 
@@ -206,7 +244,19 @@ bool events::start(void)
     return false;
 }
 
-void events::stop(const char *reason)
+void events::terminate(const char *reason)
+{
+}
+
+void events::warning(const char *reason)
+{
+}
+
+void events::failure(const char *reason)
+{
+}
+
+void events::notice(const char *reason)
 {
 }
 

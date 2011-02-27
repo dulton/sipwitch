@@ -76,7 +76,11 @@ public:
     };
 
     static bool start(void);
-    static void stop(const char *reason);
+
+    static void notice(const char *reason);
+    static void warning(const char *reason);
+    static void failure(const char *reason);
+    static void terminate(const char *reason);
 };
 
 typedef events event_t;

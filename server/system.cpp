@@ -118,6 +118,21 @@ static void versioninfo(void)
 
 static bool errlog(shell::loglevel_t level, const char *text)
 {
+    switch(level) {
+    case shell::WARN:
+        events::warning(text);
+        break;
+    case shell::NOTIFY:
+        events::notice(text);
+        break;
+    case shell::FAIL:
+        events::terminate(text);
+        break;
+    case shell::ERR:
+        events::failure(text);
+    default:
+        break;
+    }
     modules::errlog(level, text);
     history::add(level, text);
     return false;
@@ -137,7 +152,7 @@ namespace SIPWITCH_NAMESPACE {
         events::start();
         server::run();
 
-        events::stop("server shutdown");
+        events::terminate("server shutdown");
         signals::stop();
         service::shutdown();
         process::release();
