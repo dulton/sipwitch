@@ -216,11 +216,23 @@ static void showevents(char **argv)
             shell::errexit(10, "*** sipwitch: events: server offline\n");
     }
 
-    event_t buffer;
-    while(::recv(ipc, &buffer, sizeof(buffer), 0)) {
-
+    event_t event;
+    while(::recv(ipc, &event, sizeof(event), 0)) {
+        switch(event.type) {
+        case events::FAILURE:
+            printf("failure: %s\n", event.reason);
+            break;
+        case events::WARNING:
+            printf("warning: %s\n", event.reason);
+            break;
+        case events::NOTICE:
+            printf("notice:  %s\n", event.reason);
+            break;
+        case events::TERMINATE:
+            printf("exiting: %s\n", event.reason);
+            exit(0);
+        }
     }
-
     exit(0);
 }
 #endif
