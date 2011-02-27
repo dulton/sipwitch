@@ -217,7 +217,7 @@ static void showevents(char **argv)
     }
 
     event_t event;
-    while(::recv(ipc, &event, sizeof(event), 0)) {
+    while(::recv(ipc, &event, sizeof(event), 0) == sizeof(event)) {
         switch(event.type) {
         case events::FAILURE:
             printf("failure: %s\n", event.reason);
@@ -233,7 +233,7 @@ static void showevents(char **argv)
             exit(0);
         }
     }
-    exit(0);
+    shell::errexit(11, "*** sipwitch: events: connection lost\n");
 }
 #endif
 
