@@ -178,7 +178,7 @@ set_target_properties(sipwitch-passwd PROPERTIES OUTPUT_NAME sippasswd)
 
 add_executable(sipwitch-control utils/sipwitch.cpp)
 add_dependencies(sipwitch-control ucommon)
-target_link_libraries(sipwitch-control ucommon ${UCOMMON_LIBS})
+target_link_libraries(sipwitch-control usecure ucommon ${SECURE_LIBS} ${UCOMMON_LIBS})
 set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipwitch)
 
 if(NOT BUILD_STATIC AND HAVE_EXOSIP2)
