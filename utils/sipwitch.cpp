@@ -29,6 +29,28 @@
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
+#ifdef  _MSWINDOWS_
+static char *getpass(const char *prompt)
+{
+    static char buf[128];
+    size_t i;
+
+    fputs(prompt, stderr);
+    fflush(stderr);
+    for (i = 0; i < sizeof(buf) - 1; i++) {
+        buf[i] = _getch();
+        if (buf[i] == '\r')
+            break;
+        fputs("*", stderr);
+        fflush(stderr);
+    }
+    buf[i] = 0;
+    fputs("\n", stderr);
+    fflush(stderr);
+    return buf;
+}
+#endif
+
 static void capture(void)
 {
 #ifndef _MSWINDOWS_
@@ -142,36 +164,42 @@ static void compute(char **argv)
     if(!user)
         shell::errexit(3, "*** sipwitch: digest: userid missing\n");
 
-    secret = argv[2];
-    if(!secret)
-        shell::errexit(3, "*** sipwitch: digest: secret missing\n");
+    secret = getpass("Enter new SIP secret: ");
+    if(!secret || !*secret) {
+        printf("no password supplied\n");
+        exit(0);
+    }
 
-    if(argv[3])
-        mode = argv[3];
+    realm = argv[2];
+    if(realm) {
+        if(argv[3])
+            mode = argv[3];
+    }
+    else {
+        fsys_t fs;
+        fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+        if(!is(fs))
+            fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
 
-    fsys_t fs;
-    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
-    if(!is(fs))
-        fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
+        if(!is(fs))
+            shell::errexit(4, "*** sipwitch: digest: no public realm known\n");
 
-    if(!is(fs))
-        shell::errexit(4, "*** sipwitch: digest: no public realm known\n");
+        memset(buffer, 0, sizeof(buffer));
+        fsys::read(fs, buffer, sizeof(buffer) - 1);
+        fsys::close(fs);
 
-    memset(buffer, 0, sizeof(buffer));
-    fsys::read(fs, buffer, sizeof(buffer) - 1);
-    fsys::close(fs);
+        char *cp = strchr(buffer, '\n');
+        if(cp)
+            *cp = 0;
 
-    char *cp = strchr(buffer, '\n');
-    if(cp)
-        *cp = 0;
+        cp = strchr(buffer, ':');
+        if(cp)
+            *(cp++) = 0;
 
-    cp = strchr(buffer, ':');
-    if(cp)
-        *(cp++) = 0;
-
-    if(cp && *cp)
-        mode = cp;
-    realm = strdup(buffer);
+        if(cp && *cp)
+            mode = cp;
+        realm = strdup(buffer);
+    }
 
     digest_t digest = mode;
     if(digest.puts((string_t)user + ":" + (string_t)realm + ":" + (string_t)secret))
@@ -645,37 +673,37 @@ static void usage(void)
 {
     printf("usage: sipwitch command\n"
         "Commands:\n"
-        "  abort                   Force daemon abort\n"
-        "  activate <ext> <ipaddr> Assign registration\n"
-        "  address <ipaddr>        Set public ip address\n"
-        "  calls                   List active calls on server\n"
-        "  check                   Server deadlock check\n"
-        "  concurrency <level>     Server concurrency level\n"
-        "  digest id secret [type] Compute a digest\n"
-        "  down                    Shut down server\n"
-        "  drop <user|callid>      Drop an active call\n"
-        "  dump                    Dump server configuration\n"
+        "  abort                    Force daemon abort\n"
+        "  activate <ext> <ipaddr>  Assign registration\n"
+        "  address <ipaddr>         Set public ip address\n"
+        "  calls                    List active calls on server\n"
+        "  check                    Server deadlock check\n"
+        "  concurrency <level>      Server concurrency level\n"
+        "  digest id [realm [type]] Compute a digest\n"
+        "  down                     Shut down server\n"
+        "  drop <user|callid>       Drop an active call\n"
+        "  dump                     Dump server configuration\n"
 #ifdef  AF_UNIX
-        "  events                  Display server events\n"
+        "  events                   Display server events\n"
 #endif
-        "  history [bufsize]       Set buffer or dump error log\n"
-        "  ifup <iface>            Notify interface came up\n"
-        "  ifdown <iface>          Notify interface went down\n"
-        "  message <ext> <text>    Send text message to extension\n"
-        "  period <interval>       Collect periodic statistics\n"
-        "  pstats                  Dump periodic statistics\n"
-        "  realm [text [digest]]   Show or set new server realm\n"
-        "  registry                Dump registry\n"
-        "  release <ext>           Release registration\n"
-        "  reload                  Reload configuration\n"
-        "  restart                 Server restart\n"
-        "  siplog                  Dump sip log when tracing\n"
-        "  snapshot                Server snapshot\n"
-        "  stats                   Dump server statistics\n"
-        "  state <selection>       Change server state\n"
-        "  status                  Dump status string\n"
-        "  trace <on|off|clear>    Set sip message tracing\n"
-        "  verbose <level>         Server verbose logging level\n"
+        "  history [bufsize]        Set buffer or dump error log\n"
+        "  ifup <iface>             Notify interface came up\n"
+        "  ifdown <iface>           Notify interface went down\n"
+        "  message <ext> <text>     Send text message to extension\n"
+        "  period <interval>        Collect periodic statistics\n"
+        "  pstats                   Dump periodic statistics\n"
+        "  realm [text [digest]]    Show or set new server realm\n"
+        "  registry                 Dump registry\n"
+        "  release <ext>            Release registration\n"
+        "  reload                   Reload configuration\n"
+        "  restart                  Server restart\n"
+        "  siplog                   Dump sip log when tracing\n"
+        "  snapshot                 Server snapshot\n"
+        "  stats                    Dump server statistics\n"
+        "  state <selection>        Change server state\n"
+        "  status                   Dump status string\n"
+        "  trace <on|off|clear>     Set sip message tracing\n"
+        "  verbose <level>          Server verbose logging level\n"
     );
 
     printf("Report bugs to sipwitch-devel@gnu.org\n");
