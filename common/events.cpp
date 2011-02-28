@@ -150,6 +150,7 @@ event_thread::event_thread() : JoinableThread()
 void event_thread::run(void)
 {
     socket_t client;
+    events msg;
 
     shell::log(DEBUG1, "starting event dispatcher");
 
@@ -160,6 +161,9 @@ void event_thread::run(void)
             break;
 
         shell::log(DEBUG3, "connecting client events for %d", client);
+        msg.type = events::WELCOME;
+        String::set(msg.welcome.version, sizeof(msg.welcome.version), VERSION);
+        ::send(client, &msg, sizeof(msg), 0);
         dispatch::add(client);
     }
 
@@ -193,6 +197,27 @@ failed:
 
     _thread_.start();
     return true;
+}
+
+void events::connect(cdr *rec)
+{
+    events msg;
+    msg.type = CALL;
+    String::set(msg.call.caller, sizeof(msg.call.caller), rec->ident);
+    String::set(msg.call.dialed, sizeof(msg.call.dialed), rec->dialed);
+    String::set(msg.call.display, sizeof(msg.call.display), rec->display);
+    dispatch::send(&msg);
+}
+
+void events::drop(cdr *rec)
+{
+    events msg;
+    msg.type = DROP;
+    String::set(msg.call.caller, sizeof(msg.call.caller), rec->ident);
+    String::set(msg.call.dialed, sizeof(msg.call.dialed), rec->dialed);
+    String::set(msg.call.display, sizeof(msg.call.display), rec->display);
+    dispatch::send(&msg);
+
 }
 
 void events::activate(MappedRegistry *rr)
@@ -286,6 +311,14 @@ void events::activate(MappedRegistry *rr)
 }
 
 void events::release(MappedRegistry *rr)
+{
+}
+
+void events::connect(cdr *rec)
+{
+}
+
+void events::drop(cdr *rec)
 {
 }
 

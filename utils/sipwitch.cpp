@@ -14,6 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sipwitch/sipwitch.h"
+#include "ucommon/secure.h"
 #ifndef _MSWINDOWS_
 #include <signal.h>
 #include <pwd.h>
@@ -95,6 +96,172 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 
     Socket::getaddress((struct sockaddr *)a2, buf, sizeof(buf));
     printf("%s:%u\n", buf, p2);
+}
+
+static void showrealm(void)
+{
+    fsys_t fs;
+    char buffer[256];
+
+    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+    if(!is(fs))
+        fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
+
+    if(!is(fs))
+error:
+        shell::errexit(1, "*** sipwitch: realm: no public realm known\n");
+
+    memset(buffer, 0, sizeof(buffer));
+    fsys::read(fs, buffer, sizeof(buffer) - 1);
+    fsys::close(fs);
+
+    char *cp = strchr(buffer, '\n');
+    if(cp)
+        *cp = 0;
+
+    cp = strchr(buffer, ':');
+    if(cp)
+        *cp = 0;
+
+    if(!buffer[0])
+        goto error;
+
+    printf("%s\n", buffer);
+    exit(0);
+}
+
+static void compute(char **argv)
+{
+    char *realm = NULL;
+    const char *user, *secret;
+    const char *mode = "md5";
+    char buffer[128];
+    string_t digestbuf;
+
+    user = argv[1];
+    if(!user)
+        shell::errexit(3, "*** sipwitch: digest: userid missing\n");
+
+    secret = argv[2];
+    if(!secret)
+        shell::errexit(3, "*** sipwitch: digest: secret missing\n");
+
+    if(argv[3])
+        mode = argv[3];
+
+    fsys_t fs;
+    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+    if(!is(fs))
+        fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
+
+    if(!is(fs))
+        shell::errexit(4, "*** sipwitch: digest: no public realm known\n");
+
+    memset(buffer, 0, sizeof(buffer));
+    fsys::read(fs, buffer, sizeof(buffer) - 1);
+    fsys::close(fs);
+
+    char *cp = strchr(buffer, '\n');
+    if(cp)
+        *cp = 0;
+
+    cp = strchr(buffer, ':');
+    if(cp)
+        *(cp++) = 0;
+
+    if(cp && *cp)
+        mode = cp;
+    realm = strdup(buffer);
+
+    digest_t digest = mode;
+    if(digest.puts((string_t)user + ":" + (string_t)realm + ":" + (string_t)secret))
+        digestbuf = *digest;
+    else
+        shell::errexit(6, "** sipwitch: digest: unsupported computation");
+
+    printf("%s\n", *digestbuf);
+    exit(0);
+}
+
+static void realm(char **argv)
+{
+    char *realm = NULL;
+    const char *mode = NULL;
+    fsys_t fs;
+    char buffer[256];
+    char replace[256];
+    char *cp = NULL;
+    FILE *fp;
+
+#ifdef  _MSWINDOWS_
+    const char *control = "\\\\.\\mailslot\\sipwitch_ctrl";
+#else
+    const char *control = DEFAULT_VARPATH "/run/sipwitch/control";
+#endif
+
+    if(!argv[1])
+        showrealm();
+
+    mode = argv[2];
+    if(!mode)
+        mode = "md5";
+
+    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+    memset(buffer, 0, sizeof(buffer));
+    if(is(fs)) {
+        fsys::read(fs, buffer, sizeof(buffer) - 1);
+        fsys::close(fs);
+        cp = strchr(buffer, ':');
+        if(cp)
+            *(cp++) = 0;
+    }
+
+    realm = argv[1];
+    if(!realm)
+        realm = buffer;
+
+    if(!cp || !*cp)
+        cp = (char *)"md5";
+
+    // make sure we have a valid mode, default is md5...
+    if(!mode && cp && *cp)
+        mode = cp;
+
+    if(!mode)
+        mode = "md5";
+
+    // if unchanged, we leave alone...
+    if(eq(buffer, realm) && eq(cp, mode))
+        goto exit;
+
+    // create replacement realm string...
+    if(eq(mode, "md5"))
+        String::set(replace, sizeof(replace), realm);
+    else
+        snprintf(replace, sizeof(replace), "%s:%s", realm, mode);
+
+    ::remove(DEFAULT_CFGPATH "/siprealm");
+    fsys::create(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_WRONLY, 0644);
+    if(is(fs)) {
+        fsys::write(fs, replace, strlen(replace));
+        fsys::close(fs);
+    }
+    else
+        shell::errexit(3, "*** sipwitch: realm: root permission required\n");
+
+    // if previous digests cached, clear them as they are now invalid...
+    ::remove(DEFAULT_VARPATH "/lib/sipwitch/digests.db");
+
+    // if server is up, also sync server with realm change...
+    fp = fopen(control, "w");
+    if(fp) {
+        fprintf(fp, "realm %s\n", realm);
+        fclose(fp);
+    }
+
+exit:
+    printf("%s\n", realm);
+    exit(0);
 }
 
 static void status(char **argv)
@@ -227,6 +394,9 @@ static void showevents(char **argv)
             break;
         case events::NOTICE:
             printf("notice:  %s\n", event.reason);
+            break;
+        case events::WELCOME:
+            printf("server version %s\n", event.welcome.version);
             break;
         case events::TERMINATE:
             printf("exiting: %s\n", event.reason);
@@ -481,6 +651,7 @@ static void usage(void)
         "  calls                   List active calls on server\n"
         "  check                   Server deadlock check\n"
         "  concurrency <level>     Server concurrency level\n"
+        "  digest id secret [type] Compute a digest\n"
         "  down                    Shut down server\n"
         "  drop <user|callid>      Drop an active call\n"
         "  dump                    Dump server configuration\n"
@@ -493,6 +664,7 @@ static void usage(void)
         "  message <ext> <text>    Send text message to extension\n"
         "  period <interval>       Collect periodic statistics\n"
         "  pstats                  Dump periodic statistics\n"
+        "  realm [text [digest]]   Show or set new server realm\n"
         "  registry                Dump registry\n"
         "  release <ext>           Release registration\n"
         "  reload                  Reload configuration\n"
@@ -659,6 +831,8 @@ PROGRAM_MAIN(argc, argv)
         dumpstats(argv);
     else if(eq(*argv, "calls"))
         calls(argv);
+    else if(eq(*argv, "digest"))
+        compute(argv);
     else if(eq(*argv, "pstats"))
         periodic(argv);
     else if(eq(*argv, "address"))
@@ -675,6 +849,8 @@ PROGRAM_MAIN(argc, argv)
         status(argv);
     else if(eq(*argv, "ifdown") || eq(*argv, "ifup"))
         iface(argv);
+    else if(eq(*argv, "realm"))
+            realm(argv);
     else if(eq(*argv, "drop"))
         drop(argv);
 #ifdef  AF_UNIX

@@ -48,6 +48,9 @@ verify running daemon for deadlocks or other problems.
 \fBconcurrency\fR \fIlevel\fR
 set concurrency level of the daemon.  See pthread_setconcurrency.
 .TP
+\fBdigest\fR \fIuserid\fR \fIsecret\fR [\fItype\fR]
+compute a sip digest for the server realm.
+.TP
 \fBdown\fR
 stop and shutdown the running sipwitch daemon.
 .TP
@@ -80,6 +83,9 @@ dump server periodic statistics.  See ``stats''.
 .TP
 \fBregistry\fR
 dump all user agent registrations to stdout.
+.TP
+\fBrealm\fR [\fInew-realm\fR [\fIdigest-type\fR]]
+set or show the server realm.
 .TP
 \fBrelease\fR \fIext\fR
 deactivate an extension registered with the daemon.

@@ -47,6 +47,10 @@
 #include <sipwitch/mapped.h>
 #endif
 
+#ifndef __SIPWITCH_CDR_H_
+#include <sipwitch/cdr.h>
+#endif
+
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
@@ -56,7 +60,7 @@ protected:
     bool put(events *event);
 
 public:
-    typedef enum {NOTICE, WARNING, FAILURE, TERMINATE, STATE, CALL, DROP, ACTIVATE, RELEASE} type_t;
+    typedef enum {NOTICE, WARNING, FAILURE, TERMINATE, STATE, REALM, CALL, DROP, ACTIVATE, RELEASE, WELCOME} type_t;
 
     type_t type;
 
@@ -66,16 +70,20 @@ public:
             char caller[MAX_IDENT_SIZE];
             char display[MAX_DISPLAY_SIZE];
         } call;
-        char state[64];
         struct {
             unsigned extension;
             char id[MAX_USERID_SIZE];
         } user;
+        struct {
+            char version[16];
+        } welcome;
         char reason[160];
     };
 
     static bool start(void);
 
+    static void connect(cdr *rec);
+    static void drop(cdr *rec);
     static void activate(MappedRegistry *rr);
     static void release(MappedRegistry *rr);
     static void notice(const char *reason);

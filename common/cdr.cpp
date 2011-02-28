@@ -20,6 +20,7 @@
 #include <sipwitch/process.h>
 #include <sipwitch/service.h>
 #include <sipwitch/modules.h>
+#include <sipwitch/events.h>
 
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
@@ -100,6 +101,16 @@ void thread::run(void)
 
 void cdr::post(cdr *rec)
 {
+    switch(rec->type) {
+    case STOP:
+        events::drop(rec);
+        break;
+    case START:
+        events::connect(rec);
+    default:
+        break;
+    }
+
     run.lock();
     rec->enlist(&runlist);
     if(rec->type == STOP)
