@@ -26,6 +26,5 @@
 # sudo, etc, or - to disable
 #SIPADMIN="sipadmin"
 
-# specify starting mode.  Can be set to "0" to disable, "1" for server
-# start, or "DESKTOP" to start with desktop access permissions.
-#START="1"
+# specify security model, desktop or server.
+#SECURITY="desktop"

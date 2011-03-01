@@ -78,16 +78,9 @@ if [ ! -z "$PRELOAD" ] ; then
     export LD_PRELOAD
 fi
 
-case "$START" in
-n|no|N|NO|disable*|DISABLE*)
-    START="0"
-    ;;
-y|yes|Y|YES|server|SERVER|s|S|secure|SECURE)
-    START="1"
-    ;;
-d|desktop|D|DESKTOP)
+case "$SECURITY" in
+desktop|Desktop|DESKTOP)
     OPTIONS="$OPTIONS --desktop"
-    START="1"
     ;;
 esac
 
