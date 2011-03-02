@@ -1763,7 +1763,7 @@ void thread::run(void)
     osip_body_t *body;
 
     instance = ++startup_count;
-    shell::log(DEBUG1, "starting thread %d", instance);
+    shell::log(DEBUG1, "starting event thread %d", instance);
 
     for(;;) {
         assert(instance > 0);
@@ -1788,7 +1788,7 @@ void thread::run(void)
         via_header = NULL;
 
         if(shutdown_flag) {
-            shell::log(DEBUG1, "stopping thread %d", instance);
+            shell::log(DEBUG1, "stopping event thread %d", instance);
             ++shutdown_count;
             return; // exits thread...
         }

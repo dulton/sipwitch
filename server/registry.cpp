@@ -221,7 +221,7 @@ void registry::start(service *cfg)
 {
     assert(cfg != NULL);
 
-    shell::log(DEBUG1, "registry starting; mapping %d entries", mapped_entries);
+    shell::log(DEBUG1, "starting registry; mapping %d entries", mapped_entries);
     create(REGISTRY_MAP, mapped_entries);
     if(!reg)
         shell::log(shell::FAIL, "registry could not be mapped");
@@ -241,7 +241,7 @@ void registry::stop(service *cfg)
 {
     assert(cfg != NULL);
 
-    shell::log(DEBUG1, "registry stopping");
+    shell::log(DEBUG1, "stopping registry");
     MappedMemory::release();
     MappedMemory::remove(REGISTRY_MAP);
 }

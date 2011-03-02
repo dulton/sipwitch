@@ -74,7 +74,7 @@ void thread::run(void)
         Conditional::lock();
         if(!running) {
             Conditional::unlock();
-            shell::log(DEBUG1, "stopped cdr thread");
+            shell::log(DEBUG1, "stopping cdr thread");
             down = true;
             return;
         }

@@ -474,7 +474,7 @@ void media::reload(service *cfg)
 void media::start(service *cfg)
 {
     if(portcount)
-        shell::log(DEBUG1, "media proxy starting for %d ports", portcount);
+        shell::log(DEBUG1, "starting media proxy");
     else
         return;
 
@@ -500,7 +500,7 @@ void media::start(service *cfg)
 void media::stop(service *cfg)
 {
     if(portcount)
-        shell::log(DEBUG1, "media proxy stopping");
+        shell::log(DEBUG1, "stopping media proxy");
     else
         return;
 
