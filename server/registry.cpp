@@ -366,17 +366,21 @@ bool registry::remove(const char *id)
     assert(id != NULL && *id != 0);
 
     bool rtn = true;
-    mapped *rr;
+    mapped *rr, save;
 
     locking.modify();
     rr = find(id);
     if(rr && rr->inuse)
         rtn = false;
-    else if(rr)
+    else if(rr) {
+        memcpy(&save, rr, sizeof(save));
         expire(rr);
+    }
     else
         rtn = false;
     locking.commit();
+    if(rtn)
+        server::expire(&save);
     return rtn;
 }
 
@@ -446,22 +450,29 @@ void registry::expire(mapped *rr)
 
 void registry::cleanup(time_t period)
 {
-    mapped *rr;
+    mapped *rr, save;
     unsigned regcount = 0;
     time_t now;
+    bool expired;
 
     while(regcount < mapped_entries) {
+        expired = false;
         time(&now);
         rr = static_cast<mapped*>(reg(regcount++));
+        memcpy(&save, rr, sizeof(save));
         locking.modify();
         if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires + period < now && !rr->inuse) {
-            server::expire(rr);
             expire(rr);
+            expired = true;
         }
-        else if(!rr->inuse && rr->type == MappedRegistry::EXPIRED && rr->status != MappedRegistry::OFFLINE)
+        else if(!rr->inuse && rr->type == MappedRegistry::EXPIRED && rr->status != MappedRegistry::OFFLINE) {
             expire(rr);
+            expired = true;
+        }
         locking.commit();
         Thread::yield();
+        if(expired)
+            server::expire(&save);
     }
 }
 
@@ -557,7 +568,7 @@ void registry::reload(service *cfg)
 
     if(!String::equal(realm, oldrealm)) {
         process::uuid(session_uuid, sizeof(session_uuid), realm);
-        shell::log(shell::INFO, "new realm %s", realm);
+        shell::log(shell::NOTIFY, "new realm %s", realm);
         digests::clear();
     } else if(!String::equal(digest, olddigest)) {
         shell::log(shell::INFO, "digest changed to %s", digest);
@@ -570,6 +581,7 @@ void registry::reload(service *cfg)
     sip_realm = realm;
     sip_prefix = prefix;
     sip_range = range;
+    events::realm(realm);
 
     if(isConfigured())
         return;
@@ -1297,13 +1309,15 @@ bool registry::mapped::expire(Socket::address& saddr)
         tp.next();
     }
     if(!active_count) {
+        registry::mapped save;
         Mutex::protect(this);
+        memcpy(&save, this, sizeof(save));
         type = MappedRegistry::EXPIRED;
         expires = 0;
         Mutex::release(this);
-    }
-    if(!active_count)
+        server::expire(&save);
         return true;
+    }
 
     return false;
 }

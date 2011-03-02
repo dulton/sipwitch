@@ -536,7 +536,7 @@ void stack::destroy(call *cr)
 
     linked_pointer<segment> sp;
 
-    cr->log();
+    cdr *clog = cr->log();
 
     // we assume access lock was already held when we call this...
 
@@ -572,6 +572,8 @@ void stack::destroy(call *cr)
     delete cr;
     locking.share();
     release(map);
+    if(clog)
+        cdr::post(clog);
 }
 
 void stack::release(MappedCall *map)

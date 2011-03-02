@@ -122,9 +122,6 @@ static bool errlog(shell::loglevel_t level, const char *text)
     case shell::WARN:
         events::warning(text);
         break;
-    case shell::NOTIFY:
-        events::notice(text);
-        break;
     case shell::FAIL:
         events::terminate(text);
         break;
@@ -159,7 +156,10 @@ namespace SIPWITCH_NAMESPACE {
     }
 }
 
-extern int main(int argc, char **argv)
+static bool detached = false;
+static SERVICE_MAIN(main, argc, argv);
+
+PROGRAM_MAIN(argc, argv)
 {
 
     bool daemon = true;
@@ -430,8 +430,6 @@ extern int main(int argc, char **argv)
         umask(002);
 #endif
 
-    signals::setup();
-
     fsys::createDir(rundir, 0775);
     fsys::createDir(prefix, 0770);
     if(fsys::changeDir(prefix))
@@ -444,11 +442,13 @@ extern int main(int argc, char **argv)
 
     // daemonify process....
     if(daemon) {
-        process::args.detach();
+        process::args.detach(&service_main);
         server::logmode = shell::CONSOLE_LOG;
     }
+    else
+        shell::log("sipwitch", level, server::logmode, &errlog);
 
-    shell::log("sipwitch", level, server::logmode, &errlog);
+    signals::setup();
 
     if(!process::attach())
         shell::errexit(1, "*** sipwitch: %s\n",
@@ -465,6 +465,15 @@ extern int main(int argc, char **argv)
 
     up();
 
-    return 0;
+    PROGRAM_EXIT(0);
+}
+
+// stub code for windows service daemon...
+
+static SERVICE_MAIN(main, argc, argv)
+{
+    detached = true;
+    signals::service("sipwitch");
+    main(argc, argv);
 }
 

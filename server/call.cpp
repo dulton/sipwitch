@@ -814,10 +814,10 @@ void stack::call::expired(void)
     }
 }
 
-void stack::call::log(void)
+cdr *stack::call::log(void)
 {
     if(!starting)
-        return;
+        return NULL;
 
     if(!reason)
         reason = "unknown";
@@ -847,8 +847,8 @@ void stack::call::log(void)
         snprintf(node->network, sizeof(node->network), "%s/%s", source->network, target->network);
     else
         String::set(node->network, sizeof(node->network), source->network);
-    cdr::post(node);
     starting = 0l;
+    return node;
 }
 
 END_NAMESPACE

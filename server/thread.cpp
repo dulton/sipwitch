@@ -270,7 +270,7 @@ void thread::invite(void)
     unsigned toext = 0;
     osip_header_t *msgheader = NULL;
     char fromext[32];
-    cdr *cdrnode;
+    cdr *cdrnode = NULL;
     const char *domain = registry::getDomain();
 
     uri::serviceid(requesting, call->request, sizeof(call->request));
@@ -362,7 +362,6 @@ void thread::invite(void)
         String::set(cdrnode->ident, sizeof(cdrnode->ident), session->sysident);
         String::set(cdrnode->dialed, sizeof(cdrnode->dialed), call->dialed);
         String::set(cdrnode->display, sizeof(cdrnode->display), session->display);
-        cdr::post(cdrnode);
         snprintf(session->identity, sizeof(session->identity), "%s:%s@%s",
             stack::sip.getScheme(), session->sysident, domain);
 
@@ -379,6 +378,7 @@ void thread::invite(void)
 
             String::set(call->subject, sizeof(call->subject), "calling self");
             call->busy(this);
+            cdr::post(cdrnode);
             return;
         }
 
@@ -418,8 +418,6 @@ void thread::invite(void)
         String::set(cdrnode->ident, sizeof(cdrnode->ident), session->sysident);
         String::set(cdrnode->dialed, sizeof(cdrnode->dialed), call->dialed);
         String::set(cdrnode->display, sizeof(cdrnode->display), session->display);
-        cdr::post(cdrnode);
-
         session->closed = false;
         registry::incUse(NULL, stats::INCOMING);    // external...
         break;
@@ -465,8 +463,6 @@ void thread::invite(void)
         String::set(cdrnode->ident, sizeof(cdrnode->ident), session->sysident);
         String::set(cdrnode->dialed, sizeof(cdrnode->dialed), call->dialed);
         String::set(cdrnode->display, sizeof(cdrnode->display), session->display);
-        cdr::post(cdrnode);
-
         if(destination == REDIRECTED)
             stack::inviteRemote(session, requesting, server::getValue(authorized.keys, "digest"));
         else
@@ -501,8 +497,6 @@ void thread::invite(void)
         String::set(cdrnode->ident, sizeof(cdrnode->ident), session->sysident);
         String::set(cdrnode->dialed, sizeof(cdrnode->dialed), call->dialed);
         String::set(cdrnode->display, sizeof(cdrnode->display), session->display);
-        cdr::post(cdrnode);
-
         session->closed = false;
         session->reg = registry::invite(identity, stats::INCOMING);
         shell::debug(1, "dialed call %08x:%u for %s from %s, dialing=%s\n",
@@ -512,8 +506,6 @@ void thread::invite(void)
         String::set(cdrnode->ident, sizeof(cdrnode->ident), "unknown");
         String::set(cdrnode->dialed, sizeof(cdrnode->dialed), dialing);
         String::set(cdrnode->display, sizeof(cdrnode->display), "");
-        cdr::post(cdrnode);
-
         session->closed = true;
         break;
     }
@@ -522,7 +514,6 @@ void thread::invite(void)
     call->map->cid = session->cid;
     String::set(call->map->source, sizeof(call->map->source), session->sysident);
     String::set(call->map->display, sizeof(call->map->display), session->display);
-
     if(reginfo) {
         // get rid of config ref if we are calling registry target
         server::release(dialed);
@@ -537,6 +528,9 @@ void thread::invite(void)
     }
 
 exit:
+    if(cdrnode)
+        cdr::post(cdrnode);
+
     if(!call->invited && !stack::forward(call)) {
         call->busy(this);
         return;
@@ -1587,7 +1581,7 @@ void thread::reregister(const char *contact, time_t interval)
     int answer = SIP_OK;
     osip_message_t *reply = NULL;
     time_t expire;
-    unsigned count = 1;
+    unsigned count = 0;
     osip_contact_t *c = NULL;
     int pos = 0;
     bool refresh;
@@ -1629,7 +1623,7 @@ void thread::reregister(const char *contact, time_t interval)
         shell::debug(2, "refreshing %s for %ld seconds from %s:%u", getIdent(), interval, contact_host, contact_port);
     else if(count) {
         time(&reginfo->created);
-        server::activate(reginfo);
+        activated = true;
         shell::log(DEBUG1, "registering %s for %ld seconds from %s:%u", getIdent(), interval, contact_host, contact_port);
     }
     else {
@@ -1683,8 +1677,6 @@ void thread::deregister()
     registry::mapped *rr = registry::access(identity);
     if(rr) {
         unreg = rr->expire(contact_address);
-        if(unreg)
-            server::expire(rr);
         registry::detach(rr);
     }
     if(unreg)
@@ -1788,6 +1780,7 @@ void thread::run(void)
         if(!shutdown_flag)
             sevent = eXosip_event_wait(0, stack::sip.timing);
 
+        activated = false;
         accepted = NULL;
         via_host = NULL;
         via_port = 0;
@@ -2135,6 +2128,8 @@ void thread::run(void)
         }
 
         if(reginfo) {
+            if(activated)
+                server::activate(reginfo);
             registry::detach(reginfo);
             reginfo = NULL;
         }

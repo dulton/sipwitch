@@ -19,6 +19,7 @@
 #include <sipwitch/process.h>
 #include <sipwitch/service.h>
 #include <sipwitch/modules.h>
+#include <sipwitch/events.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -824,6 +825,8 @@ void service::commit(void)
     service *orig;
     linked_pointer<callback> cb;
     unsigned rl = 0;
+
+    events::notice("reloading config");
 
     while(rl < RUNLEVELS) {
         cb = callback::runlevels[rl++];

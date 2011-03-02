@@ -88,6 +88,10 @@ void signals::run(void)
     shell::log(DEBUG1, "stopping signal handler");
 }
 
+void signals::service(const char *name)
+{
+}
+
 void signals::setup(void)
 {
     sigemptyset(&thread.sigs);
@@ -111,7 +115,69 @@ void signals::stop(void)
     thread.cancel();
 }
 
+#elif defined(WIN32)
+
+static SERVICE_STATUS_HANDLE hStatus = 0;
+static SERVICE_STATUS status;
+
+static void WINAPI handler(DWORD sigint)
+{
+    switch(sigint) {
+    case 128:
+        // control::request("reload");
+        return;
+    case 129:
+        // control::request("snapshot");
+    case SERVICE_CONTROL_SHUTDOWN:
+    case SERVICE_CONTROL_STOP:
+        status.dwCurrentState = SERVICE_STOP_PENDING;
+        status.dwWin32ExitCode = 0;
+        status.dwCheckPoint = 0;
+        status.dwWaitHint = 6000;
+        SetServiceStatus(hStatus, &status);
+        // control::request("down");
+        break;
+    default:
+        break;
+    }
+}
+
+void signals::service(const char *name)
+{
+    memset(&status, 0, sizeof(SERVICE_STATUS));
+    status.dwServiceType = SERVICE_WIN32;
+    status.dwCurrentState = SERVICE_START_PENDING;
+    status.dwControlsAccepted = SERVICE_ACCEPT_STOP|SERVICE_ACCEPT_SHUTDOWN;
+    hStatus = ::RegisterServiceCtrlHandler(name, &handler);
+}
+
+void signals::setup(void)
+{
+}
+
+void signals::start(void)
+{
+    if(!hStatus)
+        return;
+
+    status.dwCurrentState = SERVICE_RUNNING;
+    ::SetServiceStatus(hStatus, &status);
+}
+
+void signals::stop(void)
+{
+    if(!hStatus)
+        return;
+
+    status.dwCurrentState = SERVICE_STOPPED;
+    ::SetServiceStatus(hStatus, &status);
+}
+
 #else
+
+void signals::service(const char *name)
+{
+}
 
 void signals::setup(void)
 {

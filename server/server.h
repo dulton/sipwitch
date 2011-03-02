@@ -327,7 +327,7 @@ private:
         void disconnectLocked(void);
         void joinLocked(session *s);
         void cancelLocked(void);
-        void log(void);
+        cdr *log(void);
         void refer(thread *thread, session *s);
         void bye(thread *thread, session *s);
         void set(state_t state, char id, const char *text);
@@ -572,6 +572,7 @@ private:
     registry::mapped *reginfo;
     MappedRegistry *accepted;
     eXosip_event_t *sevent;
+    bool activated;
     char binding[MAX_URI_SIZE];
     char buffer[MAX_URI_SIZE];
     char buftemp[MAX_URI_SIZE];
@@ -764,6 +765,7 @@ private:
     static signals thread;
 
 public:
+    static void service(const char *name);
     static void setup(void);
     static void start(void);
     static void stop(void);

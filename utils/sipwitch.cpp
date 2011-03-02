@@ -424,7 +424,8 @@ static void showevents(char **argv)
             printf("notice:  %s\n", event.reason);
             break;
         case events::WELCOME:
-            printf("server version %s\n", event.welcome.version);
+            printf("server version %s %s\n",
+                event.server.version, event.server.state);
             break;
         case events::TERMINATE:
             printf("exiting: %s\n", event.reason);

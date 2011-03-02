@@ -75,13 +75,18 @@ public:
             char id[MAX_USERID_SIZE];
         } user;
         struct {
+            time_t started;
             char version[16];
-        } welcome;
+            char state[32];
+            char realm[64];
+        } server;
         char reason[160];
     };
 
     static bool start(void);
 
+    static void state(const char *newstate);
+    static void realm(const char *newrealm);
     static void connect(cdr *rec);
     static void drop(cdr *rec);
     static void activate(MappedRegistry *rr);

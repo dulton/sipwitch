@@ -65,8 +65,8 @@ static bool activating(int argc, char **args)
     time(&reg->created);
     if(!reg->setTargets(*addr))
         rtn = false;
-    registry::detach(reg);
     server::activate(reg);
+    registry::detach(reg);
     delete addr;
     return rtn;
 }
@@ -192,12 +192,11 @@ void server::expire(MappedRegistry *rr)
 
     logging(rr, "releasing");
 
-    events::release(rr);
-
     while(is(cb)) {
         cb->expiring(rr);
         cb.next();
     }
+    events::release(rr);
 }
 
 void server::logging(MappedRegistry *rr, const char *reason)
@@ -900,14 +899,14 @@ void server::reload(void)
     }
 
     FILE *fp = fopen(process::get("config"), "r");
-    shell::log(shell::INFO, "loading config from %s", process::get("config"));
     if(fp)
         if(!cfgp->load(fp)) {
-            shell::log(shell::ERR, "invalid config");
+            shell::log(shell::ERR, "invalid config %s", process::get("config"));
             delete cfgp;
             return;
         }
 
+    shell::log(shell::NOTIFY, "loaded config from %s", process::get("config"));
     cp = cfgp->root.getPointer();
     if(cp)
         shell::log(shell::INFO, "activating for state \"%s\"", cp);
@@ -1210,6 +1209,7 @@ invalid:
             }
             process::printlog("state %s %s\n", state, (const char *)logtime);
             shell::log(shell::NOTIFY, "state changed to %s", state);
+            events::state(state);
             reload();
             continue;
         }

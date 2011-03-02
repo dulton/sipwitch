@@ -53,6 +53,8 @@ public:
 
 static LinkedObject *root = NULL;
 static dispatch *freelist = NULL;
+static string_t saved_state("up"), saved_realm("unknown");
+static time_t started;
 
 static class __LOCAL event_thread : public JoinableThread
 {
@@ -152,6 +154,8 @@ void event_thread::run(void)
     socket_t client;
     events msg;
 
+    time(&started);
+
     shell::log(DEBUG1, "starting event dispatcher");
 
     for(;;) {
@@ -162,7 +166,12 @@ void event_thread::run(void)
 
         shell::log(DEBUG3, "connecting client events for %d", client);
         msg.type = events::WELCOME;
-        String::set(msg.welcome.version, sizeof(msg.welcome.version), VERSION);
+        msg.server.started = started;
+        String::set(msg.server.version, sizeof(msg.server.version), VERSION);
+        private_locking.acquire();
+        String::set(msg.server.state, sizeof(msg.server.state), *saved_state);
+        String::set(msg.server.realm, sizeof(msg.server.realm), *saved_realm);
+        private_locking.release();
         ::send(client, &msg, sizeof(msg), 0);
         dispatch::add(client);
     }
@@ -237,6 +246,30 @@ void events::release(MappedRegistry *rr)
     msg.type = RELEASE;
     String::set(msg.user.id, sizeof(msg.user.id), rr->userid);
     msg.user.extension  = rr->ext;
+    dispatch::send(&msg);
+}
+
+void events::realm(const char *str)
+{
+    events msg;
+
+    private_locking.acquire();
+    saved_realm = str;
+    private_locking.release();
+    msg.type = REALM;
+    String::set(msg.server.realm, sizeof(msg.server.realm), str);
+    dispatch::send(&msg);
+}
+
+void events::state(const char *str)
+{
+    events msg;
+
+    private_locking.acquire();
+    saved_state = str;
+    private_locking.release();
+    msg.type = STATE;
+    String::set(msg.server.state, sizeof(msg.server.state), str);
     dispatch::send(&msg);
 }
 
@@ -321,5 +354,14 @@ void events::connect(cdr *rec)
 void events::drop(cdr *rec)
 {
 }
+
+void events::realm(const char *str)
+{
+}
+
+void events::state(const char *str)
+{
+}
+
 
 #endif
