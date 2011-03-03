@@ -746,7 +746,6 @@ public:
 };
 
 #ifdef HAVE_SIGWAIT
-#include <signal.h>
 
 class __LOCAL signals : private JoinableThread
 {
@@ -775,6 +774,7 @@ public:
 class __LOCAL signals
 {
 public:
+    static void service(const char *name);
     static void setup(void);
     static void start(void);
     static void stop(void);

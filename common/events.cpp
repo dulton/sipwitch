@@ -20,7 +20,7 @@
 #include <sipwitch/process.h>
 #include <sipwitch/mapped.h>
 
-#ifdef  AF_UNIX
+#if defined(AF_UNIX) && !defined(_MSWINDOWS_)
 #include <sys/un.h>
 #endif
 
@@ -32,7 +32,7 @@
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
-#ifdef  AF_UNIX
+#if defined(AF_UNIX) && !defined(_MSWINDOWS_)
 
 static mutex_t private_locking;
 

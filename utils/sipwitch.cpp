@@ -15,14 +15,16 @@
 
 #include "sipwitch/sipwitch.h"
 #include "ucommon/secure.h"
-#ifndef _MSWINDOWS_
+#ifdef _MSWINDOWS_
+#include <io.h>
+#else
 #include <signal.h>
 #include <pwd.h>
 #include <fcntl.h>
 #endif
 #include <config.h>
 
-#ifdef  AF_UNIX
+#if defined(AF_UNIX) && !defined(_MSWINDOWS_)
 #include <sys/un.h>
 #endif
 
@@ -38,8 +40,8 @@ static char *getpass(const char *prompt)
     fputs(prompt, stderr);
     fflush(stderr);
     for (i = 0; i < sizeof(buf) - 1; i++) {
-        buf[i] = _getch();
-        if (buf[i] == '\r')
+        buf[i] = fgetc(stdin);
+        if (buf[i] == '\r' || buf[i] == '\n')
             break;
         fputs("*", stderr);
         fflush(stderr);
@@ -384,7 +386,7 @@ static void periodic(char **argv)
     exit(0);
 }
 
-#ifdef  AF_UNIX
+#if defined(AF_UNIX) && !defined(_MSWINDOWS_)
 static void showevents(char **argv)
 {
     socket_t ipc = ::socket(AF_UNIX, SOCK_STREAM, 0);
@@ -684,7 +686,7 @@ static void usage(void)
         "  down                     Shut down server\n"
         "  drop <user|callid>       Drop an active call\n"
         "  dump                     Dump server configuration\n"
-#ifdef  AF_UNIX
+#if defined(AF_UNIX) && !defined(_MSWINDOWS_)
         "  events                   Display server events\n"
 #endif
         "  history [bufsize]        Set buffer or dump error log\n"
@@ -882,7 +884,7 @@ PROGRAM_MAIN(argc, argv)
             realm(argv);
     else if(eq(*argv, "drop"))
         drop(argv);
-#ifdef  AF_UNIX
+#if defined(AF_UNIX) && !defined(_MSWINDOWS_)
     if(eq(*argv, "events"))
         showevents(argv);
 #endif

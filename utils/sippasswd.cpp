@@ -25,6 +25,7 @@ using namespace UCOMMON_NAMESPACE;
 using namespace SIPWITCH_NAMESPACE;
 
 #ifdef  _MSWINDOWS_
+#include <io.h>
 static char *getpass(const char *prompt)
 {
     static char buf[128];
@@ -33,8 +34,8 @@ static char *getpass(const char *prompt)
     fputs(prompt, stderr);
     fflush(stderr);
     for (i = 0; i < sizeof(buf) - 1; i++) {
-        buf[i] = _getch();
-        if (buf[i] == '\r')
+        buf[i] = fgetc(stdin);
+        if (buf[i] == '\r' || buf[i] == '\n')
             break;
         fputs("*", stderr);
         fflush(stderr);
