@@ -160,27 +160,33 @@ AC_ARG_WITH(malloc,
     done
 ])
 
-AC_ARG_WITH(libeXosip2,
-    AC_HELP_STRING([--with-libeXosip2=xxx],[specify eXosip2 library]),
-        [SIPWITCH_EXOSIP2="$with_libeXosip2"],[SIPWITCH_EXOSIP2="-leXosip2"])
-
 AC_ARG_ENABLE(commands,
     AC_HELP_STRING([--disable-commands],[disable command options]))
 if test -z "$enable_commands" ; then
     enable_commands="yes" ; fi
 
-AC_CHECK_HEADER(eXosip2/eXosip.h,,[
-    AC_ERROR("libeXosip2 must be installed or build --disable-sipwitch-server")
+PKG_CHECK_MODULES(EXOSIP2, eXosip2 >= 3.0.0, [
+        AC_DEFINE(EXOSIP2_OPTION_SEND_101, 1, [new option 6])
+        AC_DEFINE(EXOSIP2_OPTION_RPORT, 1, [new option 7])
+    ],[
+    AC_ARG_WITH(libeXosip2,
+        AC_HELP_STRING([--with-libeXosip2=xxx],[specify eXosip2 library]),
+            [EXOSIP2_LIBS="$with_libeXosip2"],[EXOSIP2_LIBS="-leXosip2"])
+
+    AC_CHECK_HEADER(eXosip2/eXosip.h,,[
+        AC_ERROR("libeXosip2 must be installed or build --disable-sipwitch-server")
+    ])
+    AC_EGREP_HEADER(EXOSIP_OPT_DONT_SEND_101, eXosip2/eX_setup.h,[
+        AC_DEFINE(EXOSIP2_OPTION_SEND_101, 1, [new option 6])
+    ])
+    AC_EGREP_HEADER(EXOSIP_OPT_USE_RPORT, eXosip2/eX_setup.h,[
+        AC_DEFINE(EXOSIP2_OPTION_RPORT, 1, [new option 7])
+    ])
 ])
-AC_EGREP_HEADER(EXOSIP_OPT_DONT_SEND_101, eXosip2/eX_setup.h,[
-    AC_DEFINE(EXOSIP2_OPTION_SEND_101, 1, [new option 6])
-])
-AC_EGREP_HEADER(EXOSIP_OPT_USE_RPORT, eXosip2/eX_setup.h,[
-    AC_DEFINE(EXOSIP2_OPTION_RPORT, 1, [new option 7])
-])
+
 PKG_CHECK_MODULES(LIBOSIP2, libosip2 >= 3.0.0)
 AC_DEFINE(OSIP2_LIST_PTR, [&], [define pointer mode])
-SIPWITCH_EXOSIP2="$SIPWITCH_EXOSIP2 $LIBOSIP2_LIBS"
+SIPWITCH_EXOSIP2="$EXOSIP2_LIBS $LIBOSIP2_LIBS"
 
 case "$target" in
 *mingw*)
@@ -284,7 +290,7 @@ for flag in $CXXFLAGS ; do
 done
 export CXXFLAGS="$COMPILER_FLAGS"
 
-SIPWITCH_FLAGS="$EXPORT_FLAGS $UCOMMON_CFLAGS"
+SIPWITCH_FLAGS="$EXPORT_FLAGS $EXOSIP2_CFLAGS $LIBOSIP2_CFLAGS $UCOMMON_CFLAGS"
 SIPWITCH_LIBS="$EXPORT_LIBS $UCOMMON_LIBS $ac_with_malloc $UCOMMON_CLINK"
 
 if test "$localstatedir" = '${prefix}/var' ; then
