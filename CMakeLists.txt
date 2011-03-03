@@ -164,7 +164,7 @@ if(HAVE_EXOSIP2)
 
     add_executable(sipwitch-query utils/sipquery.cpp)
     add_dependencies(sipwitch-query usecure ucommon)
-    target_link_libraries(sipwitch-query ucommon ${EXOSIP2_LIBS} ${UCOMMON_LIBS})
+    target_link_libraries(sipwitch-query usecure ucommon ${EXOSIP2_LIBS} ${SECURE_LIBS} ${UCOMMON_LIBS})
     set_target_properties(sipwitch-query PROPERTIES OUTPUT_NAME sipquery)
 endif()
 
