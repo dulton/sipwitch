@@ -4,6 +4,7 @@ from version 0.10.0 to 0.10.1
 - minimized linkage where we do not require sipwitch runtime
 - some cleanup of utils for error handling and recent ucommon changes.
 - consolidated siprealm and sipdigest into "sipwitch" control app.
+- cleanup and expansion of cmake support.
 
 from version 0.9.3 to 0.10.0
 - use of digest functions from usecure.
