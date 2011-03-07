@@ -226,7 +226,7 @@ int messages::remote(const char *to, message *msg, const char *digest)
         char *req = NULL;
         osip_uri_to_str(im->req_uri, &req);
         snprintf(authbuf, 1024, "%s:%s", im->sip_method, req);
-        control::uuid(nounce, sizeof(nounce), "auth");
+        Random::uuid(nounce);
 
         digest_t auth = "md5";
         auth.puts(nounce);

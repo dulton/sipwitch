@@ -547,10 +547,7 @@ void registry::reload(service *cfg)
     // if not in config file and not set, create one...
     else if(!realm) {
         memset(buffer, 0, sizeof(buffer));
-        const char *evp = getenv("HOSTNAME");
-        if(!evp)
-            evp = "none";
-        control::uuid(buffer, sizeof(buffer), evp);
+        Random::uuid(buffer);
         String::add(buffer, sizeof(buffer), ":");
         String::add(buffer, sizeof(buffer), digest);
         fsys::create(fs, "uuid", fsys::ACCESS_WRONLY, 0444);
@@ -567,7 +564,7 @@ void registry::reload(service *cfg)
 #endif
 
     if(!String::equal(realm, oldrealm)) {
-        control::uuid(session_uuid, sizeof(session_uuid), realm);
+        secure::uuid(session_uuid);
         shell::log(shell::NOTIFY, "new realm %s", realm);
         digests::clear();
     } else if(!String::equal(digest, olddigest)) {

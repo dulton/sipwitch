@@ -131,10 +131,7 @@ stack::segment::segment(call *cr, int cid, int did, int tid) : OrderedObject()
     sid.reg = NULL;
     sid.closed = false;
 
-    static unsigned short sequence = 0;
-    Mutex::protect(&sequence);
-    control::uuid(sid.uuid, sizeof(sid.uuid), ++sequence, cid);
-    Mutex::release(&sequence);
+    secure::uuid(sid.uuid);
 }
 
 void *stack::segment::operator new(size_t size)
@@ -1255,7 +1252,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
         char *req = NULL;
         osip_uri_to_str(invite->req_uri, &req);
         snprintf(authbuf, 1024, "%s:%s", invite->sip_method, req);
-        control::uuid(nounce, sizeof(nounce), "auth");
+        Random::uuid(nounce);
 
         digest_t auth = "md5";
         auth.puts(nounce);

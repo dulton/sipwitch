@@ -61,8 +61,6 @@ public:
     static bool state(const char *value);
     static bool libexec(const char *fmt, ...) __PRINTF(1, 2);
     static FILE *output(const char *id);
-    static void uuid(char *buffer, size_t size, const char *node);
-    static void uuid(char *buffer, size_t size, unsigned short seq, unsigned callid);
 
     inline static const char *env(const char *id)
         {return args->getsym(id);}
