@@ -202,7 +202,7 @@ void server::expire(MappedRegistry *rr)
 void server::logging(MappedRegistry *rr, const char *reason)
 {
     DateTimeString dt;
-    process::printlog("%s %s %s\n", reason, rr->userid, (const char *)dt);
+    printlog("%s %s %s\n", reason, rr->userid, (const char *)dt);
 }
 
 bool server::announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body)
@@ -328,11 +328,11 @@ void server::confirm(void)
     pp->value.features = USER_PROFILE_ADMIN;
 
 #ifdef  _MSWINDOWS_
-    dirpath = _STR(process::path("prefix") + "\\users");
+    dirpath = _STR(control::path("prefix") + "\\users");
 #else
-    dirpath = process::get("users");    // /etc/sipwitch.d
+    dirpath = control::env("users");    // /etc/sipwitch.d
     if(!dirpath)
-        dirpath = process::get("prefix");
+        dirpath = control::env("prefix");
 #endif
     fsys::open(dir, dirpath, fsys::ACCESS_DIRECTORY);
     shell::log(DEBUG1, "scanning config from %s", dirpath);
@@ -898,15 +898,15 @@ void server::reload(void)
             shell::log(shell::ERR, "invalid state");
     }
 
-    FILE *fp = fopen(process::get("config"), "r");
+    FILE *fp = fopen(control::env("config"), "r");
     if(fp)
         if(!cfgp->load(fp)) {
-            shell::log(shell::ERR, "invalid config %s", process::get("config"));
+            shell::log(shell::ERR, "invalid config %s", control::env("config"));
             delete cfgp;
             return;
         }
 
-    shell::log(shell::NOTIFY, "loaded config from %s", process::get("config"));
+    shell::log(shell::NOTIFY, "loaded config from %s", control::env("config"));
     cp = cfgp->root.getPointer();
     if(cp)
         shell::log(shell::INFO, "activating for state \"%s\"", cp);
@@ -1024,22 +1024,22 @@ void server::run(void)
     // initial load of digest cache
     digests::load();
 
-    process::printlog("server starting %s\n", (const char *)logtime);
+    printlog("server starting %s\n", (const char *)logtime);
 
-    while(running && NULL != (cp = process::receive())) {
+    while(running && NULL != (cp = control::receive())) {
         shell::debug(9, "received request %s\n", cp);
 
         logtime.set();
 
         if(ieq(cp, "reload")) {
-            process::printlog("server reloading %s\n", (const char *)logtime);
+            printlog("server reloading %s\n", (const char *)logtime);
             reload();
             continue;
         }
 
         if(ieq(cp, "check")) {
             if(!check())
-                process::reply("check failed");
+                control::reply("check failed");
             continue;
         }
 
@@ -1062,10 +1062,10 @@ void server::run(void)
         }
 
         if(ieq(cp, "siplog")) {
-            FILE *out = process::output(NULL);
+            FILE *out = control::output(NULL);
             if(!out)
                 continue;
-            FILE *log = fopen(process::get("siplogs"), "r");
+            FILE *log = fopen(control::env("siplogs"), "r");
             if(!log) {
                 fclose(out);
                 continue;
@@ -1099,7 +1099,7 @@ void server::run(void)
         if(ieq(argv[0], "ifup")) {
             if(argc != 2)
                 goto invalid;
-            process::printlog("server reloading %s\n", (const char *)logtime);
+            printlog("server reloading %s\n", (const char *)logtime);
             reload();
             continue;
         }
@@ -1107,7 +1107,7 @@ void server::run(void)
         if(ieq(argv[0], "ifdown")) {
             if(argc != 2)
                 goto invalid;
-            process::printlog("server reloading %s\n", (const char *)logtime);
+            printlog("server reloading %s\n", (const char *)logtime);
             reload();
             continue;
         }
@@ -1135,11 +1135,11 @@ void server::run(void)
         if(ieq(argv[0], "uid")) {
             if(argc != 2) {
 invalid:
-                process::reply("invalid argument");
+                control::reply("invalid argument");
                 continue;
             }
             server::uid = atoi(argv[1]);
-            process::printlog("uid %d %s\n", server::uid, (const char *)logtime);
+            printlog("uid %d %s\n", server::uid, (const char *)logtime);
             reload();
             continue;
         }
@@ -1166,7 +1166,7 @@ invalid:
                 goto invalid;
 
             if(!digests::set(argv[1], argv[2]))
-                process::reply("invalid digest");
+                control::reply("invalid digest");
             continue;
         }
 
@@ -1174,7 +1174,7 @@ invalid:
             if(argc != 2)
                 goto invalid;
 
-            process::printlog("realm %s %s\n", argv[1], (const char *)logtime);
+            printlog("realm %s %s\n", argv[1], (const char *)logtime);
             reload();
             continue;
         }
@@ -1183,7 +1183,7 @@ invalid:
             if(argc != 2)
                 goto invalid;
             if(service::period(atol(argv[1])))
-                process::printlog("server period %s\n", (const char *)logtime);
+                printlog("server period %s\n", (const char *)logtime);
             continue;
         }
 
@@ -1200,14 +1200,14 @@ invalid:
             if(argc != 2)
                 goto invalid;
             state = String::unquote(argv[1], "\"\"\'\'()[]{}");
-            if(!process::state(state))
-                process::reply("invalid state");
+            if(!control::state(state))
+                control::reply("invalid state");
             fp = fopen(DEFAULT_VARPATH "/run/sipwitch/state.def", "w");
             if(fp) {
                 fputs(state, fp);
                 fclose(fp);
             }
-            process::printlog("state %s %s\n", state, (const char *)logtime);
+            printlog("state %s %s\n", state, (const char *)logtime);
             shell::log(shell::NOTIFY, "state changed to %s", state);
             events::state(state);
             reload();
@@ -1225,13 +1225,13 @@ invalid:
             if(argc != 3)
                 goto invalid;
             if(messages::system(argv[1], argv[2]) != SIP_OK)
-                process::reply("cannot message");
+                control::reply("cannot message");
             continue;
         }
 
         if(ieq(argv[0], "activate")) {
             if(!activating(argc, argv))
-                process::reply("cannot activate");
+                control::reply("cannot activate");
             continue;
         }
 
@@ -1239,15 +1239,45 @@ invalid:
             if(argc != 2)
                 goto invalid;
             if(!registry::remove(argv[1]))
-                process::reply("cannot release");
+                control::reply("cannot release");
             continue;
         }
 
-        process::reply("unknown command");
+        control::reply("unknown command");
     }
 
     logtime.set();
-    process::printlog("server shutdown %s\n", (const char *)logtime);
+    printlog("server shutdown %s\n", (const char *)logtime);
+}
+
+void server::printlog(const char *fmt, ...)
+{
+    assert(fmt != NULL && *fmt != 0);
+
+    fsys_t log;
+    va_list vargs;
+    char buf[1024];
+    int len;
+    char *cp;
+
+    va_start(vargs, fmt);
+
+    fsys::create(log, control::env("logfile"), fsys::ACCESS_APPEND, 0660);
+    vsnprintf(buf, sizeof(buf) - 1, fmt, vargs);
+    len = strlen(buf);
+    if(buf[len - 1] != '\n')
+        buf[len++] = '\n';
+
+    if(is(log)) {
+        fsys::write(log, buf, strlen(buf));
+        fsys::close(log);
+    }
+    cp = strchr(buf, '\n');
+    if(cp)
+        *cp = 0;
+
+    shell::debug(2, "logfile: %s", buf);
+    va_end(vargs);
 }
 
 END_NAMESPACE

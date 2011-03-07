@@ -17,7 +17,7 @@
 #include <ucommon/ucommon.h>
 #include <ucommon/export.h>
 #include <sipwitch/modules.h>
-#include <sipwitch/process.h>
+#include <sipwitch/control.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>

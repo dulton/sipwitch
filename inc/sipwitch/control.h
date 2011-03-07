@@ -14,17 +14,14 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Portable process management.
- * This offers a portable abstract interface class for process & ipc related
- * services that may be used by GNU Telephony servers.  This includes
- * management of the deamon environment, executing child processes, and basic
- * IPC services.  IPC services are offered through control ports which are
- * implimented as fifo's on Posix platforms, and as mailslots on w32.
- * @file sipwitch/process.h
+ * Manage control interface.
+ * This manages code for the server control interface.  Access to the
+ * control interface is shared between the server and plugins.
+ * @file sipwitch/control.h
  */
 
-#ifndef _SIPWITCH_PROCESS_H_
-#define _SIPWITCH_PROCESS_H_
+#ifndef _SIPWITCH_CONTROL_H_
+#define _SIPWITCH_CONTROL_H_
 
 #ifndef _UCOMMON_LINKED_H_
 #include <ucommon/linked.h>
@@ -49,29 +46,29 @@ using namespace UCOMMON_NAMESPACE;
 #define DEBUG2  (shell::loglevel_t(((unsigned)shell::DEBUG0 + 1)))
 #define DEBUG3  (shell::loglevel_t(((unsigned)shell::DEBUG0 + 2)))
 
-class __EXPORT process { public: static shell_t args;
+class __EXPORT control
+{
+private:
+    static shell_t *args;
 
-    static void printlog(const char *fmt, ...) __PRINTF(1, 2);
-    static bool control(const char *fmt, ...) __PRINTF(1, 2);
+public:
+    static bool send(const char *fmt, ...) __PRINTF(1, 2);
     static void result(const char *value);
     static char *receive(void);
     static void reply(const char *err = NULL);
-    static size_t attach(void);
+    static size_t attach(shell_t *env);
     static void release(void);
     static bool state(const char *value);
-    static bool system(const char *fmt, ...) __PRINTF(1, 2);
+    static bool libexec(const char *fmt, ...) __PRINTF(1, 2);
     static FILE *output(const char *id);
     static void uuid(char *buffer, size_t size, const char *node);
     static void uuid(char *buffer, size_t size, unsigned short seq, unsigned callid);
 
-    inline static void set(const char *id, const char *value)
-        {args.setsym(id, value);}
-
-    inline static const char *get(const char *id)
-        {return args.getsym(id);}
+    inline static const char *env(const char *id)
+        {return args->getsym(id);}
 
     inline static String path(const char *id)
-        {return (String)(args.getsym(id));}
+        {return (String)(args->getsym(id));}
 };
 
 END_NAMESPACE

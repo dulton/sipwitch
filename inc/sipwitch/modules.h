@@ -33,8 +33,8 @@
 #include <sipwitch/cdr.h>
 #endif
 
-#ifndef _SIPWITCH_PROCESS_H_
-#include <sipwitch/process.h>
+#ifndef _SIPWITCH_CONTROL_H_
+#include <sipwitch/control.h>
 #endif
 
 NAMESPACE_SIPWITCH

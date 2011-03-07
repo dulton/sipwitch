@@ -152,7 +152,7 @@ namespace SIPWITCH_NAMESPACE {
         events::terminate("server shutdown");
         signals::stop();
         service::shutdown();
-        process::release();
+        control::release();
     }
 }
 
@@ -167,6 +167,7 @@ PROGRAM_MAIN(argc, argv)
     const char *prefix;
     const char *rundir;
     const char *plugins = argv[0];
+    shell args;
 
     shell::bind("sipwitch");
     corefiles();
@@ -174,21 +175,21 @@ PROGRAM_MAIN(argc, argv)
 #if defined(DEBUG)
     if(eq(argv[1], "-gdb") || eq(argv[1], "--gdb") || eq(argv[1], "-dbg") || eq(argv[1], "--dbg")) {
         char *dbg[] = {(char *)"gdb", (char *)"--args", NULL};
-        const char *cp = process::args.getenv("DEBUGGER");
+        const char *cp = args.getenv("DEBUGGER");
         if(cp && *cp)
             dbg[0] = (char *)cp;
-        process::args.restart(argv[0], &argv[2], dbg);
+        args.restart(argv[0], &argv[2], dbg);
     }
 
     if(eq(argv[1], "-memcheck") || eq(argv[1], "--memcheck")) {
         char *mem[] = {(char *)"valgrind", (char *)"--tool=memcheck", NULL};
-        process::args.restart(argv[0], &argv[2], mem);
+        args.restart(argv[0], &argv[2], mem);
     }
 
     if(eq(argv[1], "-memleak") || eq(argv[1], "--memleak")) {
         char *mem[] = {(char *)"valgrind",
             (char *)"--tool=memcheck", (char *)"--leak-check=yes", NULL};
-        process::args.restart(argv[0], &argv[2], mem);
+        args.restart(argv[0], &argv[2], mem);
     }
 #endif
 
@@ -196,36 +197,36 @@ PROGRAM_MAIN(argc, argv)
     argv[0] = (char *)"sipwitch";
 
 #ifdef _MSWINDOWS_
-    rundir = strdup(str(process::args.getenv("APPDATA")) + "/sipwitch");
+    rundir = strdup(str(args.getenv("APPDATA")) + "/sipwitch");
     prefix = "C:\\Program Files\\sipwitch";
     plugins = "C:\\Program Files\\sipwitch\\plugins";
-    process::set("config", _STR(str(prefix) + "/sipwitch.ini"));
-    process::set("controls", rundir);
-    process::set("control", "\\\\.\\mailslot\\sipwitch_ctrl");
-    process::set("logfiles", _STR(str(prefix) + "/logs"));
-    process::set("siplogs", _STR(str(prefix) + "/logs/siptrace.log"));
-    process::set("logfile", _STR(str(prefix) + "/logs/sipwitch.log"));
-    process::set("calls", _STR(str(prefix) + "/logs/sipwitch.calls"));
-    process::set("stats", _STR(str(prefix) + "/logs/sipwitch.stats"));
-    process::set("prefix", rundir);
-    process::set("shell", "cmd.exe");
+    args.setsym("config", _STR(str(prefix) + "/sipwitch.ini"));
+    args.setsym("controls", rundir);
+    args.setsym("control", "\\\\.\\mailslot\\sipwitch_ctrl");
+    args.setsym("logfiles", _STR(str(prefix) + "/logs"));
+    args.setsym("siplogs", _STR(str(prefix) + "/logs/siptrace.log"));
+    args.setsym("logfile", _STR(str(prefix) + "/logs/sipwitch.log"));
+    args.setsym("calls", _STR(str(prefix) + "/logs/sipwitch.calls"));
+    args.setsym("stats", _STR(str(prefix) + "/logs/sipwitch.stats"));
+    args.setsym("prefix", rundir);
+    args.setsym("shell", "cmd.exe");
     prefix = rundir;
 #else
     prefix = DEFAULT_VARPATH "/lib/sipwitch";
     rundir = DEFAULT_VARPATH "/run/sipwitch";
-    process::set("reply", "/tmp/.sipwitch.");
-    process::set("config", DEFAULT_CFGPATH "/sipwitch.conf");
-    process::set("controls", DEFAULT_VARPATH "/run/sipwitch");
-    process::set("control", DEFAULT_VARPATH "/run/sipwitch/control");
-    process::set("events", DEFAULT_VARPATH "/run/sipwitch/events");
-    process::set("config", DEFAULT_CFGPATH "/sipwitch.conf");
-    process::set("logfiles", DEFAULT_VARPATH "/log");
-    process::set("siplogs", DEFAULT_VARPATH "/log/siptrace.log");
-    process::set("logfile", DEFAULT_VARPATH "/log/sipwitch.log");
-    process::set("calls", DEFAULT_VARPATH "/log/sipwitch.calls");
-    process::set("stats", DEFAULT_VARPATH "/log/sipwitch.stats");
-    process::set("prefix", DEFAULT_VARPATH "/lib/sipwitch");
-    process::set("shell", "/bin/sh");
+    args.setsym("reply", "/tmp/.sipwitch.");
+    args.setsym("config", DEFAULT_CFGPATH "/sipwitch.conf");
+    args.setsym("controls", DEFAULT_VARPATH "/run/sipwitch");
+    args.setsym("control", DEFAULT_VARPATH "/run/sipwitch/control");
+    args.setsym("events", DEFAULT_VARPATH "/run/sipwitch/events");
+    args.setsym("config", DEFAULT_CFGPATH "/sipwitch.conf");
+    args.setsym("logfiles", DEFAULT_VARPATH "/log");
+    args.setsym("siplogs", DEFAULT_VARPATH "/log/siptrace.log");
+    args.setsym("logfile", DEFAULT_VARPATH "/log/sipwitch.log");
+    args.setsym("calls", DEFAULT_VARPATH "/log/sipwitch.calls");
+    args.setsym("stats", DEFAULT_VARPATH "/log/sipwitch.stats");
+    args.setsym("prefix", DEFAULT_VARPATH "/lib/sipwitch");
+    args.setsym("shell", "/bin/sh");
 #endif
 
 #ifdef  HAVE_PWD_H
@@ -233,7 +234,7 @@ PROGRAM_MAIN(argc, argv)
     umask(007);
 
     if(getuid() && pwd && pwd->pw_dir && *pwd->pw_dir == '/') {
-        process::set("prefix", pwd->pw_dir);
+        args.setsym("prefix", pwd->pw_dir);
         if(!eq(pwd->pw_shell, "/bin/false") && !eq(pwd->pw_dir, "/var/", 5) && !eq(pwd->pw_dir, "/srv/", 5)) {
             umask(077);
             daemon = false;
@@ -246,17 +247,17 @@ PROGRAM_MAIN(argc, argv)
     if(!daemon && pwd) {
         rundir = strdup(str("/tmp/sipwitch-") + str(pwd->pw_name));
         prefix = strdup(str(pwd->pw_dir) + "/.sipwitch");
-        process::set("config", _STR(str(pwd->pw_dir) + "/.sipwitchrc"));
-        process::set("controls", rundir);
-        process::set("control", _STR(str(rundir) + "/control"));
-        process::set("events", _STR(str(rundir) + "/events"));
-        process::set("logfiles", rundir);
-        process::set("siplogs", _STR(str(rundir) + "/siplogs"));
-        process::set("logfile", _STR(str(rundir) + "/logfile"));
-        process::set("calls", _STR(str(rundir) + "/calls"));
-        process::set("stats", _STR(str(rundir) + "/stats"));
-        process::set("prefix", prefix);
-        process::set("shell", pwd->pw_shell);
+        args.setsym("config", _STR(str(pwd->pw_dir) + "/.sipwitchrc"));
+        args.setsym("controls", rundir);
+        args.setsym("control", _STR(str(rundir) + "/control"));
+        args.setsym("events", _STR(str(rundir) + "/events"));
+        args.setsym("logfiles", rundir);
+        args.setsym("siplogs", _STR(str(rundir) + "/siplogs"));
+        args.setsym("logfile", _STR(str(rundir) + "/logfile"));
+        args.setsym("calls", _STR(str(rundir) + "/calls"));
+        args.setsym("stats", _STR(str(rundir) + "/stats"));
+        args.setsym("prefix", prefix);
+        args.setsym("shell", pwd->pw_shell);
     }
 
 #else
@@ -265,11 +266,11 @@ PROGRAM_MAIN(argc, argv)
 #endif
 
 #ifdef  HAVE_PWD_H
-    cp = process::args.getenv("GROUP");
+    cp = args.getenv("GROUP");
     if(cp && *cp)
         group.set(cp);
 
-    cp = process::args.getenv("USER");
+    cp = args.getenv("USER");
     if(cp && *cp)
         user.set(cp);
 
@@ -294,33 +295,33 @@ PROGRAM_MAIN(argc, argv)
 
 #endif
 
-    cp = process::args.getenv("CONCURRENCY");
+    cp = args.getenv("CONCURRENCY");
     if(cp && *cp)
         concurrency.set(atol(cp));
 
-    cp = process::args.getenv("PRIORITY");
+    cp = args.getenv("PRIORITY");
     if(cp && *cp)
         priority.set(atol(cp));
 
-    cp = process::args.getenv("VERBOSE");
+    cp = args.getenv("VERBOSE");
     if(cp && *cp)
         loglevel.set(strdup(cp));
 
-    cp = process::args.getenv("LOGGING");
+    cp = args.getenv("LOGGING");
     if(cp && *cp)
         loglevel.set(strdup(cp));
 
-    cp = process::args.getenv("LOGGING");
+    cp = args.getenv("LOGGING");
     if(cp && *cp)
         histbuf.set(atoi(cp));
 
-    cp = process::args.getenv("PLUGINS");
+    cp = args.getenv("PLUGINS");
     if(cp && *cp)
         loading.set(strdup(cp));
 
     // parse and check for help
-    process::args.parse(argc, argv);
-    if(is(helpflag) || is(althelp) || process::args.argc() > 0)
+    args.parse(argc, argv);
+    if(is(helpflag) || is(althelp) || args.argc() > 0)
         usage();
 
     if(is(version))
@@ -442,7 +443,8 @@ PROGRAM_MAIN(argc, argv)
 
     // daemonify process....
     if(daemon) {
-        process::args.detach(&service_main);
+        if(!detached)
+            args.detach(&service_main);
         server::logmode = shell::CONSOLE_LOG;
     }
     else
@@ -450,7 +452,19 @@ PROGRAM_MAIN(argc, argv)
 
     signals::setup();
 
-    if(!process::attach())
+    const char *home = getenv("HOME");
+
+#ifdef  _MSWINDOWS_
+    if(!home)
+        home = getenv("USERPROFILE");
+#endif
+
+    if(!home)
+        home = args.getenv("prefix");
+
+    args.setsym("HOME", home);
+
+    if(!control::attach(&args))
         shell::errexit(1, "*** sipwitch: %s\n",
             _TEXT("no control file; exiting"));
 
@@ -461,7 +475,7 @@ PROGRAM_MAIN(argc, argv)
 #endif
 
     if(is(restart))
-        process::args.restart();
+        args.restart();
 
     up();
 
@@ -472,8 +486,10 @@ PROGRAM_MAIN(argc, argv)
 
 static SERVICE_MAIN(main, argc, argv)
 {
+#ifdef  _MSWINDOWS_
     detached = true;
     signals::service("sipwitch");
     main(argc, argv);
+#endif
 }
 

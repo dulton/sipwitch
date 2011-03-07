@@ -1,3 +1,6 @@
+from version 0.10.1 to 0.10.2
+- some reorganization of sources and common process code.
+
 from version 0.10.0 to 0.10.1
 - events dispatch ipc service added
 - new --desktop server mode, but will require new ucommon (4.1.6 or later)

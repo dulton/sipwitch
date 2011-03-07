@@ -17,7 +17,7 @@
 #include <ucommon/ucommon.h>
 #include <ucommon/export.h>
 #include <sipwitch/cdr.h>
-#include <sipwitch/process.h>
+#include <sipwitch/control.h>
 #include <sipwitch/service.h>
 #include <sipwitch/modules.h>
 #include <sipwitch/events.h>
@@ -82,7 +82,7 @@ void thread::run(void)
         cp = runlist;
         fp = NULL;
         if(runlist && logging)
-            fp = fopen(process::get("calls"), "a");
+            fp = fopen(control::env("calls"), "a");
         runlist = NULL;
         logging = false;
         Conditional::unlock();

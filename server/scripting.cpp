@@ -25,13 +25,13 @@ static char prior[65] = "down";
 class __LOCAL scripting : public modules::sipwitch
 {
 public:
-	scripting();
+    scripting();
 
 private:
-	void start(service *cfg);
-	void reload(service *cfg);
-	void activating(MappedRegistry *rr);
-	void expiring(MappedRegistry *rr);
+    void start(service *cfg);
+    void reload(service *cfg);
+    void activating(MappedRegistry *rr);
+    void expiring(MappedRegistry *rr);
 };
 
 static scripting scripting_plugin;
@@ -39,72 +39,72 @@ static scripting scripting_plugin;
 scripting::scripting() :
 modules::sipwitch()
 {
-	shell::log(shell::INFO, "scripting plugin loaded");
+    shell::log(shell::INFO, "scripting plugin loaded");
 }
 
 void scripting::reload(service *cfg)
 {
-	assert(cfg != NULL);
+    assert(cfg != NULL);
 
-	if(dirpath == NULL)
-		start(cfg);
+    if(dirpath == NULL)
+        start(cfg);
 
-	if(!dirpath)
-		return;
+    if(!dirpath)
+        return;
 
-	const char *state = cfg->getRoot()->getPointer();
-	if(!state)
-		state = "up";
+    const char *state = cfg->getRoot()->getPointer();
+    if(!state)
+        state = "up";
 
-	if(String::equal(state, prior))
-		return;
+    if(String::equal(state, prior))
+        return;
 
-	process::system("%s/sipstate %s", dirpath, state); 
+    control::libexec("%s/sipstate %s", dirpath, state);
 
-	String::set(prior, sizeof(prior), state);
+    String::set(prior, sizeof(prior), state);
 }
 
 void scripting::start(service *cfg)
 {
-	assert(cfg != NULL);
-	
-	static char buf[256];
-	const char *home = process::get("HOME");
+    assert(cfg != NULL);
 
-	if(fsys::isdir(DEFAULT_CFGPATH "/sysconfig/sipwitch-scripts"))
-		dirpath = DEFAULT_CFGPATH "/sysconfig/sipwitch-scripts";
-	else if(fsys::isdir(DEFAULT_LIBEXEC "/sipwitch"))
-		dirpath = DEFAULT_LIBEXEC "/sipwitch";
-	else if(home) {
+    static char buf[256];
+    const char *home = control::env("HOME");
+
+    if(fsys::isdir(DEFAULT_CFGPATH "/sysconfig/sipwitch-scripts"))
+        dirpath = DEFAULT_CFGPATH "/sysconfig/sipwitch-scripts";
+    else if(fsys::isdir(DEFAULT_LIBEXEC "/sipwitch"))
+        dirpath = DEFAULT_LIBEXEC "/sipwitch";
+    else if(home) {
         snprintf(buf, sizeof(buf), "%s/.sipwitch-scripts", home);
-		if(fsys::isdir(buf))
-			dirpath = buf;
-	}
+        if(fsys::isdir(buf))
+            dirpath = buf;
+    }
 
-	if(dirpath)
-		shell::log(shell::INFO, "scripting plugin path %s", dirpath);
-	else
-		shell::log(shell::ERR, "scripting plugin disabled; no script directory");
+    if(dirpath)
+        shell::log(shell::INFO, "scripting plugin path %s", dirpath);
+    else
+        shell::log(shell::ERR, "scripting plugin disabled; no script directory");
 }
 
 void scripting::activating(MappedRegistry *rr)
 {
-	char addr[128];
-	if(!dirpath)
-		return;
+    char addr[128];
+    if(!dirpath)
+        return;
 
-	Socket::getaddress((struct sockaddr *)&rr->contact, addr, sizeof(addr));
-	process::system("%s/sipup %s %d %s:%d %d", dirpath, rr->userid, rr->ext, 
-		addr, Socket::getservice((struct sockaddr *)&rr->contact), 
-		(int)(rr->type - MappedRegistry::EXPIRED));
+    Socket::getaddress((struct sockaddr *)&rr->contact, addr, sizeof(addr));
+    control::libexec("%s/sipup %s %d %s:%d %d", dirpath, rr->userid, rr->ext,
+        addr, Socket::getservice((struct sockaddr *)&rr->contact),
+        (int)(rr->type - MappedRegistry::EXPIRED));
 }
 
 void scripting::expiring(MappedRegistry *rr)
 {
-	if(!dirpath)
-		return;
+    if(!dirpath)
+        return;
 
-	process::system("%s/sipdown %s %d", dirpath, rr->userid, rr->ext);
+    control::libexec("%s/sipdown %s %d", dirpath, rr->userid, rr->ext);
 }
 
 END_NAMESPACE

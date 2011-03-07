@@ -73,13 +73,13 @@ void signals::run(void)
             break;
         case SIGINT:
         case SIGTERM:
-            process::control("down");
+            control::send("down");
             break;
         case SIGUSR1:
-            process::control("snapshot");
+            control::send("snapshot");
             break;
         case SIGHUP:
-            process::control("reload");
+            control::send("reload");
             break;
         default:
             break;

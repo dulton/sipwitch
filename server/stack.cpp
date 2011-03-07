@@ -133,7 +133,7 @@ stack::segment::segment(call *cr, int cid, int did, int tid) : OrderedObject()
 
     static unsigned short sequence = 0;
     Mutex::protect(&sequence);
-    process::uuid(sid.uuid, sizeof(sid.uuid), ++sequence, cid);
+    control::uuid(sid.uuid, sizeof(sid.uuid), ++sequence, cid);
     Mutex::release(&sequence);
 }
 
@@ -277,7 +277,7 @@ void stack::disableDumping(void)
 void stack::clearDumping(void)
 {
     ::remove(DEFAULT_VARPATH "/log/sipdump.log");
-    ::remove(_STR(process::path("controls") + "/sipdump.log"));
+    ::remove(_STR(control::path("controls") + "/sipdump.log"));
 }
 
 void stack::enableDumping(void)
@@ -297,7 +297,7 @@ void stack::siplog(osip_message_t *msg)
 
     osip_message_to_str(msg, &text, &tlen);
     if(text) {
-        fsys::create(log, process::get("siplogs"), fsys::ACCESS_APPEND, 0660);
+        fsys::create(log, control::env("siplogs"), fsys::ACCESS_APPEND, 0660);
         if(is(log)) {
             Mutex::protect(&stack::sip.dumping);
             fsys::write(log, text, tlen);
@@ -1255,7 +1255,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
         char *req = NULL;
         osip_uri_to_str(invite->req_uri, &req);
         snprintf(authbuf, 1024, "%s:%s", invite->sip_method, req);
-        process::uuid(nounce, sizeof(nounce), "auth");
+        control::uuid(nounce, sizeof(nounce), "auth");
 
         digest_t auth = "md5";
         auth.puts(nounce);

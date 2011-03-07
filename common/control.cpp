@@ -16,7 +16,7 @@
 #include <config.h>
 #include <ucommon/ucommon.h>
 #include <ucommon/export.h>
-#include <sipwitch/process.h>
+#include <sipwitch/control.h>
 #include <sipwitch/service.h>
 #include <sipwitch/modules.h>
 #include <ctype.h>
@@ -30,7 +30,7 @@ using namespace UCOMMON_NAMESPACE;
 
 static const char *replytarget = NULL;
 
-shell_t process::args;
+shell_t *control::args = NULL;
 
 #ifndef _MSWINDOWS_
 
@@ -79,16 +79,11 @@ static void get_system_time(uuid_time_t *uuid_time)
         + 0x01B21DD213814000ll;
 }
 
-size_t process::attach(void)
+size_t control::attach(shell_t *envp)
 {
-    const char *home = args.getenv("HOME");
+    args = envp;
 
-    if(!home)
-        home = get("prefix");
-
-    set("HOME", home);
-
-    String::set(fifopath, sizeof(fifopath), process::get("control"));
+    String::set(fifopath, sizeof(fifopath), env("control"));
     remove(fifopath);
     if(mkfifo(fifopath, 0660)) {
         fifopath[0] = 0;
@@ -109,7 +104,7 @@ size_t process::attach(void)
     return 0;
 }
 
-void process::release(void)
+void control::release(void)
 {
     shell::log(shell::INFO, "shutdown");
     if(fifopath[0]) {
@@ -121,7 +116,7 @@ void process::release(void)
     }
 }
 
-char *process::receive(void)
+char *control::receive(void)
 {
     static char buf[512];
     char *cp;
@@ -181,21 +176,13 @@ static void get_system_time(uuid_time_t *uuid_time)
     *uuid_time = time.QuadPart;
 }
 
-size_t process::attach(void)
+size_t control::attach(shell_t *envp)
 {
     char buf[64];
 
-    const char *home = args.getenv("HOME");
+    args = envp;
 
-    if(!home)
-        home = args.getenv("USERPROFILE");
-
-    if(!home)
-        home = get("prefix");
-
-    set("HOME", home);
-
-    String::set(buf, sizeof(buf), process::get("control"));
+    String::set(buf, sizeof(buf), env("control"));
     hFifo = CreateMailslot(buf, 0, MAILSLOT_WAIT_FOREVER, NULL);
     if(hFifo == INVALID_HANDLE_VALUE)
         return 0;
@@ -208,7 +195,7 @@ size_t process::attach(void)
     return 464;
 }
 
-char *process::receive(void)
+char *control::receive(void)
 {
     static char buf[464];
     BOOL result;
@@ -258,7 +245,7 @@ retry:
     return cp;
 }
 
-void process::release(void)
+void control::release(void)
 {
     shell::log(shell::INFO, "shutdown");
 
@@ -272,37 +259,7 @@ void process::release(void)
 
 #endif
 
-void process::printlog(const char *fmt, ...)
-{
-    assert(fmt != NULL && *fmt != 0);
-
-    fsys_t log;
-    va_list vargs;
-    char buf[1024];
-    int len;
-    char *cp;
-
-    va_start(vargs, fmt);
-
-    fsys::create(log, process::get("logfile"), fsys::ACCESS_APPEND, 0660);
-    vsnprintf(buf, sizeof(buf) - 1, fmt, vargs);
-    len = strlen(buf);
-    if(buf[len - 1] != '\n')
-        buf[len++] = '\n';
-
-    if(is(log)) {
-        fsys::write(log, buf, strlen(buf));
-        fsys::close(log);
-    }
-    cp = strchr(buf, '\n');
-    if(cp)
-        *cp = 0;
-
-    shell::debug(2, "logfile: %s", buf);
-    va_end(vargs);
-}
-
-void process::reply(const char *msg)
+void control::reply(const char *msg)
 {
     assert(msg == NULL || *msg != 0);
 
@@ -346,7 +303,7 @@ void process::reply(const char *msg)
     replytarget = NULL;
 }
 
-bool process::system(const char *fmt, ...)
+bool control::libexec(const char *fmt, ...)
 {
     assert(fmt != NULL);
 
@@ -394,7 +351,7 @@ bool process::system(const char *fmt, ...)
     return true;
 }
 
-bool process::control(const char *fmt, ...)
+bool control::send(const char *fmt, ...)
 {
     assert(fmt != NULL && *fmt != 0);
 
@@ -406,12 +363,12 @@ bool process::control(const char *fmt, ...)
 
     va_start(vargs, fmt);
 #ifdef  _MSWINDOWS_
-    fd = CreateFile(process::get("control"), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    fd = CreateFile(env("control"), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if(fd == INVALID_HANDLE_VALUE)
         return false;
 
 #else
-    fd = ::open(process::get("control"), O_WRONLY | O_NONBLOCK);
+    fd = ::open(env("control"), O_WRONLY | O_NONBLOCK);
     if(fd < 0)
         return false;
 #endif
@@ -435,17 +392,17 @@ bool process::control(const char *fmt, ...)
     return rtn;
 }
 
-bool process::state(const char *state)
+bool control::state(const char *state)
 {
     char buf[256], buf1[256];
 
 #ifdef  _MSWINDOWS_
     return false;
 #else
-    String::set(buf, sizeof(buf), _STR(process::path("prefix") + "/states/" + state + ".xml"));
+    String::set(buf, sizeof(buf), _STR(path("prefix") + "/states/" + state + ".xml"));
     if(!fsys::isfile(buf))
         return false;
-    String::set(buf1, sizeof(buf1), _STR(process::path("prefix") + "state.xml"));
+    String::set(buf1, sizeof(buf1), _STR(path("prefix") + "state.xml"));
     remove(buf1);
     if(!stricmp(state, "up") || !stricmp(state, "none"))
         return true;
@@ -461,7 +418,7 @@ bool process::state(const char *state)
 #endif
 }
 
-FILE *process::output(const char *id)
+FILE *control::output(const char *id)
 {
 #ifdef  _MSWINDOWS_
     if(!id)
@@ -477,7 +434,7 @@ FILE *process::output(const char *id)
 #endif
 }
 
-void process::uuid(char *buffer, size_t size, unsigned short seq, unsigned callid)
+void control::uuid(char *buffer, size_t size, unsigned short seq, unsigned callid)
 {
     unsigned char uuid[16];
     unsigned pos = 0, dest = 0;
@@ -525,7 +482,7 @@ void process::uuid(char *buffer, size_t size, unsigned short seq, unsigned calli
     buffer[dest++] = 0;
 }
 
-void process::uuid(char *buffer, size_t size, const char *node)
+void control::uuid(char *buffer, size_t size, const char *node)
 {
     unsigned char uuid[16];
     unsigned pos = 0, dest = 0;

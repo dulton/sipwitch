@@ -53,8 +53,8 @@
 #include <sipwitch/mapped.h>
 #endif
 
-#ifndef _SIPWITCH_PROCESS_H_
-#include <sipwitch/process.h>
+#ifndef _SIPWITCH_CONTROL_H_
+#include <sipwitch/control.h>
 #endif
 
 #ifndef _SIPWITCH_CDR_H_

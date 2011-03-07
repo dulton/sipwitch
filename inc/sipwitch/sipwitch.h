@@ -31,7 +31,7 @@
 #include <sipwitch/events.h>
 #include <sipwitch/service.h>
 #include <sipwitch/modules.h>
-#include <sipwitch/process.h>
+#include <sipwitch/control.h>
 #include <sipwitch/db.h>
 #include <sipwitch/stats.h>
 #include <sipwitch/uri.h>

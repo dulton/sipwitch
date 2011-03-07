@@ -17,7 +17,7 @@
 #include <ucommon/ucommon.h>
 #include <ucommon/export.h>
 #include <sipwitch/events.h>
-#include <sipwitch/process.h>
+#include <sipwitch/control.h>
 #include <sipwitch/mapped.h>
 
 #if defined(AF_UNIX) && !defined(_MSWINDOWS_)
@@ -127,7 +127,7 @@ void dispatch::send(events *msg)
     LinkedObject *next;
     while(is(dp)) {
         next = dp->next;
-        if(::send(dp->session, msg, sizeof(events), 0) < sizeof(events)) {
+        if(::send(dp->session, msg, sizeof(events), 0) < (ssize_t)sizeof(events)) {
 disconnect:
             shell::log(DEBUG3, "releasing client events for %d", dp->session);
             dp->release();
@@ -192,9 +192,9 @@ bool events::start(void)
 
     memset(&abuf, 0, sizeof(abuf));
     abuf.sun_family = AF_UNIX;
-    String::set(abuf.sun_path, sizeof(abuf.sun_path), process::get("events"));
+    String::set(abuf.sun_path, sizeof(abuf.sun_path), control::env("events"));
 
-    ::remove(process::get("events"));
+    ::remove(control::env("events"));
     if(::bind(ipc, (struct sockaddr *)&abuf, SUN_LEN(&abuf)) < 0) {
 failed:
         Socket::release(ipc);
@@ -312,7 +312,7 @@ void events::terminate(const char *reason)
 
     Socket::release(ipc);
     dispatch::stop(&msg);
-    ::remove(process::get("events"));
+    ::remove(control::env("events"));
     ipc = INVALID_SOCKET;
 }
 

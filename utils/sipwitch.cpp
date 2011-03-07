@@ -454,6 +454,12 @@ static void showevents(char **argv)
             else
                 printf("activating %s\n", event.user.id);
             break;
+        case events::STATE:
+            printf("changing state to %s\n", event.server.state);
+            break;
+        case events::REALM:
+            printf("changing realm to %s\n", event.server.realm);
+            break;
         }
     }
     shell::errexit(11, "*** sipwitch: events: connection lost\n");

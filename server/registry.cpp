@@ -550,7 +550,7 @@ void registry::reload(service *cfg)
         const char *evp = getenv("HOSTNAME");
         if(!evp)
             evp = "none";
-        process::uuid(buffer, sizeof(buffer), evp);
+        control::uuid(buffer, sizeof(buffer), evp);
         String::add(buffer, sizeof(buffer), ":");
         String::add(buffer, sizeof(buffer), digest);
         fsys::create(fs, "uuid", fsys::ACCESS_WRONLY, 0444);
@@ -567,7 +567,7 @@ void registry::reload(service *cfg)
 #endif
 
     if(!String::equal(realm, oldrealm)) {
-        process::uuid(session_uuid, sizeof(session_uuid), realm);
+        control::uuid(session_uuid, sizeof(session_uuid), realm);
         shell::log(shell::NOTIFY, "new realm %s", realm);
         digests::clear();
     } else if(!String::equal(digest, olddigest)) {

@@ -16,7 +16,7 @@
 #include <config.h>
 #include <ucommon/ucommon.h>
 #include <ucommon/export.h>
-#include <sipwitch/process.h>
+#include <sipwitch/control.h>
 #include <sipwitch/service.h>
 #include <sipwitch/modules.h>
 #include <sipwitch/events.h>
@@ -721,7 +721,7 @@ void service::dump(FILE *fp)
 
 void service::dumpfile(void)
 {
-    FILE *fp = process::output("dumpfile");
+    FILE *fp = control::output("dumpfile");
 
     if(!fp) {
         shell::log(shell::ERR, "%s\n",
@@ -752,7 +752,7 @@ bool service::period(long slice)
 
     next = (now / slice) * slice;
 
-    FILE *fp = fopen(process::get("stats"), "a");
+    FILE *fp = fopen(control::env("stats"), "a");
 
     if(fp) {
         DateTimeString dt(periodic);
@@ -775,7 +775,7 @@ void service::snapshot(void)
 {
     linked_pointer<callback> cb;
     unsigned rl = 0;
-    FILE *fp = process::output("snapshot");
+    FILE *fp = control::output("snapshot");
 
     if(!fp) {
         shell::log(shell::ERR, "%s\n",

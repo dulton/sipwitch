@@ -103,7 +103,7 @@ void subscriber::update(void)
     unsigned len;
     Socket::address dest = server;
 
-    process::uuid(provider.remote, sizeof(provider.remote), server);
+    control::uuid(provider.remote, sizeof(provider.remote), server);
     snprintf(uri, sizeof(uri), "sip:%s@%s", userid, server);
     snprintf(reg, sizeof(reg), "sip:%s", server);
     snprintf(contact, sizeof(contact), "sip:%s@", provider.remote);

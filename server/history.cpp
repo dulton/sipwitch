@@ -86,7 +86,7 @@ void history::out(void)
     if(!histlimit)
         return;
 
-    FILE *fp = process::output("history");
+    FILE *fp = control::output("history");
 
     if(!fp)
         return;

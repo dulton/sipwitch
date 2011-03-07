@@ -517,6 +517,7 @@ public:
     static const char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
     static const char *referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size);
     static bool checkId(const char *id);
+    static void printlog(const char *fmt, ...) __PRINTF(1, 2);
 };
 
 class __LOCAL messages : public service::callback
@@ -731,7 +732,7 @@ private:
     static bool isProxied(const char *source, const char *target, struct sockaddr_storage *peering);
 };
 
-class __LOCAL history : public OrderedObject, public process
+class __LOCAL history : public OrderedObject, public control
 {
 public:
     char text[128];
