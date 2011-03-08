@@ -68,7 +68,7 @@ size_t control::attach(shell_t *envp)
         return 0;
     }
     else
-        shell::exiting(cleanup);
+        shell::exiting(&cleanup);
 
     fifo = fopen(fifopath, "r+");
     if(fifo)
@@ -150,7 +150,7 @@ size_t control::attach(shell_t *envp)
     ovFifo.Offset = 0;
     ovFifo.OffsetHigh = 0;
     ovFifo.hEvent = hEvent;
-    shell::exiting(cleanup);
+    shell::exiting(&cleanup);
     return 464;
 }
 
