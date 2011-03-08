@@ -17,12 +17,14 @@
 #include <ucommon/ucommon.h>
 #include <ucommon/export.h>
 #include <sipwitch/stats.h>
+#include <sipwitch/control.h>
 
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
 static unsigned used = 0, total = 7;
 static stats *base = NULL;
+stringbuf<256> statmap;
 
 static class __LOCAL sta : public mapped_array<stats>
 {
@@ -40,13 +42,14 @@ sta::sta() : mapped_array<stats>()
 sta::~sta()
 {
     release();
-    remove(STAT_MAP);
+    remove(*statmap);
 }
 
 void sta::init(void)
 {
-    remove(STAT_MAP);
-    create(STAT_MAP, total);
+    statmap = control::env("statmap");
+    remove(*statmap);
+    create(*statmap, total);
 }
 
 stats *stats::create(void)

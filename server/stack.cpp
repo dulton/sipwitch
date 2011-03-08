@@ -696,7 +696,7 @@ void stack::start(service *cfg)
         mapped_calls, threading, priority);
     eXosip_init();
 
-    mapped_array<MappedCall>::create(CALL_MAP, mapped_calls);
+    mapped_array<MappedCall>::create(control::env("callmap"), mapped_calls);
     if(!sip)
         shell::log(shell::FAIL, "calls could not be mapped");
     initialize();
@@ -768,7 +768,7 @@ void stack::stop(service *cfg)
     thread::shutdown();
     Thread::yield();
     MappedMemory::release();
-    MappedMemory::remove(CALL_MAP);
+    MappedMemory::remove(control::env("callmap"));
 }
 
 bool stack::check(void)

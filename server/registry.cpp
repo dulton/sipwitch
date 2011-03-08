@@ -222,7 +222,7 @@ void registry::start(service *cfg)
     assert(cfg != NULL);
 
     shell::log(DEBUG1, "starting registry; mapping %d entries", mapped_entries);
-    create(REGISTRY_MAP, mapped_entries);
+    create(control::env("regmap"), mapped_entries);
     if(!reg)
         shell::log(shell::FAIL, "registry could not be mapped");
     initialize();
@@ -243,7 +243,7 @@ void registry::stop(service *cfg)
 
     shell::log(DEBUG1, "stopping registry");
     MappedMemory::release();
-    MappedMemory::remove(REGISTRY_MAP);
+    MappedMemory::remove(control::env("regmap"));
 }
 
 void registry::snapshot(FILE *fp)

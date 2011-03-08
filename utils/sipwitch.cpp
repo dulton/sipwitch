@@ -31,6 +31,10 @@
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
+static string_t statmap = STAT_MAP;
+static string_t callmap = CALL_MAP;
+static string_t regmap = REGISTRY_MAP;
+
 #ifdef  _MSWINDOWS_
 static char *getpass(const char *prompt)
 {
@@ -120,6 +124,25 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 
     Socket::getaddress((struct sockaddr *)a2, buf, sizeof(buf));
     printf("%s:%u\n", buf, p2);
+}
+
+static void mapinit(void)
+{
+#ifndef _MSWINDOWS_
+    struct passwd *pwd = getpwuid(getuid());
+
+    fd_t fd = ::open(DEFAULT_VARPATH "/run/sipwitch/control", O_WRONLY | O_NONBLOCK);
+    if(fd < 0) {
+        if(!pwd)
+            shell::errexit(4, "*** sipwitch: maps: invalid login\n");
+
+        statmap = str(STAT_MAP "-") + str(pwd->pw_name);
+        callmap = str(CALL_MAP "-") + str(pwd->pw_name);
+        regmap = str(REGISTRY_MAP "-") + str(pwd->pw_name);
+    }
+    else
+        ::close(fd);
+#endif
 }
 
 static void showrealm(void)
@@ -299,7 +322,9 @@ static void status(char **argv)
     if(argv[1])
         shell::errexit(1, "*** sipwitch: status: no arguments used\n");
 
-    mapped_view<MappedCall> calls(CALL_MAP);
+    mapinit();
+
+    mapped_view<MappedCall> calls(*callmap);
     unsigned count = calls.getCount();
     unsigned index = 0;
     const volatile MappedCall *map;
@@ -324,7 +349,9 @@ static void calls(char **argv)
     if(argv[1])
         shell::errexit(1, "*** sipwitch: calls: no arguments used\n");
 
-    mapped_view<MappedCall> calls(CALL_MAP);
+    mapinit();
+
+    mapped_view<MappedCall> calls(*callmap);
     unsigned count = calls.getCount();
     unsigned index = 0;
     const volatile MappedCall *map;
@@ -355,7 +382,9 @@ static void periodic(char **argv)
     if(argv[1])
         shell::errexit(1, "*** sipwitch: pstats: no arguments used\n");
 
-    mapped_view<stats> sta(STAT_MAP);
+    mapinit();
+
+    mapped_view<stats> sta(*statmap);
     unsigned count = sta.getCount();
     unsigned index = 0;
     const volatile stats *map;
@@ -474,7 +503,9 @@ static void dumpstats(char **argv)
     if(argv[1])
         shell::errexit(1, "*** sipwitch: stats: no arguments used\n");
 
-    mapped_view<stats> sta(STAT_MAP);
+    mapinit();
+
+    mapped_view<stats> sta(*statmap);
     unsigned count = sta.getCount();
     unsigned index = 0;
     const stats *map;
@@ -527,7 +558,9 @@ static void dumpstats(char **argv)
 
 static void registry(char **argv)
 {
-    mapped_view<MappedRegistry> reg(REGISTRY_MAP);
+    mapinit();
+
+    mapped_view<MappedRegistry> reg(*regmap);
     unsigned count = reg.getCount();
     unsigned found = 0, index = 0;
     volatile const MappedRegistry *member;
@@ -590,7 +623,6 @@ static void registry(char **argv)
     printf("found %d entries active of %d\n", found, count);
     exit(0);
 }
-
 
 static void command(char **argv, unsigned timeout)
 {

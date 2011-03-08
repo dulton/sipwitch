@@ -193,6 +193,10 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     // cheat out shell parser...
     argv[0] = (char *)"sipwitch";
 
+    args.setsym("statmap", STAT_MAP);
+    args.setsym("callmap", CALL_MAP);
+    args.setsym("regmap", REGISTRY_MAP);
+
 #ifdef _MSWINDOWS_
     rundir = strdup(str(args.getenv("APPDATA")) + "/sipwitch");
     prefix = "C:\\Program Files\\sipwitch";
@@ -244,6 +248,11 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     if(!daemon && pwd) {
         rundir = strdup(str("/tmp/sipwitch-") + str(pwd->pw_name));
         prefix = strdup(str(pwd->pw_dir) + "/.sipwitch");
+
+        args.setsym("statmap", _STR(str(STAT_MAP "-") + str(pwd->pw_name)));
+        args.setsym("callmap", _STR(str(CALL_MAP "-") + str(pwd->pw_name)));
+        args.setsym("regmap", _STR(str(REGISTRY_MAP "-") + str(pwd->pw_name)));
+
         args.setsym("config", _STR(str(pwd->pw_dir) + "/.sipwitchrc"));
         args.setsym("controls", rundir);
         args.setsym("control", _STR(str(rundir) + "/control"));
