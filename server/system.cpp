@@ -159,7 +159,7 @@ namespace SIPWITCH_NAMESPACE {
 static bool detached = false;
 static SERVICE_MAIN(main, argc, argv);
 
-PROGRAM_MAIN(argc, argv)
+static void init(int argc, char **argv)
 {
 
     bool daemon = true;
@@ -478,18 +478,19 @@ PROGRAM_MAIN(argc, argv)
         args.restart();
 
     up();
-
-    PROGRAM_EXIT(0);
 }
 
 // stub code for windows service daemon...
 
 static SERVICE_MAIN(main, argc, argv)
 {
-#ifdef  _MSWINDOWS_
     detached = true;
     signals::service("sipwitch");
-    main(argc, argv);
-#endif
+    init(argc, argv);
 }
 
+PROGRAM_MAIN(argc, argv)
+{
+    init(argc, argv);
+    PROGRAM_EXIT(0);
+}
