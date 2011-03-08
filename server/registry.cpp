@@ -244,6 +244,7 @@ void registry::stop(service *cfg)
     shell::log(DEBUG1, "stopping registry");
     MappedMemory::release();
     MappedMemory::remove(control::env("regmap"));
+    stats::release();
 }
 
 void registry::snapshot(FILE *fp)

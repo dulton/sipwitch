@@ -69,6 +69,7 @@ public:
     static stats *create(void);
     static stats *request(const char *id);
     static void allocate(unsigned count);
+    static void release(void);
 };
 
 END_NAMESPACE

@@ -24,13 +24,11 @@ using namespace UCOMMON_NAMESPACE;
 
 static unsigned used = 0, total = 7;
 static stats *base = NULL;
-stringbuf<256> statmap;
 
 static class __LOCAL sta : public mapped_array<stats>
 {
 public:
     sta();
-    ~sta();
 
     void init(void);
 } shm;
@@ -39,17 +37,11 @@ sta::sta() : mapped_array<stats>()
 {
 }
 
-sta::~sta()
-{
-    release();
-    remove(*statmap);
-}
-
 void sta::init(void)
 {
-    statmap = control::env("statmap");
-    remove(*statmap);
-    create(*statmap, total);
+    const char *statmap = control::env("statmap");
+    ::remove(statmap);
+    create(statmap, total);
 }
 
 stats *stats::create(void)
@@ -101,6 +93,12 @@ void stats::assign(stat_t entry)
     Mutex::release(this);
     if(this != base)
         base->assign(entry);
+}
+
+void stats::release(void)
+{
+    shm.release();
+    shm.remove(control::env("statmap"));
 }
 
 void stats::release(stat_t entry)
