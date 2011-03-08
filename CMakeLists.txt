@@ -178,7 +178,7 @@ target_link_libraries(sipwitch-passwd usecure ucommon ${SECURE_LIBS} ${UCOMMON_L
 set_target_properties(sipwitch-passwd PROPERTIES OUTPUT_NAME sippasswd)
 
 add_executable(sipwitch-control utils/sipwitch.cpp)
-add_dependencies(sipwitch-control ucommon)
+add_dependencies(sipwitch-control usecure ucommon)
 target_link_libraries(sipwitch-control usecure ucommon ${SECURE_LIBS} ${UCOMMON_LIBS})
 set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipwitch)
 
