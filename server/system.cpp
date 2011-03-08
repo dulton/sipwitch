@@ -156,10 +156,7 @@ namespace SIPWITCH_NAMESPACE {
     }
 }
 
-static bool detached = false;
-static SERVICE_MAIN(main, argc, argv);
-
-static void init(int argc, char **argv)
+static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = NULL)
 {
 
     bool daemon = true;
@@ -444,7 +441,7 @@ static void init(int argc, char **argv)
     // daemonify process....
     if(daemon) {
         if(!detached)
-            args.detach(&service_main);
+            args.detach(svc);
         server::logmode = shell::CONSOLE_LOG;
     }
     else
@@ -484,13 +481,12 @@ static void init(int argc, char **argv)
 
 static SERVICE_MAIN(main, argc, argv)
 {
-    detached = true;
     signals::service("sipwitch");
-    init(argc, argv);
+    init(argc, argv, true);
 }
 
 PROGRAM_MAIN(argc, argv)
 {
-    init(argc, argv);
+    init(argc, argv, false, &service_main);
     PROGRAM_EXIT(0);
 }
