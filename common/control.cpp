@@ -46,37 +46,15 @@ shell_t *control::args = NULL;
 static FILE *fifo = NULL;
 static char fifopath[128] = "";
 
-typedef unsigned long long uuid_time_t;
-
-#ifdef  HAVE_ATEXIT
-extern "C" {
-    static void exit_handler(void)
-    {
-        if(fifopath[0]) {
-            remove(fifopath);
-            fifopath[0] = 0;
-        }
-    }
-
-    static void abort_handler(int signo)
-    {
-        exit_handler();
-    }
-}
-#endif
-
-static void get_system_time(uuid_time_t *uuid_time)
+static void cleanup(void)
 {
-    struct timeval tp;
-
-    gettimeofday(&tp, (struct timezone *)0);
-
-    /* Offset between UUID formatted times and Unix formatted times.
-       UUID UTC base time is October 15, 1582.
-       Unix base time is January 1, 1970.*/
-    *uuid_time = ((unsigned long long)tp.tv_sec * 10000000)
-        + ((unsigned long long)tp.tv_usec * 10)
-        + 0x01B21DD213814000ll;
+    if(fifopath[0]) {
+        ::remove(fifopath);
+        char *cp = strrchr(fifopath, '/');
+        String::set(cp, 10, "/pidfile");
+        ::remove(fifopath);
+        fifopath[0] = 0;
+    }
 }
 
 size_t control::attach(shell_t *envp)
@@ -89,13 +67,8 @@ size_t control::attach(shell_t *envp)
         fifopath[0] = 0;
         return 0;
     }
-#ifdef  HAVE_ATEXIT
-    else {
-        ::signal(SIGABRT, abort_handler);
-        atexit(exit_handler);
-    }
-#endif
-
+    else
+        shell::exiting(cleanup);
 
     fifo = fopen(fifopath, "r+");
     if(fifo)
@@ -107,13 +80,7 @@ size_t control::attach(shell_t *envp)
 void control::release(void)
 {
     shell::log(shell::INFO, "shutdown");
-    if(fifopath[0]) {
-        ::remove(fifopath);
-        char *cp = strrchr(fifopath, '/');
-        String::set(cp, 10, "/pidfile");
-        ::remove(fifopath);
-        fifopath[0] = 0;
-    }
+    cleanup();
 }
 
 char *control::receive(void)
@@ -157,23 +124,14 @@ static HANDLE hLoopback = INVALID_HANDLE_VALUE;
 static HANDLE hEvent = INVALID_HANDLE_VALUE;
 static OVERLAPPED ovFifo;
 
-typedef __int64 uuid_time_t;
-
-static void get_system_time(uuid_time_t *uuid_time)
+static void cleanup(void)
 {
-    ULARGE_INTEGER time;
-
-    /* NT keeps time in FILETIME format which is 100ns ticks since
-       Jan 1, 1601. UUIDs use time in 100ns ticks since Oct 15, 1582.
-       The difference is 17 Days in Oct + 30 (Nov) + 31 (Dec)
-       + 18 years and 5 leap days. */
-    GetSystemTimeAsFileTime((FILETIME *)&time);
-    time.QuadPart +=
-
-          (unsigned __int64) (1000*1000*10)       // seconds
-        * (unsigned __int64) (60 * 60 * 24)       // days
-        * (unsigned __int64) (17+30+31+365*18+5); // # of days
-    *uuid_time = time.QuadPart;
+    if(hFifo != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFifo);
+        CloseHandle(hLoopback);
+        CloseHandle(hEvent);
+        hFifo = hLoopback = hEvent = INVALID_HANDLE_VALUE;
+    }
 }
 
 size_t control::attach(shell_t *envp)
@@ -192,6 +150,7 @@ size_t control::attach(shell_t *envp)
     ovFifo.Offset = 0;
     ovFifo.OffsetHigh = 0;
     ovFifo.hEvent = hEvent;
+    shell::exiting(cleanup);
     return 464;
 }
 
@@ -248,13 +207,7 @@ retry:
 void control::release(void)
 {
     shell::log(shell::INFO, "shutdown");
-
-    if(hFifo != INVALID_HANDLE_VALUE) {
-        CloseHandle(hFifo);
-        CloseHandle(hLoopback);
-        CloseHandle(hEvent);
-        hFifo = hLoopback = hEvent = INVALID_HANDLE_VALUE;
-    }
+    cleanup();
 }
 
 #endif
