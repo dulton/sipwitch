@@ -1,3 +1,6 @@
+from version 0.10.2 to 0.10.3
+- some cross-platform portability fixes.
+
 from version 0.10.1 to 0.10.2
 - some reorganization of sources and common process code.
 
