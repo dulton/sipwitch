@@ -253,7 +253,7 @@ long service::uptime(void)
     if(!started)
         return 0l;
 
-    return now - started;
+    return (long)(now - started);
 }
 
 service::keynode *service::path(const char *id)

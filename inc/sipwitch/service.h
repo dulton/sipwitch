@@ -156,7 +156,8 @@ public:
         static const char *sip_tlsdh;
         static const char *sip_tlskey;
         static const char *sip_tlscert;
-        static unsigned sip_prefix, sip_range;
+        static unsigned sip_prefix;
+        static unsigned sip_range;
         static char session_uuid[40];
 
         callback(int level = 0);

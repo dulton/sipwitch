@@ -1024,7 +1024,7 @@ static void server_control(void)
 
 static void call_instance(void)
 {
-    mapped_view<MappedCall> cr(REGISTRY_MAP);
+    mapped_view<MappedCall> cr(CALL_MAP);
     unsigned index = 0;
     char id[32];
     MappedCall copy;
@@ -1049,7 +1049,7 @@ static void call_instance(void)
         const MappedCall *map = const_cast<const MappedCall *>(cr(index++));
 
         do {
-            memcpy(&copy, map, sizeof(copy));
+            memcpy((void *)&copy, map, sizeof(copy));
         } while(memcmp(&copy, map, sizeof(copy)));
         map = &copy;
 

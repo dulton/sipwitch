@@ -216,7 +216,6 @@ void control::reply(const char *msg)
 {
     assert(msg == NULL || *msg != 0);
 
-    pid_t pid;
     char *sid;
     fsys fd;
     char buffer[256];
@@ -229,7 +228,7 @@ void control::reply(const char *msg)
 
     if(isdigit(*replytarget)) {
 #ifndef _MSWINDOWS_
-        pid = atoi(replytarget);
+        pid_t pid = atoi(replytarget);
         if(msg)
             kill(pid, SIGUSR2);
         else
@@ -347,11 +346,11 @@ bool control::send(const char *fmt, ...)
 
 bool control::state(const char *state)
 {
-    char buf[256], buf1[256];
-
 #ifdef  _MSWINDOWS_
     return false;
 #else
+    char buf[256], buf1[256];
+
     String::set(buf, sizeof(buf), _STR(path("prefix") + "/states/" + state + ".xml"));
     if(!fsys::isfile(buf))
         return false;
@@ -377,7 +376,7 @@ FILE *control::output(const char *id)
     if(!id)
         return NULL;
 
-    fopen(_STR(path("controls") + "/" + id + ".out"), "w");
+    return fopen(_STR(path("controls") + "/" + id + ".out"), "w");
 #else
     if(replytarget && isdigit(*replytarget))
         return fopen(path("reply") + str((Unsigned)atol(replytarget)), "w");

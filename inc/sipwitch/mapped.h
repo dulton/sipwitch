@@ -77,7 +77,7 @@ typedef struct {
     unsigned level;
 } profile_t;
 
-class __EXPORT MappedRegistry : public LinkedObject
+class MappedRegistry : public LinkedObject
 {
 public:
     typedef enum {OFFLINE = 0, IDLE, BUSY, AWAY, DND} status_t;
@@ -123,7 +123,7 @@ public:
         {return isProfiled() && (profile.features & X);};
 };
 
-class __EXPORT MappedCall : public LinkedObject
+class MappedCall : public LinkedObject
 {
 public:
     time_t  created;
