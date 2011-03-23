@@ -12,7 +12,7 @@ cmake_minimum_required(VERSION 2.6)
 PROJECT(sipwitch)
 INCLUDE(CheckIncludeFiles)
 INCLUDE(CheckFunctionExists)
-set (VERSION 0.10.3)
+set (VERSION 0.10.4)
 set (SOVERSION 0)
 
 if (WIN32)
