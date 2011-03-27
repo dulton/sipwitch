@@ -1,3 +1,6 @@
+from version 0.10.4 to 0.10.5
+- more consistent paths in cmake.
+
 from version 0.10.3 to 0.10.4
 - small fix for cmake from gahr.
 
