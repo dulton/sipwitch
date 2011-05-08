@@ -104,7 +104,7 @@ void dispatch::stop(events *msg)
 
     while(is(dp)) {
         if(msg)
-            ::send(dp->session, msg, sizeof(events), 0);
+            ::send(dp->session, (const char *)msg, sizeof(events), 0);
         ::close(dp->session);
         dp.next();
     }
@@ -125,7 +125,7 @@ void dispatch::send(events *msg)
     LinkedObject *next;
     while(is(dp)) {
         next = dp->next;
-        if(::send(dp->session, msg, sizeof(events), 0) < (ssize_t)sizeof(events)) {
+        if(::send(dp->session, (const char *)msg, sizeof(events), 0) < (ssize_t)sizeof(events)) {
 disconnect:
             shell::log(DEBUG3, "releasing client events for %d", dp->session);
             dp->release();
@@ -172,7 +172,7 @@ void event_thread::run(void)
         String::set(msg.server.realm, sizeof(msg.server.realm), *saved_realm);
         private_locking.release();
         msg.type = events::WELCOME;
-        ::send(client, &msg, sizeof(msg), 0);
+        ::send(client, (const char *)&msg, sizeof(msg), 0);
         dispatch::add(client);
     }
 
@@ -198,15 +198,15 @@ bool events::start(void)
     memset(&abuf, 0, sizeof(abuf));
 #ifdef  _MSWINDOWS_
     abuf.sin_family = AF_INET;
-    abuf.sin_addr = inet_addr("127.0.0.1");
+    abuf.sin_addr.s_addr = inet_addr("127.0.0.1");
     abuf.sin_port = 0;
     if(::bind(ipc, (struct sockaddr *)&abuf, sizeof(abuf)) < 0)
         goto failed;
 
     socklen_t alen = sizeof(abuf);
     ::getsockname(ipc, (struct sockaddr *)&abuf, &alen);
-    DWORD port = ntohs(addr.sin_port);
-    HKEY keys = HKEY_LOCAL_MACHINE;
+    DWORD port = ntohs(abuf.sin_port);
+    HKEY keys = HKEY_LOCAL_MACHINE, subkey;
     if(RegCreateKeyEx(keys, "SOFTWARE\\sipwitch", 0L, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &subkey, NULL) == ERROR_SUCCESS) {
         RegSetValueEx(subkey, "port", 0L, REG_DWORD, (const BYTE *)&port, sizeof(port));
         port = GetCurrentProcessId();
