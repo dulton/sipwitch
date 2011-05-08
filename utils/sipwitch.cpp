@@ -16,6 +16,7 @@
 #include "sipwitch/sipwitch.h"
 #include "ucommon/secure.h"
 #ifdef _MSWINDOWS_
+#include <windows.h>
 #include <io.h>
 #else
 #include <signal.h>
@@ -435,14 +436,33 @@ static void showevents(char **argv)
     memset(&addr, 0, sizeof(addr));
 
 #ifdef  _MSWINDOWS_
-    DWORD port;
+    DWORD port = 0, pid = 0;
     DWORD plen;
+    DWORD index = 0;
+    TCHAR keyname[128];
+    TCHAR keyvalue[128];
+    DWORD size = sizeof(keyname), vsize = sizeof(keyvalue), vtype;
+    DWORD *dp;
+
     plen = sizeof(port);
-    if(RegGetValue(HKEY_LOCAL_MACHINE, "SOFTWARE\\sipwitch", "port", RRF_RT_REG_DWORD, NULL, &port, &plen) != ERROR_SUCCESS)
+    HKEY keys = HKEY_LOCAL_MACHINE, subkey;
+    if(RegOpenKeyEx(keys, "SOFTWARE\\sipwitch", 0, KEY_READ, &subkey) != ERROR_SUCCESS)
         shell::errexit(10, "*** sipwitch: events: no service found\n");
+    while((RegEnumValue(subkey, index++, keyname, &size, NULL, &vtype, (BYTE *)keyvalue, &vsize) == ERROR_SUCCESS) && (vtype == REG_DWORD) && (keyname[0] != 0)) {
+        dp = (DWORD *)&keyvalue;
+        if(eq("port", keyname))
+            port = *dp;
+        else if(eq("pid", keyname))
+            pid = *dp;
+        vsize = sizeof(keyvalue);
+        size = sizeof(keyname);
+    }
+    RegCloseKey(subkey);
+    if(!port)
+        shell::errexit(10, "*** sipwitch: events: server missing\n");
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    addr.sin_port = htons(port);
+    addr.sin_port = htons((unsigned short)port);
     if(::connect(ipc, (struct sockaddr *)&addr, sizeof(addr)) < 0)
         shell::errexit(10, "*** sipwitch: events: server offline\n");
 #else
@@ -461,7 +481,7 @@ static void showevents(char **argv)
 #endif
 
     event_t event;
-    while(::recv(ipc, &event, sizeof(event), 0) == sizeof(event)) {
+    while(::recv(ipc, (char *)&event, sizeof(event), 0) == sizeof(event)) {
         switch(event.type) {
         case events::FAILURE:
             printf("failure: %s\n", event.reason);
