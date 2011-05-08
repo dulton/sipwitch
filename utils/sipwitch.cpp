@@ -489,6 +489,10 @@ static void showevents(char **argv)
         case events::REALM:
             printf("changing realm to %s\n", event.server.realm);
             break;
+        case events::SYNC:
+            if(event.period)
+                printf("housekeeping period %d\n", event.period);
+            break;
         }
     }
     shell::errexit(11, "*** sipwitch: events: connection lost\n");

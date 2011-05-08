@@ -60,7 +60,7 @@ protected:
     bool put(events *event);
 
 public:
-    typedef enum {NOTICE, WARNING, FAILURE, TERMINATE, STATE, REALM, CALL, DROP, ACTIVATE, RELEASE, WELCOME} type_t;
+    typedef enum {NOTICE, WARNING, FAILURE, TERMINATE, STATE, REALM, CALL, DROP, ACTIVATE, RELEASE, WELCOME, SYNC} type_t;
 
     type_t type;
 
@@ -81,6 +81,7 @@ public:
             char realm[64];
         } server;
         char reason[160];
+        unsigned period;
     };
 
     static bool start(void);
@@ -95,6 +96,7 @@ public:
     static void warning(const char *reason);
     static void failure(const char *reason);
     static void terminate(const char *reason);
+    static void sync(unsigned period = 0l);
 };
 
 typedef events event_t;

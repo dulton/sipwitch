@@ -164,6 +164,7 @@ void event_thread::run(void)
         if(client < 0)
             break;
 
+        events::sync();
         shell::log(DEBUG3, "connecting client events for %d", client);
         msg.type = events::WELCOME;
         msg.server.started = started;
@@ -172,6 +173,7 @@ void event_thread::run(void)
         String::set(msg.server.state, sizeof(msg.server.state), *saved_state);
         String::set(msg.server.realm, sizeof(msg.server.realm), *saved_realm);
         private_locking.release();
+        msg.type = events::WELCOME;
         ::send(client, &msg, sizeof(msg), 0);
         dispatch::add(client);
     }
@@ -270,6 +272,14 @@ void events::state(const char *str)
     private_locking.release();
     msg.type = STATE;
     String::set(msg.server.state, sizeof(msg.server.state), str);
+    dispatch::send(&msg);
+}
+
+void events::sync(unsigned period)
+{
+    events msg;
+    msg.type = SYNC;
+    msg.period = period;
     dispatch::send(&msg);
 }
 
