@@ -20,7 +20,7 @@
 #include <sipwitch/control.h>
 #include <sipwitch/mapped.h>
 
-#if defined(AF_UNIX) && !defined(_MSWINDOWS_)
+#if !defined(_MSWINDOWS_)
 #include <sys/un.h>
 #endif
 
@@ -31,8 +31,6 @@
 
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
-
-#if defined(AF_UNIX) && !defined(_MSWINDOWS_)
 
 static mutex_t private_locking;
 
@@ -183,31 +181,57 @@ void event_thread::run(void)
 
 bool events::start(void)
 {
-    struct sockaddr_un abuf;
-
     if(ipc != INVALID_SOCKET)
         return false;
 
+#ifdef  _MSWINDOWS_
+    struct sockaddr_in abuf;
+    ipc = ::socket(AF_INET, SOCK_STREAM, 0);
+#else
+    struct sockaddr_un abuf;
     ipc = ::socket(AF_UNIX, SOCK_STREAM, 0);
+#endif
+
     if(ipc == INVALID_SOCKET)
         return false;
 
     memset(&abuf, 0, sizeof(abuf));
+#ifdef  _MSWINDOWS_
+    abuf.sin_family = AF_INET;
+    abuf.sin_addr = inet_addr("127.0.0.1");
+    abuf.sin_port = 0;
+    if(::bind(ipc, (struct sockaddr *)&abuf, sizeof(abuf)) < 0)
+        goto failed;
+
+    socklen_t alen = sizeof(abuf);
+    ::getsockname(ipc, (struct sockaddr *)&abuf, &alen);
+    DWORD port = ntohs(addr.sin_port);
+    HKEY keys = HKEY_LOCAL_MACHINE;
+    if(RegCreateKeyEx(keys, "SOFTWARE\\sipwitch", 0L, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &subkey, NULL) == ERROR_SUCCESS) {
+        RegSetValueEx(subkey, "port", 0L, REG_DWORD, (const BYTE *)&port, sizeof(port));
+        port = GetCurrentProcessId();
+        RegSetValueEx(subkey, "pid", 0L, REG_DWORD, (const BYTE *)&port, sizeof(port));
+        RegCloseKey(subkey);
+    }
+#else
     abuf.sun_family = AF_UNIX;
     String::set(abuf.sun_path, sizeof(abuf.sun_path), control::env("events"));
 
     ::remove(control::env("events"));
-    if(::bind(ipc, (struct sockaddr *)&abuf, SUN_LEN(&abuf)) < 0) {
-failed:
-        Socket::release(ipc);
-        return false;
-    }
+    if(::bind(ipc, (struct sockaddr *)&abuf, SUN_LEN(&abuf)) < 0)
+        goto failed;
+#endif
 
     if(::listen(ipc, 10) < 0)
         goto failed;
 
     _thread_.start();
     return true;
+
+failed:
+    Socket::release(ipc);
+    ipc = INVALID_SOCKET;
+    return false;
 }
 
 void events::connect(cdr *rec)
@@ -326,52 +350,4 @@ void events::terminate(const char *reason)
     ipc = INVALID_SOCKET;
 }
 
-#else
 
-bool events::start(void)
-{
-    return false;
-}
-
-void events::terminate(const char *reason)
-{
-}
-
-void events::warning(const char *reason)
-{
-}
-
-void events::failure(const char *reason)
-{
-}
-
-void events::notice(const char *reason)
-{
-}
-
-void events::activate(MappedRegistry *rr)
-{
-}
-
-void events::release(MappedRegistry *rr)
-{
-}
-
-void events::connect(cdr *rec)
-{
-}
-
-void events::drop(cdr *rec)
-{
-}
-
-void events::realm(const char *str)
-{
-}
-
-void events::state(const char *str)
-{
-}
-
-
-#endif

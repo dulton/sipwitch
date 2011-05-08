@@ -1,5 +1,6 @@
 from version 0.10.5 to 0.10.6
 - using events sync to validate connections and pass down housekeeping clock.
+- event ipc extended multiplatform by fallback to localhost inet socket.
 
 from version 0.10.4 to 0.10.5
 - more consistent paths in cmake.
