@@ -24,7 +24,7 @@
 #endif
 #include <config.h>
 
-#if defined(AF_UNIX) && !defined(_MSWINDOWS_)
+#if !defined(_MSWINDOWS_)
 #include <sys/un.h>
 #endif
 
@@ -415,12 +415,16 @@ static void periodic(char **argv)
     exit(0);
 }
 
-#if defined(AF_UNIX) && !defined(_MSWINDOWS_)
 static void showevents(char **argv)
 {
+#ifdef  _MSWINDOWS_
+    socket_t ipc = ::socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in addr;
+#else
     socket_t ipc = ::socket(AF_UNIX, SOCK_STREAM, 0);
     struct sockaddr_un addr;
     struct passwd *pwd = getpwuid(getuid());
+#endif
 
     if(argv[1])
         shell::errexit(1, "*** sipwitch: events: no arguments used\n");
@@ -429,6 +433,19 @@ static void showevents(char **argv)
         shell::errexit(9, "*** sipwitch: events: cannot create event socket\n");
 
     memset(&addr, 0, sizeof(addr));
+
+#ifdef  _MSWINDOWS_
+    DWORD port;
+    DWORD plen;
+    plen = sizeof(port);
+    if(RegGetValue(HKEY_LOCAL_MACHINE, "SOFTWARE\\sipwitch", "port", RRF_RT_REG_DWORD, NULL, &port, &plen) != ERROR_SUCCESS)
+        shell::errexit(10, "*** sipwitch: events: no service found\n");
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    addr.sin_port = htons(port);
+    if(::connect(ipc, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+        shell::errexit(10, "*** sipwitch: events: server offline\n");
+#else
     addr.sun_family = AF_UNIX;
     String::set(addr.sun_path, sizeof(addr.sun_path), DEFAULT_VARPATH "/run/sipwitch/events");
     if(::connect(ipc, (struct sockaddr *)&addr, SUN_LEN(&addr)) < 0) {
@@ -441,6 +458,7 @@ static void showevents(char **argv)
         if(::connect(ipc, (struct sockaddr *)&addr, SUN_LEN(&addr)) < 0)
             shell::errexit(10, "*** sipwitch: events: server offline\n");
     }
+#endif
 
     event_t event;
     while(::recv(ipc, &event, sizeof(event), 0) == sizeof(event)) {
@@ -497,7 +515,6 @@ static void showevents(char **argv)
     }
     shell::errexit(11, "*** sipwitch: events: connection lost\n");
 }
-#endif
 
 static void dumpstats(char **argv)
 {
@@ -728,9 +745,7 @@ static void usage(void)
         "  down                     Shut down server\n"
         "  drop <user|callid>       Drop an active call\n"
         "  dump                     Dump server configuration\n"
-#if defined(AF_UNIX) && !defined(_MSWINDOWS_)
         "  events                   Display server events\n"
-#endif
         "  history [bufsize]        Set buffer or dump error log\n"
         "  ifup <iface>             Notify interface came up\n"
         "  ifdown <iface>           Notify interface went down\n"
@@ -926,10 +941,8 @@ PROGRAM_MAIN(argc, argv)
             realm(argv);
     else if(eq(*argv, "drop"))
         drop(argv);
-#if defined(AF_UNIX) && !defined(_MSWINDOWS_)
     if(eq(*argv, "events"))
         showevents(argv);
-#endif
     if(!argv[1])
         shell::errexit(1, "use: sipwitch command [arguments...]\n");
     else
