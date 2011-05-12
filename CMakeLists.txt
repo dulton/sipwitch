@@ -85,7 +85,7 @@ find_package(PkgConfig)
 if (USES_UCOMMON_INCLUDE_DIRS)
     message(STATUS "  Using local ucommon dependency")
 else()
-    pkg_check_modules(USES_UCOMMON REQUIRED ucommon>=4.2.0)
+    pkg_check_modules(USES_UCOMMON REQUIRED ucommon>=4.3.0)
 endif()
 
 pkg_check_modules(USES_ZEROCONF avahi-client>0.3)

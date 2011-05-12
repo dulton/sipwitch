@@ -238,6 +238,9 @@ void events::connect(cdr *rec)
 {
     events msg;
     msg.type = CALL;
+    msg.call.started = rec->starting;
+    String::set(msg.call.reason, sizeof(msg.call.reason), rec->reason);
+    String::set(msg.call.network, sizeof(msg.call.network), rec->network);
     String::set(msg.call.caller, sizeof(msg.call.caller), rec->ident);
     String::set(msg.call.dialed, sizeof(msg.call.dialed), rec->dialed);
     String::set(msg.call.display, sizeof(msg.call.display), rec->display);

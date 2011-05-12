@@ -500,12 +500,12 @@ static void showevents(char **argv)
             printf("exiting: %s\n", event.reason);
             exit(0);
         case events::CALL:
-            printf("connecting %s to %s\n",
-                event.call.caller, event.call.dialed);
+            printf("connecting %s to %s on %s\n",
+                event.call.caller, event.call.dialed, event.call.network);
             break;
         case events::DROP:
-            printf("disconnect %s from %s\n",
-                event.call.caller, event.call.dialed);
+            printf("disconnect %s from %s, reason=%s\n",
+                event.call.caller, event.call.dialed, event.call.reason);
             break;
         case events::RELEASE:
             if(event.user.extension)

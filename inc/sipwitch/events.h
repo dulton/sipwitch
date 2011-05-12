@@ -66,6 +66,9 @@ public:
 
     union {
         struct {
+            time_t started;
+            char reason[16];
+            char network[MAX_NETWORK_SIZE * 2];
             char dialed[MAX_USERID_SIZE];
             char caller[MAX_IDENT_SIZE];
             char display[MAX_DISPLAY_SIZE];
