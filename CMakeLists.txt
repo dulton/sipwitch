@@ -157,7 +157,9 @@ file(GLOB runtime_inc inc/sipwitch/*.h)
 set(server_src server/server.cpp server/registry.cpp server/stack.cpp server/thread.cpp server/call.cpp server/messages.cpp server/media.cpp server/system.cpp server/signals.cpp server/history.cpp)
 set(server_inc server/server.h)
 
-if(BUILD_STATIC)
+STRING(COMPARE EQUAL "${BUILD_RUNTIME_TYPE}" "SHARED" HAVE_PLUGINS)
+
+if(NOT HAVE_PLUGINS)
     set(server_src ${server_src} server/forward.cpp server/scripting.cpp)
 endif()
 
@@ -193,7 +195,7 @@ add_dependencies(sipwitch-control usecure ucommon)
 target_link_libraries(sipwitch-control usecure ucommon ${SECURE_LIBS} ${UCOMMON_LIBS})
 set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipwitch)
 
-if(NOT BUILD_STATIC AND HAVE_EXOSIP2)
+if(HAVE_PLUGINS AND HAVE_EXOSIP2)
     add_library(sipwitch-forward MODULE server/forward.cpp)
     add_dependencies(sipwitch-forward sipwitch-runtime ucommon)
     target_link_libraries(sipwitch-forward sipwitch-runtime ${EXOSIP2_LIBS} ${USES_UCOMMON_LIBRARIES})
@@ -210,7 +212,7 @@ if(NOT BUILD_STATIC AND HAVE_EXOSIP2)
     set_target_properties(sipwitch-subscriber PROPERTIES OUTPUT_NAME subscriber)
 endif()
 
-if(NOT BUILD_STATIC AND USES_ZEROCONF AND HAVE_EXOSIP2)
+if(HAVE_PLUGINS AND USES_ZEROCONF AND HAVE_EXOSIP2)
     add_library(sipwitch-zeroconf MODULE server/scripting.cpp)
     add_dependencies(sipwitch-zeroconf sipwitch-runtime ucommon)
     target_link_libraries(sipwitch-zeroconf sipwitch-runtime ${USES_ZEROCONF_LIBRARIES} ${USES_UCOMMON_LIBRARIES})
