@@ -17,7 +17,7 @@ URL: http://www.gnu.org/software/sipwitch
 Group: Applications/Communications
 Source: http://www.gnutelephony.org/dist/tarballs/sipwitch-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildRequires: ucommon-devel >= 4.2.0
+BuildRequires: ucommon-devel >= 5.0.0
 BuildRequires: libeXosip2-devel >= 3.0.0
 BuildRequires: avahi-devel
 BuildRequires: openssl-devel
@@ -32,7 +32,7 @@ Group: Development/Libraries
 Summary: Runtime library support for sipwitch
 
 %package devel
-Requires: ucommon-devel >= 4.1.0
+Requires: ucommon-devel >= 5.0.0
 Requires: %{name}-runtime = %{version}-%{release}
 Group: Development/Libraries
 Summary: Headers for building sipwitch plugins
