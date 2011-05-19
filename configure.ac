@@ -357,6 +357,13 @@ AH_BOTTOM([
 #ifndef HAVE_LOCALTIME_R
 #define localtime_r(x, y)   localtime(x)
 #endif
+
+#ifdef  _MSC_VER
+#define MODULE_EXT ".dll"
+#else
+#define MODULE_EXT ".so"
+#endif
+
 ])
 
 DAEMON_LIBS=""

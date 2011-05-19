@@ -163,11 +163,12 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     const char *cp;
     const char *prefix;
     const char *rundir;
-    const char *plugins = argv[0];
+    const char *plugins = DEFAULT_LIBPATH "/sipwitch";
     shell args;
 
     shell::bind("sipwitch");
     corefiles();
+    args.getargv0(argv);
 
 #if defined(DEBUG)
     if(eq(argv[1], "-gdb") || eq(argv[1], "--gdb") || eq(argv[1], "-dbg") || eq(argv[1], "--dbg")) {
@@ -191,7 +192,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 #endif
 
     // cheat out shell parser...
-    argv[0] = (char *)"sipwitch";
+    // argv[0] = (char *)"sipwitch";
 
     args.setsym("statmap", STAT_MAP);
     args.setsym("callmap", CALL_MAP);
@@ -199,8 +200,8 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 
 #ifdef _MSWINDOWS_
     rundir = strdup(str(args.getenv("APPDATA")) + "/sipwitch");
-    prefix = "C:\\Program Files\\sipwitch";
-    plugins = "C:\\Program Files\\sipwitch\\plugins";
+    prefix = args.execdir();
+    plugins = args.execdir();
     args.setsym("config", _STR(str(prefix) + "/sipwitch.ini"));
     args.setsym("controls", rundir);
     args.setsym("control", "\\\\.\\mailslot\\sipwitch_ctrl");
@@ -213,6 +214,10 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     args.setsym("shell", "cmd.exe");
     prefix = rundir;
 #else
+    const char *dp = strchr(args.execdir(), '/');
+    if(dp && !eq(dp, "/bin") && !eq(dp, "/sbin"))
+        plugins = args.execdir();
+
     prefix = DEFAULT_VARPATH "/lib/sipwitch";
     rundir = DEFAULT_VARPATH "/run/sipwitch";
     args.setsym("reply", "/tmp/.sipwitch.");
@@ -241,9 +246,6 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
             daemon = false;
         };
     }
-
-    if(!getuid())
-        plugins = DEFAULT_LIBPATH "/sipwitch";
 
     if(!daemon && pwd) {
         rundir = strdup(str("/tmp/sipwitch-") + str(pwd->pw_name));
@@ -445,7 +447,6 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 
     shell::loglevel_t level = (shell::loglevel_t)*verbose;
     history::set(*histbuf);
-    server::plugins(plugins, *loading);
 
     // daemonify process....
     if(daemon) {
@@ -456,6 +457,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     else
         shell::log("sipwitch", level, server::logmode, &errlog);
 
+    server::plugins(plugins, *loading);
     signals::setup();
 
     const char *home = getenv("HOME");

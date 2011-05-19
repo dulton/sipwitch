@@ -941,42 +941,37 @@ caddr_t server::allocate(size_t size, LinkedObject **list, volatile unsigned *co
 }
 
 #ifdef  _MSWINDOWS_
-#define DLL_SUFFIX  ".dll"
 #define LIB_PREFIX  "_libs"
 #else
 #define LIB_PREFIX  ".libs"
-#define DLL_SUFFIX  ".so"
 #endif
 
-void server::plugins(const char *argv0, const char *list)
+void server::plugins(const char *prefix, const char *list)
 {
     char buffer[256];
     char path[256];
     char *tp = NULL;
-    char *ep;
     const char *cp;
     fsys    module;
     fsys    dir;
+    char *ep;
     unsigned el;
 
     if(!list || !*list || !stricmp(list, "none"))
         return;
 
-    if(!stricmp(list, "auto")) {
-        String::set(path, sizeof(path), argv0);
-        ep = strstr(path, LIB_PREFIX);
-        if(ep)
-            ep[strlen(LIB_PREFIX)] = 0;
-        else
-            String::set(path, sizeof(path), DEFAULT_LIBPATH "/sipwitch");
+    if(case_eq(list, "auto")) {
+        String::set(path, sizeof(path), prefix);
         el = strlen(path);
         fsys::open(dir, path, fsys::ACCESS_DIRECTORY);
         while(is(dir) && fsys::read(dir, buffer, sizeof(buffer)) > 0) {
             ep = strrchr(buffer, '.');
-            if(!ep || stricmp(ep, DLL_SUFFIX))
+            if(!ep || !case_eq(ep, MODULE_EXT))
+                continue;
+            if(case_eq(buffer, "lib", 3))
                 continue;
             snprintf(path + el, sizeof(path) - el, "/%s", buffer);
-            shell::log(shell::INFO, "loading %s" DLL_SUFFIX, buffer);
+            shell::log(shell::INFO, "loading %s%s", buffer, MODULE_EXT);
             if(fsys::load(path))
                 shell::log(shell::ERR, "failed loading %s", path);
         }
@@ -985,20 +980,8 @@ void server::plugins(const char *argv0, const char *list)
     else {
         String::set(buffer, sizeof(buffer), list);
         while(NULL != (cp = String::token(buffer, &tp, ", ;:\r\n"))) {
-            String::set(path, sizeof(path), argv0);
-            ep = strstr(path, LIB_PREFIX);
-            if(ep) {
-                ep[strlen(LIB_PREFIX) + 1] = 0;
-                String::add(path, sizeof(path), cp);
-                String::add(path, sizeof(path), DLL_SUFFIX);
-                if(fsys::isfile(path)) {
-                    shell::log(shell::INFO, "loading %s" DLL_SUFFIX " locally", cp);
-                    goto loader;
-                }
-            }
-            snprintf(path, sizeof(path), DEFAULT_LIBPATH "/sipwitch/%s" DLL_SUFFIX, cp);
-            shell::log(shell::INFO, "loading %s" DLL_SUFFIX, cp);
-loader:
+            snprintf(path, sizeof(path), "%s/%s%s", prefix, cp, MODULE_EXT);
+            shell::log(shell::INFO, "loading %s" MODULE_EXT, cp);
             if(fsys::load(path))
                 shell::log(shell::ERR, "failed loading %s", path);
         }
