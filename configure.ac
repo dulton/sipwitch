@@ -173,6 +173,10 @@ PKG_CHECK_MODULES(EXOSIP2, eXosip2 >= 3.0.0, [
         AC_HELP_STRING([--with-libeXosip2=xxx],[specify eXosip2 library]),
             [EXOSIP2_LIBS="$with_libeXosip2"],[EXOSIP2_LIBS="-leXosip2"])
 
+    AC_CHECK_HEADER(resolv.h,[
+        EXOSIP2_LIBS="$EXOSIP2_LIBS -lresolv"
+    ],[])
+
     AC_CHECK_HEADER(eXosip2/eXosip.h,,[
         AC_ERROR("libeXosip2 must be installed or build --disable-sipwitch-server")
     ])
