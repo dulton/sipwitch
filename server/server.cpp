@@ -960,7 +960,7 @@ void server::plugins(const char *prefix, const char *list)
     if(!list || !*list || !stricmp(list, "none"))
         return;
 
-    if(case_eq(list, "auto")) {
+    if(case_eq(list, "auto") || case_eq(list, "all")) {
         String::set(path, sizeof(path), prefix);
         el = strlen(path);
         fsys::open(dir, path, fsys::ACCESS_DIRECTORY);

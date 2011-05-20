@@ -157,14 +157,8 @@ configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 file(GLOB runtime_src common/*.cpp)
 file(GLOB runtime_inc inc/sipwitch/*.h)
-set(server_src server/server.cpp server/registry.cpp server/stack.cpp server/thread.cpp server/call.cpp server/messages.cpp server/media.cpp server/system.cpp server/signals.cpp server/history.cpp)
-set(server_inc server/server.h)
 
 STRING(COMPARE EQUAL "${BUILD_RUNTIME_TYPE}" "SHARED" HAVE_PLUGINS)
-
-if(NOT HAVE_PLUGINS)
-    set(server_src ${server_src} server/forward.cpp server/scripting.cpp)
-endif()
 
 add_library(sipwitch-runtime ${BUILD_RUNTIME_TYPE} ${runtime_src} ${runtime_inc})
 set_target_properties(sipwitch-runtime PROPERTIES VERSION ${VERSION} SOVERSION ${SOVERSION})
@@ -173,15 +167,14 @@ target_link_libraries(sipwitch-runtime ${USES_UCOMMON_LIBRARIES})
 set_target_properties(sipwitch-runtime PROPERTIES OUTPUT_NAME sipwitch)
 
 if(HAVE_EXOSIP2)
-    add_executable(sipwitch ${server_src} ${server_inc})
-    add_dependencies(sipwitch sipwitch-runtime usecure ucommon eXosip2)
-    target_link_libraries(sipwitch sipwitch-runtime usecure ucommon ${EXOSIP2_LIBS} ${SECURE_LIBS} ${UCOMMON_LIBS})
-    set_target_properties(sipwitch PROPERTIES OUTPUT_NAME sipw)
+    add_subdirectory(server)
 
     add_executable(sipwitch-query utils/sipquery.cpp)
     add_dependencies(sipwitch-query usecure ucommon eXosip2)
     target_link_libraries(sipwitch-query usecure ucommon ${EXOSIP2_LIBS} ${SECURE_LIBS} ${UCOMMON_LIBS})
     set_target_properties(sipwitch-query PROPERTIES OUTPUT_NAME sipquery)
+
+    install(TARGETS sipwitch-query DESTINATION ${INSTALL_BINDIR})
 endif()
 
 add_executable(sipwitch-cgi utils/cgiserver.cpp)
@@ -198,44 +191,11 @@ add_dependencies(sipwitch-control usecure ucommon)
 target_link_libraries(sipwitch-control usecure ucommon ${SECURE_LIBS} ${UCOMMON_LIBS})
 set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipwitch)
 
-if(HAVE_PLUGINS AND HAVE_EXOSIP2)
-    add_library(sipwitch-forward MODULE server/forward.cpp)
-    add_dependencies(sipwitch-forward sipwitch-runtime ucommon)
-    target_link_libraries(sipwitch-forward sipwitch-runtime ${EXOSIP2_LIBS} ${USES_UCOMMON_LIBRARIES})
-    set_target_properties(sipwitch-forward PROPERTIES OUTPUT_NAME forward SUFFIX ${MODULE_EXT} PREFIX "")
-
-    add_library(sipwitch-scripting MODULE server/scripting.cpp)
-    add_dependencies(sipwitch-scripting sipwitch-runtime ucommon)
-    target_link_libraries(sipwitch-scripting sipwitch-runtime ${USES_UCOMMON_LIBRARIES})
-    set_target_properties(sipwitch-scripting PROPERTIES OUTPUT_NAME scripting SUFFIX ${MODULE_EXT} PREFIX "")
-
-    add_library(sipwitch-subscriber MODULE server/subscriber.cpp)
-    add_dependencies(sipwitch-subscriber sipwitch-runtime usecure ucommon)
-    target_link_libraries(sipwitch-subscriber sipwitch-runtime usecure ucommon ${EXOSIP2_LIBS} ${SECURE_LIBS} ${UCOMMON_LIBS})
-    set_target_properties(sipwitch-subscriber PROPERTIES OUTPUT_NAME subscriber SUFFIX ${MODULE_EXT} PREFIX "")
-endif()
-
-if(HAVE_PLUGINS AND USES_ZEROCONF AND HAVE_EXOSIP2)
-    add_library(sipwitch-zeroconf MODULE server/scripting.cpp)
-    add_dependencies(sipwitch-zeroconf sipwitch-runtime ucommon)
-    target_link_libraries(sipwitch-zeroconf sipwitch-runtime ${USES_ZEROCONF_LIBRARIES} ${USES_UCOMMON_LIBRARIES})
-    set_target_properties(sipwitch-zeroconf PROPERTIES OUTPUT_NAME zeroconf SUFFIX ${MODULE_EXT} PREFIX "")
-endif()
 
 install(FILES   ${runtime_inc}  DESTINATION ${INSTALL_INCLUDEDIR}/sipwitch  COMPONENT headers)
 install(TARGETS sipwitch-runtime DESTINATION ${INSTALL_LIBDIR})
 install(TARGETS sipwitch-control sipwitch-cgi DESTINATION ${INSTALL_BINDIR})
 install(TARGETS sipwitch-passwd DESTINATION ${INSTALL_BINDIR} PERMISSIONS SETUID)
 
-if(HAVE_EXOSIP2)
-    install(TARGETS sipwitch DESTINATION ${INSTALL_SBINDIR})
-    install(TARGETS sipwitch-query DESTINATION ${INSTALL_BINDIR})
-    if(NOT BUILD_STATIC)
-        install(TARGETS sipwitch-forward sipwitch-scripting sipwitch-subscriber DESTINATION ${INSTALL_PLUGINS})
-    endif()
-    if(NOT BUILD_STATIC AND USES_ZEROCONF)
-        install(TARGETS sipwitch-zeroconf DESTINATION ${INSTALL_PLUGINS})
-    endif()
-endif()
 
 

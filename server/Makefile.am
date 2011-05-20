@@ -12,7 +12,7 @@ MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@ 
 LDADD = ../common/libsipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ @DAEMON_LIBS@
 EXTRA_DIST = *.xml *-example *.conf *.log *.defaults *.init *.cron *.8 \
-	sipwitch.ifup sipwitch.ifdown sipwitch.reload
+	sipwitch.ifup sipwitch.ifdown sipwitch.reload CMakeLists.txt
 EXTRA_LTLIBRARIES =
 
 man_MANS = sipw.8

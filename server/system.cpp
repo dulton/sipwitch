@@ -214,8 +214,9 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     args.setsym("shell", "cmd.exe");
     prefix = rundir;
 #else
-    const char *dp = strchr(args.execdir(), '/');
-    if(dp && !eq(dp, "/bin") && !eq(dp, "/sbin"))
+    // if local build directory image being executed directly...
+    const char *dp = strrchr(args.execdir(), '/');
+    if(dp && (eq(dp, "/.") || eq(dp, "/server")))
         plugins = args.execdir();
 
     prefix = DEFAULT_VARPATH "/lib/sipwitch";
