@@ -216,7 +216,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 #else
     // if local build directory image being executed directly...
     const char *dp = strrchr(args.execdir(), '/');
-    if(dp && (eq(dp, "/.") || eq(dp, "/server")))
+    if(dp && (eq(dp, "/.") || eq(dp, "/server") || eq(dp, "/.libs")))
         plugins = args.execdir();
 
     prefix = DEFAULT_VARPATH "/lib/sipwitch";
