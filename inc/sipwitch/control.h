@@ -46,25 +46,94 @@ using namespace UCOMMON_NAMESPACE;
 #define DEBUG2  (shell::loglevel_t(((unsigned)shell::DEBUG0 + 1)))
 #define DEBUG3  (shell::loglevel_t(((unsigned)shell::DEBUG0 + 2)))
 
+/**
+ * Server control interfaces and functions.  This is an internal management
+ * class for the server control fifo and for other server control operations.
+ * @author David Sugar <dyfet@gnutelephony.org>
+ */
 class __EXPORT control
 {
 private:
     static shell_t *args;
 
 public:
-    static bool send(const char *fmt, ...) __PRINTF(1, 2);
-    static void result(const char *value);
+    /**
+     * Send a printf-style message to the control fifo via the file system.
+     * While plugins can also use this to send control messages back into the
+     * server, we should create a method that does not require going to the
+     * external filesystem to do this.
+     * @param format string.
+     * @return true if successful.
+     */
+    static bool send(const char *format, ...) __PRINTF(1, 2);
+
+    /**
+     * Used by the server to pull pending fifo requests.
+     * @return string of next fifo input.
+     */
     static char *receive(void);
-    static void reply(const char *err = NULL);
+
+    /**
+     * Used by the server to send replies back to control requests.
+     * @param error string to report or NULL for none.
+     */
+    static void reply(const char *error = NULL);
+
+    /**
+     * Creates the control fifo using server configuration.  This also
+     * attaches the shell environment and command line arguments to the
+     * current server instance so it can be accessed by other things.
+     * @param env of server.
+     * @return size of longest control message supported.
+     */
     static size_t attach(shell_t *env);
+
+    /**
+     * Used by the server to destroy the control fifo.
+     */
     static void release(void);
+
+    /**
+     * Sets server run state configuration.  This is done by symlinking
+     * a state xml file when selecting a special running state.
+     * @param state to select.
+     * @return true if set to state.
+     */
     static bool state(const char *value);
+
+    /**
+     * Execute an external shell command on behalf of the server.  This
+     * might also be used by plugins to execute supporting processes.  The
+     * function waits until the child process completes but does not return
+     * the child exit code.
+     * @param format of shell command to execute.
+     * @return true if successfully executed.
+     */
     static bool libexec(const char *fmt, ...) __PRINTF(1, 2);
+
+    /**
+     * Used to open an output session for returning control data.
+     * @param id of output type.
+     * @return file handle to write to or NULL on failure.
+     */
     static FILE *output(const char *id);
 
+    /**
+     * Return the value of a server environment variable.  This is commonly
+     * used by plugins to get access to the server environment.
+     * @param id of environment symbol.
+     * @return value of symbol or NULL if not found.
+     */
     inline static const char *env(const char *id)
         {return args->getsym(id);}
 
+    /**
+     * Get a string from a server environment variable.  This is often
+     * used to get pathname variables which may then be further
+     * concatenated.  This is commonly used by plugins to get paths.
+     * @param id of environment symbol.
+     * @return string value of symbol requested.
+     */
     inline static String path(const char *id)
         {return (String)(args->getsym(id));}
 };

@@ -15,14 +15,13 @@
 
 /**
  * Compute cryptographic hashes and cipher memory.
- * Common cryptographic hash support depends on the underlying crypto
- * library that we are linked with.  This is used to compute hashes for
- * digest authentication.
- * @file sipwitch/digest.h
+ * This is used for the sipwitch database files such as the user digest
+ * hashes, future user programmable speed dials, etc.
+ * @file sipwitch/db.h
  */
 
-#ifndef _SIPWITCH_DIGEST_H_
-#define _SIPWITCH_DIGEST_H_
+#ifndef _SIPWITCH_DB_H_
+#define _SIPWITCH_DB_H_
 
 #ifndef _UCOMMON_STRING_H_
 #include <ucommon/string.h>
@@ -35,13 +34,48 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+/**
+ * Access to sipwitch database of user digests.  This is used as an
+ * authentication database by user id and is most often used for sharing
+ * sipwitch user ids with system logins.  SIP digest hashes include the
+ * current sip realm.
+ * @author David Sugar <dyfet@gnutelephony.org>
+ */
 class __EXPORT digests
 {
 public:
+    /**
+     * Clear out all digests.  This is needed when the realm is changed.
+     */
     static void clear(void);
+
+    /**
+     * Lookup a digest for a specific user id.  If a string is returned,
+     * the digest database is also locked, so that the contents of the
+     * pointer cannot be modified by another thread.  You must use release()
+     * after a get() when done with using the hash.
+     * @param id of user to find.
+     * @return digest string for given user or NULL if not found.
+     */
     static const char *get(const char *id);
+
+    /**
+     * Set digest id for a given user.
+     * @param id of user to set.
+     * @param hash digest to store for given user.
+     * @return true if saved.
+     */
     static bool set(const char *id, const char *hash);
+
+    /**
+     * Used to release a hash digest that was acquired by get and unlock db.
+     * @param hash digest we got.
+     */
     static void release(const char *hash);
+
+    /**
+     * Load database file.
+     */
     static void load(void);
 };
 
