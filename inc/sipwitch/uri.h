@@ -40,6 +40,10 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+/**
+ * Some convenience methods for manipulating SIP uri's.
+ * @author David Sugar <dyfet@gnutelephony.org>
+ */
 class __EXPORT uri
 {
 public:

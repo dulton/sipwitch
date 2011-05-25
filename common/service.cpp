@@ -53,7 +53,6 @@ service *service::cfg = NULL;
 volatile service::dialmode_t service::dialmode = service::ALL_DIALING;
 
 static struct sockaddr_storage peering;
-static char header[80] = "- welcome";
 static time_t started = 0l;
 static time_t periodic = 0l;
 
@@ -219,11 +218,6 @@ service::~service()
     // or child nodes, since all was allocated from the "pager" heap.
     memset(&root, 0, sizeof(root));
     memalloc::purge();
-}
-
-void service::setHeader(const char *h)
-{
-    String::set(header, sizeof(header) - 1, h);
 }
 
 void service::publish(const char *addr)

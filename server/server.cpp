@@ -243,9 +243,6 @@ void server::confirm(void)
     const char *fn;
     digest_t digest = registry::getDigest();
 
-    snprintf(buf, sizeof(buf), "- welcome prefix=%d range=%d", prefix, range);
-    setHeader(buf);
-
     // add any missing keys
     getPath("devices");
 

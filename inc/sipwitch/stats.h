@@ -44,6 +44,16 @@ using namespace UCOMMON_NAMESPACE;
 
 #define STAT_MAP    "sipwitch.stats"
 
+/**
+ * A stat element of call traffic.  Stats may cover a specific element for
+ * a current time period, and total stats for the life of the server.  This
+ * is used to determine server utilization, to determine peak times such as
+ * may be needed for acd traffic analysis, and to categorize the kind of
+ * traffic we are processing through the server.  There is a "system" stat
+ * node for ALL server call traffic, as well as nodes for collecting stats
+ * on all extensions, on all service entries, etc.
+ * @author David Sugar <dyfet@gnutelephony.org>
+ */
 class __EXPORT stats
 {
 public:
@@ -51,6 +61,9 @@ public:
 
     typedef enum {INCOMING = 0, OUTGOING = 1} stat_t;
 
+    /**
+     * We have stats for both incoming and outgoing traffic of various kinds.
+     */
     struct
     {
         unsigned long total, period, pperiod;
@@ -60,15 +73,57 @@ public:
     time_t lastcall;
     unsigned short limit;
 
+    /**
+     * Assign a call to inbound or outbound statistic for this stat node.
+     * Increments count.
+     * @param elenent (in or out) to assign to.
+     */
     void assign(stat_t element);
+
+    /**
+     * Release a call from inbound or outbound stastic for this stat node.
+     * This is commonly related to call drop and decrements count.
+     * @param element (in or out) to release from.
+     */
     void release(stat_t element);
 
+    /**
+     * Total number of active calls in the server at the moment.
+     * @return total active calls.
+     */
     unsigned active(void) const;
 
-    static void period(FILE *fp = NULL);
+    /**
+     * Write out statistics to a file for the current period.  The stats
+     * are also reset for the new period.  The period is also the sync
+     * period of the sync event, and is set with the service::period method.
+     * @param file to write to or NULL for none.
+     */
+    static void period(FILE *file = NULL);
+
+    /**
+     * Create stats in shared memory pool.  Creates several default statistic
+     * nodes for groups of calls, and returns the "system" stat node for the
+     * total server.
+     */
     static stats *create(void);
+
+    /**
+     * Request a stat node from the memory pool by id.  If the node does not
+     * exist, it is created.
+     * @return node from shared memory or NULL if out of nodes.
+     */
     static stats *request(const char *id);
+
+    /**
+     * Server allocate x number of stat nodes at startup.
+     * @param number of stat nodes to allocate.
+     */
     static void allocate(unsigned count);
+
+    /**
+     * Release stat nodes shared memory segment.
+     */
     static void release(void);
 };
 

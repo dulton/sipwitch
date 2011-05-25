@@ -66,17 +66,42 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+/**
+ * System configuration instance and service functions.  This provides an
+ * instance of a system configuration compiled from xml configs.  There is
+ * an active instance which represents the current configuration, and a new
+ * instance can be created without stopping the server.  This also provides
+ * high level service functions in the runtime library for the server and
+ * plugins to use.  The xml tree nodes are stored in a paged allocator.
+ * @author David Sugar <dyfet@gnutelephony.org>
+ */
 class __EXPORT service : public memalloc
 {
 public:
+    /**
+     * Definition of a xml node.
+     */
     typedef treemap<char *>keynode;
+
+    /**
+     * Dialing mode supported.  Whether by extension, userid, or both.
+     */
     typedef enum {EXT_DIALING, USER_DIALING, ALL_DIALING} dialmode_t;
 
+    /**
+     * Keyword and value pair definition lists.
+     */
     typedef struct {
         const char *key;
         const char *value;
     } define;
 
+    /**
+     * Used to splice new chains onto an existing xml tree.  This is how
+     * xml user templates are attached and activated to an existing
+     * user node.  This assumes the template is used exclusively for
+     * attaching additional child nodes.
+     */
     class __EXPORT keyclone : public treemap<char *>
     {
     public:
@@ -86,6 +111,11 @@ public:
             {id = (char *)tag;};
     };
 
+    /**
+     * Pointer to a provisioned user xml subtree.  This can be a subtree
+     * in the master service xml tree, or a locally created temporary
+     * tree that is for example filled in from a sql table query by a plugin.
+     */
     class __EXPORT usernode
     {
     public:
@@ -94,6 +124,9 @@ public:
         usernode();
     };
 
+    /**
+     * A pointer to a subtree in the xml configuration tree.
+     */
     class __EXPORT pointer
     {
     private:
@@ -120,6 +153,9 @@ public:
             {return node;};
     };
 
+    /**
+     * The current singleton instance of the active xml configuration tree.
+     */
     class __EXPORT instance
     {
     private:
@@ -133,6 +169,12 @@ public:
             {return service::cfg;};
     };
 
+    /**
+     * Callback methods for objects managed under the service thread.  This
+     * ultimately includes plugin modules.  Since it is used as a base class
+     * for all plugin services, it is also a place to pass common config
+     * info in the server that needs to be directly accessible by plugins.
+     */
     class __EXPORT callback : public OrderedObject
     {
     protected:
@@ -190,7 +232,15 @@ public:
 
     static volatile dialmode_t dialmode;
 
-    bool load(FILE *fp, keynode *node = NULL);
+    /**
+     * Load xml file into xml tree.  This may load into the root node, or
+     * to a subnode.  The <provision> xml files for users are all loaded
+     * into the <provision> subtree this way.
+     * @param file to load from.
+     * @param node to load to or NULL to make a root node for master config.
+     */
+    bool load(FILE *file, keynode *node = NULL);
+
     keynode *getPath(const char *path);
     keynode *getNode(keynode *base, const char *id, const char *value);
     keynode *addNode(keynode *base, define *defs);
@@ -213,7 +263,13 @@ public:
     inline static bool isNode(keynode *node)
         {return isLinked(node) && isValue(node);};
 
+    /**
+     * Set and publish public "appearing" address of the server.  This
+     * probably should also appear in the events system.
+     * @param addr we are appearing as (dns name or ip addr).
+     */
     static void publish(const char *addr);
+
     static void published(struct sockaddr_storage *peer);
     static const char *getValue(keynode *base, const char *id);
     static void dump(FILE *fp, keynode *node, unsigned level);
@@ -248,6 +304,9 @@ public:
 protected:
     friend class instance;
 
+    /**
+     * Linked list of named xml node locations.
+     */
     class __LOCAL keymap : public LinkedObject
     {
     public:
@@ -262,9 +321,12 @@ protected:
     static service *cfg;
     static condlock_t locking;
 
-    void setHeader(const char *header);
-    void clearId(void);
-    void addAttributes(keynode *node, char *astr);
+    /**
+     * Add attributes in a XML entity as child nodes of the xml node.
+     * @param node in tree of our node.
+     * @param attrib string we must decompose into child nodes.
+     */
+    void addAttributes(keynode *node, char *attrib);
 };
 
 #define RUNLEVELS   (sizeof(callback::runlevels) / sizeof(LinkedObject *))
