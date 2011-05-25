@@ -104,34 +104,6 @@ const char *server::referRemote(MappedRegistry *rr, const char *target, char *bu
     return refer;
 }
 
-MappedRegistry *server::redirect(const char *target)
-{
-    assert(target != NULL && *target != 0);
-
-    MappedRegistry *rr = NULL;
-    linked_pointer<modules::sipwitch> cb = getModules();
-
-    while(!rr && is(cb)) {
-        rr = cb->redirect(target);
-        cb.next();
-    }
-    return rr;
-}
-
-MappedRegistry *server::accept(const char *uri)
-{
-    assert(uri != NULL);
-
-    MappedRegistry *rr = NULL;
-    linked_pointer<modules::sipwitch> cb = getModules();
-
-    while(!rr && is(cb)) {
-        rr = cb->accept(uri);
-        cb.next();
-    }
-    return rr;
-}
-
 const char *server::referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size)
 {
     assert(target != NULL && *target != 0);

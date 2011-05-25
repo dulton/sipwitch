@@ -16,7 +16,9 @@
 /**
  * Stream events to local clients.  This defines server side support for
  * streaming events to clients.  The client side code is not implemented
- * here to avoid the need to link with sipwitch runtime.
+ * here to avoid the need to link with sipwitch runtime.  The runtime library
+ * methods are meant for server use, and are called from existing runtime
+ * library methods, so plugins should not need to call them directly.
  * @file sipwitch/events.h
  */
 
@@ -54,16 +56,34 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+/**
+ * Event message and supporting methods for plugins.  This defines what
+ * an event message is as passed from the server to clients listening on
+ * (unix or inet) sockets, and also what functions are offered in the
+ * runtime library for the server and plugins to send events to clients.
+ * @author David Sugar <dyfet@gnutelephony.org>
+ */
 class __EXPORT events
 {
 protected:
+    /**
+     * Internal method to send an event message.
+     * @param event to send to connected clients.
+     * @return true if sent successfully.
+     */
     bool put(events *event);
 
 public:
     typedef enum {NOTICE, WARNING, FAILURE, TERMINATE, STATE, REALM, CALL, DROP, ACTIVATE, RELEASE, WELCOME, SYNC} type_t;
 
+    /**
+     * Type of event message.
+     */
     type_t type;
 
+    /**
+     * Content of message, based on type.
+     */
     union {
         struct {
             time_t started;
@@ -87,18 +107,85 @@ public:
         unsigned period;
     };
 
+    /**
+     * Start server event system by binding event session listener.
+     * @param true if sucessfully bound and started.
+     */
     static bool start(void);
 
+    /**
+     * Send state change to connected clients.
+     * @param newstate server changed to.
+     */
     static void state(const char *newstate);
+
+    /**
+     * Send realm change to connected clients.
+     * @param newrealm server changed to.
+     */
     static void realm(const char *newrealm);
+
+    /**
+     * Send call connection to clients from cdr start record.
+     * @param cdr record of started call.
+     */
     static void connect(cdr *rec);
+
+    /**
+     * Send call disconnected event to clients from cdr stop record.
+     * @param cdr of disconnected call.
+     */
     static void drop(cdr *rec);
-    static void activate(MappedRegistry *rr);
-    static void release(MappedRegistry *rr);
+
+    /**
+     * Send event for first instance of user registration.  This is sent
+     * after the shared memory registry object is updated.
+     * @param user registration record activated.
+     */
+    static void activate(MappedRegistry *user);
+
+    /**
+     * Send event for last instance of user expired or de-registering.
+     * This is sent after the shared memory registry object is updated.
+     * @param user registration record released.
+     */
+    static void release(MappedRegistry *user);
+
+    /**
+     * Send notice to user.  These are sent from the runtime logging, so
+     * if plugins already log messages they do not have to separately
+     * call this.
+     * @param reason for notice.
+     */
     static void notice(const char *reason);
+
+    /**
+     * Send warning to user.  These are sent from the runtime logging, so
+     * if plugins already log messages they do not have to separately
+     * call this.
+     * @param reason for warning.
+     */
     static void warning(const char *reason);
+
+    /**
+     * Send error to user.  These are sent from the runtime logging, so
+     * if plugins already log messages they do not have to separately
+     * call this.
+     * @param reason for error.
+     */
     static void failure(const char *reason);
+
+    /**
+     * Notify server termination.
+     * @param reason server terminated.
+     */
     static void terminate(const char *reason);
+
+    /**
+     * Test connection and housekeeping notification.  A sync with a period
+     * of 0 is used to test existing sessions to see if they are connected.
+     * @param period of housekeeping event or 0 if connection test.
+     */
     static void sync(unsigned period = 0l);
 };
 

@@ -71,12 +71,22 @@ using namespace UCOMMON_NAMESPACE;
 #define CALL_MAP        "sipwitch.calls"
 #define REGISTRY_MAP    "sipwitch.regs"
 
+/**
+ * User profiles are used to map features and toll restriction level together
+ * under a common identifier.
+ */
 typedef struct {
     char id[MAX_USERID_SIZE];
     unsigned short features;
     unsigned level;
 } profile_t;
 
+/**
+ * Representation of a mapped active user record.  These exist in shared
+ * memory.  They are used as data structures inside the server, and also
+ * can be examined by external client applications.
+ * @author David Sugar <dyfet@gnutelephony.org>
+ */
 class MappedRegistry : public LinkedObject
 {
 public:
@@ -123,6 +133,12 @@ public:
         {return isProfiled() && (profile.features & X);};
 };
 
+/**
+ * Representation of an active call record.  These exist in shared
+ * memory.  They are used as data structures inside the server, and also
+ * can be examined by external client applications.
+ * @author David Sugar <dyfet@gnutelephony.org>
+ */
 class MappedCall : public LinkedObject
 {
 public:

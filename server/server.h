@@ -512,8 +512,6 @@ public:
     static void logging(MappedRegistry *rr, const char *reason);
     static void registration(int id, modules::regmode_t mode);
     static bool authenticate(int id, const char *realm);
-    static MappedRegistry *redirect(const char *target);
-    static MappedRegistry *accept(const char *request);
     static const char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
     static const char *referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size);
     static bool checkId(const char *id);

@@ -40,36 +40,137 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
+/**
+ * Common interfaces and clases for plugins.
+ * @author David Sugar <dyfet@gnutelephony.org>
+ */
 class __EXPORT modules
 {
 public:
     typedef enum {REG_FAILED, REG_SUCCESS, REG_TERMINATED} regmode_t;
 
+    /**
+     * Common base class for sipwitch plugin services.  This provides
+     * interfaces for server and runtime library callbacks to notify
+     * plugins about server operatios and events.
+     * @author David Sugar <dyfet@gnutelephony.org>
+     */
     class __EXPORT sipwitch : public service::callback
     {
     protected:
+        /**
+         * Create a service instance and add to runtime list of services to
+         * start and stop.
+         */
         sipwitch();
 
     public:
+        /**
+         * Period service request.  A period is an interval during which
+         * stats are flushed and refreshed.  This notifies the plugin that
+         * a period has occured, and what the interval for the period was
+         * in seconds.
+         * @param slice of period in seconds.
+         */
         virtual void period(long slice);
-        virtual bool announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *msgbody);
-        virtual void activating(MappedRegistry *rr);
-        virtual void expiring(MappedRegistry *rr);
+
+        /**
+         * Announce a SIP publish event from a registered user to plugins.
+         * @param user registration who publushed.
+         * @param type of message that is published.
+         * @param event type description, such as \"presense\" message.
+         * @param expires time for this message.
+         * @param body of message published by user agent.
+         * @return true if plugin wishes to swallow this message.
+         */
+        virtual bool announce(MappedRegistry *user, const char *type, const char *event, const char *expires, const char *body);
+
+        /**
+         * Notify plugins a user registration is being activated.
+         * @param user registration activated.
+         */
+        virtual void activating(MappedRegistry *user);
+
+        /**
+         * Notify plugins a user registration has been expired or released.
+         * @param user registration that was expired.
+         */
+        virtual void expiring(MappedRegistry *user);
+
+        /**
+         * Notify plugins about reply messages from external registrations.
+         * This is used to get result of eXosip SIP registration requests.
+         * This might be used to get the result of a plugin registering
+         * itself with a gateway or SIP service provider, for example.
+         * @param id of registration (eXosip rid).
+         * @param result of registration
+         */
         virtual void registration(int id, regmode_t reg);
+
+        /**
+         * Used to verify authentication of a registered session.  This is
+         * for use by sessions registered by plugins.
+         * @param id of registration (eXosip rid).
+         * @param realm of this registration.
+         * @return true if valid, false if invalid or to ignore in this plugin.
+         */
         virtual bool authenticate(int id, const char *realm);
-        virtual MappedRegistry *redirect(const char *target);
-        virtual MappedRegistry *accept(const char *request_uri);
-        virtual char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
-        virtual char *referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size);
+
+        /**
+         * Enables plugin to redirect locally dialed destination to new uri.
+         * Might be used by a plugin that does per-user speed-dialing
+         * database, for example.
+         * @param user that is dialing.
+         * @param target user dialed.
+         * @param buffer to store replacement uri in.
+         * @param size of replacement buffer.
+         * @return pointer to buffer or NULL if ignored.
+         */
+        virtual char *referLocal(MappedRegistry *user, const char *target, char *buffer, size_t size);
+
+        /**
+         * Enables plugin to remap users dialing remote destinations.
+         * This might be used as a hook for a plugin that maintains gfc peer
+         * tables, for example.
+         * @param user that is dialing.
+         * @param target of remote uri.
+         * @param buffer to store replacement uri in.
+         * @param size of replacement buffer.
+         * @return pointer to buffer of new uri or NULL ignored.
+         */
+        virtual char *referRemote(MappedRegistry *user, const char *target, char *buffer, size_t size);
     };
 
+    /**
+     * A more generic service class for use by plugins.  This is meant for
+     * plugins which do generic or unrelated operations, or to activate
+     * a generic service thread.  This adds the inherited class to the
+     * existing service start/stop framework in sipwitch.
+     * @author David Sugar <dyfet@gnutelephony.org>
+     */
     class __EXPORT generic : public service::callback
     {
     protected:
+        /**
+         * Construct a generic service instance.
+         */
         generic();
     };
 
-    static void cdrlog(FILE *fp, cdr *call);
+    /**
+     * Post cdr record to a file. This provides a generic way to output
+     * cdr info, such as to a fifo for a database logger.
+     * @param file to write to.
+     * @param call record to publish.
+     */
+    static void cdrlog(FILE *file, cdr *call);
+
+    /**
+     * Module access to error logging system.  This also posts to the
+     * events subsystem.
+     * @param level of logging event.
+     * @param text of logging event.
+     */
     static void errlog(shell::loglevel_t level, const char *text);
 };
 
