@@ -10,7 +10,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@ 
-LDADD = ../common/libsipwitch.la @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@ @DAEMON_LIBS@
+LDADD = ../common/libsipwitch.la @SIPWITCH_LIBS@ @DAEMON_LIBS@
 EXTRA_DIST = *.xml *-example *.conf *.log *.defaults *.init *.cron *.8 \
 	sipwitch.ifup sipwitch.ifdown sipwitch.reload CMakeLists.txt
 EXTRA_LTLIBRARIES =
@@ -29,9 +29,9 @@ else
 EXTRA_LTLIBRARIES += zeroconf.la
 endif
 
-sipw_SOURCES = server.cpp registry.cpp stack.cpp thread.cpp \
+sipw_SOURCES = server.cpp registry.cpp stack.cpp thread.cpp protocols.cpp \
 	call.cpp messages.cpp media.cpp system.cpp signals.cpp history.cpp
-sipw_LDADD = $(LDADD) $(DLOPEN)
+sipw_LDADD = @SIPWITCH_EXOSIP2@ $(LDADD) $(DLOPEN)
 
 sysconf_DATA = sipwitch.conf
 

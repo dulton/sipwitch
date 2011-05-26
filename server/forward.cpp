@@ -14,7 +14,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <sipwitch/sipwitch.h>
-#include <eXosip2/eXosip.h>
 #include <config.h>
 
 NAMESPACE_SIPWITCH
@@ -289,7 +288,6 @@ void forward::start(service *cfg)
 
 void forward::activating(MappedRegistry *rr)
 {
-    osip_message_t *msg = NULL;
     char contact[MAX_URI_SIZE];
     char uri[MAX_URI_SIZE];
     char reg[MAX_URI_SIZE];
@@ -308,18 +306,9 @@ void forward::activating(MappedRegistry *rr)
         len = strlen(contact);
         snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::getservice((struct sockaddr *)&rr->contact));
         shell::debug(3, "registering %s with %s", contact, server);
-        eXosip_lock();
-        rr->rid = eXosip_register_build_initial_register(uri, reg, contact, (int)expires, &msg);
-        if(msg) {
-            osip_message_set_supported(msg, "100rel");
-            osip_message_set_header(msg, "Event", "Registration");
-            osip_message_set_header(msg, "Allow-Events", "presence");
-            eXosip_register_send_register(rr->rid, msg);
+        rr->rid = modules::create_registration(uri, reg, contact, expires);
+        if(rr->rid != -1)
             add(rr);
-        }
-        else
-            rr->rid = -1;
-        eXosip_unlock();
     }
 }
 
@@ -327,7 +316,6 @@ bool forward::announce(MappedRegistry *rr, const char *msgtype, const char *even
 {
     char uri_to[MAX_URI_SIZE];
     char contact[MAX_URI_SIZE];
-    osip_message_t *msg = NULL;
     size_t len;
 
     if(!isActive(rr->rid) || !rr->remote[0])
@@ -341,17 +329,12 @@ bool forward::announce(MappedRegistry *rr, const char *msgtype, const char *even
     snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::getservice((struct sockaddr *)&rr->contact));
     shell::debug(3, "publishing %s with %s", contact, server);
 
-    eXosip_lock();
-    eXosip_build_publish(&msg, uri_to, contact, NULL, event, expiration, msgtype, body);
-    if(msg)
-        eXosip_publish(msg, uri_to);
-    eXosip_unlock();
+    modules::publish(uri_to, contact, event, expiration, msgtype, body);
     return true;
 }
 
 void forward::expiring(MappedRegistry *rr)
 {
-    osip_message_t *msg = NULL;
     int id = rr->rid;
 
     if(id == -1)
@@ -362,11 +345,7 @@ void forward::expiring(MappedRegistry *rr)
     if(!enabled)
         return;
 
-    eXosip_lock();
-    eXosip_register_build_register(id, 0, &msg);
-    if(msg)
-        eXosip_register_send_register(id, msg);
-    eXosip_unlock();
+    modules::release_registration(id);
 }
 
 char *forward::referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size)
@@ -413,10 +392,7 @@ bool forward::authenticate(int id, const char *remote_realm)
         remove(id);
         return false;
     }
-    eXosip_lock();
-    eXosip_add_authentication_info(rr->userid, rr->userid, secret, NULL, remote_realm);
-    eXosip_automatic_action();
-    eXosip_unlock();
+    modules::add_authentication(rr->userid, secret, remote_realm);
     service::release(node);
     releaseMap(rr);
     return true;

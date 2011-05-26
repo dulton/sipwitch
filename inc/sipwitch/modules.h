@@ -158,6 +158,119 @@ public:
     };
 
     /**
+     * Interface to server network interface protocols.  This allows for
+     * specific eXosip functions to be called from the server rather than
+     * within a plugin.  This is needed on some platforms where we use
+     * runtime plugins but where exosip2 is statically linked, otherwise
+     * eXosip state code will get distributed all over the place.  This
+     * is a singleton abstract class that is then filled out and initialized
+     * by the server.
+     */
+    class __EXPORT protocols
+    {
+    public:
+        static protocols *instance;
+
+        /**
+         * Initialize singleton.
+         */
+        protocols();
+
+        /**
+         * Create a SIP registration on a remote server.  Registration events
+         * are then returned to the plugin through the registration callback
+         * method.
+         * @param uri we are registering with the server.
+         * @param server uri to register at.
+         * @param contact uri of our identity locally.
+         * @param expires in seconds.
+         * @return registration id or -1 on failure.
+         */
+        virtual int create_registration(const char *uri, const char *server, const char *contact, int expires) = 0;
+
+        /**
+         * Release an existing registration.
+         * @param id to release.
+         * @return true if successful, false on failure.
+         */
+        virtual bool release_registration(int rid) = 0;
+
+        /**
+         * Add authentication digest for remote server.
+         * @param userid we expect.
+         * @param secret for the userid.
+         * @param realm of remote server.
+         */
+        virtual bool add_authentication(const char *userid, const char *secret, const char *realm) = 0;
+
+        /**
+         * Compute a random uuid.
+         * @param uuid output buffer.
+         */
+        virtual void random_uuid(char *uuid) = 0;
+
+        /**
+         * Publish sip message to remote.
+         * @param uri to publish to.
+         * @param contact info for our origin here.
+         * @param event to publish.
+         * @param duration until expires or NULL.
+         * @param type of message.
+         * @param body of message.
+         */
+        virtual bool publish(const char *uri, const char *contact, const char *event, const char *duration, const char *type, const char *body) = 0;
+    };
+
+    /**
+     * Create a SIP registration on a remote server.  Registration events
+     * are then returned to the plugin through the registration callback
+     * method.
+     * @param uri we are registering with the server.
+     * @param server uri to register at.
+     * @param contact uri of our identity locally.
+     * @param expires in seconds.
+     * @return registration id or -1 on failure.
+     */
+    static inline int create_registration(const char *uri, const char *server, const char *contact, int expires)
+        {return protocols::instance->create_registration(uri, server, contact, expires);}
+
+    /**
+     * Release existing registration.
+     * @param id to release.
+     * @return true if successful, false on failure.
+     */
+    static inline bool release_registration(int rid)
+        {return protocols::instance->release_registration(rid);}
+
+    /**
+     * Add authentication digest for remote server.
+     * @param userid we expect.
+     * @param secret for the userid.
+     * @param realm of remote server.
+     */
+    static inline bool add_authentication(const char *userid, const char *secret, const char *realm)
+        {return protocols::instance->add_authentication(userid, secret, realm);}
+
+    /**
+     * Compute a random uuid.
+     * @param uuid output buffer.
+     */
+    static inline void random_uuid(char *uuid)
+        {protocols::instance->random_uuid(uuid);}
+
+    /**
+     * Publish sip message to remote.
+     * @param uri to publish to.
+     * @param contact info for our origin here.
+     * @param event to publish.
+     * @param duration until expires or NULL.
+     * @param type of message.
+     * @param body of message.
+     */
+    static inline bool publish(const char *uri, const char *contact, const char *event, const char *duration, const char *type, const char *body)
+        {return protocols::instance->publish(uri, contact, event, duration, type, body);}
+
+    /**
      * Post cdr record to a file. This provides a generic way to output
      * cdr info, such as to a fifo for a database logger.
      * @param file to write to.

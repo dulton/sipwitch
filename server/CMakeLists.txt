@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 #
 
-set(server_src server.cpp registry.cpp stack.cpp thread.cpp call.cpp messages.cpp media.cpp system.cpp signals.cpp history.cpp)
+set(server_src server.cpp registry.cpp stack.cpp thread.cpp call.cpp messages.cpp media.cpp system.cpp signals.cpp history.cpp protocols.cpp)
 set(server_inc server.h)
 
 if(NOT HAVE_PLUGINS)
@@ -24,7 +24,7 @@ install(TARGETS sipwitch DESTINATION ${INSTALL_SBINDIR})
 if(HAVE_PLUGINS)
     add_library(sipwitch-forward MODULE forward.cpp)
     add_dependencies(sipwitch-forward sipwitch-runtime ucommon)
-    target_link_libraries(sipwitch-forward sipwitch-runtime ${EXOSIP2_LIBS} ${USES_UCOMMON_LIBRARIES})
+    target_link_libraries(sipwitch-forward sipwitch-runtime ${USES_UCOMMON_LIBRARIES})
     set_target_properties(sipwitch-forward PROPERTIES OUTPUT_NAME forward SUFFIX ${MODULE_EXT} PREFIX "")
 
     add_library(sipwitch-scripting MODULE scripting.cpp)
@@ -33,8 +33,8 @@ if(HAVE_PLUGINS)
     set_target_properties(sipwitch-scripting PROPERTIES OUTPUT_NAME scripting SUFFIX ${MODULE_EXT} PREFIX "")
 
     add_library(sipwitch-subscriber MODULE subscriber.cpp)
-    add_dependencies(sipwitch-subscriber sipwitch-runtime usecure ucommon)
-    target_link_libraries(sipwitch-subscriber sipwitch-runtime usecure ucommon ${EXOSIP2_LIBS} ${SECURE_LIBS} ${UCOMMON_LIBS})
+    add_dependencies(sipwitch-subscriber sipwitch-runtime ucommon)
+    target_link_libraries(sipwitch-subscriber sipwitch-runtime ucommon ${USES_UCOMMON_LIBRARIES})
     set_target_properties(sipwitch-subscriber PROPERTIES OUTPUT_NAME subscriber SUFFIX ${MODULE_EXT} PREFIX "")
 
     install(TARGETS sipwitch-forward sipwitch-scripting sipwitch-subscriber DESTINATION ${INSTALL_PLUGINS})

@@ -27,6 +27,15 @@
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
 
+modules::protocols *modules::protocols::instance = NULL;
+
+modules::protocols::protocols()
+{
+    assert(instance == NULL);
+
+    instance = this;
+}
+
 modules::sipwitch::sipwitch() :
 service::callback(MODULE_RUNLEVEL)
 {

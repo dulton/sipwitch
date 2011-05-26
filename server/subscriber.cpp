@@ -13,7 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "server.h"
+#include <sipwitch/sipwitch.h>
+#include <config.h>
 
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
@@ -96,14 +97,13 @@ modules::sipwitch()
 
 void subscriber::update(void)
 {
-    osip_message_t *msg = NULL;
     char contact[MAX_URI_SIZE];
     char uri[MAX_URI_SIZE];
     char reg[MAX_URI_SIZE];
     unsigned len;
     Socket::address dest = server;
 
-    Random::uuid(provider.remote);
+    modules::random_uuid(provider.remote);
     snprintf(uri, sizeof(uri), "sip:%s@%s", userid, server);
     snprintf(reg, sizeof(reg), "sip:%s", server);
     snprintf(contact, sizeof(contact), "sip:%s@", provider.remote);
@@ -116,20 +116,11 @@ void subscriber::update(void)
     snprintf(contact + len, sizeof(contact) - len, ":%u", sip_port);
     shell::debug(3, "registering %s with %s", contact, server);
 
-    eXosip_lock();
-    provider.rid = eXosip_register_build_initial_register(uri, reg, contact, refresh, &msg);
-    if(msg) {
-        osip_message_set_supported(msg, "100rel");
-        osip_message_set_header(msg, "Event", "Registration");
-        osip_message_set_header(msg, "Allow-Events", "presence");
-        eXosip_register_send_register(provider.rid, msg);
-        provider.status = MappedRegistry::IDLE;
-    }
-    else {
+    provider.rid = modules::create_registration(uri, reg, contact, refresh);
+    if(provider.rid == -1)
         provider.status = MappedRegistry::OFFLINE;
-        provider.rid = -1;
-    }
-    eXosip_unlock();
+    else
+        provider.status = MappedRegistry::IDLE;
 }
 
 void subscriber::start(service *cfg)
@@ -281,10 +272,7 @@ bool subscriber::authenticate(int id, const char *remote_realm)
         return false;
     }
 
-    eXosip_lock();
-    eXosip_add_authentication_info(userid, userid, secret, NULL, remote_realm);
-    eXosip_automatic_action();
-    eXosip_unlock();
+    modules::add_authentication(userid, secret, remote_realm);
     return true;
 }
 
