@@ -36,6 +36,7 @@ using namespace UCOMMON_NAMESPACE;
 static shell::flagopt helpflag('h',"--help",    _TEXT("display this list"));
 static shell::flagopt althelp('?', NULL, NULL);
 static shell::flagopt backflag('b', "--background", _TEXT("run in background"));
+static shell::flagopt altback('d', NULL, NULL);
 static shell::numericopt concurrency('c', "--concurrency", _TEXT("process concurrency"), "level");
 static shell::flagopt desktop(0, "--desktop", _TEXT("enable desktop access"));
 static shell::flagopt foreflag('f', "--foreground", _TEXT("run in foreground"));
@@ -360,7 +361,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 
     // fore and background...
 
-    if(is(backflag))
+    if(is(backflag) || is(altback))
         daemon = true;
 
     if(is(foreflag))
