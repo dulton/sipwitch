@@ -23,3 +23,13 @@ add_dependencies(switchview ucommon)
 target_link_libraries(switchview ${QT_LIBRARIES} ${QT_QTSQL_LIBRARIES} ${USES_UCOMMON_LIBRARIES} ${USES_LIBNOTIFY_LIBRARIES})
 install(TARGETS switchview DESTINATION ${INSTALL_BINDIR})
 
+if(NOT WIN32)
+    file(GLOB autostart switchview-autostart.desktop)
+    file(GLOB appmenus menu/switchview.desktop)
+    file(GLOB pixmaps pixmaps/switchview.png)
+
+    install(FILES ${autostart} DESTINATION ${SYSCONFDIR}/xdg/autostart)
+    install(FILES ${appmenus} DESTINATION ${INSTALL_APPLICATIONS})
+    install(FILES ${pixmaps} DESTINATION ${INSTALL_PIXMAPS})
+endif()
+

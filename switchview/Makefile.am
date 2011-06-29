@@ -12,12 +12,20 @@ MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@ @QT_CFLAGS@
 LDADD = @SIPWITCH_LIBS@ @QT_LIBS@
 BUILT_SOURCES = ui_options.h ui_mapped.h
-EXTRA_DIST = CMakeLists.txt
+EXTRA_DIST = CMakeLists.txt switchview.png switchview.desktop switchview-autostart.desktop
 
 noinst_HEADERS = switchview.h options.ui mapped.ui switchview.qrc \
 	error.png info.png switchview_down.png switchview_live.png warning.png
 
 bin_PROGRAMS = switchview
+
+autostartdir = ${sysconfdir}/xdg/autostart
+applicationsdir = ${datadir}/applications
+pixmapsdir = ${datadir}/pixmaps
+
+pixmaps_DATA = switchview.png
+autostart_DATA = switchview-autostart.desktop
+applications_DATA = switchview.desktop
 
 nodist_switchview_SOURCES = moc_switchview.cpp qrc_switchview.cpp
 switchview_SOURCES = switchview.cpp events.cpp mapped.cpp options.cpp \
