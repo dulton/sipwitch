@@ -1,0 +1,29 @@
+<!--
+Copyright (C) 2011 David Sugar, Haakon Eriksen, GNU Free Call Foundation
+
+This file is part of SwitchView.
+
+SwitchView is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+SwitchView is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with SwitchView.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+	<file alias="live.png">switchview_live.png</file>
+	<file alias="down.png">switchview_down.png</file>
+	<file alias="warning.png">warning.png</file>
+	<file alias="error.png">error.png</file>
+	<file alias="info.png">info.png</file>
+</qresource>
+</RCC>
+

@@ -14,8 +14,8 @@ EXTRA_DIST = autogen.sh README *.pc.in FEATURES  TODO Doxyfile BUILDS \
 	sipwitch-config.in sipwitch-config.1 config.h.cmake CMakeLists.txt
 #  *.pc.in *.spec.in *.spec
 
-SUBDIRS = common server utils inc test
-DIST_SUBDIRS = common server utils inc test 
+SUBDIRS = common server @QTAPPS@ utils inc test
+DIST_SUBDIRS = common server switchview utils inc test 
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsipwitch.pc

@@ -10,8 +10,8 @@
 
 AC_INIT(autogen.sh)
 
-VERSION="0.10.6"
-LT_VERSION="0:48:0"
+VERSION="1.1.0"
+LT_VERSION="1:1:0"
 UCOMMON_REQUIRES="4.2.0"
 
 AC_CONFIG_AUX_DIR(autoconf)
@@ -60,6 +60,40 @@ SIPWITCH_FLAGS=""
 SERVER_FLAGS=""
 SERVER_LIBS=""
 
+AC_ARG_ENABLE(qt,
+    [  --disable-qt        disable support for qt],
+    enable_qt=$enableval,enable_qt="yes")
+
+if test "x${enable_qt}" = "xyes" ; then
+    PKG_CHECK_MODULES(QT, QtGui >= 4.0.1,,enable_qt="no") ; fi
+
+AC_CHECK_PROG(PKG_CONFIG, [pkg-config], [pkg-config])
+
+if test "x${enable_qt}" = "xyes" ; then
+    dnl Check needed because in some cases the QtGui includedir
+    dnl doesn't contain the subsystem dir.
+
+    QT_INCLUDE_DIR=$($PKG_CONFIG --variable=includedir QtGui)
+    EXTRA_QT_INCLUDE_DIR="$QT_INCLUDE_DIR/Qt"
+    AC_CHECK_FILE([$QT_INCLUDE_DIR/QWidget],
+                  AC_MSG_NOTICE([No extra QT_INCLUDE_DIR needed]),
+
+                  AC_CHECK_FILE([$EXTRA_QT_INCLUDE_DIR/QWidget],
+                        QT_CFLAGS="$QT_CFLAGS -I$EXTRA_QT_INCLUDE_DIR",
+                        AC_MSG_WARN([QWidget not found])))
+    AC_MSG_NOTICE([Set QT_CFLAGS... $QT_CFLAGS])
+    AC_CHECK_PROG(MOC, [moc], [moc])
+    AC_CHECK_PROG(RCC, [rcc], [rcc])
+    AC_CHECK_PROG(UIC, [uic], [uic])
+
+    QTAPPS="switchview"
+
+    AC_SUBST(QT_CFLAGS)
+    AC_SUBST(QT_LIBS)
+fi
+
+AC_SUBST(QTAPPS)
+
 AC_ARG_ENABLE(openssl,
     [  --enable-openssl        enable support for openssl],
     enable_openssl=$enableval,enable_openssl="auto")
@@ -76,6 +110,7 @@ fi
 
 test -z "$ac_with_malloc" && ac_with_malloc=""
 test -z "$plugindir" && plugindir='${libdir}'
+test -z "$translatedir" && translatedir='${datadir}/sipwitch/translations'
 
 AC_DEFUN([AC_SUBST_DIR], [
     ifelse($2,,,$1="[$]$2")
@@ -310,6 +345,7 @@ AC_SUBST_DIR(default_libpath, plugindir)
 AC_SUBST_DIR(default_incpath, includedir)
 AC_SUBST_DIR(default_libexec, libexecdir)
 AC_SUBST_DIR(prefix_libdir, libdir)
+AC_SUBST_DIR(translations, translatedir)
 
 if test -z "$NETWORK_UP" ; then
     NETWORK_UP="none" ; fi
@@ -339,6 +375,7 @@ case "-L/usr/lib $EXPORT_LIBS" in
     ;;
 esac
 
+AC_DEFINE_UNQUOTED(TRANSLATIONS, "$translations", [translation path])
 AC_DEFINE_UNQUOTED(DEFAULT_CFGPATH, "$default_cfgpath", [config path])
 AC_DEFINE_UNQUOTED(DEFAULT_VARPATH, "$default_varpath", [run path])
 AC_DEFINE_UNQUOTED(DEFAULT_LIBPATH, "$default_libpath", [lib path])
@@ -386,6 +423,7 @@ AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
 
 AC_SUBST(cgibindir)
 AC_SUBST(plugindir)
+AC_SUBST(translatedir)
 AC_SUBST(LT_VERSION)
 AC_SUBST(INITRDDIR)
 AC_SUBST(NETWORK_UP)
@@ -406,6 +444,6 @@ AC_SUBST(CXXFLAGS)
 AC_SUBST(MODFLAGS)
 AC_SUBST(DLOPEN)
 AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile
-server/Makefile utils/Makefile test/Makefile
+server/Makefile switchview/Makefile utils/Makefile test/Makefile
 libsipwitch.pc sipwitch.spec sipwitch-config)
 
