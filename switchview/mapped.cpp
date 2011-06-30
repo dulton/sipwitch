@@ -456,6 +456,8 @@ void Mapped::notifyActivity(events *msg)
         if(options->notify[NOTIFY_ERRORS] && trayicon && msg->type == events::FAILURE)
             trayicon->showMessage("SwitchView", msg->reason, QSystemTrayIcon::Critical);
         break;
+    default:
+        break;
     }
     ui.activityList->update();
     delete msg;

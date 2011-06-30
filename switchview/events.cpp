@@ -96,12 +96,6 @@ static bool server_control(const char *cmd)
     return true;
 }
 
-static timeout_t reconnect(void)
-{
-    QSettings settings;
-    return (settings.value("events/reconnect", 0).toInt()) * 1000l;
-}
-
 Events::Events() :
 QObject(), JoinableThread()
 {
@@ -192,7 +186,7 @@ void Events::run(void)
         event_t event;
         string_t path = shell::path(shell::SYSTEM_VAR, "run/sipwitch/events");
 
-        if(ipc = INVALID_SOCKET && !stopped) {
+        if(ipc == INVALID_SOCKET && !stopped) {
             callmap = CALL_MAP;
             usermap = REGISTRY_MAP;
             statmap = STAT_MAP;
