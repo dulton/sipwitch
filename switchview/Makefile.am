@@ -12,7 +12,7 @@ MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@ @QT_CFLAGS@
 LDADD = @SIPWITCH_LIBS@ @QT_LIBS@
 BUILT_SOURCES = ui_options.h ui_mapped.h
-EXTRA_DIST = CMakeLists.txt switchview.png switchview.desktop switchview-autostart.desktop switchview.1
+EXTRA_DIST = CMakeLists.txt switchview.png switchview.desktop switchview-autostart.desktop switchview.1 *.ui
 
 man_MANS = switchview.1
 
