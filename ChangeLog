@@ -1,4 +1,22 @@
-from version 0.10.5 to 0.10.6
+from 1.0.3 to 1.1.0
+- added switchview gui client to package.
+
+from 1.0.2 to 1.0.3
+- fix for init script.
+- -d also alt background flag for convenience.
+
+from 1.0.1 to 1.0.2
+- new server redirection api.  This allows plugins to operate without
+  having to be linked explicitly to and directly call exosip functions.
+- documented plugin api and runtime headers
+- service::publish proper handling of NULL address
+
+from 1.0.0 to 1.0.1
+- require ucommon 5.0.0
+- fixes for plugin paths
+- plugins report load-time errors after syslog initialized, not before
+
+from version 0.10.5 to 0.10.6 and 1.0.0
 - using events sync to validate connections and pass down housekeeping clock.
 - event ipc extended multiplatform by fallback to localhost inet socket.
 
