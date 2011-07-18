@@ -53,14 +53,12 @@ static void paddress(char *buffer, size_t size, struct sockaddr_internet *a1, st
 
     char sep = '\n';
     char buf[64];
-    unsigned len;
     unsigned p1 = 0, p2 = 0;
 
     if(!a1)
         return;
 
     Socket::getaddress((struct sockaddr *)a1, buf, sizeof(buf));
-    len = strlen(buf);
     switch(a1->address.sa_family) {
     case AF_INET:
         p1 = (unsigned)ntohs(a1->ipv4.sin_port);
@@ -208,21 +206,13 @@ static void remapCalls(void)
         if(!map.created || !map.source[0])
             continue;
 
-        time_t call_started;
-        long call_duration;
         const char *call_state = map.state + 1;
         const char *call_display = map.display;
         const char *call_from = map.source;
         const char *call_dialed = "none";
 
-        if(map.active) {
+        if(map.active)
             call_dialed = map.target;
-            call_started = map.active;
-        }
-        else
-            call_started = map.created;
-
-        call_duration = now - call_started;
 
         table->insertRow(row);
         add(table, call_state, row, 1);
