@@ -15,6 +15,11 @@
 
 #include "server.h"
 
+#ifdef  HAVE_SYS_INOTIFY_H
+#include <sys/inotify.h>
+#include <sys/poll.h>
+#endif
+
 NAMESPACE_SIPWITCH
 
 #ifdef HAVE_SIGWAIT
@@ -189,6 +194,101 @@ void signals::start(void)
 }
 
 void signals::stop(void)
+{
+}
+
+#endif
+
+#ifdef  HAVE_SYS_INOTIFY_H
+
+static const char *dirpath;
+static fd_t watcher = -1;
+static uint32_t dirnode;
+
+notify notify::thread;
+
+notify::notify() : JoinableThread()
+{
+}
+
+notify::~notify()
+{
+    notify::stop();
+}
+
+void notify::start(void)
+{
+    dirpath = control::env("users");
+
+    if(!dirpath)
+        dirpath = control::env("prefix");
+
+    thread.background();
+}
+
+void notify::run(void)
+{
+    timeout_t timeout = -1;
+    unsigned updates = 0;
+    struct pollfd pfd;
+
+    shell::log(DEBUG1, "notify watching %s", dirpath);
+
+    watcher = inotify_init();
+    dirnode = inotify_add_watch(watcher, dirpath, IN_CLOSE_WRITE|IN_MOVED_TO|IN_MOVED_FROM|IN_DELETE);
+
+    while(watcher != -1) {
+        // we want 500 ms of inactivity before actual updating...
+        if(updates)
+            timeout = 500;
+        else
+            timeout = 1000;
+
+        pfd.fd = watcher;
+        pfd.events = POLLIN | POLLNVAL | POLLERR;
+        pfd.revents = 0;
+        if(!poll(&pfd, 1, timeout)) {
+            if(!updates)
+                continue;
+
+            // clear updates and process config on timeout
+            control::send("reload");
+            updates = 0;
+            continue;
+        }
+        if(pfd.revents & (POLLNVAL|POLLERR))
+            break;
+
+        if(pfd.revents & POLLIN) {
+            char buffer[sizeof(struct inotify_event) + 16];
+
+            size_t len = ::read(watcher, &buffer, sizeof(buffer));
+            if(len > 0)
+                ++updates;
+        }
+    }
+
+    shell::log(DEBUG1, "notify terminating");
+}
+
+void notify::stop(void)
+{
+    if(watcher != -1) {
+        fd_t fd = watcher;
+        watcher = -1;
+        inotify_rm_watch(watcher, dirnode);
+        ::close(fd);
+        thread.join();
+    }
+}
+
+#else
+
+void notify::start(void)
+{
+}
+
+void notify::stop(void)
 {
 }
 

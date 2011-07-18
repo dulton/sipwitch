@@ -148,9 +148,11 @@ namespace SIPWITCH_NAMESPACE {
 
         signals::start();
         events::start();
+        notify::start();
         server::run();
 
         events::terminate("server shutdown");
+        notify::stop();
         signals::stop();
         service::shutdown();
         control::release();
