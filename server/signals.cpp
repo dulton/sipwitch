@@ -259,14 +259,26 @@ void notify::run(void)
         if(pfd.revents & (POLLNVAL|POLLERR))
             break;
 
-        // perhaps we should scan individual inotify events to confirm
-        // is a *.xml path.
         if(pfd.revents & POLLIN) {
             char buffer[512];
+            size_t offset = 0;
 
             size_t len = ::read(watcher, &buffer, sizeof(buffer));
-            if(len > 0)
-                ++updates;
+            if(len < sizeof(struct inotify_event))
+                continue;
+
+            while(offset < len) {
+                struct inotify_event *event = (struct inotify_event *)&buffer[offset];
+                if(!event->len)
+                    break;
+
+                // only if xml files updated do we care...
+                const char *ext = strrchr(event->name, '.');
+                if(ext && case_eq(ext, ".xml"))
+                    ++updates;
+                offset += sizeof(struct inotify_event) + event->len;
+                printf("NAME %s\n", event->name);
+            }
         }
     }
 
@@ -278,7 +290,6 @@ void notify::stop(void)
     if(watcher != -1) {
         fd_t fd = watcher;
         watcher = -1;
-//      inotify_rm_watch(watcher, dirnode);
         ::close(fd);
         thread.join();
     }
