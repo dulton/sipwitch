@@ -501,5 +501,5 @@ static SERVICE_MAIN(main, argc, argv)
 PROGRAM_MAIN(argc, argv)
 {
     init(argc, argv, false, &service_main);
-    PROGRAM_EXIT(0);
+    PROGRAM_EXIT(server::exit_code);
 }

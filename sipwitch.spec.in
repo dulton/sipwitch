@@ -193,6 +193,7 @@ echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
 /etc/xdg/autostart/switchview-autostart.desktop
 %{_datadir}/applications/switchview.desktop
 %{_datadir}/pixmaps/switchview.png
+%{_mandir}/man1/switchview.1*
 
 %post runtime
 /sbin/ldconfig

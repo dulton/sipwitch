@@ -483,6 +483,7 @@ public:
     static unsigned uid;
     static const char *sipusers;
     static const char *sipadmin;
+    static int exit_code;
 
     server(const char *id);
 

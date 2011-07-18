@@ -75,6 +75,7 @@ unsigned server::uid = 1000;
 const char *server::sipusers = "sipusers";
 const char *server::sipadmin = "wheel";
 shell::logmode_t server::logmode = shell::SYSTEM_LOG;
+int server::exit_code = 0;
 
 server::server(const char *id) :
 service(id, PAGING_SIZE)
@@ -968,7 +969,6 @@ void server::run(void)
     char *argv[65];
     char *state;
     char *cp, *tokens;
-    static int exit_code = 0;
     FILE *fp;
 
     DateTimeString logtime;

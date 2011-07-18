@@ -1080,9 +1080,6 @@ Socket::address *stack::getAddress(const char *addr, Socket::address *ap)
     const char *svc = "sip";
     const char *sp;
     char *ep;
-    int proto = SOCK_DGRAM;
-    if(sip_protocol == IPPROTO_TCP)
-        proto = SOCK_STREAM;
 
     sp = strchr(addr, '<');
     if(sp)
