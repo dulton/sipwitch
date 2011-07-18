@@ -259,8 +259,10 @@ void notify::run(void)
         if(pfd.revents & (POLLNVAL|POLLERR))
             break;
 
+        // perhaps we should scan individual inotify events to confirm
+        // is a *.xml path.
         if(pfd.revents & POLLIN) {
-            char buffer[sizeof(struct inotify_event) + 16];
+            char buffer[512];
 
             size_t len = ::read(watcher, &buffer, sizeof(buffer));
             if(len > 0)
@@ -276,7 +278,7 @@ void notify::stop(void)
     if(watcher != -1) {
         fd_t fd = watcher;
         watcher = -1;
-        inotify_rm_watch(watcher, dirnode);
+//      inotify_rm_watch(watcher, dirnode);
         ::close(fd);
         thread.join();
     }
