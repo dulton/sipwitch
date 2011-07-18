@@ -315,7 +315,6 @@ static char *parseText(char *cp)
 static char *parseValue(char *cp, char **value, char **map)
 {
     *value = NULL;
-    bool base64 = false;
 
     if(map)
         *map = NULL;
@@ -325,7 +324,6 @@ static char *parseValue(char *cp, char **value, char **map)
             ++cp;
 
         if(!strncmp(cp, "<base64>", 8)) {
-            base64 = true;
             cp += 8;
             continue;
         }

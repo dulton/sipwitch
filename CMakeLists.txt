@@ -142,6 +142,7 @@ if(NOT BUILD_RUNTIME_TYPE)
 endif()
 
 check_include_files(sys/resource.h HAVE_SYS_RESOURCE_H)
+check_include_files(sys/inotify.h HAVE_SYS_INOTIFY_H)
 check_include_files(syslog.h HAVE_SYSLOG_H)
 check_include_files(net/if.h HAVE_NET_IF_H)
 check_include_files(sys/sockio.h HAVE_SYS_SOCKIO_H)

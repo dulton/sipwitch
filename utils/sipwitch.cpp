@@ -80,14 +80,12 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 
     char sep = '\n';
     char buf[64];
-    unsigned len;
     unsigned p1 = 0, p2 = 0;
 
     if(!a1)
         return;
 
     Socket::getaddress((struct sockaddr *)a1, buf, sizeof(buf));
-    len = strlen(buf);
     switch(a1->address.sa_family) {
     case AF_INET:
         p1 = (unsigned)ntohs(a1->ipv4.sin_port);

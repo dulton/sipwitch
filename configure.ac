@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
+'# Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
 #
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without
@@ -303,7 +303,7 @@ for lib in $UCOMMON_CLINK ; do
     esac
 done
 
-AC_CHECK_HEADERS(sys/resource.h syslog.h net/if.h sys/sockio.h ioctl.h pwd.h)
+AC_CHECK_HEADERS(sys/resource.h syslog.h net/if.h sys/sockio.h ioctl.h pwd.h sys/inotify.h)
 AC_CHECK_FUNCS(setrlimit setpgrp setrlimit getuid mkfifo)
 
 AC_LANG_CPLUSPLUS

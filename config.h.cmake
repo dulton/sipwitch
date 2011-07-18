@@ -34,6 +34,7 @@
 #cmakedefine HAVE_SYMLINK 1
 #cmakedefine HAVE_SYSLOG_H 1
 #cmakedefine HAVE_SYS_RESOURCE_H 1
+#cmakedefine HAVE_SYS_INOTIFY_H 1
 #cmakedefine HAVE_SYS_SOCKIO_H 1
 #cmakedefine HAVE_SYS_STAT_H 1
 #cmakedefine HAVE_TLS 1
