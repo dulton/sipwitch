@@ -274,10 +274,11 @@ void notify::run(void)
 
                 // only if xml files updated do we care...
                 const char *ext = strrchr(event->name, '.');
-                if(ext && case_eq(ext, ".xml"))
+                if(ext && case_eq(ext, ".xml")) {
+                    shell::log(DEBUG2, "%s updated", event->name);
                     ++updates;
+                }
                 offset += sizeof(struct inotify_event) + event->len;
-                printf("NAME %s\n", event->name);
             }
         }
     }
