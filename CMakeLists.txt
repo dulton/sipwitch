@@ -156,7 +156,7 @@ if(NOT HAVE_EXOSIP2)
 endif()
 
 if(EXOSIP2_TLS AND HAVE_EXOSIP2)
-    check_include_files(openssl/openssl.h HAVE_TLS)
+    check_include_files(openssl/ssl.h HAVE_TLS)
 endif()
 
 if(HAVE_TLS)
