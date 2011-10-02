@@ -64,7 +64,7 @@ static void capture(void)
     char buffer[512];
     FILE *fp;
 
-    snprintf(buffer, sizeof(buffer), "/tmp/.sipwitch.%d", getpid());
+    snprintf(buffer, sizeof(buffer), "/tmp/.sipwitch.%ld", (long)getpid());
     fp = fopen(buffer, "r");
     remove(buffer);
     while(fp && fgets(buffer, sizeof(buffer), fp) != NULL)
@@ -698,7 +698,7 @@ static void command(char **argv, unsigned timeout)
 
 #ifndef _MSWINDOWS_
     if(timeout)
-        snprintf(buffer, sizeof(buffer), "%d", getpid());
+        snprintf(buffer, sizeof(buffer), "%ld", (long)getpid());
     else
 #endif
         buffer[0] = 0;

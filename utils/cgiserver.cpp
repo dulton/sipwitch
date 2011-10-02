@@ -481,7 +481,7 @@ retry:
             error(408, "Lock timed out");
     }
 
-    snprintf(buf, sizeof(buf), "%d\n", getpid());
+    snprintf(buf, sizeof(buf), "%ld\n", (long)getpid());
     if(write(fd, buf, strlen(buf)) < (ssize_t)strlen(buf))
         error(500, "Failed Lock");
     close(fd);
@@ -504,7 +504,7 @@ static void request(const char *fmt, ...)
     sigaddset(&sigs, SIGUSR2);
     sigaddset(&sigs, SIGALRM);
     sigprocmask(SIG_BLOCK, &sigs, NULL);
-    snprintf(buf, sizeof(buf), "%d ", getpid());
+    snprintf(buf, sizeof(buf), "%ld ", (long)getpid());
     len = strlen(buf);
 #endif
 
@@ -968,7 +968,7 @@ static bool iocontrol(const char *cmd)
 #ifdef  _MSWINDOWS_
     snprintf(buffer, sizeof(buffer), "%s\n", cmd);
 #else
-    snprintf(buffer, sizeof(buffer), "%d %s\n", getpid(), cmd);
+    snprintf(buffer, sizeof(buffer), "%ld %s\n", (long)getpid(), cmd);
 #endif
     char *ep = strchr(buffer, '\n');
     if(ep)
