@@ -1277,7 +1277,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
         osip_message_set_header(invite, P_SIPWITCH_NODE, "no");
 
     if(call->expires) {
-        snprintf(expheader, sizeof(expheader), "%ld", call->expires - now);
+        snprintf(expheader, sizeof(expheader), "%ld", (long)(call->expires - now));
         osip_message_set_header(invite, SESSION_EXPIRES, expheader);
     }
 
@@ -1496,7 +1496,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
         osip_message_set_supported(invite, "100rel,replaces,timer");
 
         if(call->expires) {
-            snprintf(expheader, sizeof(expheader), "%ld", call->expires - now);
+            snprintf(expheader, sizeof(expheader), "%ld", (long)(call->expires - now));
             osip_message_set_header(invite, SESSION_EXPIRES, expheader);
         }
 

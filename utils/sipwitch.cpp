@@ -367,9 +367,9 @@ static void calls(char **argv)
             continue;
 
         if(map->active)
-            printf("%08x:%d %s %s \"%s\" -> %s; %ld sec(s)\n", map->sequence, map->cid, map->state + 1, map->source, map->display, map->target, now - map->active);
+            printf("%08x:%d %s %s \"%s\" -> %s; %ld sec(s)\n", map->sequence, map->cid, map->state + 1, map->source, map->display, map->target, (long)(now - map->active));
         else
-            printf("%08x:%d %s %s \"%s\" -> none; %ld secs\n", map->sequence, map->cid, map->state + 1, map->source, map->display, now - map->created);
+            printf("%08x:%d %s %s \"%s\" -> none; %ld secs\n", map->sequence, map->cid, map->state + 1, map->source, map->display, (long)(now - map->created));
     }
     exit(0);
 }
@@ -590,7 +590,7 @@ static void dumpstats(char **argv)
         else if(now - map->lastcall > 120l)
             printf("%s %ld%c\n", text, (now - map->lastcall) / 60l, 'm');
         else
-            printf("%s %ld%c\n", text, now - map->lastcall, 's');
+            printf("%s %ld%c\n", text, (long)(now - map->lastcall), 's');
     }
     exit(0);
 }
@@ -634,7 +634,7 @@ static void registry(char **argv)
         exp[1] = 0;
         snprintf(use, sizeof(use), "%u", buffer.inuse);
         if(buffer.expires && buffer.type != MappedRegistry::TEMPORARY)
-            snprintf(exp, sizeof(exp), "%ld", buffer.expires - now);
+            snprintf(exp, sizeof(exp), "%ld", (long)(buffer.expires - now));
         switch(buffer.type) {
         case MappedRegistry::REJECT:
             type = "rej";

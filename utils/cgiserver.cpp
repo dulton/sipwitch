@@ -1715,9 +1715,9 @@ static void dumpcalls(const char *id)
             continue;
         printf(" <call id=\"%s\">\n", idbuf);
         printf("  <source>%s</source>\n", buffer.source);
-        printf("  <started>%ld</started>\n", now - buffer.created);
+        printf("  <started>%ld</started>\n", (long)(now - buffer.created));
         if(buffer.target[0]) {
-            printf("  <active>%ld</active>\n", now - buffer.active);
+            printf("  <active>%ld</active>\n", (long)(now - buffer.active));
             printf("  <target>%s</target>\n", buffer.target);
         }
         printf(" </call>\n");
@@ -1823,7 +1823,7 @@ use:
             printf("  <extension>%d</extension>\n", buffer.ext);
         printf("  <used>%u</used>\n", buffer.inuse);
         if(buffer.expires && buffer.type != MappedRegistry::TEMPORARY)
-            printf("  <expires>%ld</expires>\n", buffer.expires - now);
+            printf("  <expires>%ld</expires>\n", (long)(buffer.expires - now));
         switch(buffer.type) {
         case MappedRegistry::REJECT:
             type = "reject";

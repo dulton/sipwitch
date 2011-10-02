@@ -750,7 +750,7 @@ bool service::period(long slice)
 
     if(fp) {
         DateTimeString dt(periodic);
-        fprintf(fp, "%s %ld\n", (const char *)dt, next - periodic);
+        fprintf(fp, "%s %ld\n", (const char *)dt, (long)(next - periodic));
     }
     periodic = next;
     stats::period(fp);
