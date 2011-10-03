@@ -341,6 +341,8 @@ void server::confirm(void)
     mp = (caddr_t)alloc(sizeof(stack::subnet));
     new(mp) stack::subnet(&acl, "::1", "loopback");
 
+    int ifcount = 0, index = 0;
+
 #ifdef  HAVE_NET_IF_H
     char ifbuf[8192];
     struct ifconf ifc;
@@ -348,7 +350,6 @@ void server::confirm(void)
 
     ifc.ifc_len = sizeof(ifbuf);
     ifc.ifc_buf = ifbuf;
-    int ifcount = 0, index = 0;
     int ifd = ::socket(AF_INET, SOCK_DGRAM, 0);
     if(ifd < 0)
         shell::log(shell::FAIL, "cannot access network");

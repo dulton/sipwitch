@@ -1259,7 +1259,7 @@ void thread::challenge(void)
     time_t now;
 
     time(&now);
-    snprintf(nonce, sizeof(nonce), "%08lx", now);
+    snprintf(nonce, sizeof(nonce), "%08lx", (long)now);
     snprintf(buffer, sizeof(buffer),
         "Digest realm=\"%s\", nonce=\"%s\", algorithm=%s",
                 registry::getRealm(), nonce, registry::getDigest());
@@ -1424,7 +1424,7 @@ void thread::validate(void)
 
 reply:
     if(error == SIP_OK)
-        shell::debug(2, "validating %s; expires=%lu", auth->username, registry::getExpires());
+        shell::debug(2, "validating %s; expires=%lu", auth->username, (long)registry::getExpires());
     else
         shell::debug(2, "rejecting %s; error=%d", auth->username, error);
 
@@ -1433,9 +1433,9 @@ reply:
     eXosip_message_build_answer(sevent->tid, error, &reply);
     if(reply != NULL) {
         if(error == SIP_OK) {
-            snprintf(temp, sizeof(temp), ";expires=%lu", registry::getExpires());
+            snprintf(temp, sizeof(temp), ";expires=%lu", (long)registry::getExpires());
             osip_message_set_contact(reply, temp);
-            snprintf(temp, sizeof(temp), "%lu", registry::getExpires());
+            snprintf(temp, sizeof(temp), "%lu", (long)registry::getExpires());
             osip_message_set_expires(reply, temp);
         }
         osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
@@ -1620,11 +1620,11 @@ void thread::reregister(const char *contact, time_t interval)
             count = reginfo->setTarget(contact_address, expire, contact, network, (struct sockaddr *)&peering);
     }
     if(refresh)
-        shell::debug(2, "refreshing %s for %ld seconds from %s:%u", getIdent(), interval, contact_host, contact_port);
+        shell::debug(2, "refreshing %s for %ld seconds from %s:%u", getIdent(), (long)interval, contact_host, contact_port);
     else if(count) {
         time(&reginfo->created);
         activated = true;
-        shell::log(DEBUG1, "registering %s for %ld seconds from %s:%u", getIdent(), interval, contact_host, contact_port);
+        shell::log(DEBUG1, "registering %s for %ld seconds from %s:%u", getIdent(), (long)interval, contact_host, contact_port);
     }
     else {
         shell::log(shell::ERR, "cannot register %s from %s", getIdent(), buffer);

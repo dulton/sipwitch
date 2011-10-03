@@ -304,7 +304,7 @@ void registry::snapshot(FILE *fp)
                 if(tp->expires && tp->expires <= now)
                     fprintf(fp, ", expired");
                 else if(tp->expires)
-                    fprintf(fp, ", expires %ld", tp->expires - now);
+                    fprintf(fp, ", expires %ld", (long)(tp->expires - now));
                 if(tp.getNext())
                     fputc(',', fp);
                 fputc('\n', fp);

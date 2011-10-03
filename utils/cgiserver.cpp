@@ -481,7 +481,7 @@ retry:
             error(408, "Lock timed out");
     }
 
-    snprintf(buf, sizeof(buf), "%d\n", getpid());
+    snprintf(buf, sizeof(buf), "%ld\n", (long)getpid());
     if(write(fd, buf, strlen(buf)) < (ssize_t)strlen(buf))
         error(500, "Failed Lock");
     close(fd);
@@ -504,7 +504,7 @@ static void request(const char *fmt, ...)
     sigaddset(&sigs, SIGUSR2);
     sigaddset(&sigs, SIGALRM);
     sigprocmask(SIG_BLOCK, &sigs, NULL);
-    snprintf(buf, sizeof(buf), "%d ", getpid());
+    snprintf(buf, sizeof(buf), "%ld ", (long)getpid());
     len = strlen(buf);
 #endif
 
@@ -968,7 +968,7 @@ static bool iocontrol(const char *cmd)
 #ifdef  _MSWINDOWS_
     snprintf(buffer, sizeof(buffer), "%s\n", cmd);
 #else
-    snprintf(buffer, sizeof(buffer), "%d %s\n", getpid(), cmd);
+    snprintf(buffer, sizeof(buffer), "%ld %s\n", (long)getpid(), cmd);
 #endif
     char *ep = strchr(buffer, '\n');
     if(ep)
@@ -1715,9 +1715,9 @@ static void dumpcalls(const char *id)
             continue;
         printf(" <call id=\"%s\">\n", idbuf);
         printf("  <source>%s</source>\n", buffer.source);
-        printf("  <started>%ld</started>\n", now - buffer.created);
+        printf("  <started>%ld</started>\n", (long)(now - buffer.created));
         if(buffer.target[0]) {
-            printf("  <active>%ld</active>\n", now - buffer.active);
+            printf("  <active>%ld</active>\n", (long)(now - buffer.active));
             printf("  <target>%s</target>\n", buffer.target);
         }
         printf(" </call>\n");
@@ -1823,7 +1823,7 @@ use:
             printf("  <extension>%d</extension>\n", buffer.ext);
         printf("  <used>%u</used>\n", buffer.inuse);
         if(buffer.expires && buffer.type != MappedRegistry::TEMPORARY)
-            printf("  <expires>%ld</expires>\n", buffer.expires - now);
+            printf("  <expires>%ld</expires>\n", (long)(buffer.expires - now));
         switch(buffer.type) {
         case MappedRegistry::REJECT:
             type = "reject";

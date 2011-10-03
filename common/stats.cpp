@@ -149,7 +149,7 @@ void stats::period(FILE *fp)
         last = node->lastcall;
         Mutex::release(node);
         if(fp)
-            fprintf(fp, "%s %ld\n", text, last);
+            fprintf(fp, "%s %ld\n", text, (long)last);
     }
 }
 

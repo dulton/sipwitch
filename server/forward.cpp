@@ -306,7 +306,7 @@ void forward::activating(MappedRegistry *rr)
         len = strlen(contact);
         snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::getservice((struct sockaddr *)&rr->contact));
         shell::debug(3, "registering %s with %s", contact, server);
-        rr->rid = modules::create_registration(uri, reg, contact, expires);
+        rr->rid = modules::create_registration(uri, reg, contact, (int)expires);
         if(rr->rid != -1)
             add(rr);
     }
