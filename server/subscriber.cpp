@@ -116,7 +116,7 @@ void subscriber::update(void)
     snprintf(contact + len, sizeof(contact) - len, ":%u", sip_port);
     shell::debug(3, "registering %s with %s", contact, server);
 
-    provider.rid = modules::create_registration(uri, reg, contact, refresh);
+    provider.rid = modules::create_registration(uri, reg, contact, (int)refresh);
     if(provider.rid == -1)
         provider.status = MappedRegistry::OFFLINE;
     else
