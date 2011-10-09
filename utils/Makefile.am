@@ -10,12 +10,11 @@
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
-EXTRA_DIST = sipwitch.1 sipquery.1 sippasswd.1 sipwitch.cgi.8
+EXTRA_DIST = sipwitch.1 sipquery.1 sippasswd.1 sipwitch-cgi.8
 
-man_MANS = sipwitch.1 sipquery.1 sippasswd.1 sipwitch.cgi.8
+man_MANS = sipwitch.1 sipquery.1 sippasswd.1 sipwitch-cgi.8
 
-bin_PROGRAMS = sipquery sipwitch sippasswd
-cgibin_PROGRAMS = sipwitch.cgi
+bin_PROGRAMS = sipquery sipwitch sippasswd sipwitch-cgi
 
 sipwitch_SOURCES = sipwitch.cpp
 sipwitch_LDADD = @SIPWITCH_LIBS@
@@ -30,6 +29,8 @@ sipwitch_cgi_SOURCES = cgiserver.cpp
 sipwitch_cgi_LDADD = @SIPWITCH_LIBS@
 
 install-exec-hook:
-	-(chown root $(DESTDIR)$(bindir)/sippasswd 2>/dev/null ; exit 0)
-	-(chmod u+s $(DESTDIR)$(bindir)/sippasswd 2>/dev/null ; exit 0)
+	-(chown root $(DESTDIR)$(bindir)/sippasswd$(EXEEXT) 2>/dev/null ; exit 0)
+	-(chmod u+s $(DESTDIR)$(bindir)/sippasswd$(EXEEXT) 2>/dev/null ; exit 0)
+	$(mkinstalldirs) $(DESTDIR)$(cgibindir)
+	$(LN_S) $(bindir)/sipwitch-cgi$(EXEEXT) $(DESTDIR)$(cgibindir)/sipwitch
 

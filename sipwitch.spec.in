@@ -156,8 +156,9 @@ echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
 
 %files cgi
 %defattr(-,root,root,-)
-%{_mandir}/man8/sipwitch.cgi.8*
-%{_libdir}/cgi-bin/sipwitch.cgi
+%{_mandir}/man8/sipwitch-cgi.8*
+%{_bindir}/sipwitch-cgi
+%{_libdir}/cgi-bin/sipwitch
 
 %files runtime
 %defattr(-,root,root,-)

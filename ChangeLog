@@ -1,5 +1,6 @@
 from 1.1.1 to 1.1.2
 - cmake fix for openssl check.
+- renaming and reorg of sipwitch cgi binary.
 
 from 1.1.0 to 1.1.1
 - notify watcher for config directory.
