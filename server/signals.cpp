@@ -61,9 +61,15 @@ void signals::run(void)
     for(;;) {
         alarm(period);
 #ifdef  HAVE_SIGWAIT2
-        sigwait(&sigs, &signo);
+        int result = sigwait(&sigs, &signo);
+        if(result) {
+                alarm(0);
+                shell::log(shell::ERR, "signal handler error %d", errno);
+                Thread::sleep(1000);
+                continue;
+        }
 #else
-        signo = sigwait(&sigs);
+        signo = result = sigwait(&sigs);
 #endif
         alarm(0);
         if(shutdown)
@@ -228,6 +234,7 @@ void notify::start(void)
 
 void notify::run(void)
 {
+    static bool logged = false;
     timeout_t timeout = -1;
     unsigned updates = 0;
     struct pollfd pfd;
@@ -247,7 +254,18 @@ void notify::run(void)
         pfd.fd = watcher;
         pfd.events = POLLIN | POLLNVAL | POLLERR;
         pfd.revents = 0;
-        if(!poll(&pfd, 1, timeout)) {
+        int result = poll(&pfd, 1, timeout);
+        // if error, we sleep....we should also not get errors...
+        if(result < 0) {
+            if(!logged) {
+                shell::log(shell::ERR, "notify error %d", errno);
+                logged = true;
+            }
+            // throttle on repeated errors...
+            Thread::sleep(1000);
+            continue;
+        }
+        if(!result) {
             if(!updates)
                 continue;
 
@@ -264,8 +282,10 @@ void notify::run(void)
             size_t offset = 0;
 
             size_t len = ::read(watcher, &buffer, sizeof(buffer));
-            if(len < sizeof(struct inotify_event))
+            if(len < sizeof(struct inotify_event)) {
+                shell::log(shell::ERR, "notify failed to read inotify");
                 continue;
+            }
 
             while(offset < len) {
                 struct inotify_event *event = (struct inotify_event *)&buffer[offset];

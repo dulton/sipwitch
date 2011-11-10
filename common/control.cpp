@@ -95,8 +95,10 @@ char *control::receive(void)
 
 retry:
     buf[0] = 0;
-    if(fgets(buf, sizeof(buf), fifo) == NULL)
+    if(fgets(buf, sizeof(buf), fifo) == NULL) {
         buf[0] = 0;
+        Thread::sleep(100); // throttle if dead...
+    }
     cp = String::strip(buf, " \t\r\n");
     if(*cp == '/') {
         if(strstr(cp, ".."))
