@@ -63,13 +63,19 @@ void signals::run(void)
 #ifdef  HAVE_SIGWAIT2
         int result = sigwait(&sigs, &signo);
         if(result) {
-                alarm(0);
-                shell::log(shell::ERR, "signal handler error %d", errno);
-                Thread::sleep(1000);
-                continue;
+            alarm(0);
+            shell::log(shell::ERR, "signal handler error %d", errno);
+            Thread::sleep(1000);
+            continue;
         }
 #else
-        signo = result = sigwait(&sigs);
+        signo = sigwait(&sigs);
+        if(signo < 0) {
+            alarm(0);
+            shell::log(shell::ERR, "signal handler error %d", errno);
+            Thread:sleep(1000);
+            continue;
+        }
 #endif
         alarm(0);
         if(shutdown)
