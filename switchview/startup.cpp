@@ -67,6 +67,9 @@ PROGRAM_MAIN(argc, argv)
     translator.load(QLocale::system().name(), *shell::path(shell::SYSTEM_PREFIX, TRANSLATIONS));
     app.installTranslator(&translator);
 
+    if(!QIcon::hasThemeIcon("reload"))
+        QIcon::setThemeName("coastal");
+
     parse(argc, argv);
 
     SwitchView::start();

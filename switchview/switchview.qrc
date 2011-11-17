@@ -18,12 +18,21 @@ along with SwitchView.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="icons/coastal">
+    <file alias="index.theme">index.theme</file>
+
+    <file alias="16x16/exit.png">exit.png</file>
+    <file alias="16x16/reload.png">reload.png</file>
+    <file alias="16x16/help-about.png">help-about.png</file>
+    <file alias="16x16/connect_creating.png">connect_creating.png</file>
+    <file alias="16x16/dialog-warning.png">dialog-warning.png</file>
+    <file alias="16x16/dialog-error.png">dialog-error.png</file>
+    <file alias="16x16/dialog-information.png">dialog-information.png</file>
+    <file alias="16x16/preferences-other.png">preferences-other.png</file>
+</qresource>
 <qresource>
-	<file alias="live.png">switchview_live.png</file>
-	<file alias="down.png">switchview_down.png</file>
-	<file alias="warning.png">warning.png</file>
-	<file alias="error.png">error.png</file>
-	<file alias="info.png">info.png</file>
+    <file alias="live.png">switchview_live.png</file>
+    <file alias="down.png">switchview_down.png</file>
 </qresource>
 </RCC>
 

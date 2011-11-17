@@ -431,18 +431,18 @@ void Mapped::notifyActivity(events *msg)
     switch(msg->type)
     {
     case events::WARNING:
-        new QListWidgetItem(QIcon(":/warning.png"), msg->reason, ui.activityList);
+        new QListWidgetItem(QIcon::fromTheme("dialog-warning"), msg->reason, ui.activityList);
         if(options->notify[NOTIFY_WARNING] && trayicon)
             trayicon->showMessage("SwitchView", msg->reason, QSystemTrayIcon::Warning);
         break;
     case events::NOTICE:
-        new QListWidgetItem(QIcon(":/info.png"), msg->reason, ui.activityList);
+        new QListWidgetItem(QIcon::fromTheme("dialog-information"), msg->reason, ui.activityList);
         if(options->notify[NOTIFY_INFO] && trayicon)
             trayicon->showMessage("SwitchView", msg->reason, QSystemTrayIcon::Information);
         break;
     case events::FAILURE:
     case events::TERMINATE:
-        new QListWidgetItem(QIcon(":/error.png"), msg->reason, ui.activityList);
+        new QListWidgetItem(QIcon::fromTheme("dialog-error"), msg->reason, ui.activityList);
         if(options->notify[NOTIFY_ERRORS] && trayicon && msg->type == events::FAILURE)
             trayicon->showMessage("SwitchView", msg->reason, QSystemTrayIcon::Critical);
         break;
