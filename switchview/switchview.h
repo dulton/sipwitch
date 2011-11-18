@@ -36,6 +36,7 @@
 #include <QListWidget>
 #include <QMainWindow>
 #include <QSettings>
+#include <QIcon>
 
 using namespace UCOMMON_NAMESPACE;
 using namespace SIPWITCH_NAMESPACE;

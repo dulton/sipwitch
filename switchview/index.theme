@@ -1,0 +1,9 @@
+[Icon Theme]
+Name=Coastal
+Comment=Coastal Icons
+Inherits=default
+Directories=16x16
+
+[16x16]
+Size=16
+

@@ -13,7 +13,7 @@ sipw
 sippasswd
 sipwitch
 sipquery
-switchview
+switchview/switchview
 sipwitch-cgi
 moc_*.cxx
 qrc_*.cxx

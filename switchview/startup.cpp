@@ -67,6 +67,9 @@ PROGRAM_MAIN(argc, argv)
     translator.load(QLocale::system().name(), *shell::path(shell::SYSTEM_PREFIX, TRANSLATIONS));
     app.installTranslator(&translator);
 
+    if(!QIcon::hasThemeIcon("reload"))
+        QIcon::setThemeName("coastal");
+
     parse(argc, argv);
 
     SwitchView::start();
@@ -74,3 +77,61 @@ PROGRAM_MAIN(argc, argv)
 
     PROGRAM_EXIT(0);
 }
+
+#ifdef  WIN32
+int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow)
+{
+    int argc, pos;
+    char **argv;
+    argc = 1;
+    size_t len = strlen(lpCmdLine);
+
+    for (unsigned i = 0; i < len; i++) { 
+        while (lpCmdLine[i] == ' ' && i < len)
+            ++i;
+        if (lpCmdLine[i] == '\"') {
+            ++i; 
+            while (lpCmdLine[i] != '\"' && i < len)
+                ++i;  
+        } 
+        else while (lpCmdLine[i] != ' ' && i < len)
+            ++i;  
+        ++argc;
+    } 
+
+    argv = (char **)malloc(sizeof(char *) * (argc + 1));
+    argv[0] = (char*)malloc(1024); 
+    ::GetModuleFileName(0, argv[0], 1024); 
+
+    for(unsigned i = 1; i < (unsigned)argc; i++) 
+        argv[i] = (char*)malloc(len + 10); 
+
+    argv[argc] = 0; 
+
+    pos = 0;
+    argc = 1;
+    for (unsigned i = 0; i < len; i++) { 
+        while (lpCmdLine[i] == ' ' && i < len)
+            ++i;
+        if (lpCmdLine[i] == '\"') {
+            ++i; 
+            while (lpCmdLine[i] != '\"' && i < len) { 
+                argv[argc][pos] = lpCmdLine[i];
+                ++i; 
+                ++pos; 
+            } 
+        } 
+        else { 
+            while (lpCmdLine[i] != ' ' && i < len) { 
+                argv[argc][pos] = lpCmdLine[i];
+                ++i; 
+                ++pos; 
+            } 
+        }
+        argv[argc][pos] = 0;
+        argc++; 
+        pos = 0;  
+    } 
+    return main(argc, argv);
+}
+#endif

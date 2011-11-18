@@ -18,7 +18,7 @@ QT4_WRAP_UI(qt_ui ${ui_src})
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(switchview ${qt_src} ${qt_inc} ${qt_moc} ${qt_qrc} ${qt_ui})
+add_executable(switchview WIN32 ${qt_src} ${qt_inc} ${qt_moc} ${qt_qrc} ${qt_ui})
 add_dependencies(switchview ucommon)
 target_link_libraries(switchview ${QT_LIBRARIES} ${QT_QTSQL_LIBRARIES} ${USES_UCOMMON_LIBRARIES} ${USES_LIBNOTIFY_LIBRARIES})
 install(TARGETS switchview DESTINATION ${INSTALL_BINDIR})

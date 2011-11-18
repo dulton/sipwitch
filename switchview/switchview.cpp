@@ -50,20 +50,32 @@ QMainWindow(NULL)
     switchview = this;
 
     QAction *aboutAction = new QAction(tr("About"), this);
+    aboutAction->setIcon(QIcon::fromTheme("help-about"));
+    aboutAction->setIconVisibleInMenu(true);
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(about()));
 
     optionsAction = new QAction(tr("&Options"), this);
+    optionsAction->setIcon(QIcon::fromTheme("preferences-other"));
+    optionsAction->setIconVisibleInMenu(true);
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(openOptions()));
 
     reconnectAction = new QAction(tr("Reconnect"), this);
+    reconnectAction->setIcon(QIcon::fromTheme("connect_creating"));
+    reconnectAction->setIconVisibleInMenu(true);
     connect(reconnectAction, SIGNAL(triggered()), this, SLOT(reconnect()));
 
     reloadAction = new QAction(tr("Reload"), this);
+    reloadAction->setIcon(QIcon::fromTheme("reload"));
+    reloadAction->setIconVisibleInMenu(true);
 
     mappedAction = new QAction(tr("&Status"), this);
+    mappedAction->setIcon(QIcon::fromTheme("dialog-information"));
+    mappedAction->setIconVisibleInMenu(true);
     connect(mappedAction, SIGNAL(triggered()), this, SLOT(openMapped()));
 
     QAction *quitAction = new QAction(tr("&Quit"), this);
+    quitAction->setIcon(QIcon::fromTheme("exit"));
+    quitAction->setIconVisibleInMenu(true);
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
 
     QApplication::setQuitOnLastWindowClosed(false);

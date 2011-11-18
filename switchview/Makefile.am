@@ -17,7 +17,9 @@ EXTRA_DIST = CMakeLists.txt switchview.png switchview.desktop switchview-autosta
 man_MANS = switchview.1
 
 noinst_HEADERS = switchview.h options.ui mapped.ui switchview.qrc \
-	error.png info.png switchview_down.png switchview_live.png warning.png
+	dialog-error.png dialog-information.png switchview_down.png \
+	switchview_live.png dialog-warning.png exit.png reload.png \
+	help-about.png index.theme connect_creating.png preferences-other.png
 
 bin_PROGRAMS = switchview
 
