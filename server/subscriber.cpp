@@ -19,21 +19,10 @@
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
-class __LOCAL listener : public JoinableThread
-{
-public:
-    listener();
-
-private:
-    void run(void);
-};
-
 static class __LOCAL subscriber : private modules::sipwitch
 {
 private:
     static subscriber _sub;
-
-    friend class listener;
 
     void registration(int id, modules::regmode_t mode);
     bool authenticate(int id, const char *remote_realm);
@@ -49,7 +38,6 @@ public:
 } _sub;
 
 static volatile bool changed = false;
-static bool rtp_running = false;
 static volatile timeout_t interval = 50;
 static volatile time_t refresh = 60;
 static volatile time_t updated = 0;
@@ -61,29 +49,7 @@ static char *userid = NULL;
 static char *volatile secret = NULL;
 static char *identity = NULL;
 static MappedRegistry provider; // fake provider record to be used...
-static char *volatile published = NULL;
 static unsigned short port = 9000;
-static listener *thr = NULL;
-
-listener::listener() :
-JoinableThread(priority)
-{
-}
-
-void listener::run(void)
-{
-    time_t now;
-
-    rtp_running = true;
-    while(rtp_running) {
-        time(&now);
-        if(now > updated) {
-            updated = now + refresh;
-            service::publish((const char *)published);
-        }
-    }
-    shell::log(DEBUG1, "stopping rtpproxy thread");
-}
 
 subscriber::subscriber() :
 modules::sipwitch()
@@ -132,21 +98,12 @@ void subscriber::start(service *cfg)
 
         if(changed)
             update();
-
-        thr = new listener();
-        thr->start();
     }
 }
 
 void subscriber::stop(service *cfg)
 {
     assert(cfg != NULL);
-
-    rtp_running = false;
-    if(thr) {
-        shell::log(DEBUG1, "rtp proxy stopping");
-        delete thr;
-    }
 }
 
 void subscriber::snapshot(FILE *fp)
@@ -161,7 +118,6 @@ void subscriber::reload(service *cfg)
     assert(cfg != NULL);
 
     char *temp;
-    char *vp;
     const char *key = NULL, *value;
     linked_pointer<service::keynode> sp = cfg->getList("subscriber");
     char buffer[160];
@@ -187,12 +143,6 @@ void subscriber::reload(service *cfg)
                 String::set(provider.network, sizeof(provider.network), value);
             else if(!stricmp(key, "refresh"))
                 refresh = atoi(value);
-            else if(!stricmp(key, "publish") || !stricmp(key, "public") || !stricmp(key, "gateway")) {
-                vp = published;
-                published = strdup(value);
-                if(vp)
-                    free((void *)vp);
-            }
             else if(!stricmp(key, "registrar") || !stricmp(key, "server")) {
                 if(uri::resolve(value, buffer, sizeof(buffer))) {
                     changed = true;
