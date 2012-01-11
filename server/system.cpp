@@ -35,6 +35,8 @@ using namespace UCOMMON_NAMESPACE;
 
 static shell::flagopt helpflag('h',"--help",    _TEXT("display this list"));
 static shell::flagopt althelp('?', NULL, NULL);
+static shell::stringopt iface('A', "--address", _TEXT("sip interface address"), "address", NULL);
+static shell::numericopt port('P', "--port", _TEXT("sip port to bind"), "port", 5060);
 static shell::flagopt backflag('b', "--background", _TEXT("run in background"));
 static shell::flagopt altback('d', NULL, NULL);
 static shell::numericopt concurrency('c', "--concurrency", _TEXT("process concurrency"), "level");
@@ -348,6 +350,15 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     if(*histbuf < 0)
         shell::errexit(1, "sipwitch: history: %ld: %s\n",
             *histbuf, _TEXT("negative buffer limit invalid"));
+
+    // bind sip interface and port from command line options...
+    // use xx:..:xx for ipv6 address, or a.b.c.d for ipv4
+
+    if(is(iface))
+        service::callback::bind(*iface);
+
+    if(is(port))
+        service::callback::bind((unsigned short)*port);
 
     // set threading properties...
 

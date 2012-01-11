@@ -187,6 +187,7 @@ public:
         static LinkedObject *runlevels[4];
         static unsigned count;
         static unsigned short sip_port;
+        static const char *sip_iface;
         static int sip_protocol;
         static int sip_family;
         static int sip_tlsmode;
@@ -225,6 +226,12 @@ public:
         virtual void stop(service *cfg);
         virtual void reload(service *cfg);
         virtual void publish(service *cfg);
+
+    public:
+        inline static void bind(unsigned short port)
+            {sip_port = port;};
+
+        static void bind(const char *addr);
     };
 
     service(const char *name, size_t s = 0);

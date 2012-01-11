@@ -690,6 +690,9 @@ void stack::start(service *cfg)
 {
     assert(cfg != NULL);
 
+    if(!iface && sip_iface)
+        iface = sip_iface;
+
     thread *thr;
     unsigned thidx = 0;
     shell::log(DEBUG1, "starting sip stack; %d maps and %d threads at priority %d",
@@ -733,6 +736,7 @@ void stack::start(service *cfg)
 #endif
 
     Socket::family(sip_family);
+
     if(eXosip_listen_addr(sip_protocol, iface, sip_port, sip_family, sip_tlsmode)) {
 #ifdef  AF_INET6
         if(!iface && sip_family == AF_INET6)
@@ -742,6 +746,14 @@ void stack::start(service *cfg)
             iface = "*";
         shell::log(shell::FAIL, "sip cannot bind interface %s, port %d", iface, sip_port);
     }
+    #ifdef  AF_INET6
+    if(!iface && sip_family == AF_INET6)
+        iface = "::0";
+#endif
+    if(!iface)
+        iface = "*";
+
+    shell::log(shell::DEBUG1, "binding interface %s, port %d", iface, sip_port);
 
     osip_trace_initialize_syslog(TRACE_LEVEL0, (char *)"sipwitch");
     eXosip_set_user_agent(agent);
@@ -840,6 +852,8 @@ void stack::reload(service *cfg)
             else if(eq(key, "keysize") && !isConfigured())
                 keysize = atoi(value);
             else if(eq(key, "interface") && !isConfigured()) {
+                sip_family = AF_INET;
+                sip_iface = NULL;
 #ifdef  AF_INET6
                 if(strchr(value, ':') != NULL)
                     sip_family = AF_INET6;

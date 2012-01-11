@@ -36,6 +36,7 @@ unsigned service::callback::count = 0;
 unsigned short service::callback::sip_port = 5060;
 unsigned service::callback::sip_prefix = 0;
 unsigned service::callback::sip_range = 0;
+const char *service::callback::sip_iface = NULL;
 int service::callback::sip_protocol = IPPROTO_UDP;
 int service::callback::sip_family = AF_INET;
 int service::callback::sip_tlsmode = 0;
@@ -180,6 +181,22 @@ void service::callback::start(service *keys)
 
 void service::callback::stop(service *keys)
 {
+}
+
+void service::callback::bind(const char *addr)
+{
+    if(!addr)
+        return;
+
+#ifdef  AF_INET6
+    if(strchr(addr, ':'))
+        sip_family = AF_INET6;
+#endif
+
+    if(eq(addr, ":::") || eq(addr, "::0") || eq(addr, "::*") || eq(addr, "*") || eq(addr, "0.0.0.0") || !*addr)
+        addr = NULL;
+
+    sip_iface = addr;
 }
 
 service::instance::instance()

@@ -251,6 +251,7 @@ int messages::remote(const char *to, message *msg, const char *digest)
         osip_free(req);
     }
     if(im) {
+        printf("BODY %s\n", msg->body);
         osip_message_set_body(im, msg->body, msg->msglen);
         osip_message_set_content_type(im, msg->type);
         stack::siplog(im);
