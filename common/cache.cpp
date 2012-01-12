@@ -50,7 +50,7 @@ void Cache::expire(LinkedObject **root, LinkedObject **freelist)
 
     while(node) {
         next = (Cache *)node->next;
-        if(now > node->expires) {
+        if(node->expires && now > node->expires) {
             if(!prior)
                 *root = next;
             else
@@ -136,8 +136,12 @@ void UserCache::add(const char *id, struct sockaddr *addr, time_t create, unsign
 
 update:
     cp->created = create;
-    time(&cp->expires);
-    cp->expires += expire;
+    if(expire) {
+        time(&cp->expires);
+        cp->expires += expire;
+    }
+    else
+        cp->expires = 0;
     cp->set(addr);
 
 release:
