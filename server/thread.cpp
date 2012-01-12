@@ -631,6 +631,7 @@ bool thread::authorize(void)
     struct sockaddr_internet iface;
     osip_header_t *msgheader = NULL;
     bool anon = false;
+    UserCache *usercache = NULL;
 
     if(!sevent->request || !sevent->request->to || !sevent->request->from || !sevent->request->req_uri)
         goto invalid;
@@ -921,6 +922,17 @@ static_routing:
         if(refer)
             goto redirect;
     }
+
+    if(!routed)
+        usercache = UserCache::find(target);
+
+    if(usercache) {
+        stack::sipAddress(&usercache->address, buffer, target, sizeof(buffer));
+        refer = buffer;
+        UserCache::release(usercache);
+        goto redirect;
+    }
+
     if(!routed)
         goto invalid;
 

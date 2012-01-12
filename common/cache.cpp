@@ -131,6 +131,9 @@ UserCache *UserCache::find(const char *id)
     time_t now;
     time(&now);
 
+    if(strchr(id, '@'))
+        return NULL;
+
     user_lock.access();
     UserCache *cp = request(id);
     if(cp) {
@@ -150,6 +153,9 @@ void UserCache::release(UserCache *entry)
 void UserCache::add(const char *id, struct sockaddr *addr, time_t create, unsigned expire)
 {
     assert(id != NULL && *id != 0);
+
+    if(strchr(id, '@'))
+        return;
 
     unsigned path = NamedObject::keyindex(id, USER_KEY_SIZE);
 
