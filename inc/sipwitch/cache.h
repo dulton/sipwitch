@@ -69,7 +69,8 @@ class __EXPORT cache : private Cache
 {
 public:
     static void init(void);
-    static void check(void);
+    static void cleanup(void);
+    static void userdump(void);
 };
 
 /**

@@ -781,6 +781,7 @@ static void usage(void)
         "  state <selection>        Change server state\n"
         "  status                   Dump status string\n"
         "  trace <on|off|clear>     Set sip message tracing\n"
+        "  usercache                Dump user cache\n"
         "  verbose <level>          Server verbose logging level\n"
     );
 
@@ -917,7 +918,7 @@ PROGRAM_MAIN(argc, argv)
         version();
     else if(eq(*argv, "help") || eq(*argv, "-help") || eq(*argv, "--help"))
         usage();
-    else if(eq(*argv, "reload") || eq(*argv, "check") || eq(*argv, "snapshot") || eq(*argv, "dump") || eq(*argv, "siplog"))
+    else if(eq(*argv, "reload") || eq(*argv, "check") || eq(*argv, "snapshot") || eq(*argv, "dump") || eq(*argv, "siplog") || eq(*argv, "usercache"))
         single(argv, 30);
     else if(eq(*argv, "history")) {
         if(argc == 2)

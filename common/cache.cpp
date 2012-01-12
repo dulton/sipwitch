@@ -17,6 +17,7 @@
 #include <ucommon/ucommon.h>
 #include <ucommon/export.h>
 #include <sipwitch/cache.h>
+#include <sipwitch/control.h>
 
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
@@ -68,13 +69,46 @@ void cache::init(void)
     memset(&user_keys, 0, sizeof(user_keys));
 }
 
-void cache::check(void)
+void cache::cleanup(void)
 {
     for(unsigned i = 0; i < USER_KEY_SIZE; ++i) {
         user_lock.modify();
         expire(&user_keys[i], &user_freelist);
         user_lock.release();
     }
+}
+
+void cache::userdump(void)
+{
+    FILE *fp = control::output("usercache");
+    char buffer[128];
+    time_t now;
+
+    if(!fp) {
+        shell::log(shell::ERR, "%s\n",
+            _TEXT("usercache; cannot access file"));
+        return;
+    }
+
+    for(unsigned i = 0; i < USER_KEY_SIZE; ++i) {
+        user_lock.access();
+        time(&now);
+        linked_pointer<UserCache> up = user_keys[i];
+        while(is(up)) {
+            if(!up->expires || up->expires > now) {
+                Socket::getaddress((struct sockaddr *)(&up->address), buffer, sizeof(buffer));
+                if(up->expires)
+                    fprintf(fp, "%s=%s; expires=%ld\n",
+                        up->userid, buffer, (long)(up->expires - now));
+                else
+                    fprintf(fp, "%s=%s\n", up->userid, buffer);
+            }
+            up.next();
+        }
+        user_lock.release();
+    }
+
+    fclose(fp);
 }
 
 UserCache *UserCache::request(const char *id)

@@ -1009,6 +1009,11 @@ void server::run(void)
             continue;
         }
 
+        if(ieq(cp, "usercache")) {
+            cache::userdump();
+            continue;
+        }
+
         if(ieq(cp, "dump")) {
             service::dumpfile();
             continue;
