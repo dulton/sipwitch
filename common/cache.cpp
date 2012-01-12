@@ -94,13 +94,17 @@ UserCache *UserCache::request(const char *id)
 
 UserCache *UserCache::find(const char *id)
 {
+    time_t now;
+    time(&now);
+
     user_lock.access();
     UserCache *cp = request(id);
-    if(!cp) {
-        user_lock.release();
-        return NULL;
+    if(cp) {
+        if(!cp->expires || cp->expires > now)
+            return cp;
     }
-    return cp;
+    user_lock.release();
+    return NULL;
 }
 
 void UserCache::release(UserCache *entry)
