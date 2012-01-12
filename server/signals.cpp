@@ -88,6 +88,7 @@ void signals::run(void)
             shell::log(shell::INFO, "system housekeeping");
             registry::cleanup(period);
             events::sync(period);
+            cache::check();
             break;
         case SIGINT:
         case SIGTERM:

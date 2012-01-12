@@ -142,6 +142,7 @@ namespace SIPWITCH_NAMESPACE {
 
     static void up(void)
     {
+        cache::init();
         server::reload();
         server::startup();
 
