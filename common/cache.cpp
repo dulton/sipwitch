@@ -74,7 +74,7 @@ void cache::cleanup(void)
     for(unsigned i = 0; i < USER_KEY_SIZE; ++i) {
         user_lock.modify();
         expire(&user_keys[i], &user_freelist);
-        user_lock.release();
+        user_lock.commit();
     }
 }
 
@@ -166,8 +166,10 @@ void UserCache::add(const char *id, struct sockaddr *addr, time_t create, unsign
         cp = (UserCache *)user_freelist;
         user_freelist = cp->next;
     }
-    else
-        cp = (UserCache *)cache_heap.alloc(sizeof(UserCache));
+    else {
+        caddr_t mp = (caddr_t)cache_heap.alloc(sizeof(UserCache));
+        cp = new(mp) UserCache;
+    }
 
     cp->enlist(&user_keys[path]);
     String::set(cp->userid, sizeof(cp->userid), id);
@@ -183,5 +185,5 @@ update:
     cp->set(addr);
 
 release:
-    user_lock.release();
+    user_lock.commit();
 }
