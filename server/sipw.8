@@ -22,26 +22,15 @@
 sipw \- sipwitch service daemon
 .SH SYNOPSIS
 .B sipw
-.B [--background]
-.BI [--concurrency=value]
-.BI [--debug=level]
-.B [--foreground]
-.B [--gdb]
-.BI [--group=id]
-.B [--memcheck]
-.B [--memleak]
-.BI [--plugins=names]
-.BI [--priority=value]
-.B [--restarable]
-.B [--trace]
-.B [--version]
+.RB [ options ]
+.br
 .SH DESCRIPTION
 This is a service daemon for the SIP protocol.  This daemon enables sip
 devices and softphone applications to register as well as to route messages
 for the SIP protocol between arbitrary endpoints, both locally and remote
 over the Internet using DNS to resolve destination uri's.  As a telephone
 system, \fBsipw\fR offers call redirection, speed dials, call forwarding,
-sms style instant messaging, and the ability to ring multiple user agents 
+sms style instant messaging, and the ability to ring multiple user agents
 tied together under a common user id.
 .PP
 The \fBsipw\fR daemon is also being used as a mediator for desktop telephony.
@@ -56,50 +45,50 @@ config file can be set.  However, the \fBsipw\fR daemon can be manually
 started, both in the foreground for testing, and in the background.  If
 this is done, a number of options may be passed to it directly as documented.
 .TP
-.B --background
+.B \-\-background
 Execute the \fBsipw\fR daemon detached in the background (default).
 .TP
-.B --concurrency=level
+.BI \-\-concurrency= level
 Set the pthread concurrency level for the \fBsipw\fR process.
 .TP
-.B --debug=LEVEL
-Specify debug logging \fILEVEL\fR (0-9).  When run in foreground debug
+.BI \-\-debug= level
+Specify debug logging \fIlevel\fR (0-9).  When run in foreground debug
 messages are shown on the console.  When in background they are saved in
 the sipwitch log file.
 .TP
-.B --foreground
+.B \-\-foreground
 Execute the \fBsipw\fR daemon in the foreground, with output shown on stdout
 or stderr.
 .TP
-.B --gdb
+.B \-\-gdb
 Execute the \fBsipw\fR daemon under control of gdb for full debugging.
 .TP
-.B --group=ID
-Specify the group \fIID\fR that the \fBsipw\fR daemon will execute as for 
+.BI \-\-group= id
+Specify the group \fIid\fR that the \fBsipw\fR daemon will execute as for
 receiving control messages or access to daemon managed shared memory.
 .TP
-.B --memcheck
+.B \-\-memcheck
 Execute the \fBsipw\fR daemon under valgrind to validate basic memory management.
 .TP
-.B --memleak
+.B \-\-memleak
 Execute the \fBsipw\fR daemon under valgrind for full memory leak detection.
 .TP
-.B --plugins=NAMES
+.BI \-\-plugins= names
 Load only these specified plugins from /var/lib/sipwitch.
 .TP
-.BI --priority=LEVEL
+.BI \-\-priority= level
 Execute the \fBsipw\fR daemon under the realtime (fifo) schedule, and specify
-a realtime process priority \fILEVEL\fR (1-9).
+a realtime process priority \fIlevel\fR (1-9).
 .TP
-.B --restarable
+.B \-\-restarable
 The \fBsipw\fR daemon will automatically restart if it exits or crashes other
-than from a manually specified reason.  This is often used on BSD systems 
+than from a manually specified reason.  This is often used on BSD systems
 when \fBsipw\fR is started from an rc file.
 .TP
-.B --trace
+.B \-\-trace
 Logs sip messages the \fBsipw\fR daemon sends and receives.
 .TP
-.B --version
+.B \-\-version
 Print the currently installed version of sipwitch to standard output.
 .SH AUTHOR
 .B sipw

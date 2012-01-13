@@ -21,7 +21,9 @@
 .SH NAME
 sipwitch \- script control and manage GNU sipwitch server.
 .SH SYNOPSIS
-.B sipwitch \fIcommand\fR \fI[arguments...]\fR
+.B sipwitch
+.B command
+.RI [ arguments... ]
 .br
 .SH DESCRIPTION
 The sipwitch command allows one to interact with a running sipwitch daemon
@@ -33,91 +35,91 @@ is started by an ordinary user, the command can be used by the same user to
 control that daemon instance.
 .PP
 .TP
-\fBabort\fR
+.B abort
 terminate running daemon with core for debugging.
 .TP
-\fBactivate\fR \fIext\fR \fIipaddr\fR
+.BI activate " ext ipaddr"
 register a static sip extension manually on a fixed address.
 .TP
-\fBcalls\fR
+.B calls
 list active call sessions on the server.
 .TP
-\fBcheck\fR
+.B check
 verify running daemon for deadlocks or other problems.
 .TP
-\fBconcurrency\fR \fIlevel\fR
+.BI concurrency " level"
 set concurrency level of the daemon.  See pthread_setconcurrency.
 .TP
-\fBdigest\fR \fIuserid\fR [\fIrealm\fR [\fItype\fR]]
+.BI digest " userid [realm [type]]"
 compute a sip digest for the server realm.
 .TP
-\fBdown\fR
+.B down
 stop and shutdown the running sipwitch daemon.
 .TP
-\fBdrop\fR \fIuser|callid\fR
+.BI drop " user|callid"
 drop specified calls either by a user or call id.
 .TP
-\fBdump\fR
+.B dump
 dump server configuration to stdout.
 .TP
-\fBevents\fR
+.B events
 display server events as received.
 .TP
-\fBhistory\fR \fI[size]\fR
+.BI history " [size]"
 set size or dump recent error log history.
 .TP
-\fBifdown\fR \fIiface\fR
+.BI ifdown " iface"
 notify server interface went down.
 .TP
-\fBifup\fR \fIiface\fR
+.BI ifup " iface"
 notify server interface came up.
 .TP
-\fBmessage\fR \fIext\fR \fI``Text''\fR
+.BI message " ext ``Text''"
 send a short text message to a registered extension.
 .TP
-\fBperiod\fR \fIinterval\fR
+.BI period " interval"
 dump periodic stats for specified minute interval, often used for cron.
 .TP
-\fBpstats\fR
+.B pstats
 dump server periodic statistics.  See ``stats''.
 .TP
-\fBregistry\fR
+.B registry
 dump all user agent registrations to stdout.
 .TP
-\fBrealm\fR [\fInew-realm\fR [\fIdigest-type\fR]]
+.BI realm " [new-realm [digest-type]]"
 set or show the server realm.
 .TP
-\fBrelease\fR \fIext\fR
+.BI release " ext"
 deactivate an extension registered with the daemon.
 .TP
-\fBreload\fR
+.B reload
 load server configuration while live.
 .TP
 \fBrestart\fR
 force server restart.
 .TP
-\fBsiplog\fR
+.B siplog
 dump sip messages from when trace is enabled.
 .TP
-\fBsnapshot\fR
+.B snapshot
 create snapshot diagnostic file from daemon.
 .TP
-\fBstate\fR \fIid\fR
+.BI state " id"
 set daemon to specified state id.
 .TP
-\fBstats\fR
+.B stats
 dump server call statistics.
 .TP
-\fBstatus\fR
+.B status
 server mapped call status list.
 .TP
-\fBtrace\fR \fIon|off|clear\fR
+.BI trace " on|off|clear"
 Set or clear server sip message tracing.
 .TP
-\fBusercache\fR
+.B usercache
 dump user cache.
 .TP
-\fBverbose\fR \fIlevel\fR
+.BI verbose " level"
 set daemon error logging verbosity.
 .SH "EXIT STATUS"
 Normally exit status is 0 if the request was successfully processed by the

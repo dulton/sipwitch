@@ -22,11 +22,7 @@
 sipwitch-config \- script to get information about sipwitch library
 .SH SYNOPSIS
 .B sipwitch-config
-.BI [--prefix[= DIR ]]
-.BI [--exec-prefix[= DIR ]]
-.B [--version]
-.B [--cflags]
-.B [--libs]
+.RB [ options ]
 .SH DESCRIPTION
 .B sipwitch-config
 is a tool that is used to configure to determine the compiler and
@@ -75,7 +71,7 @@ options.
 If specified, use
 .I PREFIX
 instead of the installation exec prefix that
-.B sipwitch 
+.B sipwitch
 was built with when computing the output for the
 .B --cflags
 and
@@ -88,7 +84,7 @@ options.
 .SH "SEE ALSO"
 .IR pkg-config (1).
 .SH AUTHOR
-.B sipwitch-config 
+.B sipwitch-config
 was written by David Sugar <dyfet@gnutelephony.org>.
 .SH COPYRIGHT
 Copyright \(co 2009 David Sugar, Tycho Softworks.

@@ -22,12 +22,7 @@
 sipquery \- register and report sip contact details
 .SH SYNOPSIS
 .B sipquery
-.B -forward \fIipaddr\fR
-.B -port \fInumber\fR
-.B -proxy \fIsip:host[:port]\fR
-.B -server \fIsip:host[:port]\fR
-.B -timeout \fIseconds\fR
-.B -verbose
+.RB [ options ]
 .I userid[@server[:port]]
 .SH DESCRIPTION
 This is a tool that uses the registration process to query the sip contact
@@ -37,19 +32,19 @@ un-authenticated registration request is sent to the server, and the contact
 uri is read to standard out from the server reply message.
 .SH OPTIONS
 .TP
-.B -forward
+.BI \-\-forward= address
 Sets the "public appearing" IP address for testing behind NAT.
 .TP
-.B -port 
+.BI \-\-port= number
 Sets the sip port number, in case the default port (5060) is in use already.
-.TP 
-.B -proxy 
+.TP
+.BI \-\-proxy= host
 Use a specified outbound proxy uri to get to the server being queried.
 .TP
-.B -server 
+.BI \-\-server= host
 Specify server uri to query unless offered as part of userid.
 .TP
-.B -timeout 
+.BI \-\-timeout= seconds
 Time to wait for query response.
 .SH AUTHOR
 .B sipquery
