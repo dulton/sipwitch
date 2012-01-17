@@ -760,9 +760,11 @@ static void usage(void)
         "  check                    Server deadlock check\n"
         "  concurrency <level>      Server concurrency level\n"
         "  digest id [realm [type]] Compute a digest\n"
+        "  disable conf-id...       Disable configurations\n"
         "  down                     Shut down server\n"
         "  drop <user|callid>       Drop an active call\n"
         "  dump                     Dump server configuration\n"
+        "  enable conf-id...        Enable configurations\n"
         "  events                   Display server events\n"
         "  history [bufsize]        Set buffer or dump error log\n"
         "  ifup <iface>             Notify interface came up\n"
@@ -910,6 +912,8 @@ static void message(char **argv)
 
 PROGRAM_MAIN(argc, argv)
 {
+    char source[128], target[128];
+
     if(argc < 2)
         usage();
 
@@ -960,6 +964,30 @@ PROGRAM_MAIN(argc, argv)
             realm(argv);
     else if(eq(*argv, "drop"))
         drop(argv);
+
+#ifndef _MSWINDOWS_
+    if(eq(*argv, "enable")) {
+        if(argv[1])
+            shell::errexit(1, "*** sipwitch: enable: no configs specified\n");
+
+        while(*(++argv)) {
+            snprintf(source, sizeof(source), "%s/sipwitch.d/%s.xml", DEFAULT_CFGPATH, *argv);
+            snprintf(target, sizeof(target), "%s/lib/sipwitch/%s.xml", DEFAULT_VARPATH, *argv);
+            fsys::link(source, target);
+        }
+
+    }
+    else if(eq(*argv, "disable")) {
+        if(argv[1])
+            shell::errexit(1, "*** sipwitch: disable: no configs specified\n");
+
+        while(*(++argv)) {
+            snprintf(target, sizeof(target), "%s/lib/sipwitch/%s.xml", DEFAULT_VARPATH, *argv);
+            fsys::remove(target);
+        }
+    }
+#endif
+
     if(eq(*argv, "events"))
         showevents(argv);
     if(!argv[1])

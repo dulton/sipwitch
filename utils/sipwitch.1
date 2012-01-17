@@ -53,6 +53,9 @@ set concurrency level of the daemon.  See pthread_setconcurrency.
 .BI digest " userid [realm [type]]"
 compute a sip digest for the server realm.
 .TP
+.BI disable " conf-id..."
+remove /etc/sipwitch.d configurations.
+.TP
 .B down
 stop and shutdown the running sipwitch daemon.
 .TP
@@ -61,6 +64,9 @@ drop specified calls either by a user or call id.
 .TP
 .B dump
 dump server configuration to stdout.
+.TP
+.BI enable " conf-id..."
+enable /etc/sipwitch.d configurations.
 .TP
 .B events
 display server events as received.
