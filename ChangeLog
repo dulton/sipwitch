@@ -1,3 +1,6 @@
+from 1.2.1 to 1.2.2
+- cache directory defined and set
+
 from 1.2.0 to 1.2.1
 - sip server command line interface options per Simon request
 - start of cache support for peers, multicast users, etc

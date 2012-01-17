@@ -164,6 +164,7 @@ namespace SIPWITCH_NAMESPACE {
 
 static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = NULL)
 {
+    secure::init("sipwitch");
 
     bool daemon = true;
     const char *cp;
@@ -211,6 +212,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     args.setsym("config", _STR(str(prefix) + "/sipwitch.ini"));
     args.setsym("controls", rundir);
     args.setsym("control", "\\\\.\\mailslot\\sipwitch_ctrl");
+    args.setsym("cache", _STR(str(prefix) + "/cache"));
     args.setsym("logfiles", _STR(str(prefix) + "/logs"));
     args.setsym("siplogs", _STR(str(prefix) + "/logs/siptrace.log"));
     args.setsym("logfile", _STR(str(prefix) + "/logs/sipwitch.log"));
@@ -229,6 +231,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     rundir = DEFAULT_VARPATH "/run/sipwitch";
     args.setsym("reply", "/tmp/.sipwitch.");
     args.setsym("config", DEFAULT_CFGPATH "/sipwitch.conf");
+    args.setsym("cache", DEFAULT_VARPATH "/cache/sipwitch");
     args.setsym("controls", DEFAULT_VARPATH "/run/sipwitch");
     args.setsym("control", DEFAULT_VARPATH "/run/sipwitch/control");
     args.setsym("events", DEFAULT_VARPATH "/run/sipwitch/events");
@@ -265,6 +268,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
         args.setsym("config", _STR(str(pwd->pw_dir) + "/.sipwitchrc"));
         args.setsym("controls", rundir);
         args.setsym("control", _STR(str(rundir) + "/control"));
+        args.setsym("cache", _STR(str(rundir) + "/cache"));
         args.setsym("events", _STR(str(rundir) + "/events"));
         args.setsym("logfiles", rundir);
         args.setsym("siplogs", _STR(str(rundir) + "/siplogs"));
@@ -381,7 +385,6 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     if(is(foreflag))
         daemon = false;
 
-
    // lets play with verbose level and logging options
 
     if(is(verbose))
@@ -457,6 +460,8 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 
     fsys::createDir(rundir, 0775);
     fsys::createDir(prefix, 0770);
+    fsys::createDir(args.getsym("cache"), 0770);
+
     if(fsys::changeDir(prefix))
         shell::errexit(3, "*** sipwitch: %s: %s\n",
             prefix, _TEXT("data directory unavailable"));
