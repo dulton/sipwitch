@@ -848,6 +848,7 @@ void server::reload(void)
     char buf[256];
     FILE *state = NULL;
     const char *cp;
+    keynode *node;
 
 #ifdef _MSWINDOWS_
     GetEnvironmentVariable("APPDATA", buf, 192);
@@ -881,6 +882,28 @@ void server::reload(void)
     cp = cfgp->root.getPointer();
     if(cp)
         shell::log(shell::INFO, "activating for state \"%s\"", cp);
+
+    // load cache.  These may be set by external crontab scripts or
+    // utilities which dump databases or fetch from remote web sites, and
+    // output xml files for sipwitch to then consume.  cache is used to
+    // separate user editable local provisioning in /etc/sipwitch.d from
+    // such global data as part of a complete solution.
+
+    node = cfgp->getPath("provision");
+    if(node)
+        fp = fopen(_STR(control::path("cache") + "/provision.xml"), "r");
+    if(node && fp) {
+        if(!cfgp->load(fp, node))
+            shell::log(shell::ERR, "cannot load provisioning cache");
+    }
+
+    node = cfgp->getPath("routing");
+    if(node)
+        fp = fopen(_STR(control::path("cache") + "/routing.xml"), "r");
+    if(node && fp) {
+        if(!cfgp->load(fp, node))
+            shell::log(shell::ERR, "cannot load routing cache");
+    }
 
     cfgp->commit();
     if(!cfg) {
