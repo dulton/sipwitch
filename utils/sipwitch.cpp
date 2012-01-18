@@ -21,6 +21,7 @@
 #else
 #include <signal.h>
 #include <pwd.h>
+#include <grp.h>
 #include <fcntl.h>
 #endif
 #include <config.h>
@@ -766,6 +767,7 @@ static void usage(void)
         "  dump                     Dump server configuration\n"
         "  enable conf-id...        Enable configurations\n"
         "  events                   Display server events\n"
+        "  grant <group>            Grant dir access to system group\n"
         "  history [bufsize]        Set buffer or dump error log\n"
         "  ifup <iface>             Notify interface came up\n"
         "  ifdown <iface>           Notify interface went down\n"
@@ -910,10 +912,90 @@ static void message(char **argv)
     command(argv, 10);
 }
 
-PROGRAM_MAIN(argc, argv)
+#ifdef  HAVE_PWD_H
+static void grant(char **argv)
+{
+    gid_t gid = -1;
+    struct group *grp;
+    fsys::fileinfo_t ino;
+
+    if(!argv[1])
+        shell::errexit(1, "*** sipwitch: grant: no group specified\n");
+    if(argv[2])
+        shell::errexit(1, "*** sipwitch: grant: not more than one group\n");
+
+    grp = getgrnam(argv[1]);
+    if(grp)
+        gid = grp->gr_gid;
+    else if(atol(argv[1]))
+        gid = atol(argv[1]);
+    else
+        shell::errexit(2, "*** sipwitch: grant: %s: unknown group\n", argv[1]);
+
+    fsys::fileinfo(DEFAULT_VARPATH "/lib/sipwitch", &ino);
+    chmod(DEFAULT_VARPATH "/lib/sipwitch", ino.st_mode | 070);
+    chown(DEFAULT_VARPATH "/lib/sipwitch", ino.st_uid, gid);
+
+    fsys::fileinfo(DEFAULT_VARPATH "/cache/sipwitch", &ino);
+    chmod(DEFAULT_VARPATH "/cache/sipwitch", ino.st_mode | 070);
+    chown(DEFAULT_VARPATH "/cache/sipwitch", ino.st_uid, gid);
+
+    exit(0);
+}
+#else
+static void grant(char **argv)
+{
+    shell::errexit(9, "*** sipwitch: grant: unsupported platform");
+}
+#endif
+
+#ifdef  _MSWINDOWS_
+
+static void enable(char **argv)
+{
+    shell::errexit(9, "*** sipwitch: enable: unsupported platform");
+}
+
+static void disable(char **argv)
+{
+    shell::errexit(9, "*** sipwitch: disable: unsupported platform");
+}
+
+#else
+
+static void enable(char **argv)
 {
     char source[128], target[128];
 
+    if(!argv[1])
+        shell::errexit(1, "*** sipwitch: enable: no configs specified\n");
+
+    while(*(++argv)) {
+        snprintf(source, sizeof(source), "%s/sipwitch.d/%s.xml", DEFAULT_CFGPATH, *argv);
+        snprintf(target, sizeof(target), "%s/lib/sipwitch/%s.xml", DEFAULT_VARPATH, *argv);
+        fsys::link(source, target);
+    }
+    exit(0);
+}
+
+static void disable(char **argv)
+{
+    char target[128];
+
+    if(!argv[1])
+        shell::errexit(1, "*** sipwitch: disable: no configs specified\n");
+
+    while(*(++argv)) {
+        snprintf(target, sizeof(target), "%s/lib/sipwitch/%s.xml", DEFAULT_VARPATH, *argv);
+        fsys::remove(target);
+    }
+    exit(0);
+}
+
+#endif
+
+PROGRAM_MAIN(argc, argv)
+{
     if(argc < 2)
         usage();
 
@@ -964,32 +1046,15 @@ PROGRAM_MAIN(argc, argv)
             realm(argv);
     else if(eq(*argv, "drop"))
         drop(argv);
-
-#ifndef _MSWINDOWS_
-    if(eq(*argv, "enable")) {
-        if(argv[1])
-            shell::errexit(1, "*** sipwitch: enable: no configs specified\n");
-
-        while(*(++argv)) {
-            snprintf(source, sizeof(source), "%s/sipwitch.d/%s.xml", DEFAULT_CFGPATH, *argv);
-            snprintf(target, sizeof(target), "%s/lib/sipwitch/%s.xml", DEFAULT_VARPATH, *argv);
-            fsys::link(source, target);
-        }
-
-    }
-    else if(eq(*argv, "disable")) {
-        if(argv[1])
-            shell::errexit(1, "*** sipwitch: disable: no configs specified\n");
-
-        while(*(++argv)) {
-            snprintf(target, sizeof(target), "%s/lib/sipwitch/%s.xml", DEFAULT_VARPATH, *argv);
-            fsys::remove(target);
-        }
-    }
-#endif
-
-    if(eq(*argv, "events"))
+    else if(eq(*argv, "grant"))
+        grant(argv);
+    else if(eq(*argv, "enable"))
+        enable(argv);
+    else if(eq(*argv, "disable"))
+        disable(argv);
+    else if(eq(*argv, "events"))
         showevents(argv);
+
     if(!argv[1])
         shell::errexit(1, "use: sipwitch command [arguments...]\n");
     else
