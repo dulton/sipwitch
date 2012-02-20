@@ -39,6 +39,7 @@ static shell::stringopt iface('A', "--address", _TEXT("sip interface address"), 
 static shell::numericopt port('P', "--port", _TEXT("sip port to bind"), "port", 5060);
 static shell::flagopt backflag('b', "--background", _TEXT("run in background"));
 static shell::flagopt altback('d', NULL, NULL);
+static shell::flagopt dump('D', "--dump-config", _TEXT("show configuration"));
 static shell::numericopt concurrency('c', "--concurrency", _TEXT("process concurrency"), "level");
 static shell::flagopt desktop(0, "--desktop", _TEXT("enable desktop access"));
 static shell::flagopt foreflag('f', "--foreground", _TEXT("run in foreground"));
@@ -116,6 +117,20 @@ static void versioninfo(void)
         "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
         "This is free software: you are free to change and redistribute it.\n"
         "There is NO WARRANTY, to the extent permitted by law.\n"));
+    exit(0);
+}
+
+static void dumpconfig(void)
+{
+    const char *dirpath = control::env("users");    // /etc/sipwitch.d
+    if(!dirpath)
+        dirpath = control::env("prefix");
+
+    printf("config:    %s\n", control::env("config"));
+    printf("control:   %s\n", control::env("control"));
+    printf("runtime:   %s\n", control::env("controls"));
+    printf("cache:     %s\n", control::env("cache"));
+    printf("provision: %s\n", dirpath);
     exit(0);
 }
 
@@ -345,6 +360,13 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 
     if(is(version))
         versioninfo();
+
+    if(is(dump)) {
+        if(!control::attach(&args))
+            shell::errexit(1, "*** sipwitch: %s\n",
+                _TEXT("no control file; exiting"));
+        dumpconfig();
+    }
 
     // check validity of some options...
 
