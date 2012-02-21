@@ -59,6 +59,11 @@ static shell::flagopt verbose('v', NULL, _TEXT("set verbosity, can be used multi
 static shell::flagopt version(0, "--version", _TEXT("show version information"));
 static shell::numericopt debuglevel('x', "--debug", _TEXT("set debug level directly"), "level", 0);
 
+static shell::groupopt groupconfig(_TEXT("User Options"));
+static shell::stringopt configpath(0, "--configpath", _TEXT("config file"), "path", NULL);
+static shell::stringopt cachepath(0, "--cachepath", _TEXT("cache files"), "dir", NULL);
+static shell::stringopt prefixpath(0, "--prefixpath", _TEXT("provisioning files"), "dir", NULL);
+
 #if defined(HAVE_SETRLIMIT) && defined(DEBUG)
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -245,8 +250,17 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     prefix = DEFAULT_VARPATH "/lib/sipwitch";
     rundir = DEFAULT_VARPATH "/run/sipwitch";
     args.setsym("reply", "/tmp/.sipwitch.");
-    args.setsym("config", DEFAULT_CFGPATH "/sipwitch.conf");
-    args.setsym("cache", DEFAULT_VARPATH "/cache/sipwitch");
+
+    if(is(configpath) && fsys::isdir(*configpath))
+        args.setsym("config", *configpath);
+    else
+        args.setsym("config", DEFAULT_CFGPATH "/sipwitch.conf");
+
+    if(is(cachepath) && fsys::isdir(*cachepath))
+        args.setsym("cache", *cachepath);
+    else
+        args.setsym("cache", DEFAULT_VARPATH "/cache/sipwitch");
+
     args.setsym("controls", DEFAULT_VARPATH "/run/sipwitch");
     args.setsym("control", DEFAULT_VARPATH "/run/sipwitch/control");
     args.setsym("events", DEFAULT_VARPATH "/run/sipwitch/events");
@@ -256,8 +270,12 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     args.setsym("logfile", DEFAULT_VARPATH "/log/sipwitch.log");
     args.setsym("calls", DEFAULT_VARPATH "/log/sipwitch.calls");
     args.setsym("stats", DEFAULT_VARPATH "/log/sipwitch.stats");
-    args.setsym("prefix", DEFAULT_VARPATH "/lib/sipwitch");
-    args.setsym("shell", "/bin/sh");
+
+    if(is(prefixpath) && fsys::isdir(*prefixpath))
+        args.setsym("prefix", *prefixpath);
+    else
+        args.setsym("prefix", prefix);
+args.setsym("shell", "/bin/sh");
 #endif
 
 #ifdef  HAVE_PWD_H
@@ -362,9 +380,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
         versioninfo();
 
     if(is(dump)) {
-        if(!control::attach(&args))
-            shell::errexit(1, "*** sipwitch: %s\n",
-                _TEXT("no control file; exiting"));
+        control::config(&args);
         dumpconfig();
     }
 

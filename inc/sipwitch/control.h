@@ -136,6 +136,9 @@ public:
      */
     inline static String path(const char *id)
         {return (String)(args->getsym(id));}
+
+    inline static void config(shell *envp)
+        {args = envp;};
 };
 
 END_NAMESPACE
