@@ -218,6 +218,14 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     }
 #endif
 
+    // parse and check for help
+    args.parse(argc, argv);
+    if(is(helpflag) || is(althelp) || args.argc() > 0)
+        usage();
+
+    if(is(version))
+        versioninfo();
+
     // cheat out shell parser...
     // argv[0] = (char *)"sipwitch";
 
@@ -251,16 +259,8 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     rundir = DEFAULT_VARPATH "/run/sipwitch";
     args.setsym("reply", "/tmp/.sipwitch.");
 
-    if(is(configpath) && fsys::isdir(*configpath))
-        args.setsym("config", *configpath);
-    else
-        args.setsym("config", DEFAULT_CFGPATH "/sipwitch.conf");
-
-    if(is(cachepath) && fsys::isdir(*cachepath))
-        args.setsym("cache", *cachepath);
-    else
-        args.setsym("cache", DEFAULT_VARPATH "/cache/sipwitch");
-
+    args.setsym("config", DEFAULT_CFGPATH "/sipwitch.conf");
+    args.setsym("cache", DEFAULT_VARPATH "/cache/sipwitch");
     args.setsym("controls", DEFAULT_VARPATH "/run/sipwitch");
     args.setsym("control", DEFAULT_VARPATH "/run/sipwitch/control");
     args.setsym("events", DEFAULT_VARPATH "/run/sipwitch/events");
@@ -270,12 +270,8 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     args.setsym("logfile", DEFAULT_VARPATH "/log/sipwitch.log");
     args.setsym("calls", DEFAULT_VARPATH "/log/sipwitch.calls");
     args.setsym("stats", DEFAULT_VARPATH "/log/sipwitch.stats");
-
-    if(is(prefixpath) && fsys::isdir(*prefixpath))
-        args.setsym("prefix", *prefixpath);
-    else
-        args.setsym("prefix", prefix);
-args.setsym("shell", "/bin/sh");
+    args.setsym("prefix", prefix);
+    args.setsym("shell", "/bin/sh");
 #endif
 
 #ifdef  HAVE_PWD_H
@@ -298,17 +294,30 @@ args.setsym("shell", "/bin/sh");
         args.setsym("callmap", _STR(str(CALL_MAP "-") + str(pwd->pw_name)));
         args.setsym("regmap", _STR(str(REGISTRY_MAP "-") + str(pwd->pw_name)));
 
-        args.setsym("config", _STR(str(pwd->pw_dir) + "/.sipwitchrc"));
+        if(is(configpath) && fsys::isfile(*configpath))
+            args.setsym("config", *configpath);
+        else
+            args.setsym("config", _STR(str(pwd->pw_dir) + "/.sipwitchrc"));
+
+        if(is(cachepath) && fsys::isdir(*cachepath))
+            args.setsym("cache", *cachepath);
+        else
+            args.setsym("cache", _STR(str(rundir) + "/cache"));
+
         args.setsym("controls", rundir);
         args.setsym("control", _STR(str(rundir) + "/control"));
-        args.setsym("cache", _STR(str(rundir) + "/cache"));
         args.setsym("events", _STR(str(rundir) + "/events"));
         args.setsym("logfiles", rundir);
         args.setsym("siplogs", _STR(str(rundir) + "/siplogs"));
         args.setsym("logfile", _STR(str(rundir) + "/logfile"));
         args.setsym("calls", _STR(str(rundir) + "/calls"));
         args.setsym("stats", _STR(str(rundir) + "/stats"));
-        args.setsym("prefix", prefix);
+
+        if(is(prefixpath) && fsys::isdir(*prefixpath))
+            args.setsym("prefix", *prefixpath);
+        else
+            args.setsym("prefix", prefix);
+
         args.setsym("shell", pwd->pw_shell);
     }
 
@@ -370,14 +379,6 @@ args.setsym("shell", "/bin/sh");
     cp = args.getenv("PLUGINS");
     if(cp && *cp)
         loading.set(strdup(cp));
-
-    // parse and check for help
-    args.parse(argc, argv);
-    if(is(helpflag) || is(althelp) || args.argc() > 0)
-        usage();
-
-    if(is(version))
-        versioninfo();
 
     if(is(dump)) {
         control::config(&args);
