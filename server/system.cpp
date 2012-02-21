@@ -68,6 +68,21 @@ static shell::stringopt prefixpath(0, "--prefixpath", _TEXT("provisioning files"
 #include <sys/time.h>
 #include <sys/resource.h>
 
+static const char *userpath(const char *path)
+{
+    if(!path)
+        return NULL;
+
+#ifndef _MSWINDOWS_
+    if(eq(path, "~/", 2) && getuid()) {
+        const char *home = getenv("HOME");
+        if(home)
+            return strdup(str(home) + ++path);
+    }
+#endif
+    return path;
+}
+
 static void corefiles(void)
 {
     struct rlimit core;
@@ -294,13 +309,15 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
         args.setsym("callmap", _STR(str(CALL_MAP "-") + str(pwd->pw_name)));
         args.setsym("regmap", _STR(str(REGISTRY_MAP "-") + str(pwd->pw_name)));
 
-        if(is(configpath) && fsys::isfile(*configpath))
-            args.setsym("config", *configpath);
+        cp = userpath(*configpath);
+        if(is(configpath) && fsys::isfile(cp))
+            args.setsym("config", cp);
         else
             args.setsym("config", _STR(str(pwd->pw_dir) + "/.sipwitchrc"));
 
-        if(is(cachepath) && fsys::isdir(*cachepath))
-            args.setsym("cache", *cachepath);
+        cp = userpath(*cachepath);
+        if(is(cachepath) && fsys::isdir(cp))
+            args.setsym("cache", cp);
         else
             args.setsym("cache", _STR(str(rundir) + "/cache"));
 
@@ -313,8 +330,10 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
         args.setsym("calls", _STR(str(rundir) + "/calls"));
         args.setsym("stats", _STR(str(rundir) + "/stats"));
 
-        if(is(prefixpath) && fsys::isdir(*prefixpath))
-            args.setsym("prefix", *prefixpath);
+
+        cp = userpath(*prefixpath);
+        if(is(prefixpath) && fsys::isdir(cp))
+            args.setsym("prefix", cp);
         else
             args.setsym("prefix", prefix);
 
