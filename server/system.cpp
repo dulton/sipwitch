@@ -49,6 +49,7 @@ static shell::stringopt group('g', "--group", _TEXT("use specified group permiss
 static shell::numericopt histbuf('h', "--history", _TEXT("set history buffer"), "count", 0);
 static shell::stringopt loglevel('L', "--logging", _TEXT("set log level"), "level", "err");
 static shell::stringopt loading('l', "--plugins", _TEXT("specify modules to load"), "names", "none");
+static shell::flagopt nolocalusers('n', "--no-localusers", _TEXT("disable local user accounts"));
 static shell::counteropt priority('p', "--priority", _TEXT("set priority level"), "level");
 static shell::flagopt restart('r', "--restartable", _TEXT("set to restartable process"));
 static shell::flagopt trace('t', "--trace", _TEXT("trace sip messages"));
@@ -371,6 +372,11 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
         cp = getenv("SIPADMIN");
         if(cp && *cp)
             server::sipadmin = strdup(cp);
+    }
+
+    if(is(nolocalusers)) {
+        server::sipusers = NULL;
+        server::sipadmin = NULL;
     }
 
 #endif

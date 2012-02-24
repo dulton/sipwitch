@@ -442,6 +442,9 @@ void server::confirm(void)
         node.next();
     }
 
+    if(!sipadmin && !sipusers)
+        return;
+
 #ifdef  HAVE_PWD_H
     ifcount = 0;
     char *member;
@@ -458,7 +461,7 @@ void server::confirm(void)
         grp = getgrnam(sipusers);
 
     // if no separated privilege, then use sipadmin
-    if(!grp)
+    if(!grp && sipadmin)
         grp = getgrnam(sipadmin);
 
     if(grp && !grp->gr_mem)
@@ -481,7 +484,8 @@ void server::confirm(void)
         addNode(leaf, "id", member);
     }
 
-    grp = getgrnam(sipadmin);
+    if(sipadmin)
+        grp = getgrnam(sipadmin);
 
     node = base->getFirst();
     while(is(node)) {
