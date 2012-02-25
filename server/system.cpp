@@ -69,21 +69,6 @@ static shell::stringopt prefixpath(0, "--prefixpath", _TEXT("provisioning files"
 #include <sys/time.h>
 #include <sys/resource.h>
 
-static const char *userpath(const char *path)
-{
-    if(!path)
-        return NULL;
-
-#ifndef _MSWINDOWS_
-    if(eq(path, "~/", 2) && getuid()) {
-        const char *home = getenv("HOME");
-        if(home)
-            return strdup(str(home) + ++path);
-    }
-#endif
-    return path;
-}
-
 static void corefiles(void)
 {
     struct rlimit core;
@@ -106,6 +91,21 @@ static void corefiles(void)
 {
 }
 #endif
+
+static const char *userpath(const char *path)
+{
+    if(!path)
+        return NULL;
+
+#ifndef _MSWINDOWS_
+    if(eq(path, "~/", 2) && getuid()) {
+        const char *home = getenv("HOME");
+        if(home)
+            return strdup(str(home) + ++path);
+    }
+#endif
+    return path;
+}
 
 static void usage(void)
 {
