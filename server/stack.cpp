@@ -862,7 +862,7 @@ void stack::reload(service *cfg)
                     value = NULL;
                 if(value)
                     value = strdup(value);
-                iface = value;
+                sip_iface = value;
             }
             else if(eq(key, "send101") && !isConfigured() && tobool(value))
                 send101 = 0;

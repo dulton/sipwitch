@@ -232,6 +232,7 @@ public:
             {sip_port = port;};
 
         static void bind(const char *addr);
+
     };
 
     service(const char *name, size_t s = 0);
@@ -300,6 +301,12 @@ public:
 
     inline keynode *getRoot(void)
         {return &root;};
+
+    static inline const char *getInterface(void)
+        {return service::callback::sip_iface;};
+
+    static inline unsigned short getPort(void)
+        {return service::callback::sip_port;};
 
     virtual void dump(FILE *fp);
     virtual void confirm(void);

@@ -402,6 +402,9 @@ public:
         const char *getId(void)
             {return netname;};
 
+        inline struct sockaddr *getInterface(void)
+            {return (struct sockaddr *)&iface;};
+
         inline operator bool()
             {return active;};
 
@@ -493,6 +496,7 @@ public:
     static void getProvision(const char *id, usernode& user);
     static void getDialing(const char *id, usernode& user);
     static keynode *getConfig(void);
+    static void listPolicy(FILE *fp);
     static stack::subnet *getPolicy(struct sockaddr *addr);
     static stack::subnet *getSubnet(const char *id);
     static bool isLocal(struct sockaddr *addr);

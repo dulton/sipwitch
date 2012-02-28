@@ -1005,7 +1005,7 @@ PROGRAM_MAIN(argc, argv)
         version();
     else if(eq(*argv, "help") || eq(*argv, "-help") || eq(*argv, "--help"))
         usage();
-    else if(eq(*argv, "reload") || eq(*argv, "check") || eq(*argv, "snapshot") || eq(*argv, "dump") || eq(*argv, "siplog") || eq(*argv, "usercache") || eq(*argv, "peering"))
+    else if(eq(*argv, "reload") || eq(*argv, "check") || eq(*argv, "snapshot") || eq(*argv, "dump") || eq(*argv, "siplog") || eq(*argv, "usercache") || eq(*argv, "policy"))
         single(argv, 30);
     else if(eq(*argv, "history")) {
         if(argc == 2)

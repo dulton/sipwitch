@@ -1,7 +1,7 @@
 from 1.2.2 to 1.2.3
 - dumpconfig option to understand effective config
 - user configuration options
-- sipwitch peering command added
+- sipwitch policy command to examine access policy and peering
 
 from 1.2.1 to 1.2.2
 - cache directory defined and set

@@ -621,6 +621,63 @@ stack::subnet *server::getSubnet(const char *id)
     return NULL;
 }
 
+void server::listPolicy(FILE *fp)
+{
+    linked_pointer<stack::subnet> pp;
+    char buf[128], baddr[128], bmask[128];
+    struct sockaddr_storage addr, mask;
+    struct sockaddr_in *ipv4;
+#ifdef  AF_INET6
+    struct sockaddr_in6 *ipv6;
+#endif
+    inethostaddr_t ha;
+
+    locking.access();
+    pp = ((server *)(cfg))->acl;
+    while(is(pp)) {
+        const char *id = pp->getId();
+        int fam = pp->getFamily();
+        switch(fam) {
+#ifdef  AF_INET6
+        case AF_INET6:
+            ipv6 = (struct sockaddr_in6 *)&addr;
+            ha = pp->getNetwork();
+            memcpy(&ipv6->sin6_addr, &ha, sizeof(ipv6->sin6_addr));
+            ipv6->sin6_family = AF_INET6;
+            Socket::getaddress((struct sockaddr *)ipv6, baddr, sizeof(baddr));
+            ipv6 = (struct sockaddr_in6 *)&mask;
+            ha = pp->getNetmask();
+            memcpy(&ipv6->sin6_addr, &ha, sizeof(ipv6->sin6_addr));
+            ipv6->sin6_family = AF_INET6;
+            Socket::getaddress((struct sockaddr *)ipv4, bmask, sizeof(bmask));
+            break;
+#endif
+        case AF_INET:
+            ipv4 = (struct sockaddr_in *)&addr;
+            ha = pp->getNetwork();
+            memcpy(&ipv4->sin_addr, &ha, sizeof(ipv4->sin_addr));
+            ipv4->sin_family = AF_INET;
+            Socket::getaddress((struct sockaddr *)ipv4, baddr, sizeof(baddr));
+            ipv4 = (struct sockaddr_in *)&mask;
+            ha = pp->getNetmask();
+            memcpy(&ipv4->sin_addr, &ha, sizeof(ipv4->sin_addr));
+            ipv4->sin_family = AF_INET;
+            Socket::getaddress((struct sockaddr *)ipv4, bmask, sizeof(bmask));
+            break;
+        default:
+            String::set(baddr, sizeof(baddr), "?");
+            String::set(bmask, sizeof(bmask), "?");
+        }
+        Socket::getaddress(pp->getInterface(), buf, sizeof(buf));
+        if(pp->offline())
+            fprintf(fp, "offline %s; interface=%s, %s/%s\n", id, buf, baddr, bmask);
+        else
+            fprintf(fp, "policy %s; interface=%s, %s/%s\n", id, buf, baddr, bmask);
+        pp.next();
+    }
+    locking.release();
+}
+
 stack::subnet *server::getPolicy(struct sockaddr *addr)
 {
     assert(addr != NULL);
@@ -1171,7 +1228,7 @@ invalid:
             continue;
         }
 
-        if(ieq(argv[0], "peering")) {
+        if(ieq(argv[0], "policy") || ieq(argv[0], "network")) {
             if(argc != 1)
                 goto invalid;
             FILE *out = control::output(NULL);
@@ -1180,10 +1237,14 @@ invalid:
             struct sockaddr_storage peer;
             service::published(&peer);
             Socket::getaddress((struct sockaddr *)&peer, buf, sizeof(buf));
-            if(buf[0])
-                fprintf(out, "%s\n", buf);
+            if(service::getInterface())
+                fprintf(out, "binding to %s:%u\n", service::getInterface(), service::getPort());
             else
-                fprintf(out, "none\n");
+                fprintf(out, "binding to *:%u\n", service::getPort());
+            if(buf[0])
+                fprintf(out, "peering as %s\n", buf);
+
+            listPolicy(out);
             fclose(out);
             continue;
         }
