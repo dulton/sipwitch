@@ -573,7 +573,7 @@ bool service::load(FILE *fp, keynode *node)
                 ep = strstr(cp, "-->");
                 if(ep) {
                     cp = ep + 3;
-                    break;
+                    continue;       // obscure bug?...
                 }
             }
             else
