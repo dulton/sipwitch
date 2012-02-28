@@ -994,6 +994,7 @@ void server::stop(void)
 void server::run(void)
 {
     int argc;
+    char buf[256];
     char *argv[65];
     char *state;
     char *cp, *tokens;
@@ -1055,8 +1056,6 @@ void server::run(void)
                 fclose(out);
                 continue;
             }
-
-            char buf[256];
 
             while(fgets(buf, sizeof(buf), log) != NULL) {
                 cp = String::strip(buf, " \t\r\n");
@@ -1169,6 +1168,23 @@ invalid:
                 goto invalid;
             if(service::period(atol(argv[1])))
                 printlog("server period %s\n", (const char *)logtime);
+            continue;
+        }
+
+        if(ieq(argv[0], "peering")) {
+            if(argc != 1)
+                goto invalid;
+            FILE *out = control::output(NULL);
+            if(!out)
+                continue;
+            struct sockaddr_storage peer;
+            service::published(&peer);
+            Socket::getaddress((struct sockaddr *)&peer, buf, sizeof(buf));
+            if(buf[0])
+                fprintf(out, "%s\n", buf);
+            else
+                fprintf(out, "none\n");
+            fclose(out);
             continue;
         }
 

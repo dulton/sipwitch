@@ -772,6 +772,7 @@ static void usage(void)
         "  ifup <iface>             Notify interface came up\n"
         "  ifdown <iface>           Notify interface went down\n"
         "  message <ext> <text>     Send text message to extension\n"
+        "  peering                  Print peering (published) address\n"
         "  period <interval>        Collect periodic statistics\n"
         "  pstats                   Dump periodic statistics\n"
         "  realm [text [digest]]    Show or set new server realm\n"
@@ -1004,7 +1005,7 @@ PROGRAM_MAIN(argc, argv)
         version();
     else if(eq(*argv, "help") || eq(*argv, "-help") || eq(*argv, "--help"))
         usage();
-    else if(eq(*argv, "reload") || eq(*argv, "check") || eq(*argv, "snapshot") || eq(*argv, "dump") || eq(*argv, "siplog") || eq(*argv, "usercache"))
+    else if(eq(*argv, "reload") || eq(*argv, "check") || eq(*argv, "snapshot") || eq(*argv, "dump") || eq(*argv, "siplog") || eq(*argv, "usercache") || eq(*argv, "peering"))
         single(argv, 30);
     else if(eq(*argv, "history")) {
         if(argc == 2)
