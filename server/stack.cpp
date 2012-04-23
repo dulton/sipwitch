@@ -52,8 +52,16 @@ static bool tobool(const char *s)
 
 stack stack::sip;
 
-stack::subnet::subnet(cidr::policy **acl, const char *addr, const char *id, const char *ifset) :
-cidr(acl, addr, id)
+static const char *ifaddr(const char *addr, const char *id)
+{
+    if(eq(id, "any") || eq(id, "world") || eq(id, "nat"))
+        return "0.0.0.0/0";
+
+    return addr;
+}
+
+stack::subnet::subnet(cidr::policy **acl, const char *addr, const char *id) :
+cidr(acl, ifaddr(addr, id), id)
 {
     union {
         struct sockaddr_storage dest;
@@ -69,6 +77,19 @@ cidr(acl, addr, id)
 
     active = true;
     String::set(netname, sizeof(netname), id);
+
+    if(eq(id, "world") || eq(id, "any") || eq(id, "nat")) {
+        if(eq(id, "nat") || eq(id, "any"))
+            String::set(netname, sizeof(netname), "*");
+
+        if(eq(id, "nat"))
+            service::publish(addr);
+
+        Socket::address ifs(addr, sip_port);
+        Socket::store(&iface, ifs.getAddr());
+        return;
+    }
+
     memset(&us.dest, 0, sizeof(us.dest));
     us.in.sin_family = family;
     switch(family) {
@@ -93,11 +114,7 @@ cidr(acl, addr, id)
     }
     Socket::getaddress((struct sockaddr *)&us.dest, buf, sizeof(buf));
 
-    if(ifset) {
-        Socket::address ifs(ifset, sip_port);
-        Socket::store(&iface, ifs.getAddr());
-    }
-    if(!ifset && Socket::getinterface((struct sockaddr *)&iface, (struct sockaddr *)&us.dest))
+    if(Socket::getinterface((struct sockaddr *)&iface, (struct sockaddr *)&us.dest))
         memset(&iface, 0, sizeof(iface));
     // gateway special rule to specify a gateway public interface...
     else if(eq(id, "gateway")) {
@@ -107,11 +124,6 @@ cidr(acl, addr, id)
     }
     // if interface outside cidr...?
     else if(!isMember((struct sockaddr *)&iface)) {
-        String::set(netname, sizeof(netname), "*");
-        service::published(&iface);
-    }
-    // foreign public net, interface is gw...
-    else if(eq(id, "any") || eq(id, "world")) {
         String::set(netname, sizeof(netname), "*");
         service::published(&iface);
     }

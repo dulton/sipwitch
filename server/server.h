@@ -395,7 +395,7 @@ public:
         bool active;
 
     public:
-        subnet(cidr::policy **acl, const char *rule, const char *name, const char *ifaddr = NULL);
+        subnet(cidr::policy **acl, const char *rule, const char *name);
 
         struct sockaddr_storage iface;
 
