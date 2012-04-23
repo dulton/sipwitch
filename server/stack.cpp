@@ -52,7 +52,7 @@ static bool tobool(const char *s)
 
 stack stack::sip;
 
-stack::subnet::subnet(cidr::policy **acl, const char *addr, const char *id) :
+stack::subnet::subnet(cidr::policy **acl, const char *addr, const char *id, const char *ifset) :
 cidr(acl, addr, id)
 {
     union {
@@ -93,15 +93,25 @@ cidr(acl, addr, id)
     }
     Socket::getaddress((struct sockaddr *)&us.dest, buf, sizeof(buf));
 
-    if(Socket::getinterface((struct sockaddr *)&iface, (struct sockaddr *)&us.dest))
+    if(ifset) {
+        Socket::address ifs(ifset, sip_port);
+        Socket::store(&iface, ifs.getAddr());
+    }
+    if(!ifset && Socket::getinterface((struct sockaddr *)&iface, (struct sockaddr *)&us.dest))
         memset(&iface, 0, sizeof(iface));
     // gateway special rule to specify a gateway public interface...
-    else if(String::equal(id, "gateway")) {
+    else if(eq(id, "gateway")) {
         String::set(netname, sizeof(netname), "*");
         Socket::getaddress((struct sockaddr *)&iface, buf, sizeof(buf));
         service::publish(buf);
     }
+    // if interface outside cidr...?
     else if(!isMember((struct sockaddr *)&iface)) {
+        String::set(netname, sizeof(netname), "*");
+        service::published(&iface);
+    }
+    // foreign public net, interface is gw...
+    else if(eq(id, "any") || eq(id, "world")) {
         String::set(netname, sizeof(netname), "*");
         service::published(&iface);
     }
