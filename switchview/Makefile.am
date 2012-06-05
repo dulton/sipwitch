@@ -49,3 +49,5 @@ moc_switchview.cpp:	switchview.h
 qrc_switchview.cpp:	switchview.qrc
 	@RCC@ -o $@ $<
 
+clean-local:
+	-rm -rf $(nodist_switchview_SOURCES) $(BUILT_SOURCES)
