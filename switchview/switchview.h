@@ -18,7 +18,7 @@
 #ifndef SWITCHVIEW_H_
 #define SWITCHVIEW_H_
 
-#include <config.h>
+#include "../config.h"
 #include <ucommon/ucommon.h>
 #include <sipwitch/sipwitch.h>
 #include <QWidget>

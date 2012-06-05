@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "../config.h"
 #include "sipwitch/sipwitch.h"
 #include "ucommon/secure.h"
 #ifdef _MSWINDOWS_
@@ -24,7 +25,6 @@
 #include <grp.h>
 #include <fcntl.h>
 #endif
-#include <config.h>
 
 #if !defined(_MSWINDOWS_)
 #include <sys/un.h>

@@ -13,10 +13,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "../config.h"
 #include <ucommon/ucommon.h>
 #include <ucommon/secure.h>
 #include <sipwitch/sipwitch.h>
-#include <config.h>
 #ifdef  HAVE_PWD_H
 #include <pwd.h>
 #endif
