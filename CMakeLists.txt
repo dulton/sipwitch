@@ -186,6 +186,7 @@ check_function_exists(symlink HAVE_SYMLINK)
 check_function_exists(atexit HAVE_ATEXIT)
 
 configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+configure_file(config.h.cmake ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
 
 file(GLOB runtime_src common/*.cpp)
 file(GLOB runtime_inc inc/sipwitch/*.h)
