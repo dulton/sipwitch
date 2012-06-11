@@ -40,7 +40,7 @@ if(HAVE_PLUGINS)
     install(TARGETS sipwitch-forward sipwitch-scripting sipwitch-subscriber DESTINATION ${INSTALL_PLUGINS})
 endif()
 
-if(HAVE_PLUGINS AND USES_ZEROCONF)
+if(HAVE_PLUGINS AND USES_ZEROCONF_FOUND)
     add_library(sipwitch-zeroconf MODULE zeroconf.cpp)
     add_dependencies(sipwitch-zeroconf sipwitch-runtime ucommon)
     target_link_libraries(sipwitch-zeroconf sipwitch-runtime ${USES_ZEROCONF_LIBRARIES} ${USES_UCOMMON_LIBRARIES})
