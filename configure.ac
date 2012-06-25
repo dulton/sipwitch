@@ -331,7 +331,23 @@ done
 export CXXFLAGS="$COMPILER_FLAGS"
 
 SIPWITCH_FLAGS="$EXPORT_FLAGS $EXOSIP2_CFLAGS $LIBOSIP2_CFLAGS $UCOMMON_CFLAGS"
-SIPWITCH_LIBS="$EXPORT_LIBS $UCOMMON_LIBS $ac_with_malloc $UCOMMON_CLINK"
+SIPWITCH_LIBS="$EXPORT_LIBS $UCOMMON_LIBS $ac_with_malloc"
+ulibs=""
+slibs=""
+for lib in $UCOMMON_LIBS ; do
+    case "$lib" in
+    -L*|-lucommon|*ucommon.a|*ucommon.so|*ucommon.la)
+        ulibs="$ulibs $lib"
+        ;;
+    -lusecure|*usecure.a|*usecure.so|*usecure.la)
+        slibs="$slibs $lib"
+        ;;
+    esac
+done
+USECURE_LINK="$slibs $ulibs"
+UCOMMON_LINK="$ulibs"
+if test "$UCOMMON_MODEL" = "CC" ; then
+    SIPWITCH_LIBS="$SIPWITCH_LIBS $UCOMMON_CLINK" ; fi
 
 if test "$localstatedir" = '${prefix}/var' ; then
     localstatedir="/var" ; fi
@@ -437,6 +453,8 @@ AC_SUBST(DAEMON_LIBS)
 AC_SUBST(EXPORT_FLAGS)
 AC_SUBST(EXPORT_LIBS)
 AC_SUBST(INCLUDE_FLAGS)
+AC_SUBST(UCOMMON_LINK)
+AC_SUBST(USECURE_LINK)
 AC_SUBST(SIPWITCH_FLAGS)
 AC_SUBST(SIPWITCH_LIBS)
 AC_SUBST(SIPWITCH_EXOSIP2)

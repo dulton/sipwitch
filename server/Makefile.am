@@ -9,8 +9,9 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
-AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@ 
-LDADD = ../common/libsipwitch.la @SIPWITCH_LIBS@ @DAEMON_LIBS@
+AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
+LDADD = ../common/libsipwitch.la @SIPWITCH_LIBS@
+PLUGINS_ADD = ../common/libsipwitch.la @UCOMMON_LINK@
 EXTRA_DIST = *.xml *-example *.conf *.log *.defaults *.init *.cron *.8 \
 	sipwitch.ifup sipwitch.ifdown sipwitch.reload CMakeLists.txt
 EXTRA_LTLIBRARIES =
@@ -31,23 +32,24 @@ endif
 
 sipw_SOURCES = server.cpp registry.cpp stack.cpp thread.cpp protocols.cpp \
 	call.cpp messages.cpp media.cpp system.cpp signals.cpp history.cpp
-sipw_LDADD = @SIPWITCH_EXOSIP2@ $(LDADD) $(DLOPEN)
+sipw_LDADD = $(LDADD) @SIPWITCH_EXOSIP2@ @DAEMON_LIBS@ $(DLOPEN)
+sipw_LDFLAGS = @LDFLAGS@
 
 sysconf_DATA = sipwitch.conf
 
 pkgxml_DATA = lab.xml-example tests.xml 
 
 forward_la_SOURCES = forward.cpp 
-forward_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)
+forward_la_LDFLAGS = -module $(MODFLAGS) $(PLUGINS_ADD)
 
 scripting_la_SOURCES = scripting.cpp 
-scripting_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)
+scripting_la_LDFLAGS = -module $(MODFLAGS) $(PLUGINS_ADD)
 
 subscriber_la_SOURCES = subscriber.cpp 
-subscriber_la_LDFLAGS = -module $(MODFLAGS) $(LDADD)
+subscriber_la_LDFLAGS = -module $(MODFLAGS) $(PLUGINS_ADD)
 
 zeroconf_la_SOURCES = zeroconf.cpp 
-zeroconf_la_LDFLAGS = -module $(MODFLAGS) @ZEROCONF_LIBS@ $(LDADD)
+zeroconf_la_LDFLAGS = -module $(MODFLAGS) @ZEROCONF_LIBS@ $(PLUGINS_ADD)
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(logrotatedir)

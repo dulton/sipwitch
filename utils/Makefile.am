@@ -17,16 +17,16 @@ man_MANS = sipwitch.1 sipquery.1 sippasswd.1 sipwitch-cgi.8
 bin_PROGRAMS = sipquery sipwitch sippasswd sipwitch-cgi
 
 sipwitch_SOURCES = sipwitch.cpp
-sipwitch_LDADD = @SIPWITCH_LIBS@
+sipwitch_LDADD = @LDFLAGS@ @SIPWITCH_LIBS@
 
 sipquery_SOURCES = sipquery.cpp
-sipquery_LDADD = @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@
+sipquery_LDADD = @LDFLAGS@ @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@
 
 sippasswd_SOURCES = sippasswd.cpp
-sippasswd_LDADD = @SIPWITCH_LIBS@
+sippasswd_LDADD = @LDFLAGS@ @SIPWITCH_LIBS@
 
 sipwitch_cgi_SOURCES = cgiserver.cpp
-sipwitch_cgi_LDADD = @SIPWITCH_LIBS@
+sipwitch_cgi_LDADD = @LDFLAGS@ @SIPWITCH_LIBS@
 
 install-exec-hook:
 	-(chown root $(DESTDIR)$(bindir)/sippasswd$(EXEEXT) 2>/dev/null ; exit 0)
