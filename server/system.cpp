@@ -44,7 +44,7 @@ static shell::numericopt concurrency('c', "--concurrency", _TEXT("process concur
 static shell::flagopt desktop(0, "--desktop", _TEXT("enable desktop access"));
 static shell::flagopt foreflag('f', "--foreground", _TEXT("run in foreground"));
 #ifdef  HAVE_PWD_H
-static shell::stringopt group('g', "--group", _TEXT("use specified group permissions"), "groupid", "nobody");
+static shell::stringopt group('g', "--group", _TEXT("use specified group permissions"), "groupid", NULL);
 #endif
 static shell::numericopt histbuf('h', "--history", _TEXT("set history buffer"), "count", 0);
 static shell::stringopt loglevel('L', "--logging", _TEXT("set log level"), "level", "err");
@@ -491,7 +491,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
         }
     }
 
-    if(is(group)) {
+    if(*group) {
         if(atoi(*group))
             grp = getgrgid(atoi(*group));
         else
