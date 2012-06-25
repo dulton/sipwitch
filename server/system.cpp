@@ -54,7 +54,7 @@ static shell::counteropt priority('p', "--priority", _TEXT("set priority level")
 static shell::flagopt restart('r', "--restartable", _TEXT("set to restartable process"));
 static shell::flagopt trace('t', "--trace", _TEXT("trace sip messages"));
 #ifdef HAVE_PWD_H
-static shell::stringopt user('u', "--user", _TEXT("user to run as"), "userid", "nobody");
+static shell::stringopt user('u', "--user", _TEXT("user to run as"), "userid", NULL);
 #endif
 static shell::flagopt verbose('v', NULL, _TEXT("set verbosity, can be used multiple times"), false);
 static shell::flagopt version(0, "--version", _TEXT("show version information"));
@@ -480,7 +480,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     // if root user, then see if we change permissions...
 
     if(!getuid()) {
-        if(is(user)) {
+        if(*user) {
             if(atoi(*user))
                 pwd = getpwuid(atoi(*user));
             else

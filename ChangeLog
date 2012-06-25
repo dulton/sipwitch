@@ -1,5 +1,5 @@
 from 1.2.5 to 1.2.6
-- fix group handling logic
+- fix group and user handling logic
 
 from 1.2.4 to 1.2.5
 - various source build issues with config.h and cleanup
