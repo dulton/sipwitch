@@ -348,11 +348,11 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 
 #ifdef  HAVE_PWD_H
     cp = args.getenv("GROUP");
-    if(cp && *cp)
+    if(cp && *cp && !is(group))
         group.set(cp);
 
     cp = args.getenv("USER");
-    if(cp && *cp)
+    if(cp && *cp && !is(user))
         user.set(cp);
 
     // root gets these from default to act as user daemon...
