@@ -760,6 +760,7 @@ static void usage(void)
         "  calls                    List active calls on server\n"
         "  check                    Server deadlock check\n"
         "  concurrency <level>      Server concurrency level\n"
+        "  contact                  Server contact config address\n"
         "  digest id [realm [type]] Compute a digest\n"
         "  disable conf-id...       Disable configurations\n"
         "  down                     Shut down server\n"
@@ -1005,7 +1006,7 @@ PROGRAM_MAIN(argc, argv)
         version();
     else if(eq(*argv, "help") || eq(*argv, "-help") || eq(*argv, "--help"))
         usage();
-    else if(eq(*argv, "reload") || eq(*argv, "check") || eq(*argv, "snapshot") || eq(*argv, "dump") || eq(*argv, "siplog") || eq(*argv, "usercache") || eq(*argv, "policy"))
+    else if(eq(*argv, "reload") || eq(*argv, "check") || eq(*argv, "snapshot") || eq(*argv, "dump") || eq(*argv, "siplog") || eq(*argv, "usercache") || eq(*argv, "policy") || eq(*argv, "contact"))
         single(argv, 30);
     else if(eq(*argv, "history")) {
         if(argc == 2)

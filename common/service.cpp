@@ -223,6 +223,9 @@ memalloc(s), root()
 
     root.setId((char *)name);
     root.setPointer(NULL);
+
+    contact = NULL;
+
     if(!started) {
         time(&started);
         time(&periodic);
@@ -235,6 +238,12 @@ service::~service()
     // or child nodes, since all was allocated from the "pager" heap.
     memset(&root, 0, sizeof(root));
     memalloc::purge();
+}
+
+void service::setContact(const char *addr)
+{
+    if(!contact)
+        contact = dup(addr);
 }
 
 void service::publish(const char *addr)
@@ -747,6 +756,41 @@ void service::dumpfile(void)
         cfg->service::dump(fp);
     locking.release();
     fclose(fp);
+}
+
+string_t service::getContact(void)
+{
+    string_t uri;
+    const char *addr = NULL;
+    unsigned short port;
+
+    locking.access();
+    if(cfg && cfg->contact)
+        addr = cfg->contact;
+    if(!addr)
+        addr = getInterface();
+
+    if(!addr || eq(addr, "*"))
+#ifdef  HAVE_GETHOSTNAME
+        static char hostbuf[256] = {0};
+        if(!hostbuf[0])
+            gethostname(hostbuf, sizeof(hostbuf));
+        if(hostbuf[0])
+            return addr = hostbuf;
+        else
+            addr = "localhost";
+#else
+        addr = "localhost";
+#endif
+
+    port = getPort();
+    if(port && port != 5060)
+        uri = str("sip:") + addr + ":" + str(port);
+    else
+        uri = str("sip:") + addr;
+
+    locking.release();
+    return uri;
 }
 
 bool service::period(long slice)

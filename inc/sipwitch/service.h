@@ -302,6 +302,10 @@ public:
     inline keynode *getRoot(void)
         {return &root;};
 
+    void setContact(const char *cp);
+
+    static string_t getContact(void);
+
     static inline const char *getInterface(void)
         {return service::callback::sip_iface;};
 
@@ -331,6 +335,7 @@ protected:
     keynode root;
     stringbuf<1024> buffer;
     LinkedObject *keys[CONFIG_KEY_SIZE];
+    const char *contact;
 
     static service *cfg;
     static condlock_t locking;
