@@ -121,6 +121,7 @@ signals:
     void notifySignal(events*);
     void stateSignal(char *changed, char *started = NULL);
     void realmSignal(char *changed);
+    void configContact(char *uri);
 };
 
 class __LOCAL Mapped : public QDialog

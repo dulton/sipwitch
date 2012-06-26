@@ -716,13 +716,19 @@ bool thread::authorize(void)
     // bypass request address processing if local domain call....
     memset(&iface, 0, sizeof(iface));
 
-    if(String::equal(registry::getRealm(), uri_host))
+    if(eq(registry::getRealm(), uri_host))
         goto local;
 
-    if(String::equal("localdomain", uri_host))
+    if(eq("localdomain", uri_host))
         goto local;
 
     if(String::ifind(stack::sip.localnames, uri_host, " ,;:\t\n"))
+        goto local;
+
+    if(stack::sip_contact && eq((const char *)stack::sip_contact, uri_host))
+        goto local;
+
+    if(stack::sip_publish && eq((const char *)stack::sip_publish, uri_host))
         goto local;
 
     request_address.set(uri_host, local_port);
@@ -856,6 +862,12 @@ trying:
             return authenticate();
 
         if(String::equal("localdomain", from->url->host))
+            return authenticate();
+
+        if(stack::sip_contact && eq((const char *)stack::sip_contact, uri_host))
+            return authenticate();
+
+        if(stack::sip_publish && eq((const char *)stack::sip_publish, uri_host))
             return authenticate();
 
         if(String::ifind(stack::sip.localnames, from->url->host, " ,;:\t\n"))
