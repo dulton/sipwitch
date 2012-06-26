@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
+
+<ui version="4.0">
+<comment>
 Copyright (C) 2011 David Sugar, Haakon Eriksen, GNU Free Call Foundation
 
 This file is part of SwitchView.
@@ -15,10 +17,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with SwitchView.  If not, see <http://www.gnu.org/licenses/>.
--->
+along with SwitchView.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+</comment>
 
-<ui version="4.0">
  <class>Mapped</class>
  <widget class="QDialog" name="Mapped">
   <property name="geometry">
@@ -271,7 +272,7 @@ along with SwitchView.  If not, see <http://www.gnu.org/licenses/>.
       <attribute name="title">
        <string>You</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_6">
+      <layout class="QVBoxLayout" name="verticalLayout_7">
        <item>
         <layout class="QFormLayout" name="formLayout">
          <item row="0" column="0">
