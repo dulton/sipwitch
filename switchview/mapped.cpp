@@ -316,6 +316,16 @@ static void remapUsers(void)
 Mapped::Mapped() :
 QDialog(switchview)
 {
+#ifdef  _MSWINDOWS_
+    char buf[128];
+    if(GetUserName(buf, sizeof(buf)) == 0)
+        userid = buf;
+    else
+        userid = "unknown";
+#else
+    userid = getlogin();
+#endif
+
     ui.setupUi((QDialog *)this);
 
     QSettings settings;
@@ -389,11 +399,16 @@ QDialog(switchview)
         this, SLOT(notifyActivity(events*)), Qt::QueuedConnection);
 
     connect(dispatcher, SIGNAL(realmSignal(char*)),
-        this, SLOT(realm(char*)), Qt::QueuedConnection);
+        this, SLOT(changeRealm(char*)), Qt::QueuedConnection);
+
+    connect(dispatcher, SIGNAL(contactSignal(char*)),
+        this, SLOT(changeContact(char*)), Qt::QueuedConnection);
+
+    connect(dispatcher, SIGNAL(publishSignal(char*)),
+        this, SLOT(changePublish(char*)), Qt::QueuedConnection);
 
     connect(dispatcher, SIGNAL(stateSignal(char*,char *)),
-        this, SLOT(state(char*,char*)), Qt::QueuedConnection);
-
+        this, SLOT(changeState(char*,char*)), Qt::QueuedConnection);
 }
 
 void Mapped::mappedMenu(const QPoint& pos)
@@ -407,14 +422,42 @@ void Mapped::started(const char *text)
     ui.started->update();
 }
 
-void Mapped::realm(char *text)
+void Mapped::changeContact(char *text)
 {
-    ui.realmEditor->setText(text);
-    ui.realmEditor->update();
+    ui.labelServer->setText(text);
+    char *cp = strchr(text, ':');
+    if(*cp) {
+        *(cp++) = 0;
+    }
+    else
+        cp = text;
+    string_t tmp = str((const char *)text) + ":" + userid + "@" + (const char *)cp;
+    ui.labelIdentity->setText(*tmp);
     free(text);
 }
 
-void Mapped::state(char *text, char *start)
+void Mapped::changePublish(char *text)
+{
+    char *cp = strchr(text, ':');
+    if(*cp) {
+        *(cp++) = 0;
+    }
+    else
+        cp = text;
+    string_t tmp = str((const char *)text) + ":" + userid + "@" + (const char *)cp;
+    ui.labelPublished->setText(*tmp);
+    free(text);
+}
+
+void Mapped::changeRealm(char *text)
+{
+    ui.realmEditor->setText(text);
+    ui.realmEditor->update();
+    ui.labelRealm->setText(text);
+    free(text);
+}
+
+void Mapped::changeState(char *text, char *start)
 {
     if(start) {
         started(start);

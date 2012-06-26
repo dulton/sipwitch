@@ -283,7 +283,7 @@ along with SwitchView.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QLabel" name="local_identity">
+          <widget class="QLabel" name="labelIdentity">
            <property name="text">
             <string>[uri]</string>
            </property>
@@ -297,7 +297,7 @@ along with SwitchView.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QLabel" name="public_identity">
+          <widget class="QLabel" name="labelPublished">
            <property name="text">
             <string>[uri]</string>
            </property>
@@ -311,7 +311,7 @@ along with SwitchView.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QLabel" name="server_identity">
+          <widget class="QLabel" name="labelServer">
            <property name="text">
             <string>[uri]</string>
            </property>
@@ -325,7 +325,7 @@ along with SwitchView.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QLabel" name="server_realm">
+          <widget class="QLabel" name="labelRealm">
            <property name="text">
             <string>[realm]</string>
            </property>

@@ -149,7 +149,7 @@ bool Events::dispatch(events *msg)
         // only send for contact changes...
         if(!eq(contact, msg->contact)) {
             contact ^= msg->contact;
-            emit configContact(contact.c_mem());
+            emit contactSignal(contact.c_mem());
             Thread::yield();
         }
         return true;
@@ -157,7 +157,7 @@ bool Events::dispatch(events *msg)
         // only send for contact changes...
         if(!eq(publish, msg->contact)) {
             publish ^= msg->contact;
-            emit configContact(publish.c_mem());
+            emit publishSignal(publish.c_mem());
             Thread::yield();
         }
         return true;

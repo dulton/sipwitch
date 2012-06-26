@@ -121,7 +121,8 @@ signals:
     void notifySignal(events*);
     void stateSignal(char *changed, char *started = NULL);
     void realmSignal(char *changed);
-    void configContact(char *uri);
+    void contactSignal(char *uri);
+    void publishSignal(char *uri);
 };
 
 class __LOCAL Mapped : public QDialog
@@ -129,6 +130,8 @@ class __LOCAL Mapped : public QDialog
     Q_OBJECT
 
 private:
+    string_t userid;
+
     void closeEvent(QCloseEvent *event);
 
     void started(const char *text);
@@ -166,8 +169,10 @@ public slots:
     void callUpdate(events *msg);
     void dropUpdate(events *msg);
     void notifyActivity(events *msg);
-    void realm(char *text);
-    void state(char *text, char *start);
+    void changeRealm(char *text);
+    void changeState(char *text, char *start);
+    void changeContact(char *text);
+    void changePublish(char *text);
 };
 
 class __LOCAL Options : public QDialog
