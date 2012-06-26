@@ -350,6 +350,24 @@ void events::reload(void)
     msg.type = CONTACT;
     String::set(msg.contact, sizeof(msg.contact), *service::getContact());
     dispatch::send(&msg);
+
+    msg.type = PUBLISH;
+    volatile char *addr = service::callback::sip_publish;
+    if(addr) {
+        string_t uri = str("sip:") + (const char *)addr;
+        String::set(msg.contact, sizeof(msg.contact), *uri);
+        dispatch::send(&msg);
+    }
+}
+
+void events::publish(const char *addr)
+{
+    events msg;
+
+    msg.type = PUBLISH;
+    string_t uri = str("sip:") + addr;
+    String::set(msg.contact, sizeof(msg.contact), *uri);
+    dispatch::send(&msg);
 }
 
 void events::terminate(const char *reason)

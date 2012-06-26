@@ -74,7 +74,7 @@ protected:
     bool put(events *event);
 
 public:
-    typedef enum {NOTICE, WARNING, FAILURE, TERMINATE, STATE, REALM, CALL, DROP, ACTIVATE, RELEASE, WELCOME, SYNC, CONTACT} type_t;
+    typedef enum {NOTICE, WARNING, FAILURE, TERMINATE, STATE, REALM, CALL, DROP, ACTIVATE, RELEASE, WELCOME, SYNC, CONTACT, PUBLISH} type_t;
 
     /**
      * Type of event message.
@@ -180,6 +180,12 @@ public:
      * Refresh clients with any config events...
      */
     static void reload(void);
+
+    /**
+     * Update publish address...
+     * @param published address.
+     */
+    static void publish(const char *address);
 
     /**
      * Notify server termination.

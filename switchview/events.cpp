@@ -40,7 +40,8 @@ static bool started = false;
 static string_t callmap = CALL_MAP;
 static string_t usermap = REGISTRY_MAP;
 static string_t statmap = STAT_MAP;
-static string_t contact = "";
+static string_t contact = "-";
+static string_t publish = "-";
 
 static socket_t ipc = INVALID_SOCKET;
 #ifdef  _MSWINDOWS_
@@ -149,6 +150,14 @@ bool Events::dispatch(events *msg)
         if(!eq(contact, msg->contact)) {
             contact ^= msg->contact;
             emit configContact(contact.c_mem());
+            Thread::yield();
+        }
+        return true;
+    case events::PUBLISH:
+        // only send for contact changes...
+        if(!eq(publish, msg->contact)) {
+            publish ^= msg->contact;
+            emit configContact(publish.c_mem());
             Thread::yield();
         }
         return true;

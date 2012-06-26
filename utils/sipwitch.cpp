@@ -427,6 +427,7 @@ static void showevents(char **argv)
 #endif
 
     static string_t contact = "-";
+    static string_t publish = "-";
 
     if(argv[1])
         shell::errexit(1, "*** sipwitch: events: no arguments used\n");
@@ -497,6 +498,12 @@ static void showevents(char **argv)
             if(!eq(contact, event.contact)) {
                 printf("contact: %s\n", event.contact);
                 contact ^= event.contact;
+            }
+            break;
+        case events::PUBLISH:
+            if(!eq(publish, event.contact)) {
+                printf("publish: %s\n", event.contact);
+                publish ^= event.contact;
             }
             break;
         case events::WELCOME:

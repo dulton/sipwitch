@@ -180,6 +180,7 @@ public:
     protected:
         friend class service;
         friend class modules;
+        friend class events;
 
         unsigned runlevel;
         bool active_flag;
@@ -188,6 +189,8 @@ public:
         static unsigned count;
         static unsigned short sip_port;
         static const char *sip_iface;
+        static volatile char *sip_contact;
+        static volatile char *sip_publish;
         static int sip_protocol;
         static int sip_family;
         static int sip_tlsmode;
@@ -302,9 +305,10 @@ public:
     inline keynode *getRoot(void)
         {return &root;};
 
-    void setContact(const char *cp);
-
     static string_t getContact(void);
+
+    inline void setContact(const char *text)
+        {contact = dup(text);}
 
     static inline const char *getInterface(void)
         {return service::callback::sip_iface;};

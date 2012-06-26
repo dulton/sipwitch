@@ -37,6 +37,8 @@ unsigned short service::callback::sip_port = 5060;
 unsigned service::callback::sip_prefix = 0;
 unsigned service::callback::sip_range = 0;
 const char *service::callback::sip_iface = NULL;
+volatile char *service::callback::sip_contact = NULL;
+volatile char *service::callback::sip_publish = NULL;
 int service::callback::sip_protocol = IPPROTO_UDP;
 int service::callback::sip_family = AF_INET;
 int service::callback::sip_tlsmode = 0;
@@ -240,12 +242,6 @@ service::~service()
     memalloc::purge();
 }
 
-void service::setContact(const char *addr)
-{
-    if(!contact)
-        contact = dup(addr);
-}
-
 void service::publish(const char *addr)
 {
     Socket::address resolver;
@@ -257,8 +253,14 @@ void service::publish(const char *addr)
     int i = 0;
     resolver.set(addr, i);
     host = resolver.getAddr();
-    if(host)
+    if(host) {
+        volatile char *old = callback::sip_publish;
+        callback::sip_publish = strdup(addr);
+        if(old)
+            free((char *)old);
         Socket::store(&peering, host);
+        events::publish(addr);
+    }
 }
 
 void service::published(struct sockaddr_storage *peer)
@@ -761,35 +763,37 @@ void service::dumpfile(void)
 string_t service::getContact(void)
 {
     string_t uri;
-    const char *addr = NULL;
+    volatile char *vaddr = callback::sip_contact;
     unsigned short port;
+    const char *addr = (const char *)vaddr;
 
-    locking.access();
-    if(cfg && cfg->contact)
-        addr = cfg->contact;
     if(!addr)
         addr = getInterface();
 
-    if(!addr || eq(addr, "*"))
+    if(!addr || eq(addr, "*")) {
 #ifdef  HAVE_GETHOSTNAME
         static char hostbuf[256] = {0};
         if(!hostbuf[0])
             gethostname(hostbuf, sizeof(hostbuf));
         if(hostbuf[0])
-            return addr = hostbuf;
+            addr = hostbuf;
         else
             addr = "localhost";
 #else
         addr = "localhost";
 #endif
+    }
 
     port = getPort();
-    if(port && port != 5060)
-        uri = str("sip:") + addr + ":" + str(port);
+    if(port && port != 5060) {
+        if(strchr(addr, ':'))
+            uri = str("sip:[") + addr + "]:" + str(port);
+        else
+            uri = str("sip:") + addr + ":" + str(port);
+    }
     else
         uri = str("sip:") + addr;
 
-    locking.release();
     return uri;
 }
 
@@ -894,6 +898,8 @@ void service::commit(void)
     confirm();
 
     locking.modify();
+    if(contact)
+        callback::sip_contact = (volatile char *)(contact);
     orig = cfg;
     cfg = this;
     locking.commit();

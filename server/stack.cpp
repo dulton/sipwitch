@@ -914,6 +914,8 @@ void stack::reload(service *cfg)
                 system = value;
             else if(eq(key, "anon"))
                 anon = value;
+            else if(eq(key, "contact"))
+                cfg->setContact(value);
             else if(eq(key, "published") || eq(key, "public"))
                 published = cfg->dup(value);
             else if(eq(key, "peering") || eq(key, "gateway"))

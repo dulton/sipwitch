@@ -500,8 +500,6 @@ void registry::reload(service *cfg)
                 digest = cfg->dup(value);
                 String::upper((char *)digest);
             }
-            else if(!stricmp(key, "contact"))
-                cfg->setContact(value);
             else if(!stricmp(key, "realm"))
                 realm = cfg->dup(value);
             else if(!stricmp(key, "prefix") && !isConfigured())
