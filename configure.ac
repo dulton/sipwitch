@@ -346,7 +346,8 @@ for lib in $UCOMMON_LIBS ; do
 done
 USECURE_LINK="$slibs $ulibs"
 UCOMMON_LINK="$ulibs"
-SIPWITCH_LIBS="$SIPWITCH_LIBS $UCOMMON_CLINK"
+if test "$UCOMMON_MODEL" = "CC" ; then
+    SIPWITCH_LIBS="$SIPWITCH_LIBS $UCOMMON_CLINK" ; fi
 
 if test "$localstatedir" = '${prefix}/var' ; then
     localstatedir="/var" ; fi
