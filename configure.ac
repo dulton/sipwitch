@@ -274,38 +274,8 @@ fi
 if test "$UCOMMON_MODEL" = "CC" ; then
     LIBTOOL='$(SHELL) $(top_srcdir)/cmodel.sh'" ${LIBTOOL}" ; fi
 
-for lib in $UCOMMON_CLINK ; do
-    case "$lib" in
-    *,-lc)
-        lib="-lc"
-        ;;
-    esac
-    case "$lib" in
-    -l*)
-        libc=`echo $lib | sed -e "s/^-l//"`
-        AC_CHECK_LIB($libc, gethostname, [
-            AC_DEFINE(HAVE_GETHOSTNAME, [1], [hostname self lookup])
-        ])
-        AC_CHECK_LIB($libc, mkfifo, [
-            AC_DEFINE(HAVE_MKFIFO, [1], [fifo control port])
-        ])
-        AC_CHECK_LIB($libc, atexit, [
-            AC_DEFINE(HAVE_ATEXIT, [1], [have atexit handling])
-        ])
-        AC_CHECK_LIB($libc, setpgrp, [
-            AC_DEFINE(HAVE_SETPGR, [1], [process set group])
-        ])
-        AC_CHECK_LIB($libc, symlink, [
-            AC_DEFINE(HAVE_SYMLINK, [1], [support symlinks])
-        ])
-        ;;
-    *)
-        ;;
-    esac
-done
-
 AC_CHECK_HEADERS(sys/resource.h syslog.h net/if.h sys/sockio.h ioctl.h pwd.h sys/inotify.h)
-AC_CHECK_FUNCS(setrlimit setpgrp setrlimit getuid mkfifo)
+AC_CHECK_FUNCS(setrlimit setpgrp setrlimit getuid mkfifo gethostname symlink)
 
 AC_LANG_CPLUSPLUS
 COMPILER_FLAGS=""
