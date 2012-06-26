@@ -907,6 +907,9 @@ void service::commit(void)
         }
     }
 
+    // send any config related reload events...
+    events::reload();
+
     // let short-term volatile references settle before we delete it...
     if(orig) {
         Thread::sleep(1000);

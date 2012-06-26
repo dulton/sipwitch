@@ -19,6 +19,7 @@
 #include <sipwitch/events.h>
 #include <sipwitch/control.h>
 #include <sipwitch/mapped.h>
+#include <sipwitch/service.h>
 
 #if !defined(_MSWINDOWS_)
 #include <sys/un.h>
@@ -164,6 +165,7 @@ void event_thread::run(void)
 
         events::sync();
         shell::log(DEBUG3, "connecting client events for %d", client);
+
         msg.type = events::WELCOME;
         msg.server.started = started;
         String::set(msg.server.version, sizeof(msg.server.version), VERSION);
@@ -171,8 +173,12 @@ void event_thread::run(void)
         String::set(msg.server.state, sizeof(msg.server.state), *saved_state);
         String::set(msg.server.realm, sizeof(msg.server.realm), *saved_realm);
         private_locking.release();
-        msg.type = events::WELCOME;
         ::send(client, (const char *)&msg, sizeof(msg), 0);
+
+        String::set(msg.contact, sizeof(msg.contact), *service::getContact());
+        msg.type = events::CONTACT;
+        ::send(client, (const char *)&msg, sizeof(msg), 0);
+
         dispatch::add(client);
     }
 
@@ -334,6 +340,15 @@ void events::failure(const char *reason)
 
     msg.type = FAILURE;
     String::set(msg.reason, sizeof(msg.reason), reason);
+    dispatch::send(&msg);
+}
+
+void events::reload(void)
+{
+    events msg;
+
+    msg.type = CONTACT;
+    String::set(msg.contact, sizeof(msg.contact), *service::getContact());
     dispatch::send(&msg);
 }
 

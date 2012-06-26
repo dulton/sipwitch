@@ -426,6 +426,8 @@ static void showevents(char **argv)
     struct passwd *pwd = getpwuid(getuid());
 #endif
 
+    static string_t contact = "-";
+
     if(argv[1])
         shell::errexit(1, "*** sipwitch: events: no arguments used\n");
 
@@ -490,6 +492,12 @@ static void showevents(char **argv)
             break;
         case events::NOTICE:
             printf("notice:  %s\n", event.reason);
+            break;
+        case events::CONTACT:
+            if(!eq(contact, event.contact)) {
+                printf("contact: %s\n", event.contact);
+                contact ^= event.contact;
+            }
             break;
         case events::WELCOME:
             printf("server version %s %s\n",

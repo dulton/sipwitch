@@ -74,7 +74,7 @@ protected:
     bool put(events *event);
 
 public:
-    typedef enum {NOTICE, WARNING, FAILURE, TERMINATE, STATE, REALM, CALL, DROP, ACTIVATE, RELEASE, WELCOME, SYNC} type_t;
+    typedef enum {NOTICE, WARNING, FAILURE, TERMINATE, STATE, REALM, CALL, DROP, ACTIVATE, RELEASE, WELCOME, SYNC, CONTACT} type_t;
 
     /**
      * Type of event message.
@@ -103,6 +103,7 @@ public:
             char state[32];
             char realm[64];
         } server;
+        char contact[160];
         char reason[160];
         unsigned period;
     };
@@ -174,6 +175,11 @@ public:
      * @param reason for error.
      */
     static void failure(const char *reason);
+
+    /**
+     * Refresh clients with any config events...
+     */
+    static void reload(void);
 
     /**
      * Notify server termination.
