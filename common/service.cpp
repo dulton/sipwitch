@@ -773,8 +773,7 @@ string_t service::getContact(void)
     if(!addr || eq(addr, "*")) {
 #ifdef  HAVE_GETHOSTNAME
         static char hostbuf[256] = {0};
-        if(!hostbuf[0])
-            gethostname(hostbuf, sizeof(hostbuf));
+        gethostname(hostbuf, sizeof(hostbuf));
         if(hostbuf[0])
             addr = hostbuf;
         else
