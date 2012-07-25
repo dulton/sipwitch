@@ -20,6 +20,7 @@ man_MANS = sipw.8
 sbin_PROGRAMS = sipw
 pkgxmldir=$(sysconfdir)/sipwitch.d
 pkglibdir=$(libdir)/sipwitch
+systemddir=$(libdir)/systemd/system
 logrotatedir=$(sysconfdir)/logrotate.d
 noinst_HEADERS = server.h
 pkglib_LTLIBRARIES = forward.la scripting.la subscriber.la
@@ -69,6 +70,8 @@ install-exec-local:
 	if test "@NETWORK_RELOAD@" != "none" ; then $(INSTALL) -m 0755 sipwitch.reload $(DESTDIR)/@NETWORK_RELOAD@/90sipwitch ; fi
 	if test "@INITRDDIR@" != "none" ; then $(mkinstalldirs) $(DESTDIR)/@INITRDDIR@ ; fi
 	if test "@INITRDDIR@" != "none" ; then $(INSTALL) -m 0755 sipwitch.init $(DESTDIR)/@INITRDDIR@/sipwitch ; fi
+	if test "@INITRDDIR@" = "none" ; then $(mkinstalldirs) $(DESTDIR)/$(systemddir) ; fi
+	if test "@INITRDDIR@" = "none" ; then $(INSTALL) -m 0644 sipwitch.service $(DESTDIR)/$(systemddir)/sipwitch.service ; fi
 	$(mkinstalldirs) $(DESTDIR)/$(sysconfdir)/cron.hourly 
 	$(INSTALL) -m 0755 sipwitch.cron $(DESTDIR)/$(sysconfdir)/cron.hourly/sipwitch 
 
