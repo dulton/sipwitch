@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=forking
 EnvironmentFile=/etc/sysconfig/sipwitch
-ExecStartPre=/bin/rm -f $FIFO
+ExecStartPre=-/bin/rm -f $FIFO
 ExecStart=$DAEMON $OPTIONS
 ExecStop=echo "down" ]$FIFO
 ExecStopPost=sleep 3
