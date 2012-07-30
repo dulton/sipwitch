@@ -185,8 +185,8 @@ check_function_exists(mkfifo HAVE_MKFIFO)
 check_function_exists(symlink HAVE_SYMLINK)
 check_function_exists(atexit HAVE_ATEXIT)
 
-configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-configure_file(config.h.cmake ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
+configure_file(sipwitch-config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/sipwitch-config.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 file(GLOB runtime_src common/*.cpp)
 file(GLOB runtime_inc inc/sipwitch/*.h)

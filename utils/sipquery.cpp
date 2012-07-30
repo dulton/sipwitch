@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "../config.h"
+#include <sipwitch-config.h>
 #include <eXosip2/eXosip.h>
 #include <ucommon/ucommon.h>
 

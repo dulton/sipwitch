@@ -13,9 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "../config.h"
-#include "sipwitch/sipwitch.h"
-#include "ucommon/secure.h"
+#include <sipwitch-config.h>
+#include <sipwitch/sipwitch.h>
+#include <ucommon/secure.h>
 #ifdef _MSWINDOWS_
 #include <windows.h>
 #include <io.h>

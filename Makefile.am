@@ -11,7 +11,8 @@
 AUTOMAKE_OPTIONS = no-dependencies dist-zip
 EXTRA_DIST = autogen.sh README *.pc.in FEATURES  TODO Doxyfile BUILDS \
 	SUPPORT NOTES MODULES cmodel.sh sipwitch.spec.in sipwitch.spec \
-	sipwitch-config.in sipwitch-config.1 config.h.cmake CMakeLists.txt
+	sipwitch-config.in sipwitch-config.1 sipwitch-config.h.cmake \
+	CMakeLists.txt
 #  *.pc.in *.spec.in *.spec
 
 SUBDIRS = common server @QTAPPS@ utils inc test
