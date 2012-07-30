@@ -1104,6 +1104,14 @@ void server::run(void)
             continue;
         }
 
+        if(ieq(cp, "contact")) {
+            FILE *out = control::output(NULL);
+            string_t tmp = service::getContact();
+            fprintf(out, "%s\n", *tmp);
+            fclose(out);
+            continue;
+        }
+
         if(ieq(cp, "siplog")) {
             FILE *out = control::output(NULL);
             if(!out)

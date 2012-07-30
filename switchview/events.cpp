@@ -40,6 +40,8 @@ static bool started = false;
 static string_t callmap = CALL_MAP;
 static string_t usermap = REGISTRY_MAP;
 static string_t statmap = STAT_MAP;
+static string_t contact = "-";
+static string_t publish = "-";
 
 static socket_t ipc = INVALID_SOCKET;
 #ifdef  _MSWINDOWS_
@@ -142,6 +144,22 @@ bool Events::dispatch(events *msg)
         emit serverOnlineSignal();
         emit stateSignal(strdup(msg->server.state), strdup(buf));
         emit realmSignal(strdup(msg->server.realm));
+        return true;
+    case events::CONTACT:
+        // only send for contact changes...
+        if(!eq(contact, msg->contact)) {
+            contact ^= msg->contact;
+            emit contactSignal(contact.c_mem());
+            Thread::yield();
+        }
+        return true;
+    case events::PUBLISH:
+        // only send for contact changes...
+        if(!eq(publish, msg->contact)) {
+            publish ^= msg->contact;
+            emit publishSignal(publish.c_mem());
+            Thread::yield();
+        }
         return true;
     case events::STATE:
         emit stateSignal(strdup(msg->server.state), NULL);

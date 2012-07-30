@@ -1,0 +1,15 @@
+[Unit]
+Description=GNU SIP Witch, a SIP telephony service daemon.
+After=network.target
+
+[Service]
+Type=forking
+EnvironmentFile=/etc/sysconfig/sipwitch
+ExecStartPre=-/bin/rm -f $FIFO
+ExecStart=$DAEMON $OPTIONS
+ExecStop=echo "down" ]$FIFO
+ExecStopPost=sleep 3
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

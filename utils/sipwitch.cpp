@@ -426,6 +426,9 @@ static void showevents(char **argv)
     struct passwd *pwd = getpwuid(getuid());
 #endif
 
+    static string_t contact = "-";
+    static string_t publish = "-";
+
     if(argv[1])
         shell::errexit(1, "*** sipwitch: events: no arguments used\n");
 
@@ -490,6 +493,18 @@ static void showevents(char **argv)
             break;
         case events::NOTICE:
             printf("notice:  %s\n", event.reason);
+            break;
+        case events::CONTACT:
+            if(!eq(contact, event.contact)) {
+                printf("contact: %s\n", event.contact);
+                contact ^= event.contact;
+            }
+            break;
+        case events::PUBLISH:
+            if(!eq(publish, event.contact)) {
+                printf("publish: %s\n", event.contact);
+                publish ^= event.contact;
+            }
             break;
         case events::WELCOME:
             printf("server version %s %s\n",
@@ -760,6 +775,7 @@ static void usage(void)
         "  calls                    List active calls on server\n"
         "  check                    Server deadlock check\n"
         "  concurrency <level>      Server concurrency level\n"
+        "  contact                  Server contact config address\n"
         "  digest id [realm [type]] Compute a digest\n"
         "  disable conf-id...       Disable configurations\n"
         "  down                     Shut down server\n"
@@ -1005,7 +1021,7 @@ PROGRAM_MAIN(argc, argv)
         version();
     else if(eq(*argv, "help") || eq(*argv, "-help") || eq(*argv, "--help"))
         usage();
-    else if(eq(*argv, "reload") || eq(*argv, "check") || eq(*argv, "snapshot") || eq(*argv, "dump") || eq(*argv, "siplog") || eq(*argv, "usercache") || eq(*argv, "policy"))
+    else if(eq(*argv, "reload") || eq(*argv, "check") || eq(*argv, "snapshot") || eq(*argv, "dump") || eq(*argv, "siplog") || eq(*argv, "usercache") || eq(*argv, "policy") || eq(*argv, "contact"))
         single(argv, 30);
     else if(eq(*argv, "history")) {
         if(argc == 2)

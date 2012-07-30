@@ -37,6 +37,8 @@ unsigned short service::callback::sip_port = 5060;
 unsigned service::callback::sip_prefix = 0;
 unsigned service::callback::sip_range = 0;
 const char *service::callback::sip_iface = NULL;
+volatile char *service::callback::sip_contact = NULL;
+volatile char *service::callback::sip_publish = NULL;
 int service::callback::sip_protocol = IPPROTO_UDP;
 int service::callback::sip_family = AF_INET;
 int service::callback::sip_tlsmode = 0;
@@ -223,6 +225,9 @@ memalloc(s), root()
 
     root.setId((char *)name);
     root.setPointer(NULL);
+
+    contact = NULL;
+
     if(!started) {
         time(&started);
         time(&periodic);
@@ -248,8 +253,14 @@ void service::publish(const char *addr)
     int i = 0;
     resolver.set(addr, i);
     host = resolver.getAddr();
-    if(host)
+    if(host) {
+        volatile char *old = callback::sip_publish;
+        callback::sip_publish = strdup(addr);
+        if(old)
+            free((char *)old);
         Socket::store(&peering, host);
+        events::publish(addr);
+    }
 }
 
 void service::published(struct sockaddr_storage *peer)
@@ -749,6 +760,42 @@ void service::dumpfile(void)
     fclose(fp);
 }
 
+string_t service::getContact(void)
+{
+    string_t uri;
+    volatile char *vaddr = callback::sip_contact;
+    unsigned short port;
+    const char *addr = (const char *)vaddr;
+
+    if(!addr)
+        addr = getInterface();
+
+    if(!addr || eq(addr, "*")) {
+#ifdef  HAVE_GETHOSTNAME
+        static char hostbuf[256] = {0};
+        gethostname(hostbuf, sizeof(hostbuf));
+        if(hostbuf[0])
+            addr = hostbuf;
+        else
+            addr = "localhost";
+#else
+        addr = "localhost";
+#endif
+    }
+
+    port = getPort();
+    if(port && port != 5060) {
+        if(strchr(addr, ':'))
+            uri = str("sip:[") + addr + "]:" + str(port);
+        else
+            uri = str("sip:") + addr + ":" + str(port);
+    }
+    else
+        uri = str("sip:") + addr;
+
+    return uri;
+}
+
 bool service::period(long slice)
 {
     assert(slice > 0);
@@ -850,6 +897,8 @@ void service::commit(void)
     confirm();
 
     locking.modify();
+    if(contact)
+        callback::sip_contact = (volatile char *)(contact);
     orig = cfg;
     cfg = this;
     locking.commit();
@@ -862,6 +911,9 @@ void service::commit(void)
             cb.next();
         }
     }
+
+    // send any config related reload events...
+    events::reload();
 
     // let short-term volatile references settle before we delete it...
     if(orig) {
