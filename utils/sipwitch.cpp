@@ -59,9 +59,9 @@ static char *getpass(const char *prompt)
 }
 #endif
 
+#ifndef _MSWINDOWS_
 static void capture(void)
 {
-#ifndef _MSWINDOWS_
     char buffer[512];
     FILE *fp;
 
@@ -72,8 +72,8 @@ static void capture(void)
         fputs(buffer, stdout);
     if(fp)
         fclose(fp);
-#endif
 }
+#endif
 
 static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
 {
@@ -438,15 +438,13 @@ static void showevents(char **argv)
     memset(&addr, 0, sizeof(addr));
 
 #ifdef  _MSWINDOWS_
-    DWORD port = 0, pid = 0;
-    DWORD plen;
+    DWORD port = 0;
     DWORD index = 0;
     TCHAR keyname[128];
     TCHAR keyvalue[128];
     DWORD size = sizeof(keyname), vsize = sizeof(keyvalue), vtype;
     DWORD *dp;
 
-    plen = sizeof(port);
     HKEY keys = HKEY_LOCAL_MACHINE, subkey;
     if(RegOpenKeyEx(keys, "SOFTWARE\\sipwitch", 0, KEY_READ, &subkey) != ERROR_SUCCESS)
         shell::errexit(10, "*** sipwitch: events: no service found\n");
@@ -454,8 +452,8 @@ static void showevents(char **argv)
         dp = (DWORD *)&keyvalue;
         if(eq("port", keyname))
             port = *dp;
-        else if(eq("pid", keyname))
-            pid = *dp;
+//      else if(eq("pid", keyname))
+//          pid = *dp;
         vsize = sizeof(keyvalue);
         size = sizeof(keyname);
     }

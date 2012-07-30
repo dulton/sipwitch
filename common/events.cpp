@@ -203,16 +203,20 @@ bool events::start(void)
 
     memset(&abuf, 0, sizeof(abuf));
 #ifdef  _MSWINDOWS_
+    DWORD port;
+    HKEY keys, subkey;
+    socklen_t alen;
+
     abuf.sin_family = AF_INET;
     abuf.sin_addr.s_addr = inet_addr("127.0.0.1");
     abuf.sin_port = 0;
     if(::bind(ipc, (struct sockaddr *)&abuf, sizeof(abuf)) < 0)
         goto failed;
 
-    socklen_t alen = sizeof(abuf);
+    alen = sizeof(abuf);
     ::getsockname(ipc, (struct sockaddr *)&abuf, &alen);
-    DWORD port = ntohs(abuf.sin_port);
-    HKEY keys = HKEY_LOCAL_MACHINE, subkey;
+    port = ntohs(abuf.sin_port);
+    keys = HKEY_LOCAL_MACHINE;
     if(RegCreateKeyEx(keys, "SOFTWARE\\sipwitch", 0L, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &subkey, NULL) == ERROR_SUCCESS) {
         RegSetValueEx(subkey, "port", 0L, REG_DWORD, (const BYTE *)&port, sizeof(port));
         port = GetCurrentProcessId();
