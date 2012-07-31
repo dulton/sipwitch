@@ -128,7 +128,7 @@ void dispatch::send(events *msg)
         next = dp->next;
         if(::send(dp->session, (const char *)msg, sizeof(events), 0) < (ssize_t)sizeof(events)) {
 disconnect:
-            shell::log(DEBUG3, "releasing client events for %d", dp->session);
+            shell::log(DEBUG3, "releasing client events for %ld", (long)dp->session);
             dp->release();
             dp->next = freelist;
             freelist = *dp;
@@ -164,7 +164,7 @@ void event_thread::run(void)
             break;
 
         events::sync();
-        shell::log(DEBUG3, "connecting client events for %d", client);
+        shell::log(DEBUG3, "connecting client events for %ld", (long)client);
 
         msg.type = events::WELCOME;
         msg.server.started = started;
