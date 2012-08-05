@@ -17,10 +17,13 @@ QT4_WRAP_CPP(qt_moc switchview.h)
 QT4_WRAP_UI(qt_ui ${ui_src})
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+if(QT_IS_STATIC)
+    file(GLOB QT_PLUGINS ${QT_PLUGINS_DIR}/codecs/*${CMAKE_STATIC_LIBRARY_SUFFIX})
+endif()
 
 add_executable(switchview WIN32 ${qt_src} ${qt_inc} ${qt_moc} ${qt_qrc} ${qt_ui})
 add_dependencies(switchview ucommon)
-target_link_libraries(switchview ${QT_LIBRARIES} ${QT_QTSQL_LIBRARIES} ${USES_UCOMMON_LIBRARIES} ${USES_LIBNOTIFY_LIBRARIES})
+target_link_libraries(switchview ${QT_LIBRARIES} ${QT_PLUGINS} ${QT_QTSQL_LIBRARIES} ${USES_UCOMMON_LIBRARIES} ${USES_LIBNOTIFY_LIBRARIES})
 install(TARGETS switchview DESTINATION ${INSTALL_BINDIR})
 
 if(NOT WIN32)

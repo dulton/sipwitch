@@ -318,7 +318,8 @@ QDialog(switchview)
 {
 #ifdef  _MSWINDOWS_
     char buf[128];
-    if(GetUserName(buf, sizeof(buf)) == 0)
+    DWORD size = sizeof(buf);
+    if(GetUserNameA(buf, &size))
         userid = buf;
     else
         userid = "unknown";
