@@ -21,6 +21,14 @@
 #include <eXosip2/eXosip.h>
 #include <ctype.h>
 
+#ifdef  EXOSIP_OPT_BASE_OPTION
+#define EXOSIP_CONTEXT  stack::sip.context
+#define OPTION_CONTEXT  stack::sip.context,
+#else
+#define EXOSIP_CONTEXT
+#define OPTION_CONTEXT
+#endif
+
 #ifndef SESSION_EXPIRES
 #define SESSION_EXPIRES "session-expires"
 #endif
@@ -387,9 +395,13 @@ private:
     timeout_t ring_timer, cfna_timer, reset_timer;
     unsigned invite_expires;
 
+public:
+#ifdef  EXOSIP_OPT_BASE_OPTION
+    eXosip_t *context;
+#endif
+
     static stack sip;
 
-public:
     class __LOCAL subnet : public cidr
     {
     private:

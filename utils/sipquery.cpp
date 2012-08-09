@@ -30,6 +30,16 @@ static const char *binding = NULL;
 static unsigned timeout = 1000;
 static int tls = 0;
 
+#ifdef  EXOSIP_OPT_BASE_OPTION
+#define EXOSIP_CONTEXT  context
+#define OPTION_CONTEXT  context,
+static struct eXosip_t *context = NULL;
+#else
+#define EXOSIP_CONTEXT
+#define OPTION_CONTEXT
+#endif
+
+
 #if defined(_MSWINDOWS_) && defined(__GNUC__)
 // binds addrinfo for mingw32 linkage since otherwise mingw32 cannot
 // cannot link proper getaddrinfo/freeaddrinfo calls that eXosip uses.
@@ -199,7 +209,11 @@ usage:
         port = 5060 + getuid();
 #endif
 
-    if(eXosip_init())
+#ifdef  EXOSIP_OPT_BASE_OPTION
+    context = eXosip_malloc();
+#endif
+
+    if(eXosip_init(EXOSIP_CONTEXT))
         shell::errexit(3, "*** sipuser: failed exosip init\n");
 
 #ifdef  AF_INET6
@@ -210,7 +224,7 @@ usage:
     }
 #endif
 
-    if(eXosip_listen_addr(protocol, binding, port, family, tls)) {
+    if(eXosip_listen_addr(OPTION_CONTEXT protocol, binding, port, family, tls)) {
 #ifdef  AF_INET6
         if(!binding && family == AF_INET6)
             binding = "::0";
@@ -221,9 +235,9 @@ usage:
     }
 
     if(forwarded)
-        eXosip_masquerade_contact(forwarded, port);
+        eXosip_masquerade_contact(OPTION_CONTEXT forwarded, port);
 
-    eXosip_set_user_agent("SIPW/sipquery");
+    eXosip_set_user_agent(OPTION_CONTEXT "SIPW/sipquery");
 
     if(!strncmp(user, "sip:", 4)) {
         tls = 0;
@@ -272,20 +286,20 @@ usage:
         snprintf(buffer, sizeof(buffer), "sip:%s", user);
 
 
-    eXosip_lock();
-    rid = eXosip_register_build_initial_register(buffer, proxy, NULL, 60, &msg);
+    eXosip_lock(EXOSIP_CONTEXT);
+    rid = eXosip_register_build_initial_register(OPTION_CONTEXT buffer, proxy, NULL, 60, &msg);
     if(!msg) {
-        eXosip_unlock();
+        eXosip_unlock(EXOSIP_CONTEXT);
         shell::errexit(3, "*** sipuser: cannot create query for %s\n", user);
     }
     snprintf(tbuffer, sizeof(tbuffer), "<%s>", buffer);
     osip_message_set_to(msg, tbuffer);
     osip_list_ofchar_free(&msg->contacts);
-    eXosip_register_send_register(rid, msg);
-    eXosip_unlock();
+    eXosip_register_send_register(OPTION_CONTEXT rid, msg);
+    eXosip_unlock(EXOSIP_CONTEXT);
 
     while(!stop) {
-        sevent = eXosip_event_wait(0, timeout);
+        sevent = eXosip_event_wait(OPTION_CONTEXT 0, timeout);
         if(!sevent)
             shell::errexit(2, "*** sipuser: timed out\n");
 
@@ -309,8 +323,8 @@ usage:
 
         eXosip_event_free(sevent);
     }
-    eXosip_register_remove(rid);
-    eXosip_quit();
+    eXosip_register_remove(OPTION_CONTEXT rid);
+    eXosip_quit(EXOSIP_CONTEXT);
     PROGRAM_EXIT(error);
 }
 

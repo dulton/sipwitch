@@ -216,8 +216,8 @@ int messages::remote(const char *to, message *msg, const char *digest)
     osip_message_t *im = NULL;
     int error = SIP_BAD_REQUEST;
 
-    eXosip_lock();
-    eXosip_message_build_request(&im, "MESSAGE", to, msg->from, NULL);
+    eXosip_lock(EXOSIP_CONTEXT);
+    eXosip_message_build_request(OPTION_CONTEXT &im, "MESSAGE", to, msg->from, NULL);
     if(im && digest) {
         char *authbuf = new char[1024];
         stringbuf<64> response;
@@ -255,10 +255,10 @@ int messages::remote(const char *to, message *msg, const char *digest)
         osip_message_set_body(im, msg->body, msg->msglen);
         osip_message_set_content_type(im, msg->type);
         stack::siplog(im);
-        if(!eXosip_message_send_request(im))
+        if(!eXosip_message_send_request(OPTION_CONTEXT im))
             error = SIP_OK;
     }
-    eXosip_unlock();
+    eXosip_unlock(EXOSIP_CONTEXT);
     return error;
 }
 
@@ -290,9 +290,9 @@ int messages::deliver(message *msg)
             stack::sipAddress(&tp->address, to + 1, msg->user, sizeof(to) - 6);
             to[0] = '<';
             String::add(to, sizeof(to), ";lr>");
-            eXosip_lock();
+            eXosip_lock(EXOSIP_CONTEXT);
             im = NULL;
-            eXosip_message_build_request(&im, "MESSAGE", tp->contact, msg->from, to);
+            eXosip_message_build_request(OPTION_CONTEXT &im, "MESSAGE", tp->contact, msg->from, to);
             if(im != NULL) {
                 stack::sipAddress(&tp->address, to + 1, msg->user, sizeof(to) - 2);
                 to[0] = '<';
@@ -305,10 +305,10 @@ int messages::deliver(message *msg)
                 osip_message_set_body(im, msg->body, msg->msglen);
                 osip_message_set_content_type(im, msg->type);
                 stack::siplog(im);
-                if(!eXosip_message_send_request(im))
+                if(!eXosip_message_send_request(OPTION_CONTEXT im))
                     ++msgcount;
             }
-            eXosip_unlock();
+            eXosip_unlock(EXOSIP_CONTEXT);
         }
         tp.next();
     }

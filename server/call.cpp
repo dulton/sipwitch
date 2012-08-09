@@ -71,9 +71,9 @@ void stack::call::cancelLocked(void)
                 s->state = session::CLOSED;
             else if(s->cid > 0 && s->state != session::CLOSED) {
                 s->state = session::CLOSED;
-                eXosip_lock();
-                eXosip_call_terminate(s->cid, s->did);
-                eXosip_unlock();
+                eXosip_lock(EXOSIP_CONTEXT);
+                eXosip_call_terminate(OPTION_CONTEXT s->cid, s->did);
+                eXosip_unlock(EXOSIP_CONTEXT);
             }
         }
         sp.next();
@@ -110,9 +110,9 @@ void stack::call::joinLocked(session *join)
                 s->state = session::CLOSED;
             else if(s->cid > 0 && s->state != session::CLOSED) {
                 s->state = session::CLOSED;
-                eXosip_lock();
-                eXosip_call_terminate(s->cid, s->did);
-                eXosip_unlock();
+                eXosip_lock(EXOSIP_CONTEXT);
+                eXosip_call_terminate(OPTION_CONTEXT s->cid, s->did);
+                eXosip_unlock(EXOSIP_CONTEXT);
             }
         }
         sp.next();
@@ -173,9 +173,9 @@ void stack::call::disconnectLocked(void)
             sp->sid.state = session::CLOSED;
         else if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
             sp->sid.state = session::CLOSED;
-            eXosip_lock();
-            eXosip_call_terminate(sp->sid.cid, sp->sid.did);
-            eXosip_unlock();
+            eXosip_lock(EXOSIP_CONTEXT);
+            eXosip_call_terminate(OPTION_CONTEXT sp->sid.cid, sp->sid.did);
+            eXosip_unlock(EXOSIP_CONTEXT);
         }
         sp.next();
     }
@@ -214,17 +214,17 @@ void stack::call::reply_source(int error)
     if(error == SIP_CALL_IS_BEING_FORWARDED && answering)
         answering = 16;
 
-    eXosip_lock();
-    eXosip_call_build_answer(source->tid, error, &reply);
+    eXosip_lock(EXOSIP_CONTEXT);
+    eXosip_call_build_answer(OPTION_CONTEXT source->tid, error, &reply);
     if(reply != NULL) {
         stack::siplog(reply);
-        eXosip_call_send_answer(source->tid, error, reply);
+        eXosip_call_send_answer(OPTION_CONTEXT source->tid, error, reply);
     }
     else {
         shell::debug(3, "sip: source reply %d failed", error);
-        eXosip_call_send_answer(source->tid, SIP_BAD_REQUEST, NULL);
+        eXosip_call_send_answer(OPTION_CONTEXT source->tid, SIP_BAD_REQUEST, NULL);
     }
-    eXosip_unlock();
+    eXosip_unlock(EXOSIP_CONTEXT);
 }
 
 void stack::call::set(state_t flag, char id, const char *text)
@@ -385,14 +385,14 @@ void stack::call::reinvite(thread *thread, session *s)
         if(s == source) {
 unconnected:
             Mutex::release(this);
-            eXosip_lock();
-            eXosip_call_build_answer(source->tid, 500, &reply);
+            eXosip_lock(EXOSIP_CONTEXT);
+            eXosip_call_build_answer(OPTION_CONTEXT source->tid, 500, &reply);
             if(reply != NULL) {
                 osip_message_set_header(reply, "Reply-After", "8");
                 stack::siplog(reply);
-                eXosip_call_send_answer(source->tid, 500, reply);
+                eXosip_call_send_answer(OPTION_CONTEXT source->tid, 500, reply);
             }
-            eXosip_unlock();
+            eXosip_unlock(EXOSIP_CONTEXT);
             return;
         }
         if(state != ANSWERED && state != RINGBACK) {
@@ -406,8 +406,8 @@ unconnected:
             arm((timeout_t)(thread->header_expires * 1000l));
         }
         Mutex::release(this);
-        eXosip_lock();
-        eXosip_call_build_answer(source->tid, 200, &reply);
+        eXosip_lock(EXOSIP_CONTEXT);
+        eXosip_call_build_answer(OPTION_CONTEXT source->tid, 200, &reply);
         if(reply != NULL) {
             osip_message_set_require(reply, "100rel");
             osip_message_set_header(reply, "RSeq", "1");
@@ -421,9 +421,9 @@ unconnected:
                     error = SIP_TEMPORARILY_UNAVAILABLE;
             }
             stack::siplog(reply);
-            eXosip_call_send_answer(source->tid, error, reply);
+            eXosip_call_send_answer(OPTION_CONTEXT source->tid, error, reply);
         }
-        eXosip_unlock();
+        eXosip_unlock(EXOSIP_CONTEXT);
         return;
     case HOLDING:
     case JOINED:
@@ -438,8 +438,8 @@ unconnected:
         }
         Mutex::release(this);
 
-        eXosip_lock();
-        eXosip_call_build_request(did, "INVITE", &reply);
+        eXosip_lock(EXOSIP_CONTEXT);
+        eXosip_call_build_request(OPTION_CONTEXT did, "INVITE", &reply);
         if(reply != NULL) {
             if(stack::sip_protocol == IPPROTO_UDP)
                 osip_message_set_supported(reply, "100rel,replaces");
@@ -448,10 +448,10 @@ unconnected:
                 osip_message_set_content_type(reply, "application/sdp");
             }
             stack::siplog(reply);
-            eXosip_call_send_request(did, reply);
+            eXosip_call_send_request(OPTION_CONTEXT did, reply);
             update->state = session::REINVITE;
         }
-        eXosip_unlock();
+        eXosip_unlock(EXOSIP_CONTEXT);
         if(!reply)
             goto failed;
         return;
@@ -501,9 +501,9 @@ void stack::call::answer(thread *thread, session *s)
             s->did = thread->sevent->did;
         did = target->did;
         Mutex::release(this);
-        eXosip_lock();
-        eXosip_call_send_ack(did, NULL);
-        eXosip_unlock();
+        eXosip_lock(EXOSIP_CONTEXT);
+        eXosip_call_send_ack(OPTION_CONTEXT did, NULL);
+        eXosip_unlock(EXOSIP_CONTEXT);
         return;
     default:
         Mutex::release(this);
@@ -512,17 +512,17 @@ void stack::call::answer(thread *thread, session *s)
         return;
     }
     Mutex::release(this);
-    eXosip_lock();
-    eXosip_call_build_answer(tid, SIP_OK, &reply);
+    eXosip_lock(EXOSIP_CONTEXT);
+    eXosip_call_build_answer(OPTION_CONTEXT tid, SIP_OK, &reply);
     if(reply != NULL) {
         osip_message_set_body(reply, s->sdp, strlen(s->sdp));
         osip_message_set_content_type(reply, "application/sdp");
         stack::siplog(reply);
-        eXosip_call_send_answer(tid, SIP_OK, reply);
-        eXosip_unlock();
+        eXosip_call_send_answer(OPTION_CONTEXT tid, SIP_OK, reply);
+        eXosip_unlock(EXOSIP_CONTEXT);
     }
     else {
-        eXosip_unlock();
+        eXosip_unlock(EXOSIP_CONTEXT);
         shell::debug(2, "answer failed for call %08x:%u",
             source->sequence, source->cid);
         failed(thread, source);
@@ -543,9 +543,9 @@ void stack::call::message_reply(thread *thread, session *s)
     if(tid < 1)
         return;
 
-    eXosip_lock();
-    eXosip_call_send_answer(tid, thread->sevent->response->status_code, NULL);
-    eXosip_unlock();
+    eXosip_lock(EXOSIP_CONTEXT);
+    eXosip_call_send_answer(OPTION_CONTEXT tid, thread->sevent->response->status_code, NULL);
+    eXosip_unlock(EXOSIP_CONTEXT);
 }
 
 
@@ -587,8 +587,8 @@ void stack::call::relay(thread *thread, session *s)
     if(tid < 1)
         return;
 
-    eXosip_lock();
-    eXosip_call_build_answer(tid, status, &reply);
+    eXosip_lock(EXOSIP_CONTEXT);
+    eXosip_call_build_answer(OPTION_CONTEXT tid, status, &reply);
     if(reply) {
         if(stack::sip_protocol == IPPROTO_UDP)
             osip_message_set_require(reply, "100rel");
@@ -597,9 +597,9 @@ void stack::call::relay(thread *thread, session *s)
             osip_message_set_body(reply, body->body, strlen(body->body));
             osip_message_set_content_type(reply, "application/sdp");
         }
-        eXosip_call_send_answer(tid, status, reply);
+        eXosip_call_send_answer(OPTION_CONTEXT tid, status, reply);
     }
-    eXosip_unlock();
+    eXosip_unlock(EXOSIP_CONTEXT);
 }
 
 void stack::call::confirm(thread *thread, session *s)
@@ -645,17 +645,17 @@ void stack::call::confirm(thread *thread, session *s)
         return;
     }
     Mutex::release(this);
-    eXosip_lock();
-    eXosip_call_build_ack(did, &ack);
+    eXosip_lock(EXOSIP_CONTEXT);
+    eXosip_call_build_ack(OPTION_CONTEXT did, &ack);
     if(ack) {
         stack::siplog(ack);
-        eXosip_call_send_ack(did, ack);
+        eXosip_call_send_ack(OPTION_CONTEXT did, ack);
     }
     else {
         shell::debug(2, "confirm failed to send for call %08x:%u",
             source->sequence, source->cid);
     }
-    eXosip_unlock();
+    eXosip_unlock(EXOSIP_CONTEXT);
 }
 
 void stack::call::busy(thread *thread, session *s)

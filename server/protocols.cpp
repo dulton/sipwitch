@@ -41,17 +41,17 @@ int proto::create_registration(const char *uri, const char *server, const char *
     osip_message_t *msg = NULL;
     int rid;
 
-    eXosip_lock();
-    rid = eXosip_register_build_initial_register(uri, server, contact, (int)expires, &msg);
+    eXosip_lock(EXOSIP_CONTEXT);
+    rid = eXosip_register_build_initial_register(OPTION_CONTEXT uri, server, contact, (int)expires, &msg);
     if(msg) {
         osip_message_set_supported(msg, "100rel");
         osip_message_set_header(msg, "Event", "Registration");
         osip_message_set_header(msg, "Allow-Events", "presence");
-        eXosip_register_send_register(rid, msg);
+        eXosip_register_send_register(OPTION_CONTEXT rid, msg);
     }
     else
         rid = -1;
-    eXosip_unlock();
+    eXosip_unlock(EXOSIP_CONTEXT);
     return rid;
 }
 
@@ -60,23 +60,23 @@ bool proto::release_registration(int rid)
     osip_message_t *msg = NULL;
     bool result = true;
 
-    eXosip_lock();
+    eXosip_lock(EXOSIP_CONTEXT);
 
-    eXosip_register_build_register(rid, 0, &msg);
+    eXosip_register_build_register(OPTION_CONTEXT rid, 0, &msg);
     if(msg)
-        eXosip_register_send_register(rid, msg);
+        eXosip_register_send_register(OPTION_CONTEXT rid, msg);
     else
         result = false;
-    eXosip_unlock();
+    eXosip_unlock(EXOSIP_CONTEXT);
     return result;
 }
 
 bool proto::add_authentication(const char *userid, const char *secret, const char *realm)
 {
-    eXosip_lock();
-    eXosip_add_authentication_info(userid, userid, secret, NULL, realm);
-    eXosip_automatic_action();
-    eXosip_unlock();
+    eXosip_lock(EXOSIP_CONTEXT);
+    eXosip_add_authentication_info(OPTION_CONTEXT userid, userid, secret, NULL, realm);
+    eXosip_automatic_action(EXOSIP_CONTEXT);
+    eXosip_unlock(EXOSIP_CONTEXT);
     return true;
 }
 
@@ -90,13 +90,13 @@ bool proto::publish(const char *uri, const char *contact, const char *event, con
     bool result = true;
     osip_message_t *msg = NULL;
 
-    eXosip_lock();
-    eXosip_build_publish(&msg, uri, contact, NULL, event, duration, type, body);
+    eXosip_lock(EXOSIP_CONTEXT);
+    eXosip_build_publish(OPTION_CONTEXT &msg, uri, contact, NULL, event, duration, type, body);
     if(msg)
-        eXosip_publish(msg, uri);
+        eXosip_publish(OPTION_CONTEXT msg, uri);
     else
         result = false;
-    eXosip_unlock();
+    eXosip_unlock(EXOSIP_CONTEXT);
     return result;
 }
 

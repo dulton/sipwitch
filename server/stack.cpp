@@ -259,9 +259,9 @@ void stack::background::run(void)
             Conditional::unlock();
         }
         messages::automatic();
-        eXosip_lock();
-        eXosip_automatic_action();
-        eXosip_unlock();
+        eXosip_lock(EXOSIP_CONTEXT);
+        eXosip_automatic_action(EXOSIP_CONTEXT);
+        eXosip_unlock(EXOSIP_CONTEXT);
     }
 }
 
@@ -394,7 +394,7 @@ void stack::clear(session *s)
             cr->source->sequence, cr->source->cid, s->sequence, s->cid);
         if(s->state != session::CLOSED) {
             s->state = session::CLOSED;
-            eXosip_call_terminate(s->cid, s->did);
+            eXosip_call_terminate(OPTION_CONTEXT s->cid, s->did);
         }
         s->delist(&hash[s->cid % keysize]);
         s->cid = 0;
@@ -458,27 +458,27 @@ void stack::refer(session *source, eXosip_event_t *sevent)
     did = getDialog(target);
     if(did < 1) {
 norefer:
-        eXosip_lock();
+        eXosip_lock(EXOSIP_CONTEXT);
         goto failed;
     }
 
-    eXosip_lock();
-    eXosip_call_build_refer(did, header->hvalue, &msg);
+    eXosip_lock(EXOSIP_CONTEXT);
+    eXosip_call_build_refer(OPTION_CONTEXT did, header->hvalue, &msg);
     if(!msg) {
 failed:
-        eXosip_call_build_answer(sevent->tid, SIP_SERVICE_UNAVAILABLE, &msg);
+        eXosip_call_build_answer(OPTION_CONTEXT sevent->tid, SIP_SERVICE_UNAVAILABLE, &msg);
         if(msg)
-            eXosip_call_send_answer(sevent->tid, SIP_SERVICE_UNAVAILABLE, msg);
-        eXosip_unlock();
+            eXosip_call_send_answer(OPTION_CONTEXT sevent->tid, SIP_SERVICE_UNAVAILABLE, msg);
+        eXosip_unlock(EXOSIP_CONTEXT);
         return;
     }
     osip_message_set_header(msg, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
     osip_message_set_header(msg, ALLOW_EVENTS, "talk, hold, refer");
     osip_message_set_header(msg, "Referred-By", source->identity);
-    eXosip_call_send_request(did, msg);
+    eXosip_call_send_request(OPTION_CONTEXT did, msg);
     target->state = session::REFER;
     target->tid = sevent->tid;
-    eXosip_unlock();
+    eXosip_unlock(EXOSIP_CONTEXT);
 }
 
 void stack::infomsg(session *source, eXosip_event_t *sevent)
@@ -507,10 +507,10 @@ void stack::infomsg(session *source, eXosip_event_t *sevent)
         return;
 
     osip_message_get_body(sevent->request, 0, &body);
-    eXosip_lock();
-    eXosip_call_build_info(did, &msg);
+    eXosip_lock(EXOSIP_CONTEXT);
+    eXosip_call_build_info(OPTION_CONTEXT did, &msg);
     if(!msg) {
-        eXosip_unlock();
+        eXosip_unlock(EXOSIP_CONTEXT);
         return;
     }
     if(ct->subtype)
@@ -521,8 +521,8 @@ void stack::infomsg(session *source, eXosip_event_t *sevent)
     osip_message_set_body(msg, body->body, strlen(body->body));
     osip_message_set_header(msg, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
     osip_message_set_header(msg, ALLOW_EVENTS, "talk, hold, refer");
-    eXosip_call_send_request(did, msg);
-    eXosip_unlock();
+    eXosip_call_send_request(OPTION_CONTEXT did, msg);
+    eXosip_unlock(EXOSIP_CONTEXT);
 }
 
 void stack::disjoin(call *cr)
@@ -538,9 +538,9 @@ void stack::disjoin(call *cr)
                 s->closed = true;
             }
             if(s->cid > 0 && s->state != session::CLOSED) {
-                eXosip_lock();
-                eXosip_call_terminate(s->cid, s->did);
-                eXosip_unlock();
+                eXosip_lock(EXOSIP_CONTEXT);
+                eXosip_call_terminate(OPTION_CONTEXT s->cid, s->did);
+                eXosip_unlock(EXOSIP_CONTEXT);
                 s->state = session::CLOSED;
             }
         }
@@ -575,9 +575,9 @@ void stack::destroy(call *cr)
 
         if(sp->sid.cid > 0) {
             if(sp->sid.state != session::CLOSED) {
-                eXosip_lock();
-                eXosip_call_terminate(sp->sid.cid, sp->sid.did);
-                eXosip_unlock();
+                eXosip_lock(EXOSIP_CONTEXT);
+                eXosip_call_terminate(OPTION_CONTEXT sp->sid.cid, sp->sid.did);
+                eXosip_unlock(EXOSIP_CONTEXT);
             }
             sp->sid.delist(&hash[sp->sid.cid % keysize]);
         }
@@ -719,7 +719,10 @@ void stack::start(service *cfg)
     unsigned thidx = 0;
     shell::log(DEBUG1, "starting sip stack; %d maps and %d threads at priority %d",
         mapped_calls, threading, priority);
-    eXosip_init();
+#ifdef  EXOSIP_OPT_BASE_OPTION
+    sip.context = eXosip_malloc();
+#endif
+    eXosip_init(EXOSIP_CONTEXT);
 
     mapped_array<MappedCall>::create(control::env("callmap"), mapped_calls);
     if(!sip)
@@ -759,7 +762,7 @@ void stack::start(service *cfg)
 
     Socket::family(sip_family);
 
-    if(eXosip_listen_addr(sip_protocol, iface, sip_port, sip_family, sip_tlsmode)) {
+    if(eXosip_listen_addr(OPTION_CONTEXT sip_protocol, iface, sip_port, sip_family, sip_tlsmode)) {
 #ifdef  AF_INET6
         if(!iface && sip_family == AF_INET6)
             iface = "::0";
@@ -778,9 +781,9 @@ void stack::start(service *cfg)
     shell::log(shell::DEBUG1, "binding interface %s, port %d", iface, sip_port);
 
     osip_trace_initialize_syslog(TRACE_LEVEL0, (char *)"sipwitch");
-    eXosip_set_user_agent(agent);
+    eXosip_set_user_agent(OPTION_CONTEXT agent);
 
-#ifdef  EXOSIP2_OPTION_SEND_101
+#if defined(EXOSIP2_OPTION_SEND_101) && !defined(EXOSIP_OPT_BASE_OPTION)
     eXosip_set_option(EXOSIP_OPT_DONT_SEND_101, &send101);
 #endif
 
@@ -808,8 +811,8 @@ void stack::stop(service *cfg)
 bool stack::check(void)
 {
     shell::log(shell::INFO, "checking sip stack...");
-    eXosip_lock();
-    eXosip_unlock();
+    eXosip_lock(EXOSIP_CONTEXT);
+    eXosip_unlock(EXOSIP_CONTEXT);
     return true;
 }
 
@@ -890,11 +893,11 @@ void stack::reload(service *cfg)
                 send101 = 0;
             else if(eq(key, "keepalive") && !isConfigured()) {
                 val = atoi(value);
-                eXosip_set_option(EXOSIP_OPT_UDP_KEEP_ALIVE, &val);
+                eXosip_set_option(OPTION_CONTEXT EXOSIP_OPT_UDP_KEEP_ALIVE, &val);
             }
             else if(eq(key, "learn") && !isConfigured()) {
                 val = tobool(value);
-                eXosip_set_option(EXOSIP_OPT_UDP_LEARN_PORT, &val);
+                eXosip_set_option(OPTION_CONTEXT EXOSIP_OPT_UDP_LEARN_PORT, &val);
             }
             else if(eq(key, "restricted")) {
                 if(eq(value, "none"))
@@ -1266,10 +1269,10 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
     invite = NULL;
 
-    eXosip_lock();
-    if(eXosip_call_build_initial_invite(&invite, touri, s->from, NULL, call->subject)) {
+    eXosip_lock(EXOSIP_CONTEXT);
+    if(eXosip_call_build_initial_invite(OPTION_CONTEXT &invite, touri, s->from, NULL, call->subject)) {
         shell::log(shell::ERR, "cannot invite %s; build failed", uri_target);
-        eXosip_unlock();
+        eXosip_unlock(EXOSIP_CONTEXT);
         return icount;
     }
 
@@ -1324,28 +1327,28 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
     if(media::invite(s, network, &nat, sdp) == NULL) {
         shell::log(shell::ERR, "cannot assign media proxy for %s", uri_target);
-        eXosip_unlock();
+        eXosip_unlock(EXOSIP_CONTEXT);
         return icount;
     }
 
     osip_message_set_body(invite, sdp, strlen(sdp));
     osip_message_set_content_type(invite, "application/sdp");
     stack::siplog(invite);
-    cid = eXosip_call_send_initial_invite(invite);
+    cid = eXosip_call_send_initial_invite(OPTION_CONTEXT invite);
     if(cid > 0) {
         snprintf(seqid, sizeof(seqid), "%08x-%d", s->sequence, s->cid);
         uri::publish(call->request, route, seqid, sizeof(route));
-        eXosip_call_set_reference(cid, route);
+        eXosip_call_set_reference(OPTION_CONTEXT cid, route);
         ++icount;
     }
     else {
         media::release(&nat);
         shell::log(shell::ERR, "invite failed for %s", uri_target);
-        eXosip_unlock();
+        eXosip_unlock(EXOSIP_CONTEXT);
         return icount;
     }
 
-    eXosip_unlock();
+    eXosip_unlock(EXOSIP_CONTEXT);
     invited = stack::create(call, cid);
     registry::incUse(NULL, stats::OUTGOING);
     String::set(invited->identity, sizeof(invited->identity), uri_target);
@@ -1507,8 +1510,8 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
         route[0] = '<';
         String::add(route, sizeof(route), ";lr>");
 
-        eXosip_lock();
-        if(eXosip_call_build_initial_invite(&invite, touri, s->from, route, call->subject)) {
+        eXosip_lock(EXOSIP_CONTEXT);
+        if(eXosip_call_build_initial_invite(OPTION_CONTEXT &invite, touri, s->from, route, call->subject)) {
             stack::sipPublish(&tp->address, route, NULL, sizeof(route));
             shell::log(shell::ERR, "cannot invite %s; build failed", route);
             goto unlock;
@@ -1548,11 +1551,11 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
         osip_message_set_body(invite, sdp, strlen(sdp));
         osip_message_set_content_type(invite, "application/sdp");
         stack::siplog(invite);
-        cid = eXosip_call_send_initial_invite(invite);
+        cid = eXosip_call_send_initial_invite(OPTION_CONTEXT invite);
         if(cid > 0) {
             snprintf(seqid, sizeof(seqid), "%08x-%d", s->sequence, s->cid);
             stack::sipAddress((struct sockaddr_internet *)&tp->peering, route, seqid, sizeof(route));
-            eXosip_call_set_reference(cid, route);
+            eXosip_call_set_reference(OPTION_CONTEXT cid, route);
             ++icount;
         }
         else {
@@ -1562,7 +1565,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
             goto unlock;
         }
 
-        eXosip_unlock();
+        eXosip_unlock(EXOSIP_CONTEXT);
 
         invited = stack::create(call, cid);
 
@@ -1601,7 +1604,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
         }
         goto next;
 unlock:
-        eXosip_unlock();
+        eXosip_unlock(EXOSIP_CONTEXT);
 next:
         tp.next();
     }
