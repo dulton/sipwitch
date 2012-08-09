@@ -43,14 +43,13 @@ static struct eXosip_t *context = NULL;
 #define OPTION_CONTEXT
 #endif
 
+using namespace UCOMMON_NAMESPACE;
 
 #if defined(_MSWINDOWS_) && defined(__GNUC__)
 // binds addrinfo for mingw32 linkage since otherwise mingw32 cannot
 // cannot link proper getaddrinfo/freeaddrinfo calls that eXosip uses.
 static Socket::address localhost("127.0.0.1");
 #endif
-
-using namespace UCOMMON_NAMESPACE;
 
 PROGRAM_MAIN(argc, argv)
 {

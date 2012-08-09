@@ -175,7 +175,7 @@ if(HAVE_RESOLV)
 endif()
 
 if(HAVE_EXOSIP2 AND WIN32 AND NOT CYGWIN)
-    set(EXOSIP2_LIBS ${EXOSIP2_LIBS} Iphlpapi dnsapi)
+    set(EXOSIP2_LIBS ${EXOSIP2_LIBS} iphlpapi dnsapi)
 endif()
 
 check_function_exists(setrlimit HAVE_SETRLIMIT)
