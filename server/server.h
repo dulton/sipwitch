@@ -24,13 +24,13 @@
 #ifdef  EXOSIP_OPT_BASE_OPTION
 #define EXOSIP_CONTEXT  stack::sip.context
 #define OPTION_CONTEXT  stack::sip.context,
-#define EXOSIP_LOCK     eXosip_lock(stack::sip_context)
-#define EXOSIP_UNLOCK   eXosip_unlock(stack::sip_context)
+#define EXOSIP_LOCK     eXosip_lock(stack::sip.context);
+#define EXOSIP_UNLOCK   eXosip_unlock(stack::sip.context);
 #else
 #define EXOSIP_CONTEXT
 #define OPTION_CONTEXT
-#define EXOSIP_LOCK     eXosip_lock()
-#define EXOSIP_UNLOCK   eXosip_unlock()
+#define EXOSIP_LOCK     eXosip_lock();
+#define EXOSIP_UNLOCK   eXosip_unlock();
 #endif
 
 #ifndef SESSION_EXPIRES

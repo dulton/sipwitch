@@ -33,12 +33,12 @@ static int tls = 0;
 #ifdef  EXOSIP_OPT_BASE_OPTION
 #define EXOSIP_CONTEXT  context
 #define OPTION_CONTEXT  context,
-#define EXOSIP_LOCK     eXosip_lock(context)
-#define EXOSIP_UNLOCK   eXosip_unlock(context)
+#define EXOSIP_LOCK     eXosip_lock(context);
+#define EXOSIP_UNLOCK   eXosip_unlock(context);
 static struct eXosip_t *context = NULL;
 #else
-#define EXOSIP_LOCK     eXosip_lock()
-#define EXOSIP_UNLOCK   eXosip_unlock()
+#define EXOSIP_LOCK     eXosip_lock();
+#define EXOSIP_UNLOCK   eXosip_unlock();
 #define EXOSIP_CONTEXT
 #define OPTION_CONTEXT
 #endif
