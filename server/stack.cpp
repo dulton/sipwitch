@@ -259,9 +259,9 @@ void stack::background::run(void)
             Conditional::unlock();
         }
         messages::automatic();
-        eXosip_lock(EXOSIP_CONTEXT);
+        EXOSIP_LOCK
         eXosip_automatic_action(EXOSIP_CONTEXT);
-        eXosip_unlock(EXOSIP_CONTEXT);
+        EXOSIP_UNLOCK
     }
 }
 
@@ -458,18 +458,18 @@ void stack::refer(session *source, eXosip_event_t *sevent)
     did = getDialog(target);
     if(did < 1) {
 norefer:
-        eXosip_lock(EXOSIP_CONTEXT);
+        EXOSIP_LOCK
         goto failed;
     }
 
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     eXosip_call_build_refer(OPTION_CONTEXT did, header->hvalue, &msg);
     if(!msg) {
 failed:
         eXosip_call_build_answer(OPTION_CONTEXT sevent->tid, SIP_SERVICE_UNAVAILABLE, &msg);
         if(msg)
             eXosip_call_send_answer(OPTION_CONTEXT sevent->tid, SIP_SERVICE_UNAVAILABLE, msg);
-        eXosip_unlock(EXOSIP_CONTEXT);
+        EXOSIP_UNLOCK
         return;
     }
     osip_message_set_header(msg, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
@@ -478,7 +478,7 @@ failed:
     eXosip_call_send_request(OPTION_CONTEXT did, msg);
     target->state = session::REFER;
     target->tid = sevent->tid;
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
 }
 
 void stack::infomsg(session *source, eXosip_event_t *sevent)
@@ -507,10 +507,10 @@ void stack::infomsg(session *source, eXosip_event_t *sevent)
         return;
 
     osip_message_get_body(sevent->request, 0, &body);
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     eXosip_call_build_info(OPTION_CONTEXT did, &msg);
     if(!msg) {
-        eXosip_unlock(EXOSIP_CONTEXT);
+        EXOSIP_UNLOCK
         return;
     }
     if(ct->subtype)
@@ -522,7 +522,7 @@ void stack::infomsg(session *source, eXosip_event_t *sevent)
     osip_message_set_header(msg, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
     osip_message_set_header(msg, ALLOW_EVENTS, "talk, hold, refer");
     eXosip_call_send_request(OPTION_CONTEXT did, msg);
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
 }
 
 void stack::disjoin(call *cr)
@@ -538,9 +538,9 @@ void stack::disjoin(call *cr)
                 s->closed = true;
             }
             if(s->cid > 0 && s->state != session::CLOSED) {
-                eXosip_lock(EXOSIP_CONTEXT);
+                EXOSIP_LOCK
                 eXosip_call_terminate(OPTION_CONTEXT s->cid, s->did);
-                eXosip_unlock(EXOSIP_CONTEXT);
+                EXOSIP_UNLOCK
                 s->state = session::CLOSED;
             }
         }
@@ -575,9 +575,9 @@ void stack::destroy(call *cr)
 
         if(sp->sid.cid > 0) {
             if(sp->sid.state != session::CLOSED) {
-                eXosip_lock(EXOSIP_CONTEXT);
+                EXOSIP_LOCK
                 eXosip_call_terminate(OPTION_CONTEXT sp->sid.cid, sp->sid.did);
-                eXosip_unlock(EXOSIP_CONTEXT);
+                EXOSIP_UNLOCK
             }
             sp->sid.delist(&hash[sp->sid.cid % keysize]);
         }
@@ -811,8 +811,8 @@ void stack::stop(service *cfg)
 bool stack::check(void)
 {
     shell::log(shell::INFO, "checking sip stack...");
-    eXosip_lock(EXOSIP_CONTEXT);
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
+    EXOSIP_UNLOCK
     return true;
 }
 
@@ -1269,10 +1269,10 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
     invite = NULL;
 
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     if(eXosip_call_build_initial_invite(OPTION_CONTEXT &invite, touri, s->from, NULL, call->subject)) {
         shell::log(shell::ERR, "cannot invite %s; build failed", uri_target);
-        eXosip_unlock(EXOSIP_CONTEXT);
+        EXOSIP_UNLOCK
         return icount;
     }
 
@@ -1327,7 +1327,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
     if(media::invite(s, network, &nat, sdp) == NULL) {
         shell::log(shell::ERR, "cannot assign media proxy for %s", uri_target);
-        eXosip_unlock(EXOSIP_CONTEXT);
+        EXOSIP_UNLOCK
         return icount;
     }
 
@@ -1344,11 +1344,11 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     else {
         media::release(&nat);
         shell::log(shell::ERR, "invite failed for %s", uri_target);
-        eXosip_unlock(EXOSIP_CONTEXT);
+        EXOSIP_UNLOCK
         return icount;
     }
 
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
     invited = stack::create(call, cid);
     registry::incUse(NULL, stats::OUTGOING);
     String::set(invited->identity, sizeof(invited->identity), uri_target);
@@ -1510,7 +1510,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
         route[0] = '<';
         String::add(route, sizeof(route), ";lr>");
 
-        eXosip_lock(EXOSIP_CONTEXT);
+        EXOSIP_LOCK
         if(eXosip_call_build_initial_invite(OPTION_CONTEXT &invite, touri, s->from, route, call->subject)) {
             stack::sipPublish(&tp->address, route, NULL, sizeof(route));
             shell::log(shell::ERR, "cannot invite %s; build failed", route);
@@ -1565,7 +1565,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
             goto unlock;
         }
 
-        eXosip_unlock(EXOSIP_CONTEXT);
+        EXOSIP_UNLOCK
 
         invited = stack::create(call, cid);
 
@@ -1604,7 +1604,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
         }
         goto next;
 unlock:
-        eXosip_unlock(EXOSIP_CONTEXT);
+        EXOSIP_UNLOCK
 next:
         tp.next();
     }

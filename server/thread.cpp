@@ -1084,7 +1084,7 @@ void thread::send_reply(int error)
 
     osip_message_t *reply = NULL;
 
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     switch(authorizing) {
     case CALL:
         eXosip_call_build_answer(OPTION_CONTEXT sevent->tid, error, &reply);
@@ -1112,7 +1112,7 @@ void thread::send_reply(int error)
     default:
         break;
     }
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
 }
 
 bool thread::authenticate(stack::session *s)
@@ -1160,10 +1160,10 @@ bool thread::authenticate(stack::session *s)
     if(!sip_realm || !*sip_realm || !userid || !secret || !*userid)
         return false;
 
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     eXosip_add_authentication_info(OPTION_CONTEXT userid, userid, secret, NULL, sip_realm);
     eXosip_automatic_action(EXOSIP_CONTEXT);
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
     return true;
 }
 
@@ -1288,7 +1288,7 @@ void thread::challenge(void)
         "Digest realm=\"%s\", nonce=\"%s\", algorithm=%s",
                 registry::getRealm(), nonce, registry::getDigest());
 
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     switch(authorizing) {
     case REGISTRAR:
         eXosip_message_build_answer(OPTION_CONTEXT sevent->tid, SIP_UNAUTHORIZED, &reply);
@@ -1323,7 +1323,7 @@ void thread::challenge(void)
     case NONE:
         break;
     }
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
 }
 
 bool thread::getsource(void)
@@ -1453,7 +1453,7 @@ reply:
         shell::debug(2, "rejecting %s; error=%d", auth->username, error);
 
     server::release(user);
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     eXosip_message_build_answer(OPTION_CONTEXT sevent->tid, error, &reply);
     if(reply != NULL) {
         if(error == SIP_OK) {
@@ -1469,7 +1469,7 @@ reply:
     }
     else
         eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, SIP_BAD_REQUEST, NULL);
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
 }
 
 void thread::registration(void)
@@ -1566,7 +1566,7 @@ reply:
             shell::debug(3, "querying %s", reguri->username);
         else
             shell::debug(3, "query rejected for %s; error=%d", reguri->username, error);
-        eXosip_lock(EXOSIP_CONTEXT);
+        EXOSIP_LOCK
         eXosip_message_build_answer(OPTION_CONTEXT sevent->tid, error, &reply);
         if(reply != NULL) {
             if(error == SIP_OK) {
@@ -1581,7 +1581,7 @@ reply:
         }
         else
             eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, SIP_BAD_REQUEST, NULL);
-        eXosip_unlock(EXOSIP_CONTEXT);
+        EXOSIP_UNLOCK
         return;
     }
 
@@ -1668,7 +1668,7 @@ void thread::reregister(const char *contact, time_t interval)
         }
     }
 reply:
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     eXosip_message_build_answer(OPTION_CONTEXT sevent->tid, answer, &reply);
     if(reply != NULL) {
 
@@ -1690,7 +1690,7 @@ reply:
     }
     else
         eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, SIP_BAD_REQUEST, NULL);
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
     if(reginfo && reginfo->isUser() && answer == SIP_OK)
         messages::update(identity);
 }
@@ -1731,7 +1731,7 @@ void thread::options(void)
 {
     osip_message_t *reply = NULL;
 
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     if(eXosip_options_build_answer(OPTION_CONTEXT sevent->tid, SIP_OK, &reply) == 0) {
         osip_message_set_header(reply, ACCEPT, "application/sdp, text/plain");
         osip_message_set_header(reply, ALLOW, "INVITE,ACK,CANCEL,OPTIONS,INFO,REFER,MESSAGE,SUBSCRIBE,NOTIFY,REGISTER,PRACK");
@@ -1741,7 +1741,7 @@ void thread::options(void)
     }
     else
         eXosip_options_send_answer(OPTION_CONTEXT sevent->tid, SIP_BAD_REQUEST, NULL);
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
 }
 
 void thread::shutdown(void)

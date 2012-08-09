@@ -33,8 +33,12 @@ static int tls = 0;
 #ifdef  EXOSIP_OPT_BASE_OPTION
 #define EXOSIP_CONTEXT  context
 #define OPTION_CONTEXT  context,
+#define EXOSIP_LOCK     eXosip_lock(context)
+#define EXOSIP_UNLOCK   eXosip_unlock(context)
 static struct eXosip_t *context = NULL;
 #else
+#define EXOSIP_LOCK     eXosip_lock()
+#define EXOSIP_UNLOCK   eXosip_unlock()
 #define EXOSIP_CONTEXT
 #define OPTION_CONTEXT
 #endif
@@ -286,17 +290,17 @@ usage:
         snprintf(buffer, sizeof(buffer), "sip:%s", user);
 
 
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     rid = eXosip_register_build_initial_register(OPTION_CONTEXT buffer, proxy, NULL, 60, &msg);
     if(!msg) {
-        eXosip_unlock(EXOSIP_CONTEXT);
+        EXOSIP_UNLOCK
         shell::errexit(3, "*** sipuser: cannot create query for %s\n", user);
     }
     snprintf(tbuffer, sizeof(tbuffer), "<%s>", buffer);
     osip_message_set_to(msg, tbuffer);
     osip_list_ofchar_free(&msg->contacts);
     eXosip_register_send_register(OPTION_CONTEXT rid, msg);
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
 
     while(!stop) {
         sevent = eXosip_event_wait(OPTION_CONTEXT 0, timeout);

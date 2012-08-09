@@ -41,7 +41,7 @@ int proto::create_registration(const char *uri, const char *server, const char *
     osip_message_t *msg = NULL;
     int rid;
 
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     rid = eXosip_register_build_initial_register(OPTION_CONTEXT uri, server, contact, (int)expires, &msg);
     if(msg) {
         osip_message_set_supported(msg, "100rel");
@@ -51,7 +51,7 @@ int proto::create_registration(const char *uri, const char *server, const char *
     }
     else
         rid = -1;
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
     return rid;
 }
 
@@ -60,23 +60,22 @@ bool proto::release_registration(int rid)
     osip_message_t *msg = NULL;
     bool result = true;
 
-    eXosip_lock(EXOSIP_CONTEXT);
-
+    EXOSIP_LOCK
     eXosip_register_build_register(OPTION_CONTEXT rid, 0, &msg);
     if(msg)
         eXosip_register_send_register(OPTION_CONTEXT rid, msg);
     else
         result = false;
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
     return result;
 }
 
 bool proto::add_authentication(const char *userid, const char *secret, const char *realm)
 {
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     eXosip_add_authentication_info(OPTION_CONTEXT userid, userid, secret, NULL, realm);
     eXosip_automatic_action(EXOSIP_CONTEXT);
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
     return true;
 }
 
@@ -90,13 +89,13 @@ bool proto::publish(const char *uri, const char *contact, const char *event, con
     bool result = true;
     osip_message_t *msg = NULL;
 
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     eXosip_build_publish(OPTION_CONTEXT &msg, uri, contact, NULL, event, duration, type, body);
     if(msg)
         eXosip_publish(OPTION_CONTEXT msg, uri);
     else
         result = false;
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
     return result;
 }
 

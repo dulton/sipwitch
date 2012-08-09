@@ -216,7 +216,7 @@ int messages::remote(const char *to, message *msg, const char *digest)
     osip_message_t *im = NULL;
     int error = SIP_BAD_REQUEST;
 
-    eXosip_lock(EXOSIP_CONTEXT);
+    EXOSIP_LOCK
     eXosip_message_build_request(OPTION_CONTEXT &im, "MESSAGE", to, msg->from, NULL);
     if(im && digest) {
         char *authbuf = new char[1024];
@@ -258,7 +258,7 @@ int messages::remote(const char *to, message *msg, const char *digest)
         if(!eXosip_message_send_request(OPTION_CONTEXT im))
             error = SIP_OK;
     }
-    eXosip_unlock(EXOSIP_CONTEXT);
+    EXOSIP_UNLOCK
     return error;
 }
 
@@ -290,7 +290,7 @@ int messages::deliver(message *msg)
             stack::sipAddress(&tp->address, to + 1, msg->user, sizeof(to) - 6);
             to[0] = '<';
             String::add(to, sizeof(to), ";lr>");
-            eXosip_lock(EXOSIP_CONTEXT);
+            EXOSIP_LOCK
             im = NULL;
             eXosip_message_build_request(OPTION_CONTEXT &im, "MESSAGE", tp->contact, msg->from, to);
             if(im != NULL) {
@@ -308,7 +308,7 @@ int messages::deliver(message *msg)
                 if(!eXosip_message_send_request(OPTION_CONTEXT im))
                     ++msgcount;
             }
-            eXosip_unlock(EXOSIP_CONTEXT);
+            EXOSIP_UNLOCK
         }
         tp.next();
     }
