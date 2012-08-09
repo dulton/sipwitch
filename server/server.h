@@ -21,7 +21,11 @@
 #include <eXosip2/eXosip.h>
 #include <ctype.h>
 
-#ifdef  EXOSIP_OPT_BASE_OPTION
+#if defined(EXOSIP_OPT_BASE_OPTION) && !defined(EXOSIP_OPT_DONT_SEND_101)
+#define EXOSIP_API4
+#endif
+
+#ifdef  EXOSIP_API4
 #define EXOSIP_CONTEXT  stack::sip.context
 #define OPTION_CONTEXT  stack::sip.context,
 #define EXOSIP_LOCK     eXosip_lock(stack::sip.context);
@@ -400,7 +404,7 @@ private:
     unsigned invite_expires;
 
 public:
-#ifdef  EXOSIP_OPT_BASE_OPTION
+#ifdef  EXOSIP_API4
     eXosip_t *context;
 #endif
 

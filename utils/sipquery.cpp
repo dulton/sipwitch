@@ -30,7 +30,11 @@ static const char *binding = NULL;
 static unsigned timeout = 1000;
 static int tls = 0;
 
-#ifdef  EXOSIP_OPT_BASE_OPTION
+#if defined(EXOSIP_OPT_BASE_OPTION) && !defined(EXOSIP_OPT_DONT_SEND_101)
+#define EXOSIP_API4
+#endif
+
+#ifdef  EXOSIP_API4
 #define EXOSIP_CONTEXT  context
 #define OPTION_CONTEXT  context,
 #define EXOSIP_LOCK     eXosip_lock(context);
@@ -213,7 +217,7 @@ usage:
         port = 5060 + getuid();
 #endif
 
-#ifdef  EXOSIP_OPT_BASE_OPTION
+#ifdef  EXOSIP_API4
     context = eXosip_malloc();
 #endif
 

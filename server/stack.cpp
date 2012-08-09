@@ -719,7 +719,7 @@ void stack::start(service *cfg)
     unsigned thidx = 0;
     shell::log(DEBUG1, "starting sip stack; %d maps and %d threads at priority %d",
         mapped_calls, threading, priority);
-#ifdef  EXOSIP_OPT_BASE_OPTION
+#ifdef  EXOSIP_API4
     sip.context = eXosip_malloc();
 #endif
     eXosip_init(EXOSIP_CONTEXT);
@@ -783,7 +783,7 @@ void stack::start(service *cfg)
     osip_trace_initialize_syslog(TRACE_LEVEL0, (char *)"sipwitch");
     eXosip_set_user_agent(OPTION_CONTEXT agent);
 
-#if defined(EXOSIP2_OPTION_SEND_101) && !defined(EXOSIP_OPT_BASE_OPTION)
+#if defined(EXOSIP2_OPTION_SEND_101) && !defined(EXOSIP_API4)
     eXosip_set_option(EXOSIP_OPT_DONT_SEND_101, &send101);
 #endif
 
