@@ -83,9 +83,9 @@ if test "x${enable_qt}" = "xyes" ; then
                         QT_CFLAGS="$QT_CFLAGS -I$EXTRA_QT_INCLUDE_DIR",
                         AC_MSG_WARN([QWidget not found])))
     AC_MSG_NOTICE([Set QT_CFLAGS... $QT_CFLAGS])
-    AC_CHECK_PROG(MOC, [moc], [moc])
-    AC_CHECK_PROG(RCC, [rcc], [rcc])
-    AC_CHECK_PROG(UIC, [uic], [uic])
+    AC_CHECK_PROGS(MOC, [moc moc-qt4], [no])
+    AC_CHECK_PROGS(RCC, [rcc], [no])
+    AC_CHECK_PROGS(UIC, [uic uic-qt4], [no])
 
     QTAPPS="switchview"
 
