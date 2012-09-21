@@ -55,13 +55,8 @@ zeroconf_la_LDFLAGS = -module $(MODFLAGS) @ZEROCONF_LIBS@ $(PLUGINS_ADD)
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(logrotatedir)
 	$(INSTALL_DATA) sipwitch.log $(DESTDIR)/$(logrotatedir)/sipwitch
-	if test -d /etc/sysconfig ; then \
-		$(mkinstalldirs) $(DESTDIR)/$(sysconfdir)/sysconfig ; \
-		$(INSTALL_DATA) sipwitch.defaults $(DESTDIR)/$(sysconfdir)/sysconfig/sipwitch ; \
-	else \
-		$(mkinstalldirs) $(DESTDIR)/$(sysconfdir)/default ; \
-		$(INSTALL_DATA) sipwitch.defaults $(DESTDIR)/$(sysconfdir)/default/sipwitch ; \
-	fi
+	$(mkinstalldirs) $(DESTDIR)/$(sysconfdir)/default
+	$(INSTALL_DATA) sipwitch.defaults $(DESTDIR)/$(sysconfdir)/default/sipwitch
 	if test "@NETWORK_UP@" != "none" ; then $(mkinstalldirs) $(DESTDIR)/@NETWORK_UP@ ; fi
 	if test "@NETWORK_UP@" != "none" ; then $(INSTALL) -m 0755 sipwitch.ifup $(DESTDIR)/@NETWORK_UP@/sipwitch ; fi
 	if test "@NETWORK_DOWN@" != "none" ; then $(mkinstalldirs) $(DESTDIR)/@NETWORK_DOWN@ ; fi
