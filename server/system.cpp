@@ -51,6 +51,7 @@ static shell::stringopt loglevel('L', "--logging", _TEXT("set log level"), "leve
 static shell::stringopt loading('l', "--plugins", _TEXT("specify modules to load"), "names", "none");
 static shell::flagopt nolocalusers('n', "--no-localusers", _TEXT("disable local user accounts"));
 static shell::counteropt priority('p', "--priority", _TEXT("set priority level"), "level");
+static shell::flagopt hotspot(0, "--public", _TEXT("public access mode"));
 static shell::flagopt restart('r', "--restartable", _TEXT("set to restartable process"));
 static shell::flagopt trace('t', "--trace", _TEXT("trace sip messages"));
 #ifdef HAVE_PWD_H
@@ -472,6 +473,9 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 
     if(is(debuglevel))
         verbose.set((unsigned)shell::DEBUG0 + *debuglevel);
+
+    if(is(hotspot))
+        service::callback::setPublic();
 
 #ifdef  HAVE_PWD_H
     pwd = NULL;

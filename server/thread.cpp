@@ -632,6 +632,7 @@ bool thread::authorize(void)
     osip_header_t *msgheader = NULL;
     bool anon = false;
     UserCache *usercache = NULL;
+    bool allowed = false;
 
     if(!sevent->request || !sevent->request->to || !sevent->request->from || !sevent->request->req_uri)
         goto invalid;
@@ -850,9 +851,21 @@ trying:
         return true;
     }
 
-    // see if destination allows anonymous remote (public) callers
+    // see if destination allows anonymous remote (public) callers.
+    // destination must be valid and either have class of service
+    // or server is in hotspot mode.  Origin must offer a host uri.
 
-    if(reginfo && reginfo->isFeature(USER_PROFILE_INCOMING) && from->url->host) {
+    allowed = false;
+    if(reginfo) {
+        if(stack::sip_public)
+            allowed = true;
+        else
+            allowed = reginfo->isFeature(USER_PROFILE_INCOMING);
+    }
+    if(!from->url->host)
+        allowed = false;
+
+    if(allowed) {
 
         // now we make sure the originating call does not "claim" to be
         // associated with us.  If it has any of our our names, then we have
@@ -1024,7 +1037,7 @@ static_routing:
     goto invalid;
 
 anonymous:
-    if(!stack::sip.published) {
+    if(!stack::sip.published && !stack::sip_public) {
         error = SIP_FORBIDDEN;
         goto invalid;
     }
@@ -1040,20 +1053,23 @@ anonymous:
 remote:
     error = SIP_FORBIDDEN;
     destination = EXTERNAL;
-    if(!stack::sip.published)
+    if(!stack::sip.published && !stack::sip_public)
         goto invalid;
 
     if(!authenticate())
         return false;
 
-    // must be active registration to dial out...
-    reginfo = registry::access(identity);
-    time(&now);
-    if(!reginfo || (reginfo->expires && reginfo->expires < now))
-        goto invalid;
+    // must be active registration with correct class of service, or with
+    // server in hotspot mode, to dial out...
+    if(!stack::sip_public) {
+        reginfo = registry::access(identity);
+        time(&now);
+        if(!reginfo || (reginfo->expires && reginfo->expires < now))
+            goto invalid;
 
-    if(!reginfo->isFeature(USER_PROFILE_OUTGOING))
-        goto invalid;
+        if(!reginfo->isFeature(USER_PROFILE_OUTGOING) && !stack::sip_public)
+            goto invalid;
+    }
 
     refer = server::referRemote(reginfo, requesting, buffer, sizeof(buffer));
     if(refer)

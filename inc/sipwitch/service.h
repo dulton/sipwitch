@@ -194,6 +194,7 @@ public:
         static int sip_protocol;
         static int sip_family;
         static int sip_tlsmode;
+        static bool sip_public;             // hotspot mode flag
         static const char *sip_domain;
         static const char *sip_realm;
         static const char *sip_tlspwd;
@@ -232,7 +233,10 @@ public:
 
     public:
         inline static void bind(unsigned short port)
-            {sip_port = port;};
+            {sip_port = port;}
+
+        inline static void setPublic(void)
+            {sip_public = true;}
 
         static void bind(const char *addr);
 

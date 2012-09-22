@@ -42,6 +42,7 @@ volatile char *service::callback::sip_publish = NULL;
 int service::callback::sip_protocol = IPPROTO_UDP;
 int service::callback::sip_family = AF_INET;
 int service::callback::sip_tlsmode = 0;
+bool service::callback::sip_public = false;
 const char *service::callback::sip_tlspwd = "";
 const char *service::callback::sip_tlsdev = "/dev/random";
 const char *service::callback::sip_tlsca = "/etc/ssl/ca.pem";
