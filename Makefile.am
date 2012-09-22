@@ -34,6 +34,7 @@ cleandist:
 	@rm -f ${PACKAGE}-[0-9]*.shar.gz
 	@rm -f ${PACKAGE}-[0-9]*.zip
 	@rm -f ${PACKAGE}-*.rpm
+	@rm -f lib${PACKAGE}*[-_]*.deb
 	@rm -f ${PACKAGE}[-_]*.deb
 	@rm -f ${PACKAGE}_*.gz
 	@rm -f ${PACKAGE}_*.dsc

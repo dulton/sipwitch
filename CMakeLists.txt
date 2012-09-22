@@ -13,7 +13,7 @@ PROJECT(sipwitch)
 INCLUDE(CheckIncludeFiles)
 INCLUDE(CheckFunctionExists)
 INCLUDE(FindPkgConfig)
-set (VERSION 1.3.1)
+set (VERSION 1.3.2)
 set (SOVERSION 1)
 
 set(INSTALL_INCLUDEDIR include)
