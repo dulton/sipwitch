@@ -856,14 +856,12 @@ trying:
     // or server is in hotspot mode.  Origin must offer a host uri.
 
     allowed = false;
-    if(reginfo) {
+    if(reginfo && from && from->url && from->url->host) {
         if(stack::sip_public)
             allowed = true;
         else
             allowed = reginfo->isFeature(USER_PROFILE_INCOMING);
     }
-    if(!from->url->host)
-        allowed = false;
 
     if(allowed) {
 
@@ -1061,15 +1059,14 @@ remote:
 
     // must be active registration with correct class of service, or with
     // server in hotspot mode, to dial out...
-    if(!stack::sip_public) {
-        reginfo = registry::access(identity);
-        time(&now);
-        if(!reginfo || (reginfo->expires && reginfo->expires < now))
-            goto invalid;
+    reginfo = registry::access(identity);
+    time(&now);
+    if(!reginfo || (reginfo->expires && reginfo->expires < now))
+        goto invalid;
 
-        if(!reginfo->isFeature(USER_PROFILE_OUTGOING) && !stack::sip_public)
+    if(!stack::sip_public)
+        if(!reginfo->isFeature(USER_PROFILE_OUTGOING))
             goto invalid;
-    }
 
     refer = server::referRemote(reginfo, requesting, buffer, sizeof(buffer));
     if(refer)
