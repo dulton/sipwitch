@@ -211,15 +211,13 @@ void Events::run(void)
 
             memset(&ipcaddr, 0, sizeof(ipcaddr));
 #ifdef  _MSWINDOWS_
-            DWORD port = 0, pid = 0;
-            DWORD plen;
+            DWORD port = 0;
             DWORD index = 0;
             TCHAR keyname[128];
             TCHAR keyvalue[128];
             DWORD size = sizeof(keyname), vsize = sizeof(keyvalue), vtype;
             DWORD *dp;
 
-            plen = sizeof(port);
             HKEY keys = HKEY_LOCAL_MACHINE, subkey;
             if(RegOpenKeyEx(keys, "SOFTWARE\\sipwitch", 0, KEY_READ, &subkey) != ERROR_SUCCESS)
                 goto drop;
@@ -227,8 +225,6 @@ void Events::run(void)
                 dp = (DWORD *)&keyvalue;
                 if(eq("port", keyname))
                     port = *dp;
-                else if(eq("pid", keyname))
-                    pid = *dp;
                 vsize = sizeof(keyvalue);
                 size = sizeof(keyname);
             }
