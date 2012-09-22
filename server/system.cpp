@@ -522,8 +522,11 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     endgrent();
     endpwent();
 
-    if(is(desktop))
+    if(is(desktop)) {
         umask(002);
+        service::callback::setPublic();
+    }
+
 #endif
 
     fsys::createDir(rundir, 0775);
