@@ -1,6 +1,6 @@
 from 1.3.1 to 1.3.2
 - more qt automake options for strange qt configs
-- simplified system startup defaults
+- fixed systemd support - soon to add to fedora
 - sipwitch hotspot --public mode option
 
 from 1.3.0 to 1.3.1
