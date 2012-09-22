@@ -839,6 +839,8 @@ rewrite:
     }
 
 trying:
+    // should SIP_GONE expiration and other checks be here??
+
     if(MSG_IS_PUBLISH(sevent->request))
         return authenticate();
 

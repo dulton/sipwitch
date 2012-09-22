@@ -43,8 +43,16 @@ test -x "$DAEMON" || exit 0
 
 set -e
 
-if [ -f /etc/default/sipwitch ] ; then
-    . /etc/default/sipwitch ; fi
+if [ -f /etc/sysconfig/sipwitch ] ; then
+    DEFAULT="/etc/sysconfig/sipwitch"
+    . /etc/sysconfig/sipwitch
+elif [ -f /etc/default/sipwitch ] ; then
+    . /etc/default/sipwitch
+elif [ -f /etc/conf.d/sipwitch ] ; then
+    . /etc/conf.d/sipwitch
+elif [ -f /etc/site-start.d/sipwitch ] ; then
+    . /etc/site-start.d/sipwitch
+fi
 
 if [ ! -z "$PLUGINS" ] ; then
     export PLUGINS
@@ -72,6 +80,9 @@ fi
 
 case "$SECURITY" in
 desktop|Desktop|DESKTOP)
+    OPTIONS="$OPTIONS --desktop"
+    ;;
+public|Public|PUBLIC)
     OPTIONS="$OPTIONS --desktop"
     ;;
 esac

@@ -129,7 +129,7 @@ your locally installed sipwitch service.
 %{__make} DESTDIR=%{buildroot} INSTALL="install -p" install
 %{__rm} -f %{buildroot}/%{_libdir}/*.la
 %{__rm} -f %{buildroot}/%{_libdir}/sipwitch/*.la
-echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/default/sipwitch
+echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
 
 %clean
 %{__rm} -rf %{buildroot}

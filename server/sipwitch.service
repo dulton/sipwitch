@@ -4,10 +4,12 @@ After=network.target
 
 [Service]
 Type=forking
-EnvironmentFile=/etc/default/sipwitch
-ExecStartPre=-/bin/rm -f $FIFO
-ExecStart=$DAEMON $OPTIONS
-ExecStop=echo "down" ]$FIFO
+EnvironmentFile=-/etc/conf.d/sipwitch
+EnvironmentFile=-/etc/sysconfig/sipwitch
+EnvironmentFile=-/etc/default/sipwitch
+ExecStartPre=-/bin/rm -f /var/run/sipwitch/control
+ExecStart=/usr/sbin/sipw $OPTIONS
+ExecStop=/bin/bash -c 'echo down > /var/run/sipwitch/control'
 ExecStopPost=sleep 3
 Restart=always
 
