@@ -1,3 +1,7 @@
+from 1.3.2 to 1.3.3
+- systemd related changes; env security model now parsed in system.cpp.
+- systemd related changes; OPTIONS has -b default
+
 from 1.3.1 to 1.3.2
 - more qt automake options for strange qt configs
 - fixed systemd support - soon to add to fedora

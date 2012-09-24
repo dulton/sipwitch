@@ -214,6 +214,10 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     corefiles();
     args.getargv0(argv);
 
+    const char *security = args.getenv("SECURITY");
+    if(!security)
+        security = "default";
+
 #if defined(DEBUG)
     if(eq(argv[1], "-gdb") || eq(argv[1], "--gdb") || eq(argv[1], "-dbg") || eq(argv[1], "--dbg")) {
         char *dbg[] = {(char *)"gdb", (char *)"--args", NULL};
@@ -474,7 +478,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     if(is(debuglevel))
         verbose.set((unsigned)shell::DEBUG0 + *debuglevel);
 
-    if(is(hotspot))
+    if(is(hotspot) || eq(security, "public"))
         service::callback::setPublic();
 
 #ifdef  HAVE_PWD_H
@@ -522,7 +526,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     endgrent();
     endpwent();
 
-    if(is(desktop)) {
+    if(is(desktop) || eq(security, "desktop")) {
         umask(002);
         service::callback::setPublic();
     }
