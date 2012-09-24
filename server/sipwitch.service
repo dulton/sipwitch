@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=forking
+PIDFile=/var/run/sipwitch/pidfile
 EnvironmentFile=-/etc/conf.d/sipwitch
 EnvironmentFile=-/etc/sysconfig/sipwitch
 EnvironmentFile=-/etc/default/sipwitch

@@ -177,8 +177,18 @@ static bool errlog(shell::loglevel_t level, const char *text)
 
 namespace SIPWITCH_NAMESPACE {
 
-    static void up(void)
+    static void up(const char *pidfile)
     {
+        if(pidfile) {
+            ::remove(pidfile);
+            FILE *fp = fopen(pidfile, "w");
+            if(fp) {
+                fprintf(fp, "    %ld\n", (long)getpid());
+                fclose(fp);
+                fp = NULL;
+            }
+        }
+
         cache::init();
         server::reload();
         server::startup();
@@ -196,6 +206,9 @@ namespace SIPWITCH_NAMESPACE {
         signals::stop();
         service::shutdown();
         control::release();
+
+        if(pidfile)
+            ::remove(pidfile);
     }
 }
 
@@ -284,6 +297,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     args.setsym("cache", DEFAULT_VARPATH "/cache/sipwitch");
     args.setsym("controls", DEFAULT_VARPATH "/run/sipwitch");
     args.setsym("control", DEFAULT_VARPATH "/run/sipwitch/control");
+    args.setsym("pidfile", DEFAULT_VARPATH "/run/sipwitch/pidfile");
     args.setsym("events", DEFAULT_VARPATH "/run/sipwitch/events");
     args.setsym("config", DEFAULT_CFGPATH "/sipwitch.conf");
     args.setsym("logfiles", DEFAULT_VARPATH "/log");
@@ -330,6 +344,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
         args.setsym("controls", rundir);
         args.setsym("control", _STR(str(rundir) + "/control"));
         args.setsym("events", _STR(str(rundir) + "/events"));
+        args.setsym("pidfile", _STR(str(rundir) + "/pidfile"));
         args.setsym("logfiles", rundir);
         args.setsym("siplogs", _STR(str(rundir) + "/siplogs"));
         args.setsym("logfile", _STR(str(rundir) + "/logfile"));
@@ -581,7 +596,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     if(is(restart))
         args.restart();
 
-    up();
+    up(args.getsym("pidfile"));
 }
 
 // stub code for windows service daemon...
