@@ -135,6 +135,11 @@ AC_ARG_WITH(initrddir,
         INITRDDIR="$with_initrddir"
 ])
 
+AC_ARG_WITH(defaultdir,
+    AC_HELP_STRING([--with-default=path], [specify /etc/default path]),[
+        DEFAULTDIR="$with_defaultdir"
+])
+
 # define network script paths
 AC_ARG_WITH(netscripting,
     AC_HELP_STRING([--with-netscripting=type], [specify scripting type]),[
@@ -346,6 +351,9 @@ if test -z "$NETWORK_RELOAD" ; then
 if test -z "$INITRDDIR" ; then
     INITRDDIR="$default_cfgpath/init.d" ; fi
 
+if test -z "$DEFAULTDIR" ; then
+    DEFAULTDIR="$default_cfgpath/defailt" ; fi
+
 case "$SIPWITCH_FLAGS -I/usr/include" in
 *-I${default_incpath}*)
     ;;
@@ -412,6 +420,7 @@ AC_SUBST(cgibindir)
 AC_SUBST(plugindir)
 AC_SUBST(translatedir)
 AC_SUBST(LT_VERSION)
+AC_SUBST(DEFAULTDIR)
 AC_SUBST(INITRDDIR)
 AC_SUBST(NETWORK_UP)
 AC_SUBST(NETWORK_DOWN)
