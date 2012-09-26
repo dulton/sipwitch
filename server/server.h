@@ -26,11 +26,17 @@
 #endif
 
 #ifdef  EXOSIP_API4
+
+typedef eXosip_t *context_t;
+
 #define EXOSIP_CONTEXT  stack::sip.context
 #define OPTION_CONTEXT  stack::sip.context,
 #define EXOSIP_LOCK     eXosip_lock(stack::sip.context);
 #define EXOSIP_UNLOCK   eXosip_unlock(stack::sip.context);
 #else
+
+typedef void *context_t;
+
 #define EXOSIP_CONTEXT
 #define OPTION_CONTEXT
 #define EXOSIP_LOCK     eXosip_lock();
@@ -134,6 +140,7 @@ public:
         } index;
         struct sockaddr_internet address;
         struct sockaddr_storage peering;
+        context_t context;
 
         time_t created;
         status_t status;
@@ -263,6 +270,7 @@ private:
     public:
         registry::mapped *reg;
         int cid, tid, did;
+        context_t context;
         time_t activates;
         uint32_t sequence;
         call *parent;
@@ -404,9 +412,7 @@ private:
     unsigned invite_expires;
 
 public:
-#ifdef  EXOSIP_API4
-    eXosip_t *context;
-#endif
+    context_t context;
 
     static stack sip;
 
@@ -587,6 +593,7 @@ private:
     friend class stack;
     friend class stack::call;
 
+    context_t context;
     unsigned instance;
     unsigned extension;
     stack::subnet *access;
