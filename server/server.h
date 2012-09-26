@@ -593,7 +593,6 @@ private:
     friend class stack;
     friend class stack::call;
 
-    context_t context;
     unsigned instance;
     unsigned extension;
     stack::subnet *access;
@@ -626,6 +625,7 @@ private:
     unsigned via_hops;
     unsigned via_port, from_port, contact_port;
     destination_t destination;
+    context_t source_context, target_context;
 
     char *sip_realm;
     osip_proxy_authenticate_t *proxy_auth;
