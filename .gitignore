@@ -18,10 +18,13 @@ config.log
 config.status
 libtool
 stamp-h1
+server/*.test
 server/sipw
 utils/sippasswd
 utils/sipwitch
 sipwitch-config
+sipwitch-config.h
+sipwitch-config.h.in
 utils/sipquery
 switchview/switchview
 utils/sipwitch-cgi
@@ -41,5 +44,10 @@ ui_*.h
 *.libs
 *.pc
 *.spec
+*.rpm
+*.tar.gz
+*.changes
+*.dsc
+*.zip
 *~
 
