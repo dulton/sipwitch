@@ -88,7 +88,7 @@ bool uri::userid(const char *addr, char *buf, size_t size)
     if(!strchr(addr, '@'))
         return false;
 
-    string::set(buf, size, addr);
+    String::set(buf, size, addr);
     ep = strchr(buf, '@');
     if(ep)
         *ep = 0;
