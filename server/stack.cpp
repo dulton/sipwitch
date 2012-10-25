@@ -760,7 +760,11 @@ void stack::start(service *cfg)
     }
 #endif
 
+#if UCOMMON_ABI > 5
+    Socket::query(sip_family);
+#else
     Socket::family(sip_family);
+#endif
 
     if(eXosip_listen_addr(OPTION_CONTEXT sip_protocol, iface, sip_port, sip_family, sip_tlsmode)) {
 #ifdef  AF_INET6
