@@ -745,7 +745,7 @@ bool thread::authorize(void)
     if(local_port != stack::sip_port)
         goto remote;
 
-    if(Socket::equalhost((struct sockaddr *)&iface, request_address.getAddr()))
+    if(eq_host((struct sockaddr *)&iface, request_address.getAddr()))
         goto local;
 
     goto remote;
@@ -1569,7 +1569,7 @@ void thread::registration(void)
         error = SIP_NOT_FOUND;
 //      if(!String::ifind(stack::sip.localnames, reguri->host, " ,;:\t\n")) {
             stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
-            if(!Socket::equalhost((struct sockaddr *)&iface, request_address.getAddr()) && atoi(port) == stack::sip_port)
+            if(!eq_host((struct sockaddr *)&iface, request_address.getAddr()) && atoi(port) == stack::sip_port)
                 goto reply;
 //      }
 
