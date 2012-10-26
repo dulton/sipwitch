@@ -129,7 +129,7 @@ public:
     inline bool is_admin(void) const
         {return (is_profiled() && (profile.features & USER_PROFILE_SUPERUSER));};
 
-    inline bool feature(unsigned short X) const
+    inline bool has_feature(unsigned short X) const
         {return is_profiled() && (profile.features & X);};
 };
 

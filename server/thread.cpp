@@ -862,7 +862,7 @@ trying:
         if(stack::sip_public)
             allowed = true;
         else
-            allowed = reginfo->feature(USER_PROFILE_INCOMING);
+            allowed = reginfo->has_feature(USER_PROFILE_INCOMING);
     }
 
     if(allowed) {
@@ -1067,7 +1067,7 @@ remote:
         goto invalid;
 
     if(!stack::sip_public)
-        if(!reginfo->feature(USER_PROFILE_OUTGOING))
+        if(!reginfo->has_feature(USER_PROFILE_OUTGOING))
             goto invalid;
 
     refer = server::referRemote(reginfo, requesting, buffer, sizeof(buffer));
