@@ -866,9 +866,9 @@ void stack::reload(service *cfg)
         key = sp->getId();
         value = sp->getPointer();
         if(key && value) {
-            if(eq(key, "threading") && !isConfigured())
+            if(eq(key, "threading") && !is_configured())
                 threading = atoi(value);
-            else if(eq(key, "priority") && !isConfigured())
+            else if(eq(key, "priority") && !is_configured())
                 priority = atoi(value);
             else if(eq(key, "timing"))
                 timing = atoi(value);
@@ -878,9 +878,9 @@ void stack::reload(service *cfg)
                 outgoing = tobool(value);
             else if(eq(key, "trace") || eq(key, "dumping"))
                 dumping = tobool(value);
-            else if(eq(key, "keysize") && !isConfigured())
+            else if(eq(key, "keysize") && !is_configured())
                 keysize = atoi(value);
-            else if(eq(key, "interface") && !isConfigured()) {
+            else if(eq(key, "interface") && !is_configured()) {
                 sip_family = AF_INET;
                 sip_iface = NULL;
 #ifdef  AF_INET6
@@ -893,13 +893,13 @@ void stack::reload(service *cfg)
                     value = strdup(value);
                 sip_iface = value;
             }
-            else if(eq(key, "send101") && !isConfigured() && tobool(value))
+            else if(eq(key, "send101") && !is_configured() && tobool(value))
                 send101 = 0;
-            else if(eq(key, "keepalive") && !isConfigured()) {
+            else if(eq(key, "keepalive") && !is_configured()) {
                 val = atoi(value);
                 eXosip_set_option(OPTION_CONTEXT EXOSIP_OPT_UDP_KEEP_ALIVE, &val);
             }
-            else if(eq(key, "learn") && !isConfigured()) {
+            else if(eq(key, "learn") && !is_configured()) {
                 val = tobool(value);
                 eXosip_set_option(OPTION_CONTEXT EXOSIP_OPT_UDP_LEARN_PORT, &val);
             }
@@ -929,25 +929,25 @@ void stack::reload(service *cfg)
                 service::publish(value);
             else if(eq(key, "proxy") || eq(key, "outbound"))
                 new_proxy = cfg->dup(value);
-            else if(eq(key, "agent") && !isConfigured())
+            else if(eq(key, "agent") && !is_configured())
                 agent = value;
-            else if(eq(key, "port") && !isConfigured())
+            else if(eq(key, "port") && !is_configured())
                 sip_port = atoi(value);
-            else if(eq(key, "mapped") && !isConfigured())
+            else if(eq(key, "mapped") && !is_configured())
                 mapped_calls = atoi(value);
-            else if(eq(key, "password") && !isConfigured())
+            else if(eq(key, "password") && !is_configured())
                 sip_tlspwd = strdup(value);
-            else if(eq(key, "keyfile") && !isConfigured())
+            else if(eq(key, "keyfile") && !is_configured())
                 sip_tlskey = strdup(value);
-            else if(eq(key, "random") && !isConfigured())
+            else if(eq(key, "random") && !is_configured())
                 sip_tlsdev = strdup(value);
-            else if(eq(key, "certfile") && !isConfigured())
+            else if(eq(key, "certfile") && !is_configured())
                 sip_tlscert = strdup(value);
-            else if(eq(key, "dhfile") && !isConfigured())
+            else if(eq(key, "dhfile") && !is_configured())
                 sip_tlsdh = strdup(value);
-            else if(eq(key, "authfile") && !isConfigured())
+            else if(eq(key, "authfile") && !is_configured())
                 sip_tlsca = strdup(value);
-            else if(eq(key, "transport") && !isConfigured()) {
+            else if(eq(key, "transport") && !is_configured()) {
                 if(eq(value, "tcp") || eq(value, "tls"))
                     sip_protocol = IPPROTO_TCP;
                 if(eq(value, "tls"))

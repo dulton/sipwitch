@@ -494,7 +494,7 @@ void registry::reload(service *cfg)
         key = sp->getId();
         value = sp->getPointer();
         if(key && value) {
-            if(!stricmp(key, "mapped") && !isConfigured())
+            if(!stricmp(key, "mapped") && !is_configured())
                 mapped_entries = atoi(value);
             else if(!stricmp(key, "digest")) {
                 digest = cfg->dup(value);
@@ -502,15 +502,15 @@ void registry::reload(service *cfg)
             }
             else if(!stricmp(key, "realm"))
                 realm = cfg->dup(value);
-            else if(!stricmp(key, "prefix") && !isConfigured())
+            else if(!stricmp(key, "prefix") && !is_configured())
                 prefix = atoi(value);
-            else if(!stricmp(key, "range") && !isConfigured())
+            else if(!stricmp(key, "range") && !is_configured())
                 range = atoi(value);
-            else if(!stricmp(key, "priorities") && !isConfigured())
+            else if(!stricmp(key, "priorities") && !is_configured())
                 routes = atoi(value);
             else if(!stricmp(key, "expires"))
                 expires = atoi(value);
-            else if(!stricmp(key, "keysize") && !isConfigured())
+            else if(!stricmp(key, "keysize") && !is_configured())
                 keysize = atoi(value);
         }
         sp.next();
@@ -581,7 +581,7 @@ void registry::reload(service *cfg)
     sip_range = range;
     events::realm(realm);
 
-    if(isConfigured())
+    if(is_configured())
         return;
 
     if(range) {

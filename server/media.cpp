@@ -444,7 +444,7 @@ void media::reload(service *cfg)
 {
     assert(cfg != NULL);
 
-    if(isConfigured())
+    if(is_configured())
         return;
 
     baseport = sip_port + 2;

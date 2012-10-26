@@ -128,15 +128,15 @@ void subscriber::reload(service *cfg)
         key = sp->getId();
         value = sp->getPointer();
         if(key && value) {
-            if(!stricmp(key, "count") && !isConfigured())
+            if(!stricmp(key, "count") && !is_configured())
                 count = atoi(value);
-            else if(!stricmp(key, "interface") && !isConfigured())
+            else if(!stricmp(key, "interface") && !is_configured())
                 iface = strdup(value);
             else if(!stricmp(key, "interval"))
                 interval = atol(value);
-            else if(!stricmp(key, "priority") && !isConfigured())
+            else if(!stricmp(key, "priority") && !is_configured())
                 priority = atoi(value);
-            else if(!stricmp(key, "port") && !isConfigured())
+            else if(!stricmp(key, "port") && !is_configured())
                 port = atoi(value);
             // very rare we may wish to override provider network/nat state
             else if(!stricmp(key, "network"))
@@ -182,7 +182,7 @@ void subscriber::reload(service *cfg)
         sp.next();
     }
 
-    if(!isConfigured() && count)
+    if(!is_configured() && count)
         stats::allocate(1);
 }
 
