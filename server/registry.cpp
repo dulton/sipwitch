@@ -821,7 +821,7 @@ registry::mapped *registry::allocate(const char *id)
     if(leaf && leaf->getPointer())
         ext = atoi(leaf->getPointer());
 
-    if(rr->isProfiled()) {
+    if(rr->is_profiled()) {
         pro = NULL;
         leaf = node->leaf("profile");
         if(leaf)
@@ -1327,7 +1327,7 @@ void registry::mapped::update(Socket::address& saddr, int changed)
 
     time(&now);
 
-    if(changed == registry::target::UNKNOWN || !saddr.getAddr() || !expires || expires < now || !isUser())
+    if(changed == registry::target::UNKNOWN || !saddr.getAddr() || !expires || expires < now || !is_user())
         return;
 
     tp = source.internal.targets;

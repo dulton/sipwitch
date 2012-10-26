@@ -71,13 +71,13 @@ void scripting::start(service *cfg)
     static char buf[256];
     const char *home = control::env("HOME");
 
-    if(fsys::isdir(DEFAULT_CFGPATH "/sysconfig/sipwitch-scripts"))
+    if(fsys::is_dir(DEFAULT_CFGPATH "/sysconfig/sipwitch-scripts"))
         dirpath = DEFAULT_CFGPATH "/sysconfig/sipwitch-scripts";
-    else if(fsys::isdir(DEFAULT_LIBEXEC "/sipwitch"))
+    else if(fsys::is_dir(DEFAULT_LIBEXEC "/sipwitch"))
         dirpath = DEFAULT_LIBEXEC "/sipwitch";
     else if(home) {
         snprintf(buf, sizeof(buf), "%s/.sipwitch-scripts", home);
-        if(fsys::isdir(buf))
+        if(fsys::is_dir(buf))
             dirpath = buf;
     }
 

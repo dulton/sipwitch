@@ -330,13 +330,13 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
         args.setsym("regmap", _STR(str(REGISTRY_MAP "-") + str(pwd->pw_name)));
 
         cp = userpath(*configpath);
-        if(is(configpath) && fsys::isfile(cp))
+        if(is(configpath) && fsys::is_file(cp))
             args.setsym("config", cp);
         else
             args.setsym("config", _STR(str(pwd->pw_dir) + "/.sipwitchrc"));
 
         cp = userpath(*cachepath);
-        if(is(cachepath) && fsys::isdir(cp))
+        if(is(cachepath) && fsys::is_dir(cp))
             args.setsym("cache", cp);
         else
             args.setsym("cache", _STR(str(rundir) + "/cache"));
@@ -353,7 +353,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 
 
         cp = userpath(*prefixpath);
-        if(is(prefixpath) && fsys::isdir(cp))
+        if(is(prefixpath) && fsys::is_dir(cp))
             args.setsym("prefix", cp);
         else
             args.setsym("prefix", prefix);

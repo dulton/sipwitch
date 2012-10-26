@@ -236,7 +236,7 @@ void notify::start(void)
     if(!dirpath)
         dirpath = control::env("prefix");
 
-    if(fsys::isdir(dirpath))
+    if(fsys::is_dir(dirpath))
         thread.background();
     else
         shell::log(shell::ERR, "notify failed; %s missing", dirpath);

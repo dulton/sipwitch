@@ -354,7 +354,7 @@ bool control::state(const char *state)
     char buf[256], buf1[256];
 
     String::set(buf, sizeof(buf), _STR(path("prefix") + "/states/" + state + ".xml"));
-    if(!fsys::isfile(buf))
+    if(!fsys::is_file(buf))
         return false;
     String::set(buf1, sizeof(buf1), _STR(path("prefix") + "state.xml"));
     remove(buf1);

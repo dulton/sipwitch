@@ -70,7 +70,7 @@ void thread::publish(void)
     if(destination != LOCAL)
         goto final;
 
-    if(!reginfo || !reginfo->isUser())
+    if(!reginfo || !reginfo->is_user())
         goto final;
 
     if(!String::equal(reginfo->userid, identity))
@@ -862,7 +862,7 @@ trying:
         if(stack::sip_public)
             allowed = true;
         else
-            allowed = reginfo->isFeature(USER_PROFILE_INCOMING);
+            allowed = reginfo->feature(USER_PROFILE_INCOMING);
     }
 
     if(allowed) {
@@ -1067,7 +1067,7 @@ remote:
         goto invalid;
 
     if(!stack::sip_public)
-        if(!reginfo->isFeature(USER_PROFILE_OUTGOING))
+        if(!reginfo->feature(USER_PROFILE_OUTGOING))
             goto invalid;
 
     refer = server::referRemote(reginfo, requesting, buffer, sizeof(buffer));
@@ -1706,7 +1706,7 @@ reply:
     else
         eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, SIP_BAD_REQUEST, NULL);
     EXOSIP_UNLOCK
-    if(reginfo && reginfo->isUser() && answer == SIP_OK)
+    if(reginfo && reginfo->is_user() && answer == SIP_OK)
         messages::update(identity);
 }
 

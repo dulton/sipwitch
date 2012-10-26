@@ -120,17 +120,17 @@ public:
         } internal;
     } source;
 
-    inline bool isUser(void) const
+    inline bool is_user(void) const
         {return (type == USER);};
 
-    inline bool isProfiled(void) const
+    inline bool is_profiled(void) const
         {return (type == USER || type == SERVICE);};
 
-    inline bool isAdmin(void) const
-        {return (isProfiled() && (profile.features & USER_PROFILE_SUPERUSER));};
+    inline bool is_admin(void) const
+        {return (is_profiled() && (profile.features & USER_PROFILE_SUPERUSER));};
 
-    inline bool isFeature(unsigned short X) const
-        {return isProfiled() && (profile.features & X);};
+    inline bool feature(unsigned short X) const
+        {return is_profiled() && (profile.features & X);};
 };
 
 /**
