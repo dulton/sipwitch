@@ -396,7 +396,7 @@ void media::sdp::check_connect(char *buffer, size_t len)
     else
         ttl[0] = 0;
 
-    if(!Socket::isNumeric(ap)) {
+    if(!Socket::is_numeric(ap)) {
 invalid:
         *cp = '/';
         return;

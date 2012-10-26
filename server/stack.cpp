@@ -123,7 +123,7 @@ cidr(acl, ifaddr(addr, id), id)
         service::publish(buf);
     }
     // if interface outside cidr...?
-    else if(!isMember((struct sockaddr *)&iface)) {
+    else if(!is_member((struct sockaddr *)&iface)) {
         String::set(netname, sizeof(netname), "*");
         service::published(&iface);
     }

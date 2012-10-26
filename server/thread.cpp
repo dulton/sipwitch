@@ -1536,7 +1536,7 @@ void thread::registration(void)
         // auto-detect registration from ephemerial ports...
         contact_port = atoi(port);
         contact_host = reguri->host;
-        if(!Socket::isNumeric(reguri->host) || !String::equal(contact_host, via_host) || contact_port == via_port) {
+        if(!Socket::is_numeric(reguri->host) || !String::equal(contact_host, via_host) || contact_port == via_port) {
             // non-ephemeral or source based registration required...
             contact_host = via_host;
             contact_port = via_port;

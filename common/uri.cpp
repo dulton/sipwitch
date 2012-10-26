@@ -166,7 +166,7 @@ bool uri::resolve(const char *sipuri, char *buffer, size_t size)
             port = atoi(cp);
         }
     }
-    if(Socket::isNumeric(buffer)) {
+    if(Socket::is_numeric(buffer)) {
         if(!port)
             port = 5060;
     }
