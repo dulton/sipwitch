@@ -812,7 +812,7 @@ static void response(char *buffer, unsigned max, const char *fmt, ...)
                 break;
             case 't':
                 tv = va_arg(args, time_t);
-                dt = DateTime::glt(&tv);
+                dt = DateTime::local(&tv);
                 if(dt->tm_year < 1800)
                     dt->tm_year += 1900;
                 count += xmlformat(buffer + count, max - count,
@@ -1585,7 +1585,7 @@ static void callfile(FILE *fp, const char *id)
     fstat(fileno(fp), &ino);
 #endif
 
-    dt = DateTime::glt(&ino.st_ctime);
+    dt = DateTime::local(&ino.st_ctime);
 
     if(dt->tm_year >= 2000)
         dt->tm_year -= 2000;
@@ -1846,7 +1846,7 @@ use:
         printf("  <type>%s</type>\n", type);
         printf("  <class>%s</class>\n", buffer.profile.id);
 
-        dt = DateTime::glt(&buffer.created);
+        dt = DateTime::local(&buffer.created);
         if(dt->tm_year < 1000)
             dt->tm_year += 1900;
 
