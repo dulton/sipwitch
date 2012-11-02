@@ -114,7 +114,7 @@ cidr(acl, ifaddr(addr, id), id)
     }
     Socket::query((struct sockaddr *)&us.dest, buf, sizeof(buf));
 
-    if(Socket::network((struct sockaddr *)&iface, (struct sockaddr *)&us.dest))
+    if(Socket::via((struct sockaddr *)&iface, (struct sockaddr *)&us.dest))
         memset(&iface, 0, sizeof(iface));
     // gateway special rule to specify a gateway public interface...
     else if(eq(id, "gateway")) {
@@ -635,7 +635,7 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 {
     assert(iface != NULL && dest != NULL);
 
-    Socket::network(iface, dest);
+    Socket::via(iface, dest);
     switch(iface->sa_family) {
     case AF_INET:
         ((struct sockaddr_in*)(iface))->sin_port = htons(sip_port);

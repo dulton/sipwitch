@@ -76,7 +76,7 @@ void subscriber::update(void)
 
     changed = false;
     len = strlen(contact);
-    Socket::network((struct sockaddr *)&provider.contact, dest.getAddr());
+    Socket::via((struct sockaddr *)&provider.contact, dest.getAddr());
     Socket::query((struct sockaddr *)&provider.contact, contact + len, sizeof(contact) - len);
     len = strlen(contact);
     snprintf(contact + len, sizeof(contact) - len, ":%u", sip_port);
