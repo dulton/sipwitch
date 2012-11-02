@@ -299,7 +299,7 @@ void registry::snapshot(FILE *fp)
                 fputc('\n', fp);
             tp = rr->source.internal.targets;
             while(is(tp)) {
-                Socket::getaddress((struct sockaddr *)(&tp->address), buffer, sizeof(buffer));
+                Socket::query((struct sockaddr *)(&tp->address), buffer, sizeof(buffer));
                 fprintf(fp, "    address=%s, contact=%s", buffer, tp->contact);
                 if(tp->expires && tp->expires <= now)
                     fprintf(fp, ", expired");
@@ -1122,7 +1122,7 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
     if(!ai)
         return 0;
 
-    len = Socket::getlen(ai);
+    len = Socket::len(ai);
 
     locking.exclusive();
     tp = source.internal.targets;
@@ -1399,7 +1399,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
     if(lease > expires)
         expires = lease;
 
-    len = Socket::getlen(ai);
+    len = Socket::len(ai);
     time(&now);
     while(tp) {
         if(tp->expires < now)
@@ -1486,7 +1486,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
     source.internal.targets = NULL;
     count = 0;
     while(al) {
-        len = Socket::getlen(al->ai_addr);
+        len = Socket::len(al->ai_addr);
 
         tp = new target;
         time(&tp->created);

@@ -1855,8 +1855,8 @@ use:
             dt->tm_hour, dt->tm_min, dt->tm_sec);
 
         DateTime::release(dt);
-        Socket::getaddress((struct sockaddr *)&buffer.contact, buf, sizeof(buf));
-        port = Socket::getservice((struct sockaddr *)&buffer.contact);
+        Socket::query((struct sockaddr *)&buffer.contact, buf, sizeof(buf));
+        port = Socket::service((struct sockaddr *)&buffer.contact);
         printf("  <address>%s</address>\n", buf);
         printf("  <service>%u</service>\n", port);
         printf(" </registry>\n");

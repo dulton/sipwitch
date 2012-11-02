@@ -644,12 +644,12 @@ void server::listPolicy(FILE *fp)
             ha = pp->getNetwork();
             memcpy(&ipv6->sin6_addr, &ha, sizeof(ipv6->sin6_addr));
             ipv6->sin6_family = AF_INET6;
-            Socket::getaddress((struct sockaddr *)ipv6, baddr, sizeof(baddr));
+            Socket::query((struct sockaddr *)ipv6, baddr, sizeof(baddr));
             ipv6 = (struct sockaddr_in6 *)&mask;
             ha = pp->getNetmask();
             memcpy(&ipv6->sin6_addr, &ha, sizeof(ipv6->sin6_addr));
             ipv6->sin6_family = AF_INET6;
-            Socket::getaddress((struct sockaddr *)ipv4, bmask, sizeof(bmask));
+            Socket::query((struct sockaddr *)ipv4, bmask, sizeof(bmask));
             break;
 #endif
         case AF_INET:
@@ -657,18 +657,18 @@ void server::listPolicy(FILE *fp)
             ha = pp->getNetwork();
             memcpy(&ipv4->sin_addr, &ha, sizeof(ipv4->sin_addr));
             ipv4->sin_family = AF_INET;
-            Socket::getaddress((struct sockaddr *)ipv4, baddr, sizeof(baddr));
+            Socket::query((struct sockaddr *)ipv4, baddr, sizeof(baddr));
             ipv4 = (struct sockaddr_in *)&mask;
             ha = pp->getNetmask();
             memcpy(&ipv4->sin_addr, &ha, sizeof(ipv4->sin_addr));
             ipv4->sin_family = AF_INET;
-            Socket::getaddress((struct sockaddr *)ipv4, bmask, sizeof(bmask));
+            Socket::query((struct sockaddr *)ipv4, bmask, sizeof(bmask));
             break;
         default:
             String::set(baddr, sizeof(baddr), "?");
             String::set(bmask, sizeof(bmask), "?");
         }
-        Socket::getaddress(pp->getInterface(), buf, sizeof(buf));
+        Socket::query(pp->getInterface(), buf, sizeof(buf));
         if(pp->offline())
             fprintf(fp, "offline %s; interface=%s, %s/%s\n", id, buf, baddr, bmask);
         else
@@ -1244,7 +1244,7 @@ invalid:
                 continue;
             struct sockaddr_storage peer;
             service::published(&peer);
-            Socket::getaddress((struct sockaddr *)&peer, buf, sizeof(buf));
+            Socket::query((struct sockaddr *)&peer, buf, sizeof(buf));
             if(service::getInterface())
                 fprintf(out, "binding to %s:%u\n", service::getInterface(), service::getPort());
             else

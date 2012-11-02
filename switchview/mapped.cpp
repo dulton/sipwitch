@@ -58,7 +58,7 @@ static void paddress(char *buffer, size_t size, struct sockaddr_internet *a1, st
     if(!a1)
         return;
 
-    Socket::getaddress((struct sockaddr *)a1, buf, sizeof(buf));
+    Socket::query((struct sockaddr *)a1, buf, sizeof(buf));
     switch(a1->address.sa_family) {
     case AF_INET:
         p1 = (unsigned)ntohs(a1->ipv4.sin_port);
@@ -94,7 +94,7 @@ static void paddress(char *buffer, size_t size, struct sockaddr_internet *a1, st
     if(!a2 || !p2)
         return;
 
-    Socket::getaddress((struct sockaddr *)a2, buf, sizeof(buf));
+    Socket::query((struct sockaddr *)a2, buf, sizeof(buf));
     snprintf(buffer, size, "%s:%u\n", buf, p2);
 }
 

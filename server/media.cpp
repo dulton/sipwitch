@@ -413,7 +413,7 @@ invalid:
     else
         reconnect();
 
-    Socket::getaddress((struct sockaddr *)&peering, ap, len - 8);
+    Socket::query((struct sockaddr *)&peering, ap, len - 8);
     String::add(buffer, len, ttl);
 }
 

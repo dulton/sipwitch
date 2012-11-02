@@ -112,14 +112,14 @@ cidr(acl, ifaddr(addr, id), id)
     default:
         return;
     }
-    Socket::getaddress((struct sockaddr *)&us.dest, buf, sizeof(buf));
+    Socket::query((struct sockaddr *)&us.dest, buf, sizeof(buf));
 
-    if(Socket::getinterface((struct sockaddr *)&iface, (struct sockaddr *)&us.dest))
+    if(Socket::network((struct sockaddr *)&iface, (struct sockaddr *)&us.dest))
         memset(&iface, 0, sizeof(iface));
     // gateway special rule to specify a gateway public interface...
     else if(eq(id, "gateway")) {
         String::set(netname, sizeof(netname), "*");
-        Socket::getaddress((struct sockaddr *)&iface, buf, sizeof(buf));
+        Socket::query((struct sockaddr *)&iface, buf, sizeof(buf));
         service::publish(buf);
     }
     // if interface outside cidr...?
@@ -635,7 +635,7 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 {
     assert(iface != NULL && dest != NULL);
 
-    Socket::getinterface(iface, dest);
+    Socket::network(iface, dest);
     switch(iface->sa_family) {
     case AF_INET:
         ((struct sockaddr_in*)(iface))->sin_port = htons(sip_port);
@@ -1107,7 +1107,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
     }
 
     len = strlen(buf);
-    Socket::getaddress((struct sockaddr *)addr, buf + len, size - len);
+    Socket::query((struct sockaddr *)addr, buf + len, size - len);
     if(ipv6)
         snprintf(pbuf, sizeof(pbuf), "]:%u", port);
     else

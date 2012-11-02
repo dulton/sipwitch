@@ -93,9 +93,9 @@ void scripting::activating(MappedRegistry *rr)
     if(!dirpath)
         return;
 
-    Socket::getaddress((struct sockaddr *)&rr->contact, addr, sizeof(addr));
+    Socket::query((struct sockaddr *)&rr->contact, addr, sizeof(addr));
     control::libexec("%s/sipup %s %d %s:%d %d", dirpath, rr->userid, rr->ext,
-        addr, Socket::getservice((struct sockaddr *)&rr->contact),
+        addr, Socket::service((struct sockaddr *)&rr->contact),
         (int)(rr->type - MappedRegistry::EXPIRED));
 }
 
