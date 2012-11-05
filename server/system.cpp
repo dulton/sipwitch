@@ -214,7 +214,7 @@ namespace SIPWITCH_NAMESPACE {
 
 static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = NULL)
 {
-    secure::init("sipwitch");
+    secure::init();
 
     bool daemon = true;
     const char *cp;
