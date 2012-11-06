@@ -330,7 +330,7 @@ bool Events::isAdmin(void)
 {
     string_t path = shell::path(shell::SYSTEM_VAR, CONTROL_PATH);
 
-    if(fsys::access(*path, W_OK) == 0)
+    if(fsys::is_writable(*path))
         return true;
 
     return false;
