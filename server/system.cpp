@@ -552,7 +552,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     fsys::createDir(prefix, 0770);
     fsys::createDir(args.getsym("cache"), 0770);
 
-    if(fsys::changeDir(prefix))
+    if(fsys::prefix(prefix))
         shell::errexit(3, "*** sipwitch: %s: %s\n",
             prefix, _TEXT("data directory unavailable"));
 
