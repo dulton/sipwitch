@@ -140,7 +140,7 @@ PROGRAM_MAIN(argc, argv)
     snprintf(replace, sizeof(replace), "%s:%s\n", user, *digestbuf);
 
     // create work directory if it does not exist
-    fsys::createDir(DEFAULT_VARPATH "/lib/sipwitch", 0770);
+    fsys::create(DEFAULT_VARPATH "/lib/sipwitch", 0770);
 
     // make sure always created root only
     fsys::create(fs, DEFAULT_VARPATH "/lib/sipwitch/digests.db",
