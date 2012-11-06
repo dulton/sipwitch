@@ -947,12 +947,12 @@ static void grant(char **argv)
     else
         shell::errexit(2, "*** sipwitch: grant: %s: unknown group", argv[1]);
 
-    fsys::fileinfo(DEFAULT_VARPATH "/lib/sipwitch", &ino);
+    fsys::info(DEFAULT_VARPATH "/lib/sipwitch", &ino);
     chmod(DEFAULT_VARPATH "/lib/sipwitch", ino.st_mode | 070);
     if(chown(DEFAULT_VARPATH "/lib/sipwitch", ino.st_uid, gid))
         shell::errexit(2, "*** sipwitch: grant: %s: cannot change owner", argv[1]);
 
-    fsys::fileinfo(DEFAULT_VARPATH "/cache/sipwitch", &ino);
+    fsys::info(DEFAULT_VARPATH "/cache/sipwitch", &ino);
     chmod(DEFAULT_VARPATH "/cache/sipwitch", ino.st_mode | 070);
     if(chown(DEFAULT_VARPATH "/cache/sipwitch", ino.st_uid, gid))
         shell::errexit(2, "*** sipwitch: grant: %s: cannot change owner", argv[1]);
