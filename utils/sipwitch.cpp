@@ -67,7 +67,7 @@ static void capture(void)
 
     snprintf(buffer, sizeof(buffer), "/tmp/.sipwitch.%ld", (long)getpid());
     fp = fopen(buffer, "r");
-    remove(buffer);
+    fsys::erase(buffer);
     while(fp && fgets(buffer, sizeof(buffer), fp) != NULL)
         fputs(buffer, stdout);
     if(fp)
@@ -1004,7 +1004,7 @@ static void disable(char **argv)
 
     while(*(++argv)) {
         snprintf(target, sizeof(target), "%s/lib/sipwitch/%s.xml", DEFAULT_VARPATH, *argv);
-        fsys::remove(target);
+        fsys::erase(target);
     }
     exit(0);
 }

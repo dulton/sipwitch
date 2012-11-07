@@ -224,7 +224,7 @@ bool server::create(const char *id, keynode *node)
 
 void server::confirm(void)
 {
-    fsys_t dir;
+    dirsys_t dir;
     keynode *access = getPath("access");
     char *id = NULL, *secret = NULL;
     const char *ext;
@@ -304,9 +304,9 @@ void server::confirm(void)
     if(!dirpath)
         dirpath = control::env("prefix");
 #endif
-    fsys::open(dir, dirpath, fsys::DIRECTORY);
+    dir::open(dir, dirpath);
     shell::log(DEBUG1, "scanning config from %s", dirpath);
-    while(is(dir) && fsys::read(dir, filename, sizeof(filename)) > 0) {
+    while(is(dir) && dir::read(dir, filename, sizeof(filename)) > 0) {
         ext = strrchr(filename, '.');
         if(!ext || !String::equal(ext, ".xml"))
             continue;
@@ -333,7 +333,7 @@ void server::confirm(void)
         }
     }
 
-    fsys::close(dir);
+    dir::close(dir);
 
     mp = (caddr_t)alloc(sizeof(stack::subnet));
     new(mp) stack::subnet(&acl, "127.0.0.0/8", "loopback");
@@ -1008,7 +1008,7 @@ void server::plugins(const char *prefix, const char *list)
     char *tp = NULL;
     const char *cp;
     fsys    module;
-    fsys    dir;
+    dirsys_t    dir;
     char *ep;
     unsigned el;
 
@@ -1018,8 +1018,8 @@ void server::plugins(const char *prefix, const char *list)
     if(eq(list, "auto") || eq(list, "all")) {
         String::set(path, sizeof(path), prefix);
         el = strlen(path);
-        fsys::open(dir, path, fsys::DIRECTORY);
-        while(is(dir) && fsys::read(dir, buffer, sizeof(buffer)) > 0) {
+        dir::open(dir, path);
+        while(is(dir) && dir::read(dir, buffer, sizeof(buffer)) > 0) {
             ep = strrchr(buffer, '.');
             if(!ep || !eq(ep, MODULE_EXT))
                 continue;
@@ -1030,7 +1030,7 @@ void server::plugins(const char *prefix, const char *list)
             if(fsys::load(path))
                 shell::log(shell::ERR, "failed loading %s", path);
         }
-        fsys::close(dir);
+        dir::close(dir);
     }
     else {
         String::set(buffer, sizeof(buffer), list);
