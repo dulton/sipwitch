@@ -91,11 +91,11 @@ cidr(acl, ifaddr(addr, id), id)
     }
 
     memset(&us.dest, 0, sizeof(us.dest));
-    us.in.sin_family = family;
-    switch(family) {
+    us.in.sin_family = Family;
+    switch(Family) {
     case AF_INET:
         us.in.sin_port = htons(1);
-        memcpy(&us.in.sin_addr, &network, sizeof(us.in.sin_addr));
+        memcpy(&us.in.sin_addr, &Network, sizeof(us.in.sin_addr));
         lp = ((unsigned char *)(&us.in.sin_addr)) + sizeof(us.in.sin_addr) - 1;
         if(bits < 31)
             ++*lp;
@@ -103,7 +103,7 @@ cidr(acl, ifaddr(addr, id), id)
 #ifdef  AF_INET6
     case AF_INET6:
         us.in6.sin6_port = htons(1);
-        memcpy(&us.in6.sin6_addr, &network, sizeof(us.in6.sin6_addr));
+        memcpy(&us.in6.sin6_addr, &Network, sizeof(us.in6.sin6_addr));
         lp = ((unsigned char *)(&us.in6.sin6_addr)) + sizeof(us.in6.sin6_addr) - 1;
         if(bits < 127)
             ++*lp;
