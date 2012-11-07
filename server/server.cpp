@@ -1332,7 +1332,7 @@ void server::printlog(const char *fmt, ...)
 
     va_start(vargs, fmt);
 
-    fsys::open(log, control::env("logfile"), fsys::ACCESS_APPEND, 0660);
+    fsys::open(log, control::env("logfile"), 0660, fsys::ACCESS_APPEND);
     vsnprintf(buf, sizeof(buf) - 1, fmt, vargs);
     len = strlen(buf);
     if(buf[len - 1] != '\n')

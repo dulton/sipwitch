@@ -294,7 +294,7 @@ static void realm(char **argv)
         snprintf(replace, sizeof(replace), "%s:%s", realm, mode);
 
     ::remove(DEFAULT_CFGPATH "/siprealm");
-    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_WRONLY, 0644);
+    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", 0664, fsys::ACCESS_WRONLY);
     if(is(fs)) {
         fsys::write(fs, replace, strlen(replace));
         fsys::close(fs);

@@ -551,7 +551,7 @@ void registry::reload(service *cfg)
         Random::uuid(buffer);
         String::add(buffer, sizeof(buffer), ":");
         String::add(buffer, sizeof(buffer), digest);
-        fsys::open(fs, "uuid", fsys::ACCESS_WRONLY, 0444);
+        fsys::open(fs, "uuid", 0440, fsys::ACCESS_WRONLY);
         if(is(fs)) {
             fsys::write(fs, buffer, sizeof(buffer));
             fsys::close(fs);

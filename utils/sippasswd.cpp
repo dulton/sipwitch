@@ -143,8 +143,8 @@ PROGRAM_MAIN(argc, argv)
     fsys::create(DEFAULT_VARPATH "/lib/sipwitch", 0770);
 
     // make sure always created root only
-    fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/digests.db",
-        fsys::ACCESS_RDONLY, 0600);
+    fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/digests.db", 0600,
+        fsys::ACCESS_RDONLY);
     fsys::close(fs);
 
     fp = fopen(DEFAULT_VARPATH "/lib/sipwitch/digests.db", "r+");
