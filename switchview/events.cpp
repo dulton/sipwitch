@@ -83,11 +83,11 @@ static bool server_control(const char *cmd)
     fsys_t fs;
     string_t path = shell::path(shell::SYSTEM_VAR, CONTROL_PATH);
 
-    fs.open(*path, fsys::ACCESS_WRONLY);
+    fs.open(*path, fsys::WRONLY);
 #if !defined(_MSWINDOWS_)
     if(!is(fs)) {
         string_t path = str("/tmp/sipwitch-") + shell::userid();
-        fs.open(path, fsys::ACCESS_WRONLY);
+        fs.open(path, fsys::WRONLY);
     }
 #endif
     if(!is(fs))

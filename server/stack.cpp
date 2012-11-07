@@ -316,7 +316,7 @@ void stack::siplog(osip_message_t *msg)
 
     osip_message_to_str(msg, &text, &tlen);
     if(text) {
-        fsys::open(log, control::env("siplogs"), fsys::GROUP_PRIVATE, fsys::ACCESS_APPEND);
+        fsys::open(log, control::env("siplogs"), fsys::GROUP_PRIVATE, fsys::APPEND);
         if(is(log)) {
             Mutex::protect(&stack::sip.dumping);
             fsys::write(log, text, tlen);

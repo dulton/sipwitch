@@ -94,10 +94,10 @@ PROGRAM_MAIN(argc, argv)
 #endif
 
     fsys_t fs;
-    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
 
     if(!is(fs))
-        fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
+        fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
 
     if(!is(fs))
         shell::errexit(4, "*** sippasswd: no realm active\n");
@@ -144,7 +144,7 @@ PROGRAM_MAIN(argc, argv)
 
     // make sure always created root only
     fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/digests.db", fsys::OWNER_PRIVATE,
-        fsys::ACCESS_RDONLY);
+        fsys::RDONLY);
     fsys::close(fs);
 
     fp = fopen(DEFAULT_VARPATH "/lib/sipwitch/digests.db", "r+");

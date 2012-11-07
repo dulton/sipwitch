@@ -150,9 +150,9 @@ static void showrealm(void)
     fsys_t fs;
     char buffer[256];
 
-    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
     if(!is(fs))
-        fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
+        fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
 
     if(!is(fs))
 error:
@@ -202,9 +202,9 @@ static void compute(char **argv)
     }
     else {
         fsys_t fs;
-        fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+        fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
         if(!is(fs))
-            fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
+            fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
 
         if(!is(fs))
             shell::errexit(4, "*** sipwitch: digest: no public realm known\n");
@@ -259,7 +259,7 @@ static void realm(char **argv)
     if(!mode)
         mode = "md5";
 
-    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
     memset(buffer, 0, sizeof(buffer));
     if(is(fs)) {
         fsys::read(fs, buffer, sizeof(buffer) - 1);
@@ -294,7 +294,7 @@ static void realm(char **argv)
         snprintf(replace, sizeof(replace), "%s:%s", realm, mode);
 
     ::remove(DEFAULT_CFGPATH "/siprealm");
-    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::GROUP_PUBLIC, fsys::ACCESS_WRONLY);
+    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::GROUP_PUBLIC, fsys::WRONLY);
     if(is(fs)) {
         fsys::write(fs, replace, strlen(replace));
         fsys::close(fs);

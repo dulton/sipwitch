@@ -523,9 +523,9 @@ void registry::reload(service *cfg)
     char *cp;
 
     if(!getuid() || !realm)
-        fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+        fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
     if(!is(fs) && !realm)
-        fsys::open(fs, "uuid", fsys::ACCESS_RDONLY);
+        fsys::open(fs, "uuid", fsys::RDONLY);
     if(is(fs)) {
         memset(buffer, 0, sizeof(buffer));
         fsys::read(fs, buffer, sizeof(buffer) - 1);
@@ -551,7 +551,7 @@ void registry::reload(service *cfg)
         Random::uuid(buffer);
         String::add(buffer, sizeof(buffer), ":");
         String::add(buffer, sizeof(buffer), digest);
-        fsys::open(fs, "uuid", 0440, fsys::ACCESS_WRONLY);
+        fsys::open(fs, "uuid", 0440, fsys::WRONLY);
         if(is(fs)) {
             fsys::write(fs, buffer, sizeof(buffer));
             fsys::close(fs);

@@ -248,7 +248,7 @@ void control::reply(const char *msg)
             snprintf(buffer, sizeof(buffer), "%s msg %s\n", sid, msg);
         else
             snprintf(buffer, sizeof(buffer), "%s ok\n", sid);
-        fd.open(replytarget, fsys::ACCESS_WRONLY);
+        fd.open(replytarget, fsys::WRONLY);
         if(is(fd)) {
             fd.write(buffer, strlen(buffer));
             fd.close();

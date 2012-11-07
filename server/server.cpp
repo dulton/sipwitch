@@ -304,7 +304,7 @@ void server::confirm(void)
     if(!dirpath)
         dirpath = control::env("prefix");
 #endif
-    fsys::open(dir, dirpath, fsys::ACCESS_DIRECTORY);
+    fsys::open(dir, dirpath, fsys::DIRECTORY);
     shell::log(DEBUG1, "scanning config from %s", dirpath);
     while(is(dir) && fsys::read(dir, filename, sizeof(filename)) > 0) {
         ext = strrchr(filename, '.');
@@ -1018,7 +1018,7 @@ void server::plugins(const char *prefix, const char *list)
     if(eq(list, "auto") || eq(list, "all")) {
         String::set(path, sizeof(path), prefix);
         el = strlen(path);
-        fsys::open(dir, path, fsys::ACCESS_DIRECTORY);
+        fsys::open(dir, path, fsys::DIRECTORY);
         while(is(dir) && fsys::read(dir, buffer, sizeof(buffer)) > 0) {
             ep = strrchr(buffer, '.');
             if(!ep || !eq(ep, MODULE_EXT))
@@ -1332,7 +1332,7 @@ void server::printlog(const char *fmt, ...)
 
     va_start(vargs, fmt);
 
-    fsys::open(log, control::env("logfile"), fsys::GROUP_PRIVATE, fsys::ACCESS_APPEND);
+    fsys::open(log, control::env("logfile"), fsys::GROUP_PRIVATE, fsys::APPEND);
     vsnprintf(buf, sizeof(buf) - 1, fmt, vargs);
     len = strlen(buf);
     if(buf[len - 1] != '\n')
