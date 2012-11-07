@@ -890,7 +890,7 @@ void server::dump(FILE *fp)
 
     fprintf(fp, "Server:\n");
     fprintf(fp, "  allocated pages: %d\n", server::allocate());
-    fprintf(fp, "  configure pages: %d\n", cfg->getPages());
+    fprintf(fp, "  configure pages: %d\n", cfg->pages());
     fprintf(fp, "  memory paging:   %ld\n", (long)PAGING_SIZE);
     keynode *reg = getPath("registry");
     if(reg && reg->getFirst()) {
@@ -975,7 +975,7 @@ void server::reload(void)
 
 unsigned server::allocate(void)
 {
-    return mempool.getPages();
+    return mempool.pages();
 }
 
 caddr_t server::allocate(size_t size, LinkedObject **list, volatile unsigned *count)
