@@ -466,7 +466,7 @@ static void cgilock(void)
     char buf[65];
 
 retry:
-    fd = open(DEFAULT_VARPATH "/run/sipwitch/cgilock", O_CREAT|O_WRONLY|O_TRUNC|O_EXCL, fsys::FILE_OWNER_PUBLIC);
+    fd = open(DEFAULT_VARPATH "/run/sipwitch/cgilock", O_CREAT|O_WRONLY|O_TRUNC|O_EXCL, fsys::OWNER_PUBLIC);
     if(fd < 0) {
         opid = pidfile();
         if(!opid || opid == 1) {

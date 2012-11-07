@@ -548,9 +548,9 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 
 #endif
 
-    fsys::create(rundir, fsys::DIR_GROUP_PUBLIC);
-    fsys::create(prefix, fsys::DIR_GROUP_PRIVATE);
-    fsys::create(args.getsym("cache"), fsys::DIR_GROUP_PRIVATE);
+    fsys::create(rundir, fsys::GROUP_PUBLIC);
+    fsys::create(prefix, fsys::GROUP_PRIVATE);
+    fsys::create(args.getsym("cache"), fsys::GROUP_PRIVATE);
 
     if(fsys::prefix(prefix))
         shell::errexit(3, "*** sipwitch: %s: %s\n",

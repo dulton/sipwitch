@@ -63,7 +63,7 @@ size_t control::attach(shell_t *envp)
 
     String::set(fifopath, sizeof(fifopath), env("control"));
     remove(fifopath);
-    if(mkfifo(fifopath, fsys::FILE_GROUP_PRIVATE)) {
+    if(mkfifo(fifopath, fsys::GROUP_PRIVATE)) {
         fifopath[0] = 0;
         return 0;
     }
