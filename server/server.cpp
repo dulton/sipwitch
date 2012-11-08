@@ -1027,7 +1027,7 @@ void server::plugins(const char *prefix, const char *list)
                 continue;
             snprintf(path + el, sizeof(path) - el, "/%s", buffer);
             shell::log(shell::INFO, "loading %s%s", buffer, MODULE_EXT);
-            if(fsys::load(path))
+            if(dso::load(path))
                 shell::log(shell::ERR, "failed loading %s", path);
         }
         dir::close(dir);
@@ -1037,7 +1037,7 @@ void server::plugins(const char *prefix, const char *list)
         while(NULL != (cp = String::token(buffer, &tp, ", ;:\r\n"))) {
             snprintf(path, sizeof(path), "%s/%s%s", prefix, cp, MODULE_EXT);
             shell::log(shell::INFO, "loading %s" MODULE_EXT, cp);
-            if(fsys::load(path))
+            if(dso::load(path))
                 shell::log(shell::ERR, "failed loading %s", path);
         }
     }
