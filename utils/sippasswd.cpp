@@ -94,17 +94,17 @@ PROGRAM_MAIN(argc, argv)
 #endif
 
     fsys_t fs;
-    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
+    fs.open(DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
 
     if(!is(fs))
-        fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
+        fs.open(DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
 
     if(!is(fs))
         shell::errexit(4, "*** sippasswd: no realm active\n");
 
     memset(buffer, 0, sizeof(buffer));
-    fsys::read(fs, buffer, sizeof(buffer) - 1);
-    fsys::close(fs);
+    fs.read(buffer, sizeof(buffer) - 1);
+    fs.close();
 
     char *cp = strchr(buffer, '\n');
     if(cp)
@@ -143,9 +143,9 @@ PROGRAM_MAIN(argc, argv)
     dir::create(DEFAULT_VARPATH "/lib/sipwitch", fsys::GROUP_PRIVATE);
 
     // make sure always created root only
-    fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/digests.db", fsys::OWNER_PRIVATE,
+    fs.open(DEFAULT_VARPATH "/lib/sipwitch/digests.db", fsys::OWNER_PRIVATE,
         fsys::RDONLY);
-    fsys::close(fs);
+    fs.close();
 
     fp = fopen(DEFAULT_VARPATH "/lib/sipwitch/digests.db", "r+");
     if(!fp)

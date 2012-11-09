@@ -150,17 +150,17 @@ static void showrealm(void)
     fsys_t fs;
     char buffer[256];
 
-    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
+    fs.open(DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
     if(!is(fs))
-        fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
+        fs.open(DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
 
     if(!is(fs))
 error:
         shell::errexit(1, "*** sipwitch: realm: no public realm known\n");
 
     memset(buffer, 0, sizeof(buffer));
-    fsys::read(fs, buffer, sizeof(buffer) - 1);
-    fsys::close(fs);
+    fs.read(buffer, sizeof(buffer) - 1);
+    fs.close();
 
     char *cp = strchr(buffer, '\n');
     if(cp)
@@ -202,16 +202,16 @@ static void compute(char **argv)
     }
     else {
         fsys_t fs;
-        fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
+        fs.open(DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
         if(!is(fs))
-            fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
+            fs.open(DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
 
         if(!is(fs))
             shell::errexit(4, "*** sipwitch: digest: no public realm known\n");
 
         memset(buffer, 0, sizeof(buffer));
-        fsys::read(fs, buffer, sizeof(buffer) - 1);
-        fsys::close(fs);
+        fs.read(buffer, sizeof(buffer) - 1);
+        fs.close();
 
         char *cp = strchr(buffer, '\n');
         if(cp)
@@ -259,11 +259,11 @@ static void realm(char **argv)
     if(!mode)
         mode = "md5";
 
-    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
+    fs.open(DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
     memset(buffer, 0, sizeof(buffer));
     if(is(fs)) {
-        fsys::read(fs, buffer, sizeof(buffer) - 1);
-        fsys::close(fs);
+        fs.read(buffer, sizeof(buffer) - 1);
+        fs.close();
         cp = strchr(buffer, ':');
         if(cp)
             *(cp++) = 0;
@@ -294,10 +294,10 @@ static void realm(char **argv)
         snprintf(replace, sizeof(replace), "%s:%s", realm, mode);
 
     ::remove(DEFAULT_CFGPATH "/siprealm");
-    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::GROUP_PUBLIC, fsys::WRONLY);
+    fs.open(DEFAULT_CFGPATH "/siprealm", fsys::GROUP_PUBLIC, fsys::WRONLY);
     if(is(fs)) {
-        fsys::write(fs, replace, strlen(replace));
-        fsys::close(fs);
+        fs.write(replace, strlen(replace));
+        fs.close();
     }
     else
         shell::errexit(3, "*** sipwitch: realm: root permission required\n");

@@ -316,13 +316,13 @@ void stack::siplog(osip_message_t *msg)
 
     osip_message_to_str(msg, &text, &tlen);
     if(text) {
-        fsys::open(log, control::env("siplogs"), fsys::GROUP_PRIVATE, fsys::APPEND);
+        log.open(control::env("siplogs"), fsys::GROUP_PRIVATE, fsys::APPEND);
         if(is(log)) {
             Mutex::protect(&stack::sip.dumping);
-            fsys::write(log, text, tlen);
-            fsys::write(log, "---\n\n", 5);
+            log.write(text, tlen);
+            log.write("---\n\n", 5);
             Mutex::release(&stack::sip.dumping);
-            fsys::close(log);
+            log.close();
         }
         osip_free(text);
     }

@@ -304,9 +304,9 @@ void server::confirm(void)
     if(!dirpath)
         dirpath = control::env("prefix");
 #endif
-    dir::open(dir, dirpath);
+    dir.open(dirpath);
     shell::log(DEBUG1, "scanning config from %s", dirpath);
-    while(is(dir) && dir::read(dir, filename, sizeof(filename)) > 0) {
+    while(is(dir) && dir.read(filename, sizeof(filename)) > 0) {
         ext = strrchr(filename, '.');
         if(!ext || !String::equal(ext, ".xml"))
             continue;
@@ -333,7 +333,7 @@ void server::confirm(void)
         }
     }
 
-    dir::close(dir);
+    dir.close();
 
     mp = (caddr_t)alloc(sizeof(stack::subnet));
     new(mp) stack::subnet(&acl, "127.0.0.0/8", "loopback");
@@ -1018,8 +1018,8 @@ void server::plugins(const char *prefix, const char *list)
     if(eq(list, "auto") || eq(list, "all")) {
         String::set(path, sizeof(path), prefix);
         el = strlen(path);
-        dir::open(dir, path);
-        while(is(dir) && dir::read(dir, buffer, sizeof(buffer)) > 0) {
+        dir.open(path);
+        while(is(dir) && dir.read(buffer, sizeof(buffer)) > 0) {
             ep = strrchr(buffer, '.');
             if(!ep || !eq(ep, MODULE_EXT))
                 continue;
@@ -1030,7 +1030,7 @@ void server::plugins(const char *prefix, const char *list)
             if(fsys::load(path))
                 shell::log(shell::ERR, "failed loading %s", path);
         }
-        dir::close(dir);
+        dir.close();
     }
     else {
         String::set(buffer, sizeof(buffer), list);
@@ -1332,15 +1332,15 @@ void server::printlog(const char *fmt, ...)
 
     va_start(vargs, fmt);
 
-    fsys::open(log, control::env("logfile"), fsys::GROUP_PRIVATE, fsys::APPEND);
+    log.open(control::env("logfile"), fsys::GROUP_PRIVATE, fsys::APPEND);
     vsnprintf(buf, sizeof(buf) - 1, fmt, vargs);
     len = strlen(buf);
     if(buf[len - 1] != '\n')
         buf[len++] = '\n';
 
     if(is(log)) {
-        fsys::write(log, buf, strlen(buf));
-        fsys::close(log);
+        log.write(buf, strlen(buf));
+        log.close();
     }
     cp = strchr(buf, '\n');
     if(cp)

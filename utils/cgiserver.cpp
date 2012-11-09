@@ -1337,14 +1337,14 @@ static void server_realm(void)
     if(params.argc != 0)
         fault(3, "Invalid Parameters");
 
-    fsys::open(fd, DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
+    fd.open(DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
     if(!is(fd))
-        fsys::open(fd, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
+        fd.open(DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
 
     if(is(fd)) {
         memset(realm, 0, sizeof(realm));
-        fsys::read(fd, realm, sizeof(realm) - 1);
-        fsys::close(fd);
+        fd.read(realm, sizeof(realm) - 1);
+        fd.close();
 
         char *cp = strchr(realm, '\n');
         if(cp)
