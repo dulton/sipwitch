@@ -224,7 +224,7 @@ bool server::create(const char *id, keynode *node)
 
 void server::confirm(void)
 {
-    dirsys_t dir;
+    dir_t dir;
     keynode *access = getPath("access");
     char *id = NULL, *secret = NULL;
     const char *ext;
@@ -1008,7 +1008,7 @@ void server::plugins(const char *prefix, const char *list)
     char *tp = NULL;
     const char *cp;
     fsys    module;
-    dirsys_t    dir;
+    dir_t   dir;
     char *ep;
     unsigned el;
 
