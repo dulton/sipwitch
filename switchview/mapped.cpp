@@ -124,7 +124,7 @@ static void remapStats(void)
 
     while(index < count) {
         statmap_t   &sta = *mapped_stats;
-        sta.copy(index++, &map);
+        sta.copy(index++, map);
 
         if(!map.id[0])
             break;
@@ -193,7 +193,7 @@ static void remapCalls(void)
 
     while(index < count) {
         callmap_t   &calls = *mapped_calls;
-        calls.copy(index++, &map);
+        calls.copy(index++, map);
 
         if(!map.created || !map.source[0])
             continue;
@@ -245,7 +245,7 @@ static void remapUsers(void)
     row = 0;
     while(index < count) {
         usermap_t   &reg = *mapped_users;
-        reg.copy(index++, &buffer);
+        reg.copy(index++, buffer);
 
         if(buffer.type == MappedRegistry::EXPIRED)
             continue;

@@ -1044,7 +1044,7 @@ static void call_instance(void)
 
     time(&now);
     while(index < count) {
-        cr.copy(index++, &map);
+        cr.copy(index++, map);
         if(!map.created)
             continue;
 
@@ -1085,7 +1085,7 @@ static void call_range(void)
     response(buffer, size, "^[");
 
     while(index < count) {
-        cr.copy(index++, &map);
+        cr.copy(index++, map);
 
         if(!map.created)
             continue;
@@ -1116,7 +1116,7 @@ static void stat_periodic(void)
         fault(2, "Server Offline");
 
     while(index < count) {
-        sta.copy(index++, &map);
+        sta.copy(index++, map);
         if(!eq(map.id, cid))
             continue;
 
@@ -1148,7 +1148,7 @@ static void stat_instance(void)
         fault(2, "Server Offline");
 
     while(index < count) {
-        sta.copy(index++, &map);
+        sta.copy(index++, map);
         if(!eq(map.id, cid))
             continue;
 
@@ -1180,7 +1180,7 @@ static void stat_range(void)
     response(buffer, size, "^[");
 
     while(index < count) {
-        sta.copy(index++, &map);
+        sta.copy(index++, map);
         if(!map.id[0])
             continue;
 
@@ -1213,7 +1213,7 @@ static void user_instance(void)
 
     time(&now);
     while(index < count) {
-        reg.copy(index++, &map);
+        reg.copy(index++, map);
 
         if(map.type != MappedRegistry::USER && map.type != MappedRegistry::SERVICE)
             continue;
@@ -1275,7 +1275,7 @@ static void user_range(void)
     time(&now);
 
     while(index < count) {
-        reg.copy(index++, &map);
+        reg.copy(index++, map);
 
         if(map.type != MappedRegistry::USER && map.type != MappedRegistry::SERVICE)
             continue;
@@ -1646,7 +1646,6 @@ static void dumpcalls(const char *id)
     mapped_view<MappedCall> calls(CALL_MAP);
     unsigned count = calls.count();
     unsigned index = 0;
-    volatile const MappedCall *member;
     MappedCall buffer;
     char idbuf[32];
     time_t now;
@@ -1664,11 +1663,8 @@ static void dumpcalls(const char *id)
     time(&now);
 
     while(index < count) {
-        member = (const volatile MappedCall *)(calls(index++));
-        do {
-            memcpy(&buffer, (const void *)member, sizeof(buffer));
-        } while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
-        if(!member->created)
+        calls.copy(index++, buffer);
+        if(!buffer.created)
             continue;
 
         snprintf(idbuf, sizeof(idbuf), "%08x:%u", buffer.sequence, buffer.cid);
@@ -1693,7 +1689,6 @@ static void dumpstats(const char *id)
     mapped_view<stats> sta(STAT_MAP);
     unsigned count = sta.count();
     unsigned index = 0;
-    volatile const stats *member;
     stats buffer;
     time_t now;
 
@@ -1710,13 +1705,10 @@ static void dumpstats(const char *id)
     time(&now);
 
     while(index < count) {
-        member = (const volatile stats *)(sta(index++));
-        do {
-            memcpy(&buffer, (const void *)member, sizeof(buffer));
-        } while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
-        if(!member->id[0])
+        sta.copy(index++, buffer);
+        if(!buffer.id[0])
             continue;
-        if(id && !String::equal(id, buffer.id))
+        if(id && !eq(id, buffer.id))
             continue;
         printf(" <stat id=\"%s\">\n", buffer.id);
         printf("  <incoming>\n");
@@ -1743,7 +1735,6 @@ static void registry(const char *id)
     mapped_view<MappedRegistry> reg(REGISTRY_MAP);
     unsigned count = reg.count();
     unsigned index = 0;
-    volatile const MappedRegistry *member;
     MappedRegistry buffer;
     time_t now;
     struct tm *dt;
@@ -1763,10 +1754,7 @@ static void registry(const char *id)
     printf("<mappedRegistry>\n");
     time(&now);
     while(index < count) {
-        member = (const volatile MappedRegistry *)(reg(index++));
-        do {
-            memcpy(&buffer, (const void *)member, sizeof(buffer));
-        } while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
+        reg.copy(index++, buffer);
         if(buffer.type == MappedRegistry::EXPIRED)
             continue;
         else if(buffer.type == MappedRegistry::TEMPORARY && !buffer.inuse)

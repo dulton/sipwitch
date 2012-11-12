@@ -81,7 +81,7 @@ public:
     /**
      * Definition of a xml node.
      */
-    typedef treemap<char *>keynode;
+    typedef treemap<char *> keynode;
 
     /**
      * Dialing mode supported.  Whether by extension, userid, or both.

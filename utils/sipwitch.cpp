@@ -569,7 +569,7 @@ static void dumpstats(char **argv)
 
     time(&now);
     while(index < count) {
-        sta.copy(index++, &map);
+        sta.copy(index++, map);
         if(!map.id[0])
             continue;
 
@@ -622,7 +622,7 @@ static void registry(char **argv)
 
     time(&now);
     while(index < count) {
-        reg.copy(index++, &buffer);
+        reg.copy(index++, buffer);
         if(buffer.type == MappedRegistry::EXPIRED)
             continue;
         else if(buffer.type == MappedRegistry::TEMPORARY && !buffer.inuse)
