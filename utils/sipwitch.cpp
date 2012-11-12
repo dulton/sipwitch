@@ -325,7 +325,7 @@ static void status(char **argv)
     mapinit();
 
     mapped_view<MappedCall> calls(*callmap);
-    unsigned count = calls.getCount();
+    unsigned count = calls.count();
     unsigned index = 0;
     const volatile MappedCall *map;
 
@@ -352,7 +352,7 @@ static void calls(char **argv)
     mapinit();
 
     mapped_view<MappedCall> calls(*callmap);
-    unsigned count = calls.getCount();
+    unsigned count = calls.count();
     unsigned index = 0;
     const volatile MappedCall *map;
     time_t now;
@@ -385,7 +385,7 @@ static void periodic(char **argv)
     mapinit();
 
     mapped_view<stats> sta(*statmap);
-    unsigned count = sta.getCount();
+    unsigned count = sta.count();
     unsigned index = 0;
     const volatile stats *map;
 
@@ -559,52 +559,45 @@ static void dumpstats(char **argv)
     mapinit();
 
     mapped_view<stats> sta(*statmap);
-    unsigned count = sta.getCount();
+    unsigned count = sta.count();
     unsigned index = 0;
-    const stats *map;
+    stats map;
     unsigned current;
-    stats buffer;
 
     if(!count)
         shell::errexit(10, "*** sipwitch: stats: offline\n");
 
     time(&now);
     while(index < count) {
-        map = const_cast<const stats *>(sta(index++));
-
-        if(!map->id[0])
+        sta.copy(index++, &map);
+        if(!map.id[0])
             continue;
 
-        do {
-            memcpy(&buffer, map, sizeof(buffer));
-        } while(memcmp(&buffer, map, sizeof(buffer)));
-        map = &buffer;
-
-        if(map->limit)
-            snprintf(text, sizeof(text), "%-12s %05hu", map->id, map->limit);
+        if(map.limit)
+            snprintf(text, sizeof(text), "%-12s %05hu", map.id, map.limit);
         else
-            snprintf(text, sizeof(text), "%-12s -    ", map->id);
+            snprintf(text, sizeof(text), "%-12s -    ", map.id);
 
         for(unsigned entry = 0; entry < 2; ++entry) {
             size_t len = strlen(text);
             snprintf(text + len, sizeof(text) - len, " %09lu %05hu %05hu",
-                map->data[entry].total,
-                map->data[entry].current,
-                map->data[entry].peak);
+                map.data[entry].total,
+                map.data[entry].current,
+                map.data[entry].peak);
         }
-        current = map->data[0].current + map->data[1].current;
+        current = map.data[0].current + map.data[1].current;
         if(current)
             printf("%s 0s\n", text);
-        else if(!map->lastcall)
+        else if(!map.lastcall)
             printf("%s -\n", text);
-        else if(now - map->lastcall > (3600l * 99l))
-            printf("%s %ld%c\n", text, (now - map->lastcall) / (3600l * 24l), 'd');
-        else if(now - map->lastcall > (60l * 120l))
-            printf("%s %ld%c\n", text, (now - map->lastcall) / 3600l, 'h');
-        else if(now - map->lastcall > 120l)
-            printf("%s %ld%c\n", text, (now - map->lastcall) / 60l, 'm');
+        else if(now - map.lastcall > (3600l * 99l))
+            printf("%s %ld%c\n", text, (now - map.lastcall) / (3600l * 24l), 'd');
+        else if(now - map.lastcall > (60l * 120l))
+            printf("%s %ld%c\n", text, (now - map.lastcall) / 3600l, 'h');
+        else if(now - map.lastcall > 120l)
+            printf("%s %ld%c\n", text, (now - map.lastcall) / 60l, 'm');
         else
-            printf("%s %ld%c\n", text, (long)(now - map->lastcall), 's');
+            printf("%s %ld%c\n", text, (long)(now - map.lastcall), 's');
     }
     exit(0);
 }
@@ -614,9 +607,8 @@ static void registry(char **argv)
     mapinit();
 
     mapped_view<MappedRegistry> reg(*regmap);
-    unsigned count = reg.getCount();
+    unsigned count = reg.count();
     unsigned found = 0, index = 0;
-    volatile const MappedRegistry *member;
     MappedRegistry buffer;
     time_t now;
     char ext[8], exp[8], use[8];
@@ -630,10 +622,7 @@ static void registry(char **argv)
 
     time(&now);
     while(index < count) {
-        member = (const volatile MappedRegistry *)(reg(index++));
-        do {
-            memcpy(&buffer, (const void *)member, sizeof(buffer));
-        } while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
+        reg.copy(index++, &buffer);
         if(buffer.type == MappedRegistry::EXPIRED)
             continue;
         else if(buffer.type == MappedRegistry::TEMPORARY && !buffer.inuse)

@@ -211,9 +211,9 @@ registry::mapped *registry::find(const char *id)
 
 unsigned registry::getIndex(mapped *rr)
 {
-    assert((caddr_t)rr >= reg.getStart());
+    assert((caddr_t)rr >= reg.addr());
 
-    unsigned x = (unsigned)(((caddr_t)rr - reg.getStart()) / sizeof(MappedRegistry));
+    unsigned x = (unsigned)(((caddr_t)rr - reg.addr()) / sizeof(MappedRegistry));
     return x;
 }
 

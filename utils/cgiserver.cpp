@@ -97,7 +97,7 @@ static size_t xmlformat(char *dp, size_t max, const char *fmt, ...)
 {
     va_list args;
 
-    if(max < 0)
+    if(max < 1)
         return 0;
 
     va_start(args, fmt);
@@ -1025,7 +1025,7 @@ static void call_instance(void)
     mapped_view<MappedCall> cr(CALL_MAP);
     unsigned index = 0;
     char id[32];
-    MappedCall copy;
+    MappedCall map;
     char buffer[1024];
     rpcint_t diff = 0;
     time_t now;
@@ -1038,34 +1038,28 @@ static void call_instance(void)
         fault(5, "Invalid Command Argument");
 
 
-    unsigned count = cr.getCount();
+    unsigned count = cr.count();
     if(!count)
         fault(2, "Server Offline");
 
     time(&now);
     while(index < count) {
-        const MappedCall *map = const_cast<const MappedCall *>(cr(index++));
-
-        do {
-            memcpy((void *)&copy, map, sizeof(copy));
-        } while(memcmp(&copy, map, sizeof(copy)));
-        map = &copy;
-
-        if(!map->created)
+        cr.copy(index++, &map);
+        if(!map.created)
             continue;
 
-        snprintf(id, sizeof(id), "%08x:%d", map->sequence, map->cid);
-        if(!String::equal(id, cid))
+        snprintf(id, sizeof(id), "%08x:%d", map.sequence, map.cid);
+        if(!eq(id, cid))
             continue;
 
-        if(map->active) {
+        if(map.active) {
             time(&now);
-            diff = (rpcint_t)(now - map->active);
+            diff = (rpcint_t)(now - map.active);
         }
 
         response(buffer, sizeof(buffer), "^(tsssssi)",
-            map->created, map->state + 1, map->authorized,
-            map->source, map->target, map->display, diff);
+            map.created, map.state + 1, map.authorized,
+            map.source, map.target, map.display, diff);
         reply(buffer);
     }
     fault(6, "Unknown Call");
@@ -1077,12 +1071,12 @@ static void call_range(void)
     unsigned size;
     unsigned index = 0;
     char id[32];
-    MappedCall copy;
+    MappedCall map;
 
     if(params.argc != 0)
         fault(3, "Invalid Parameters");
 
-    unsigned count = cr.getCount();
+    unsigned count = cr.count();
     if(!count)
         fault(2, "Server Offline");
 
@@ -1091,17 +1085,12 @@ static void call_range(void)
     response(buffer, size, "^[");
 
     while(index < count) {
-        const MappedCall *map = const_cast<const MappedCall *>(cr(index++));
+        cr.copy(index++, &map);
 
-        do {
-            memcpy(&copy, map, sizeof(copy));
-        } while(memcmp(&copy, map, sizeof(copy)));
-        map = &copy;
-
-        if(!map->created)
+        if(!map.created)
             continue;
 
-        snprintf(id, sizeof(id), "%08x:%d", map->sequence, map->cid);
+        snprintf(id, sizeof(id), "%08x:%d", map.sequence, map.cid);
         response(buffer, size, "!s", buffer);
     }
     response(buffer, size, "]");
@@ -1112,7 +1101,7 @@ static void stat_periodic(void)
 {
     mapped_view<stats> sta(STAT_MAP);
     unsigned index = 0;
-    stats copy;
+    stats map;
     char buffer[1024];
 
     if(params.argc != 1)
@@ -1122,25 +1111,19 @@ static void stat_periodic(void)
     if(!cid || !*cid)
         fault(5, "Invalid Command Argument");
 
-    unsigned count = sta.getCount();
+    unsigned count = sta.count();
     if(!count)
         fault(2, "Server Offline");
 
     while(index < count) {
-        const stats *map = const_cast<const stats *>(sta(index++));
-
-        do {
-            memcpy(&copy, map, sizeof(copy));
-        } while(memcmp(&copy, map, sizeof(copy)));
-        map = &copy;
-
-        if(!String::equal(map->id, cid))
+        sta.copy(index++, &map);
+        if(!eq(map.id, cid))
             continue;
 
         response(buffer, sizeof(buffer), "^(itiiiiii)",
-            (rpcint_t)map->limit, map->lastcall,
-            (rpcint_t)map->data[0].pperiod, (rpcint_t)map->data[0].pmin, (rpcint_t)map->data[0].pmax,
-            (rpcint_t)map->data[1].pperiod, (rpcint_t)map->data[1].pmin, (rpcint_t)map->data[1].pmax);
+            (rpcint_t)map.limit, map.lastcall,
+            (rpcint_t)map.data[0].pperiod, (rpcint_t)map.data[0].pmin, (rpcint_t)map.data[0].pmax,
+            (rpcint_t)map.data[1].pperiod, (rpcint_t)map.data[1].pmin, (rpcint_t)map.data[1].pmax);
         reply(buffer);
     }
     fault(7, "Unknown Stat");
@@ -1150,7 +1133,7 @@ static void stat_instance(void)
 {
     mapped_view<stats> sta(STAT_MAP);
     unsigned index = 0;
-    stats copy;
+    stats map;
     char buffer[1024];
 
     if(params.argc != 1)
@@ -1160,25 +1143,19 @@ static void stat_instance(void)
     if(!cid || !*cid)
         fault(5, "Invalid Command Argument");
 
-    unsigned count = sta.getCount();
+    unsigned count = sta.count();
     if(!count)
         fault(2, "Server Offline");
 
     while(index < count) {
-        const stats *map = const_cast<const stats *>(sta(index++));
-
-        do {
-            memcpy(&copy, map, sizeof(copy));
-        } while(memcmp(&copy, map, sizeof(copy)));
-        map = &copy;
-
-        if(!String::equal(map->id, cid))
+        sta.copy(index++, &map);
+        if(!eq(map.id, cid))
             continue;
 
         response(buffer, sizeof(buffer), "^(itiiiiii)",
-            (rpcint_t)map->limit, map->lastcall,
-            (rpcint_t)map->data[0].total, (rpcint_t)map->data[0].current, (rpcint_t)map->data[0].peak,
-            (rpcint_t)map->data[1].total, (rpcint_t)map->data[1].current, (rpcint_t)map->data[1].peak);
+            (rpcint_t)map.limit, map.lastcall,
+            (rpcint_t)map.data[0].total, (rpcint_t)map.data[0].current, (rpcint_t)map.data[0].peak,
+            (rpcint_t)map.data[1].total, (rpcint_t)map.data[1].current, (rpcint_t)map.data[1].peak);
         reply(buffer);
     }
     fault(7, "Unknown Stat");
@@ -1189,12 +1166,12 @@ static void stat_range(void)
     mapped_view<stats> sta(STAT_MAP);
     unsigned size;
     unsigned index = 0;
-    stats copy;
+    stats map;
 
     if(params.argc != 0)
         fault(3, "Invalid Parameters");
 
-    unsigned count = sta.getCount();
+    unsigned count = sta.count();
     if(!count)
         fault(2, "Server Offline");
 
@@ -1203,17 +1180,11 @@ static void stat_range(void)
     response(buffer, size, "^[");
 
     while(index < count) {
-        const stats *map = const_cast<const stats *>(sta(index++));
-
-        do {
-            memcpy(&copy, map, sizeof(copy));
-        } while(memcmp(&copy, map, sizeof(copy)));
-        map = &copy;
-
-        if(!map->id[0])
+        sta.copy(index++, &map);
+        if(!map.id[0])
             continue;
 
-        response(buffer, size, "!s", map->id);
+        response(buffer, size, "!s", map.id);
     }
     response(buffer, size, "]");
     reply(buffer);
@@ -1224,7 +1195,7 @@ static void user_instance(void)
     mapped_view<MappedRegistry> reg(REGISTRY_MAP);
     unsigned index = 0;
     char ext[48];
-    MappedRegistry copy;
+    MappedRegistry map;
     char buffer[2048];
     time_t now;
     const char *status = "idle";
@@ -1236,37 +1207,32 @@ static void user_instance(void)
     if(!id || !*id)
         fault(5, "Invalid Command Argument");
 
-    unsigned count = reg.getCount();
+    unsigned count = reg.count();
     if(!count)
         fault(2, "Server Offline");
 
     time(&now);
     while(index < count) {
-        const MappedRegistry *map = const_cast<const MappedRegistry *>(reg(index++));
+        reg.copy(index++, &map);
 
-        do {
-            memcpy(&copy, map, sizeof(copy));
-        } while(memcmp(&copy, map, sizeof(copy)));
-        map = &copy;
-
-        if(map->type != MappedRegistry::USER && map->type != MappedRegistry::SERVICE)
+        if(map.type != MappedRegistry::USER && map.type != MappedRegistry::SERVICE)
             continue;
 
-        if(map->expires < now)
+        if(map.expires < now)
             continue;
 
-        if(!String::equal(map->userid, id))
+        if(!eq(map.userid, id))
             continue;
 
-        if(map->ext)
-            snprintf(ext, sizeof(ext), "%u", map->ext);
+        if(map.ext)
+            snprintf(ext, sizeof(ext), "%u", map.ext);
         else
-            String::set(ext, sizeof(ext), map->userid);
+            String::set(ext, sizeof(ext), map.userid);
 
-        if(map->inuse)
+        if(map.inuse)
             status = "busy";
         else
-            switch(map->status) {
+            switch(map.status) {
             case MappedRegistry::AWAY:
                 status = "away";
                 break;
@@ -1281,8 +1247,8 @@ static void user_instance(void)
             }
 
         response(buffer, sizeof(buffer), "^(ssssii)",
-            ext, map->display, map->profile.id, status,
-            (rpcint_t)map->inuse, (rpcint_t)map->profile.level);
+            ext, map.display, map.profile.id, status,
+            (rpcint_t)map.inuse, (rpcint_t)map.profile.level);
         reply(buffer);
     }
     fault(8, "Unknown User");
@@ -1293,12 +1259,12 @@ static void user_range(void)
     mapped_view<MappedRegistry> reg(REGISTRY_MAP);
     unsigned size;
     unsigned index = 0;
-    MappedRegistry copy;
+    MappedRegistry map;
 
     if(params.argc != 0)
         fault(3, "Invalid Parameters");
 
-    unsigned count = reg.getCount();
+    unsigned count = reg.count();
     if(!count)
         fault(2, "Server Offline");
 
@@ -1309,20 +1275,15 @@ static void user_range(void)
     time(&now);
 
     while(index < count) {
-        const MappedRegistry *map = const_cast<const MappedRegistry *>(reg(index++));
+        reg.copy(index++, &map);
 
-        do {
-            memcpy(&copy, map, sizeof(copy));
-        } while(memcmp(&copy, map, sizeof(copy)));
-        map = &copy;
-
-        if(map->type != MappedRegistry::USER && map->type != MappedRegistry::SERVICE)
+        if(map.type != MappedRegistry::USER && map.type != MappedRegistry::SERVICE)
             continue;
 
-        if(map->expires < now)
+        if(map.expires < now)
             continue;
 
-        response(buffer, size, "!s", map->userid);
+        response(buffer, size, "!s", map.userid);
     }
     response(buffer, size, "]");
     reply(buffer);
@@ -1371,7 +1332,7 @@ static void server_status(void)
     if(params.argc != 0)
         fault(3, "Invalid Parameters");
 
-    unsigned count = cr.getCount();
+    unsigned count = cr.count();
     if(!count)
         fault(2, "Server Offline");
 
@@ -1683,7 +1644,7 @@ static void info(void)
 static void dumpcalls(const char *id)
 {
     mapped_view<MappedCall> calls(CALL_MAP);
-    unsigned count = calls.getCount();
+    unsigned count = calls.count();
     unsigned index = 0;
     volatile const MappedCall *member;
     MappedCall buffer;
@@ -1730,7 +1691,7 @@ static void dumpcalls(const char *id)
 static void dumpstats(const char *id)
 {
     mapped_view<stats> sta(STAT_MAP);
-    unsigned count = sta.getCount();
+    unsigned count = sta.count();
     unsigned index = 0;
     volatile const stats *member;
     stats buffer;
@@ -1780,7 +1741,7 @@ static void dumpstats(const char *id)
 static void registry(const char *id)
 {
     mapped_view<MappedRegistry> reg(REGISTRY_MAP);
-    unsigned count = reg.getCount();
+    unsigned count = reg.count();
     unsigned index = 0;
     volatile const MappedRegistry *member;
     MappedRegistry buffer;
