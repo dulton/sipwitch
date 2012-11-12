@@ -71,13 +71,13 @@ void scripting::start(service *cfg)
     static char buf[256];
     const char *home = control::env("HOME");
 
-    if(fsys::isdir(DEFAULT_CFGPATH "/sysconfig/sipwitch-scripts"))
+    if(fsys::is_dir(DEFAULT_CFGPATH "/sysconfig/sipwitch-scripts"))
         dirpath = DEFAULT_CFGPATH "/sysconfig/sipwitch-scripts";
-    else if(fsys::isdir(DEFAULT_LIBEXEC "/sipwitch"))
+    else if(fsys::is_dir(DEFAULT_LIBEXEC "/sipwitch"))
         dirpath = DEFAULT_LIBEXEC "/sipwitch";
     else if(home) {
         snprintf(buf, sizeof(buf), "%s/.sipwitch-scripts", home);
-        if(fsys::isdir(buf))
+        if(fsys::is_dir(buf))
             dirpath = buf;
     }
 
@@ -93,9 +93,9 @@ void scripting::activating(MappedRegistry *rr)
     if(!dirpath)
         return;
 
-    Socket::getaddress((struct sockaddr *)&rr->contact, addr, sizeof(addr));
+    Socket::query((struct sockaddr *)&rr->contact, addr, sizeof(addr));
     control::libexec("%s/sipup %s %d %s:%d %d", dirpath, rr->userid, rr->ext,
-        addr, Socket::getservice((struct sockaddr *)&rr->contact),
+        addr, Socket::service((struct sockaddr *)&rr->contact),
         (int)(rr->type - MappedRegistry::EXPIRED));
 }
 

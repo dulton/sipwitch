@@ -211,9 +211,9 @@ registry::mapped *registry::find(const char *id)
 
 unsigned registry::getIndex(mapped *rr)
 {
-    assert((caddr_t)rr >= reg.getStart());
+    assert((caddr_t)rr >= reg.addr());
 
-    unsigned x = (unsigned)(((caddr_t)rr - reg.getStart()) / sizeof(MappedRegistry));
+    unsigned x = (unsigned)(((caddr_t)rr - reg.addr()) / sizeof(MappedRegistry));
     return x;
 }
 
@@ -299,7 +299,7 @@ void registry::snapshot(FILE *fp)
                 fputc('\n', fp);
             tp = rr->source.internal.targets;
             while(is(tp)) {
-                Socket::getaddress((struct sockaddr *)(&tp->address), buffer, sizeof(buffer));
+                Socket::query((struct sockaddr *)(&tp->address), buffer, sizeof(buffer));
                 fprintf(fp, "    address=%s, contact=%s", buffer, tp->contact);
                 if(tp->expires && tp->expires <= now)
                     fprintf(fp, ", expired");
@@ -374,7 +374,7 @@ bool registry::remove(const char *id)
     if(rr && rr->inuse)
         rtn = false;
     else if(rr) {
-        memcpy(&save, rr, sizeof(save));
+        memcpy((void *)&save, (void *)rr, sizeof(save));
         expire(rr);
     }
     else
@@ -460,7 +460,7 @@ void registry::cleanup(time_t period)
         expired = false;
         time(&now);
         rr = static_cast<mapped*>(reg(regcount++));
-        memcpy(&save, rr, sizeof(save));
+        memcpy((void *)&save, (void *)rr, sizeof(save));
         locking.modify();
         if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires + period < now && !rr->inuse) {
             expire(rr);
@@ -494,7 +494,7 @@ void registry::reload(service *cfg)
         key = sp->getId();
         value = sp->getPointer();
         if(key && value) {
-            if(!stricmp(key, "mapped") && !isConfigured())
+            if(!stricmp(key, "mapped") && !is_configured())
                 mapped_entries = atoi(value);
             else if(!stricmp(key, "digest")) {
                 digest = cfg->dup(value);
@@ -502,15 +502,15 @@ void registry::reload(service *cfg)
             }
             else if(!stricmp(key, "realm"))
                 realm = cfg->dup(value);
-            else if(!stricmp(key, "prefix") && !isConfigured())
+            else if(!stricmp(key, "prefix") && !is_configured())
                 prefix = atoi(value);
-            else if(!stricmp(key, "range") && !isConfigured())
+            else if(!stricmp(key, "range") && !is_configured())
                 range = atoi(value);
-            else if(!stricmp(key, "priorities") && !isConfigured())
+            else if(!stricmp(key, "priorities") && !is_configured())
                 routes = atoi(value);
             else if(!stricmp(key, "expires"))
                 expires = atoi(value);
-            else if(!stricmp(key, "keysize") && !isConfigured())
+            else if(!stricmp(key, "keysize") && !is_configured())
                 keysize = atoi(value);
         }
         sp.next();
@@ -523,13 +523,13 @@ void registry::reload(service *cfg)
     char *cp;
 
     if(!getuid() || !realm)
-        fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+        fs.open(DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
     if(!is(fs) && !realm)
-        fsys::open(fs, "uuid", fsys::ACCESS_RDONLY);
+        fs.open("uuid", fsys::RDONLY);
     if(is(fs)) {
         memset(buffer, 0, sizeof(buffer));
-        fsys::read(fs, buffer, sizeof(buffer) - 1);
-        fsys::close(fs);
+        fs.read(buffer, sizeof(buffer) - 1);
+        fs.close();
 
         cp = strchr(buffer, '\n');
         if(cp)
@@ -551,10 +551,10 @@ void registry::reload(service *cfg)
         Random::uuid(buffer);
         String::add(buffer, sizeof(buffer), ":");
         String::add(buffer, sizeof(buffer), digest);
-        fsys::create(fs, "uuid", fsys::ACCESS_WRONLY, 0444);
+        fs.open("uuid", 0440, fsys::WRONLY);
         if(is(fs)) {
-            fsys::write(fs, buffer, sizeof(buffer));
-            fsys::close(fs);
+            fs.write(buffer, sizeof(buffer));
+            fs.close();
         }
         cp = strchr(buffer, ':');
         if(cp)
@@ -581,7 +581,7 @@ void registry::reload(service *cfg)
     sip_range = range;
     events::realm(realm);
 
-    if(isConfigured())
+    if(is_configured())
         return;
 
     if(range) {
@@ -821,7 +821,7 @@ registry::mapped *registry::allocate(const char *id)
     if(leaf && leaf->getPointer())
         ext = atoi(leaf->getPointer());
 
-    if(rr->isProfiled()) {
+    if(rr->is_profiled()) {
         pro = NULL;
         leaf = node->leaf("profile");
         if(leaf)
@@ -1122,7 +1122,7 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
     if(!ai)
         return 0;
 
-    len = Socket::getlen(ai);
+    len = Socket::len(ai);
 
     locking.exclusive();
     tp = source.internal.targets;
@@ -1309,7 +1309,7 @@ bool registry::mapped::expire(Socket::address& saddr)
     if(!active_count) {
         registry::mapped save;
         Mutex::protect(this);
-        memcpy(&save, this, sizeof(save));
+        memcpy((void *)&save, (void *)this, sizeof(save));
         type = MappedRegistry::EXPIRED;
         expires = 0;
         Mutex::release(this);
@@ -1327,7 +1327,7 @@ void registry::mapped::update(Socket::address& saddr, int changed)
 
     time(&now);
 
-    if(changed == registry::target::UNKNOWN || !saddr.getAddr() || !expires || expires < now || !isUser())
+    if(changed == registry::target::UNKNOWN || !saddr.getAddr() || !expires || expires < now || !is_user())
         return;
 
     tp = source.internal.targets;
@@ -1399,7 +1399,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
     if(lease > expires)
         expires = lease;
 
-    len = Socket::getlen(ai);
+    len = Socket::len(ai);
     time(&now);
     while(tp) {
         if(tp->expires < now)
@@ -1486,7 +1486,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
     source.internal.targets = NULL;
     count = 0;
     while(al) {
-        len = Socket::getlen(al->ai_addr);
+        len = Socket::len(al->ai_addr);
 
         tp = new target;
         time(&tp->created);

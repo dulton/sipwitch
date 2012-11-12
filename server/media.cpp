@@ -396,7 +396,7 @@ void media::sdp::check_connect(char *buffer, size_t len)
     else
         ttl[0] = 0;
 
-    if(!Socket::isNumeric(ap)) {
+    if(!Socket::is_numeric(ap)) {
 invalid:
         *cp = '/';
         return;
@@ -413,7 +413,7 @@ invalid:
     else
         reconnect();
 
-    Socket::getaddress((struct sockaddr *)&peering, ap, len - 8);
+    Socket::query((struct sockaddr *)&peering, ap, len - 8);
     String::add(buffer, len, ttl);
 }
 
@@ -444,7 +444,7 @@ void media::reload(service *cfg)
 {
     assert(cfg != NULL);
 
-    if(isConfigured())
+    if(is_configured())
         return;
 
     baseport = sip_port + 2;

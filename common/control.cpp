@@ -63,7 +63,7 @@ size_t control::attach(shell_t *envp)
 
     String::set(fifopath, sizeof(fifopath), env("control"));
     remove(fifopath);
-    if(mkfifo(fifopath, 0660)) {
+    if(mkfifo(fifopath, fsys::GROUP_PRIVATE)) {
         fifopath[0] = 0;
         return 0;
     }
@@ -248,7 +248,7 @@ void control::reply(const char *msg)
             snprintf(buffer, sizeof(buffer), "%s msg %s\n", sid, msg);
         else
             snprintf(buffer, sizeof(buffer), "%s ok\n", sid);
-        fd.open(replytarget, fsys::ACCESS_WRONLY);
+        fd.open(replytarget, fsys::WRONLY);
         if(is(fd)) {
             fd.write(buffer, strlen(buffer));
             fd.close();
@@ -354,7 +354,7 @@ bool control::state(const char *state)
     char buf[256], buf1[256];
 
     String::set(buf, sizeof(buf), _STR(path("prefix") + "/states/" + state + ".xml"));
-    if(!fsys::isfile(buf))
+    if(!fsys::is_file(buf))
         return false;
     String::set(buf1, sizeof(buf1), _STR(path("prefix") + "state.xml"));
     remove(buf1);

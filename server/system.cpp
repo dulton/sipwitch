@@ -214,7 +214,7 @@ namespace SIPWITCH_NAMESPACE {
 
 static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = NULL)
 {
-    secure::init("sipwitch");
+    secure::init();
 
     bool daemon = true;
     const char *cp;
@@ -330,13 +330,13 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
         args.setsym("regmap", _STR(str(REGISTRY_MAP "-") + str(pwd->pw_name)));
 
         cp = userpath(*configpath);
-        if(is(configpath) && fsys::isfile(cp))
+        if(is(configpath) && fsys::is_file(cp))
             args.setsym("config", cp);
         else
             args.setsym("config", _STR(str(pwd->pw_dir) + "/.sipwitchrc"));
 
         cp = userpath(*cachepath);
-        if(is(cachepath) && fsys::isdir(cp))
+        if(is(cachepath) && fsys::is_dir(cp))
             args.setsym("cache", cp);
         else
             args.setsym("cache", _STR(str(rundir) + "/cache"));
@@ -353,7 +353,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 
 
         cp = userpath(*prefixpath);
-        if(is(prefixpath) && fsys::isdir(cp))
+        if(is(prefixpath) && fsys::is_dir(cp))
             args.setsym("prefix", cp);
         else
             args.setsym("prefix", prefix);
@@ -548,11 +548,11 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 
 #endif
 
-    fsys::createDir(rundir, 0775);
-    fsys::createDir(prefix, 0770);
-    fsys::createDir(args.getsym("cache"), 0770);
+    dir::create(rundir, fsys::GROUP_PUBLIC);
+    dir::create(prefix, fsys::GROUP_PRIVATE);
+    dir::create(args.getsym("cache"), fsys::GROUP_PRIVATE);
 
-    if(fsys::changeDir(prefix))
+    if(fsys::prefix(prefix))
         shell::errexit(3, "*** sipwitch: %s: %s\n",
             prefix, _TEXT("data directory unavailable"));
 

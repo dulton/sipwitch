@@ -90,7 +90,7 @@ void messages::reload(service *cfg)
         key = sp->getId();
         value = sp->getPointer();
         if(key && value) {
-            if(!stricmp(key, "keysize") && !isConfigured())
+            if(!stricmp(key, "keysize") && !is_configured())
                 keysize = atoi(value);
             else if(!stricmp(key, "expires"))
                 duration = atoi(value) * 60;
@@ -98,7 +98,7 @@ void messages::reload(service *cfg)
         sp.next();
     }
 
-    if(isConfigured())
+    if(is_configured())
         return;
 
     msgs = new LinkedObject*[keysize];

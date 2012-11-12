@@ -166,7 +166,7 @@ bool uri::resolve(const char *sipuri, char *buffer, size_t size)
             port = atoi(cp);
         }
     }
-    if(Socket::isNumeric(buffer)) {
+    if(Socket::is_numeric(buffer)) {
         if(!port)
             port = 5060;
     }
@@ -175,8 +175,8 @@ bool uri::resolve(const char *sipuri, char *buffer, size_t size)
         resolver.set(buffer, port);
         address = resolver.getAddr();
         if(address) {
-            Socket::getaddress(address, buffer, size);
-            port = Socket::getservice(address);
+            Socket::query(address, buffer, size);
+            port = Socket::service(address);
             if(!port)
                 port = 5060;
         }
@@ -235,6 +235,6 @@ void uri::identity(struct sockaddr *addr, char *buf, const char *user, size_t si
     }
 
     len = strlen(buf);
-    Socket::getaddress(addr, buf + len, size - len);
+    Socket::query(addr, buf + len, size - len);
 }
 

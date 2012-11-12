@@ -302,9 +302,9 @@ void forward::activating(MappedRegistry *rr)
         snprintf(reg, sizeof(reg), "sip:%s", server);
         snprintf(contact, sizeof(contact), "sip:%s@", rr->remote);
         len = strlen(contact);
-        Socket::getaddress((struct sockaddr *)&rr->contact, contact + len, sizeof(contact) - len);
+        Socket::query((struct sockaddr *)&rr->contact, contact + len, sizeof(contact) - len);
         len = strlen(contact);
-        snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::getservice((struct sockaddr *)&rr->contact));
+        snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::service((struct sockaddr *)&rr->contact));
         shell::debug(3, "registering %s with %s", contact, server);
         rr->rid = modules::create_registration(uri, reg, contact, (int)expires);
         if(rr->rid != -1)
@@ -324,9 +324,9 @@ bool forward::announce(MappedRegistry *rr, const char *msgtype, const char *even
     snprintf(uri_to, sizeof(uri_to), "sip:%s@%s", rr->userid, server);
     snprintf(contact, sizeof(contact), "sip:%s@", rr->remote);
     len = strlen(contact);
-    Socket::getaddress((struct sockaddr *)&rr->contact, contact + len, sizeof(contact) - len);
+    Socket::query((struct sockaddr *)&rr->contact, contact + len, sizeof(contact) - len);
     len = strlen(contact);
-    snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::getservice((struct sockaddr *)&rr->contact));
+    snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::service((struct sockaddr *)&rr->contact));
     shell::debug(3, "publishing %s with %s", contact, server);
 
     modules::publish(uri_to, contact, event, expiration, msgtype, body);

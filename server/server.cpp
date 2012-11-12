@@ -224,7 +224,7 @@ bool server::create(const char *id, keynode *node)
 
 void server::confirm(void)
 {
-    fsys_t dir;
+    dir_t dir;
     keynode *access = getPath("access");
     char *id = NULL, *secret = NULL;
     const char *ext;
@@ -304,9 +304,9 @@ void server::confirm(void)
     if(!dirpath)
         dirpath = control::env("prefix");
 #endif
-    fsys::open(dir, dirpath, fsys::ACCESS_DIRECTORY);
+    dir.open(dirpath);
     shell::log(DEBUG1, "scanning config from %s", dirpath);
-    while(is(dir) && fsys::read(dir, filename, sizeof(filename)) > 0) {
+    while(is(dir) && dir.read(filename, sizeof(filename)) > 0) {
         ext = strrchr(filename, '.');
         if(!ext || !String::equal(ext, ".xml"))
             continue;
@@ -333,7 +333,7 @@ void server::confirm(void)
         }
     }
 
-    fsys::close(dir);
+    dir.close();
 
     mp = (caddr_t)alloc(sizeof(stack::subnet));
     new(mp) stack::subnet(&acl, "127.0.0.0/8", "loopback");
@@ -554,7 +554,7 @@ void server::confirm(void)
         temp = clone->getFirst();
         while(is(temp)) {
             clone = (keyclone *)alloc(sizeof(keynode));
-            memcpy(clone, *temp, sizeof(keynode));
+            memcpy((void *)clone, (void *)*temp, sizeof(keynode));
             clone->splice(entry);
             temp.next();
         }
@@ -644,12 +644,12 @@ void server::listPolicy(FILE *fp)
             ha = pp->getNetwork();
             memcpy(&ipv6->sin6_addr, &ha, sizeof(ipv6->sin6_addr));
             ipv6->sin6_family = AF_INET6;
-            Socket::getaddress((struct sockaddr *)ipv6, baddr, sizeof(baddr));
+            Socket::query((struct sockaddr *)ipv6, baddr, sizeof(baddr));
             ipv6 = (struct sockaddr_in6 *)&mask;
             ha = pp->getNetmask();
             memcpy(&ipv6->sin6_addr, &ha, sizeof(ipv6->sin6_addr));
             ipv6->sin6_family = AF_INET6;
-            Socket::getaddress((struct sockaddr *)ipv4, bmask, sizeof(bmask));
+            Socket::query((struct sockaddr *)ipv4, bmask, sizeof(bmask));
             break;
 #endif
         case AF_INET:
@@ -657,18 +657,18 @@ void server::listPolicy(FILE *fp)
             ha = pp->getNetwork();
             memcpy(&ipv4->sin_addr, &ha, sizeof(ipv4->sin_addr));
             ipv4->sin_family = AF_INET;
-            Socket::getaddress((struct sockaddr *)ipv4, baddr, sizeof(baddr));
+            Socket::query((struct sockaddr *)ipv4, baddr, sizeof(baddr));
             ipv4 = (struct sockaddr_in *)&mask;
             ha = pp->getNetmask();
             memcpy(&ipv4->sin_addr, &ha, sizeof(ipv4->sin_addr));
             ipv4->sin_family = AF_INET;
-            Socket::getaddress((struct sockaddr *)ipv4, bmask, sizeof(bmask));
+            Socket::query((struct sockaddr *)ipv4, bmask, sizeof(bmask));
             break;
         default:
             String::set(baddr, sizeof(baddr), "?");
             String::set(bmask, sizeof(bmask), "?");
         }
-        Socket::getaddress(pp->getInterface(), buf, sizeof(buf));
+        Socket::query(pp->getInterface(), buf, sizeof(buf));
         if(pp->offline())
             fprintf(fp, "offline %s; interface=%s, %s/%s\n", id, buf, baddr, bmask);
         else
@@ -890,7 +890,7 @@ void server::dump(FILE *fp)
 
     fprintf(fp, "Server:\n");
     fprintf(fp, "  allocated pages: %d\n", server::allocate());
-    fprintf(fp, "  configure pages: %d\n", cfg->getPages());
+    fprintf(fp, "  configure pages: %d\n", cfg->pages());
     fprintf(fp, "  memory paging:   %ld\n", (long)PAGING_SIZE);
     keynode *reg = getPath("registry");
     if(reg && reg->getFirst()) {
@@ -975,7 +975,7 @@ void server::reload(void)
 
 unsigned server::allocate(void)
 {
-    return mempool.getPages();
+    return mempool.pages();
 }
 
 caddr_t server::allocate(size_t size, LinkedObject **list, volatile unsigned *count)
@@ -1008,29 +1008,29 @@ void server::plugins(const char *prefix, const char *list)
     char *tp = NULL;
     const char *cp;
     fsys    module;
-    fsys    dir;
+    dir_t   dir;
     char *ep;
     unsigned el;
 
-    if(!list || !*list || !stricmp(list, "none"))
+    if(!list || !*list || eq(list, "none"))
         return;
 
-    if(case_eq(list, "auto") || case_eq(list, "all")) {
+    if(eq(list, "auto") || eq(list, "all")) {
         String::set(path, sizeof(path), prefix);
         el = strlen(path);
-        fsys::open(dir, path, fsys::ACCESS_DIRECTORY);
-        while(is(dir) && fsys::read(dir, buffer, sizeof(buffer)) > 0) {
+        dir.open(path);
+        while(is(dir) && dir.read(buffer, sizeof(buffer)) > 0) {
             ep = strrchr(buffer, '.');
-            if(!ep || !case_eq(ep, MODULE_EXT))
+            if(!ep || !eq(ep, MODULE_EXT))
                 continue;
-            if(case_eq(buffer, "lib", 3))
+            if(eq(buffer, "lib", 3))
                 continue;
             snprintf(path + el, sizeof(path) - el, "/%s", buffer);
             shell::log(shell::INFO, "loading %s%s", buffer, MODULE_EXT);
             if(fsys::load(path))
                 shell::log(shell::ERR, "failed loading %s", path);
         }
-        fsys::close(dir);
+        dir.close();
     }
     else {
         String::set(buffer, sizeof(buffer), list);
@@ -1069,42 +1069,42 @@ void server::run(void)
 
         logtime.set();
 
-        if(ieq(cp, "reload")) {
+        if(eq(cp, "reload")) {
             printlog("server reloading %s\n", (const char *)logtime);
             reload();
             continue;
         }
 
-        if(ieq(cp, "check")) {
+        if(eq(cp, "check")) {
             if(!check())
                 control::reply("check failed");
             continue;
         }
 
-        if(ieq(cp, "stop") || ieq(cp, "down") || ieq(cp, "exit"))
+        if(eq(cp, "stop") || eq(cp, "down") || eq(cp, "exit"))
             break;
 
-        if(ieq(cp, "restart")) {
+        if(eq(cp, "restart")) {
             exit_code = SIGABRT;
             break;
         }
 
-        if(ieq(cp, "snapshot")) {
+        if(eq(cp, "snapshot")) {
             service::snapshot();
             continue;
         }
 
-        if(ieq(cp, "usercache")) {
+        if(eq(cp, "usercache")) {
             cache::userdump();
             continue;
         }
 
-        if(ieq(cp, "dump")) {
+        if(eq(cp, "dump")) {
             service::dumpfile();
             continue;
         }
 
-        if(ieq(cp, "contact")) {
+        if(eq(cp, "contact")) {
             FILE *out = control::output(NULL);
             string_t tmp = service::getContact();
             fprintf(out, "%s\n", *tmp);
@@ -1112,7 +1112,7 @@ void server::run(void)
             continue;
         }
 
-        if(ieq(cp, "siplog")) {
+        if(eq(cp, "siplog")) {
             FILE *out = control::output(NULL);
             if(!out)
                 continue;
@@ -1131,7 +1131,7 @@ void server::run(void)
             continue;
         }
 
-        if(ieq(cp, "abort")) {
+        if(eq(cp, "abort")) {
             abort();
             continue;
         }
@@ -1145,7 +1145,7 @@ void server::run(void)
         if(argc < 1)
             continue;
 
-        if(ieq(argv[0], "ifup")) {
+        if(eq(argv[0], "ifup")) {
             if(argc != 2)
                 goto invalid;
             printlog("server reloading %s\n", (const char *)logtime);
@@ -1153,7 +1153,7 @@ void server::run(void)
             continue;
         }
 
-        if(ieq(argv[0], "ifdown")) {
+        if(eq(argv[0], "ifdown")) {
             if(argc != 2)
                 goto invalid;
             printlog("server reloading %s\n", (const char *)logtime);
@@ -1161,13 +1161,13 @@ void server::run(void)
             continue;
         }
 
-        if(ieq(argv[0], "drop")) {
+        if(eq(argv[0], "drop")) {
             if(argc != 2)
                 goto invalid;
             continue;
         }
 
-        if(ieq(argv[0], "trace")) {
+        if(eq(argv[0], "trace")) {
             if(argc != 2)
                 goto invalid;
             if(!stricmp(argv[1], "on"))
@@ -1181,7 +1181,7 @@ void server::run(void)
             continue;
         }
 
-        if(ieq(argv[0], "uid")) {
+        if(eq(argv[0], "uid")) {
             if(argc != 2) {
 invalid:
                 control::reply("invalid argument");
@@ -1193,7 +1193,7 @@ invalid:
             continue;
         }
 
-        if(ieq(argv[0], "history")) {
+        if(eq(argv[0], "history")) {
             if(argc > 2)
                 goto invalid;
             else if(argc == 2)
@@ -1203,14 +1203,14 @@ invalid:
             continue;
         }
 
-        if(ieq(argv[0], "verbose")) {
+        if(eq(argv[0], "verbose")) {
             if(argc != 2)
                 goto invalid;
 
             shell::log("sipwitch", (shell::loglevel_t)(atoi(argv[1])), logmode);            continue;
         }
 
-        if(ieq(argv[0], "digest")) {
+        if(eq(argv[0], "digest")) {
             if(argc != 3)
                 goto invalid;
 
@@ -1219,7 +1219,7 @@ invalid:
             continue;
         }
 
-        if(ieq(argv[0], "realm")) {
+        if(eq(argv[0], "realm")) {
             if(argc != 2)
                 goto invalid;
 
@@ -1228,7 +1228,7 @@ invalid:
             continue;
         }
 
-        if(ieq(argv[0], "period")) {
+        if(eq(argv[0], "period")) {
             if(argc != 2)
                 goto invalid;
             if(service::period(atol(argv[1])))
@@ -1236,7 +1236,7 @@ invalid:
             continue;
         }
 
-        if(ieq(argv[0], "policy") || ieq(argv[0], "network")) {
+        if(eq(argv[0], "policy") || eq(argv[0], "network")) {
             if(argc != 1)
                 goto invalid;
             FILE *out = control::output(NULL);
@@ -1244,7 +1244,7 @@ invalid:
                 continue;
             struct sockaddr_storage peer;
             service::published(&peer);
-            Socket::getaddress((struct sockaddr *)&peer, buf, sizeof(buf));
+            Socket::query((struct sockaddr *)&peer, buf, sizeof(buf));
             if(service::getInterface())
                 fprintf(out, "binding to %s:%u\n", service::getInterface(), service::getPort());
             else
@@ -1257,7 +1257,7 @@ invalid:
             continue;
         }
 
-        if(ieq(argv[0], "address")) {
+        if(eq(argv[0], "address")) {
             if(argc != 2)
                 goto invalid;
             state = String::unquote(argv[1], "\"\"\'\'()[]{}");
@@ -1266,7 +1266,7 @@ invalid:
             continue;
         }
 
-        if(ieq(argv[0], "state")) {
+        if(eq(argv[0], "state")) {
             if(argc != 2)
                 goto invalid;
             state = String::unquote(argv[1], "\"\"\'\'()[]{}");
@@ -1284,14 +1284,14 @@ invalid:
             continue;
         }
 
-        if(ieq(argv[0], "concurrency")) {
+        if(eq(argv[0], "concurrency")) {
             if(argc != 2)
                 goto invalid;
             Thread::concurrency(atoi(argv[1]));
             continue;
         }
 
-        if(ieq(argv[0], "message")) {
+        if(eq(argv[0], "message")) {
             if(argc != 3)
                 goto invalid;
             if(messages::system(argv[1], argv[2]) != SIP_OK)
@@ -1299,13 +1299,13 @@ invalid:
             continue;
         }
 
-        if(ieq(argv[0], "activate")) {
+        if(eq(argv[0], "activate")) {
             if(!activating(argc, argv))
                 control::reply("cannot activate");
             continue;
         }
 
-        if(ieq(argv[0], "release")) {
+        if(eq(argv[0], "release")) {
             if(argc != 2)
                 goto invalid;
             if(!registry::remove(argv[1]))
@@ -1332,15 +1332,15 @@ void server::printlog(const char *fmt, ...)
 
     va_start(vargs, fmt);
 
-    fsys::create(log, control::env("logfile"), fsys::ACCESS_APPEND, 0660);
+    log.open(control::env("logfile"), fsys::GROUP_PRIVATE, fsys::APPEND);
     vsnprintf(buf, sizeof(buf) - 1, fmt, vargs);
     len = strlen(buf);
     if(buf[len - 1] != '\n')
         buf[len++] = '\n';
 
     if(is(log)) {
-        fsys::write(log, buf, strlen(buf));
-        fsys::close(log);
+        log.write(buf, strlen(buf));
+        log.close();
     }
     cp = strchr(buf, '\n');
     if(cp)

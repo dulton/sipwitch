@@ -91,11 +91,11 @@ cidr(acl, ifaddr(addr, id), id)
     }
 
     memset(&us.dest, 0, sizeof(us.dest));
-    us.in.sin_family = family;
-    switch(family) {
+    us.in.sin_family = Family;
+    switch(Family) {
     case AF_INET:
         us.in.sin_port = htons(1);
-        memcpy(&us.in.sin_addr, &network, sizeof(us.in.sin_addr));
+        memcpy(&us.in.sin_addr, &Network, sizeof(us.in.sin_addr));
         lp = ((unsigned char *)(&us.in.sin_addr)) + sizeof(us.in.sin_addr) - 1;
         if(bits < 31)
             ++*lp;
@@ -103,7 +103,7 @@ cidr(acl, ifaddr(addr, id), id)
 #ifdef  AF_INET6
     case AF_INET6:
         us.in6.sin6_port = htons(1);
-        memcpy(&us.in6.sin6_addr, &network, sizeof(us.in6.sin6_addr));
+        memcpy(&us.in6.sin6_addr, &Network, sizeof(us.in6.sin6_addr));
         lp = ((unsigned char *)(&us.in6.sin6_addr)) + sizeof(us.in6.sin6_addr) - 1;
         if(bits < 127)
             ++*lp;
@@ -112,18 +112,18 @@ cidr(acl, ifaddr(addr, id), id)
     default:
         return;
     }
-    Socket::getaddress((struct sockaddr *)&us.dest, buf, sizeof(buf));
+    Socket::query((struct sockaddr *)&us.dest, buf, sizeof(buf));
 
-    if(Socket::getinterface((struct sockaddr *)&iface, (struct sockaddr *)&us.dest))
+    if(Socket::via((struct sockaddr *)&iface, (struct sockaddr *)&us.dest))
         memset(&iface, 0, sizeof(iface));
     // gateway special rule to specify a gateway public interface...
     else if(eq(id, "gateway")) {
         String::set(netname, sizeof(netname), "*");
-        Socket::getaddress((struct sockaddr *)&iface, buf, sizeof(buf));
+        Socket::query((struct sockaddr *)&iface, buf, sizeof(buf));
         service::publish(buf);
     }
     // if interface outside cidr...?
-    else if(!isMember((struct sockaddr *)&iface)) {
+    else if(!is_member((struct sockaddr *)&iface)) {
         String::set(netname, sizeof(netname), "*");
         service::published(&iface);
     }
@@ -316,13 +316,13 @@ void stack::siplog(osip_message_t *msg)
 
     osip_message_to_str(msg, &text, &tlen);
     if(text) {
-        fsys::create(log, control::env("siplogs"), fsys::ACCESS_APPEND, 0660);
+        log.open(control::env("siplogs"), fsys::GROUP_PRIVATE, fsys::APPEND);
         if(is(log)) {
             Mutex::protect(&stack::sip.dumping);
-            fsys::write(log, text, tlen);
-            fsys::write(log, "---\n\n", 5);
+            log.write(text, tlen);
+            log.write("---\n\n", 5);
             Mutex::release(&stack::sip.dumping);
-            fsys::close(log);
+            log.close();
         }
         osip_free(text);
     }
@@ -635,7 +635,7 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
 {
     assert(iface != NULL && dest != NULL);
 
-    Socket::getinterface(iface, dest);
+    Socket::via(iface, dest);
     switch(iface->sa_family) {
     case AF_INET:
         ((struct sockaddr_in*)(iface))->sin_port = htons(sip_port);
@@ -760,7 +760,11 @@ void stack::start(service *cfg)
     }
 #endif
 
+#if UCOMMON_ABI > 5
+    Socket::query(sip_family);
+#else
     Socket::family(sip_family);
+#endif
 
     if(eXosip_listen_addr(OPTION_CONTEXT sip_protocol, iface, sip_port, sip_family, sip_tlsmode)) {
 #ifdef  AF_INET6
@@ -862,9 +866,9 @@ void stack::reload(service *cfg)
         key = sp->getId();
         value = sp->getPointer();
         if(key && value) {
-            if(eq(key, "threading") && !isConfigured())
+            if(eq(key, "threading") && !is_configured())
                 threading = atoi(value);
-            else if(eq(key, "priority") && !isConfigured())
+            else if(eq(key, "priority") && !is_configured())
                 priority = atoi(value);
             else if(eq(key, "timing"))
                 timing = atoi(value);
@@ -874,9 +878,9 @@ void stack::reload(service *cfg)
                 outgoing = tobool(value);
             else if(eq(key, "trace") || eq(key, "dumping"))
                 dumping = tobool(value);
-            else if(eq(key, "keysize") && !isConfigured())
+            else if(eq(key, "keysize") && !is_configured())
                 keysize = atoi(value);
-            else if(eq(key, "interface") && !isConfigured()) {
+            else if(eq(key, "interface") && !is_configured()) {
                 sip_family = AF_INET;
                 sip_iface = NULL;
 #ifdef  AF_INET6
@@ -889,13 +893,13 @@ void stack::reload(service *cfg)
                     value = strdup(value);
                 sip_iface = value;
             }
-            else if(eq(key, "send101") && !isConfigured() && tobool(value))
+            else if(eq(key, "send101") && !is_configured() && tobool(value))
                 send101 = 0;
-            else if(eq(key, "keepalive") && !isConfigured()) {
+            else if(eq(key, "keepalive") && !is_configured()) {
                 val = atoi(value);
                 eXosip_set_option(OPTION_CONTEXT EXOSIP_OPT_UDP_KEEP_ALIVE, &val);
             }
-            else if(eq(key, "learn") && !isConfigured()) {
+            else if(eq(key, "learn") && !is_configured()) {
                 val = tobool(value);
                 eXosip_set_option(OPTION_CONTEXT EXOSIP_OPT_UDP_LEARN_PORT, &val);
             }
@@ -925,25 +929,25 @@ void stack::reload(service *cfg)
                 service::publish(value);
             else if(eq(key, "proxy") || eq(key, "outbound"))
                 new_proxy = cfg->dup(value);
-            else if(eq(key, "agent") && !isConfigured())
+            else if(eq(key, "agent") && !is_configured())
                 agent = value;
-            else if(eq(key, "port") && !isConfigured())
+            else if(eq(key, "port") && !is_configured())
                 sip_port = atoi(value);
-            else if(eq(key, "mapped") && !isConfigured())
+            else if(eq(key, "mapped") && !is_configured())
                 mapped_calls = atoi(value);
-            else if(eq(key, "password") && !isConfigured())
+            else if(eq(key, "password") && !is_configured())
                 sip_tlspwd = strdup(value);
-            else if(eq(key, "keyfile") && !isConfigured())
+            else if(eq(key, "keyfile") && !is_configured())
                 sip_tlskey = strdup(value);
-            else if(eq(key, "random") && !isConfigured())
+            else if(eq(key, "random") && !is_configured())
                 sip_tlsdev = strdup(value);
-            else if(eq(key, "certfile") && !isConfigured())
+            else if(eq(key, "certfile") && !is_configured())
                 sip_tlscert = strdup(value);
-            else if(eq(key, "dhfile") && !isConfigured())
+            else if(eq(key, "dhfile") && !is_configured())
                 sip_tlsdh = strdup(value);
-            else if(eq(key, "authfile") && !isConfigured())
+            else if(eq(key, "authfile") && !is_configured())
                 sip_tlsca = strdup(value);
-            else if(eq(key, "transport") && !isConfigured()) {
+            else if(eq(key, "transport") && !is_configured()) {
                 if(eq(value, "tcp") || eq(value, "tls"))
                     sip_protocol = IPPROTO_TCP;
                 if(eq(value, "tls"))
@@ -1103,7 +1107,7 @@ char *stack::sipAddress(struct sockaddr_internet *addr, char *buf, const char *u
     }
 
     len = strlen(buf);
-    Socket::getaddress((struct sockaddr *)addr, buf + len, size - len);
+    Socket::query((struct sockaddr *)addr, buf + len, size - len);
     if(ipv6)
         snprintf(pbuf, sizeof(pbuf), "]:%u", port);
     else

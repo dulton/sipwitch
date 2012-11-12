@@ -81,7 +81,7 @@ public:
     /**
      * Definition of a xml node.
      */
-    typedef treemap<char *>keynode;
+    typedef treemap<char *> keynode;
 
     /**
      * Dialing mode supported.  Whether by extension, userid, or both.
@@ -216,10 +216,10 @@ public:
         inline static char *dup(service *cfgp, const char *s)
             {return cfgp->dup(s);};
 
-        inline static bool isConfigured(void)
+        inline static bool is_configured(void)
             {return service::cfg != NULL;};
 
-        inline bool isActive(void) const
+        inline bool is_active(void) const
             {return active_flag;};
 
         virtual void cdrlog(cdr *call);
@@ -265,18 +265,6 @@ public:
 
     inline static LinkedObject *getModules(void)
         {return service::callback::runlevels[3];};
-
-    inline static bool isLinked(keynode *node)
-        {return node->isLeaf();};
-
-    inline static bool isValue(keynode *node)
-        {return (node->getPointer() != NULL);};
-
-    inline static bool isUndefined(keynode *node)
-        {return !isLinked(node) && !isValue(node);};
-
-    inline static bool isNode(keynode *node)
-        {return isLinked(node) && isValue(node);};
 
     /**
      * Set and publish public "appearing" address of the server.  This

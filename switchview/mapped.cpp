@@ -58,7 +58,7 @@ static void paddress(char *buffer, size_t size, struct sockaddr_internet *a1, st
     if(!a1)
         return;
 
-    Socket::getaddress((struct sockaddr *)a1, buf, sizeof(buf));
+    Socket::query((struct sockaddr *)a1, buf, sizeof(buf));
     switch(a1->address.sa_family) {
     case AF_INET:
         p1 = (unsigned)ntohs(a1->ipv4.sin_port);
@@ -94,7 +94,7 @@ static void paddress(char *buffer, size_t size, struct sockaddr_internet *a1, st
     if(!a2 || !p2)
         return;
 
-    Socket::getaddress((struct sockaddr *)a2, buf, sizeof(buf));
+    Socket::query((struct sockaddr *)a2, buf, sizeof(buf));
     snprintf(buffer, size, "%s:%u\n", buf, p2);
 }
 
@@ -103,7 +103,6 @@ static void remapStats(void)
     QTableWidget *table = ui.statsTable;
     unsigned count = 0;
     unsigned index = 0;
-    const volatile stats *member;
     stats map;
     time_t now;
     int row;
@@ -118,17 +117,14 @@ static void remapStats(void)
         table->removeRow(row);
 
     if(mapped_calls)
-        count = mapped_calls->getCount();
+        count = mapped_calls->count();
 
     time(&now);
     row = 0;
 
     while(index < count) {
         statmap_t   &sta = *mapped_stats;
-        member = (const volatile stats *)(sta(index++));
-        do {
-            memcpy(&map, (const void *)member, sizeof(map));
-        } while(memcmp(&map, (const void *)member, sizeof(map)));
+        sta.copy(index++, map);
 
         if(!map.id[0])
             break;
@@ -178,7 +174,6 @@ static void remapCalls(void)
     QTableWidget *table = ui.callTable;
     unsigned count = 0;
     unsigned index = 0;
-    const volatile MappedCall *member;
     MappedCall map;
     time_t now;
     int row;
@@ -191,17 +186,14 @@ static void remapCalls(void)
         table->removeRow(row);
 
     if(mapped_calls)
-        count = mapped_calls->getCount();
+        count = mapped_calls->count();
 
     time(&now);
     row = 0;
 
     while(index < count) {
         callmap_t   &calls = *mapped_calls;
-        member = (const volatile MappedCall *)(calls(index++));
-        do {
-            memcpy(&map, (const void *)member, sizeof(map));
-        } while(memcmp(&map, (const void *)member, sizeof(map)));
+        calls.copy(index++, map);
 
         if(!map.created || !map.source[0])
             continue;
@@ -231,7 +223,6 @@ static void remapUsers(void)
     QTableWidget *table = ui.usersTable;
     unsigned count = 0;
     unsigned row = 0, index = 0;
-    volatile const MappedRegistry *member;
     MappedRegistry buffer;
     time_t now;
     char ext[8], use[8], addr[128];
@@ -248,16 +239,14 @@ static void remapUsers(void)
         table->removeRow(row);
 
     if(mapped_users)
-        count = mapped_users->getCount();
+        count = mapped_users->count();
 
     time(&now);
     row = 0;
     while(index < count) {
         usermap_t   &reg = *mapped_users;
-        member = (const volatile MappedRegistry *)reg(index++);
-        do {
-            memcpy(&buffer, (const void *)member, sizeof(buffer));
-        } while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
+        reg.copy(index++, buffer);
+
         if(buffer.type == MappedRegistry::EXPIRED)
             continue;
         else if(buffer.type == MappedRegistry::TEMPORARY && !buffer.inuse)

@@ -67,7 +67,7 @@ static void capture(void)
 
     snprintf(buffer, sizeof(buffer), "/tmp/.sipwitch.%ld", (long)getpid());
     fp = fopen(buffer, "r");
-    remove(buffer);
+    fsys::erase(buffer);
     while(fp && fgets(buffer, sizeof(buffer), fp) != NULL)
         fputs(buffer, stdout);
     if(fp)
@@ -86,7 +86,7 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
     if(!a1)
         return;
 
-    Socket::getaddress((struct sockaddr *)a1, buf, sizeof(buf));
+    Socket::query((struct sockaddr *)a1, buf, sizeof(buf));
     switch(a1->address.sa_family) {
     case AF_INET:
         p1 = (unsigned)ntohs(a1->ipv4.sin_port);
@@ -122,7 +122,7 @@ static void paddress(struct sockaddr_internet *a1, struct sockaddr_internet *a2)
     if(!a2 || !p2)
         return;
 
-    Socket::getaddress((struct sockaddr *)a2, buf, sizeof(buf));
+    Socket::query((struct sockaddr *)a2, buf, sizeof(buf));
     printf("%s:%u\n", buf, p2);
 }
 
@@ -150,17 +150,17 @@ static void showrealm(void)
     fsys_t fs;
     char buffer[256];
 
-    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+    fs.open(DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
     if(!is(fs))
-        fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
+        fs.open(DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
 
     if(!is(fs))
 error:
         shell::errexit(1, "*** sipwitch: realm: no public realm known\n");
 
     memset(buffer, 0, sizeof(buffer));
-    fsys::read(fs, buffer, sizeof(buffer) - 1);
-    fsys::close(fs);
+    fs.read(buffer, sizeof(buffer) - 1);
+    fs.close();
 
     char *cp = strchr(buffer, '\n');
     if(cp)
@@ -202,16 +202,16 @@ static void compute(char **argv)
     }
     else {
         fsys_t fs;
-        fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+        fs.open(DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
         if(!is(fs))
-            fsys::open(fs, DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::ACCESS_RDONLY);
+            fs.open(DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
 
         if(!is(fs))
             shell::errexit(4, "*** sipwitch: digest: no public realm known\n");
 
         memset(buffer, 0, sizeof(buffer));
-        fsys::read(fs, buffer, sizeof(buffer) - 1);
-        fsys::close(fs);
+        fs.read(buffer, sizeof(buffer) - 1);
+        fs.close();
 
         char *cp = strchr(buffer, '\n');
         if(cp)
@@ -259,11 +259,11 @@ static void realm(char **argv)
     if(!mode)
         mode = "md5";
 
-    fsys::open(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_RDONLY);
+    fs.open(DEFAULT_CFGPATH "/siprealm", fsys::RDONLY);
     memset(buffer, 0, sizeof(buffer));
     if(is(fs)) {
-        fsys::read(fs, buffer, sizeof(buffer) - 1);
-        fsys::close(fs);
+        fs.read(buffer, sizeof(buffer) - 1);
+        fs.close();
         cp = strchr(buffer, ':');
         if(cp)
             *(cp++) = 0;
@@ -294,10 +294,10 @@ static void realm(char **argv)
         snprintf(replace, sizeof(replace), "%s:%s", realm, mode);
 
     ::remove(DEFAULT_CFGPATH "/siprealm");
-    fsys::create(fs, DEFAULT_CFGPATH "/siprealm", fsys::ACCESS_WRONLY, 0644);
+    fs.open(DEFAULT_CFGPATH "/siprealm", fsys::GROUP_PUBLIC, fsys::WRONLY);
     if(is(fs)) {
-        fsys::write(fs, replace, strlen(replace));
-        fsys::close(fs);
+        fs.write(replace, strlen(replace));
+        fs.close();
     }
     else
         shell::errexit(3, "*** sipwitch: realm: root permission required\n");
@@ -325,7 +325,7 @@ static void status(char **argv)
     mapinit();
 
     mapped_view<MappedCall> calls(*callmap);
-    unsigned count = calls.getCount();
+    unsigned count = calls.count();
     unsigned index = 0;
     const volatile MappedCall *map;
 
@@ -352,7 +352,7 @@ static void calls(char **argv)
     mapinit();
 
     mapped_view<MappedCall> calls(*callmap);
-    unsigned count = calls.getCount();
+    unsigned count = calls.count();
     unsigned index = 0;
     const volatile MappedCall *map;
     time_t now;
@@ -385,7 +385,7 @@ static void periodic(char **argv)
     mapinit();
 
     mapped_view<stats> sta(*statmap);
-    unsigned count = sta.getCount();
+    unsigned count = sta.count();
     unsigned index = 0;
     const volatile stats *map;
 
@@ -559,52 +559,45 @@ static void dumpstats(char **argv)
     mapinit();
 
     mapped_view<stats> sta(*statmap);
-    unsigned count = sta.getCount();
+    unsigned count = sta.count();
     unsigned index = 0;
-    const stats *map;
+    stats map;
     unsigned current;
-    stats buffer;
 
     if(!count)
         shell::errexit(10, "*** sipwitch: stats: offline\n");
 
     time(&now);
     while(index < count) {
-        map = const_cast<const stats *>(sta(index++));
-
-        if(!map->id[0])
+        sta.copy(index++, map);
+        if(!map.id[0])
             continue;
 
-        do {
-            memcpy(&buffer, map, sizeof(buffer));
-        } while(memcmp(&buffer, map, sizeof(buffer)));
-        map = &buffer;
-
-        if(map->limit)
-            snprintf(text, sizeof(text), "%-12s %05hu", map->id, map->limit);
+        if(map.limit)
+            snprintf(text, sizeof(text), "%-12s %05hu", map.id, map.limit);
         else
-            snprintf(text, sizeof(text), "%-12s -    ", map->id);
+            snprintf(text, sizeof(text), "%-12s -    ", map.id);
 
         for(unsigned entry = 0; entry < 2; ++entry) {
             size_t len = strlen(text);
             snprintf(text + len, sizeof(text) - len, " %09lu %05hu %05hu",
-                map->data[entry].total,
-                map->data[entry].current,
-                map->data[entry].peak);
+                map.data[entry].total,
+                map.data[entry].current,
+                map.data[entry].peak);
         }
-        current = map->data[0].current + map->data[1].current;
+        current = map.data[0].current + map.data[1].current;
         if(current)
             printf("%s 0s\n", text);
-        else if(!map->lastcall)
+        else if(!map.lastcall)
             printf("%s -\n", text);
-        else if(now - map->lastcall > (3600l * 99l))
-            printf("%s %ld%c\n", text, (now - map->lastcall) / (3600l * 24l), 'd');
-        else if(now - map->lastcall > (60l * 120l))
-            printf("%s %ld%c\n", text, (now - map->lastcall) / 3600l, 'h');
-        else if(now - map->lastcall > 120l)
-            printf("%s %ld%c\n", text, (now - map->lastcall) / 60l, 'm');
+        else if(now - map.lastcall > (3600l * 99l))
+            printf("%s %ld%c\n", text, (now - map.lastcall) / (3600l * 24l), 'd');
+        else if(now - map.lastcall > (60l * 120l))
+            printf("%s %ld%c\n", text, (now - map.lastcall) / 3600l, 'h');
+        else if(now - map.lastcall > 120l)
+            printf("%s %ld%c\n", text, (now - map.lastcall) / 60l, 'm');
         else
-            printf("%s %ld%c\n", text, (long)(now - map->lastcall), 's');
+            printf("%s %ld%c\n", text, (long)(now - map.lastcall), 's');
     }
     exit(0);
 }
@@ -614,9 +607,8 @@ static void registry(char **argv)
     mapinit();
 
     mapped_view<MappedRegistry> reg(*regmap);
-    unsigned count = reg.getCount();
+    unsigned count = reg.count();
     unsigned found = 0, index = 0;
-    volatile const MappedRegistry *member;
     MappedRegistry buffer;
     time_t now;
     char ext[8], exp[8], use[8];
@@ -630,10 +622,7 @@ static void registry(char **argv)
 
     time(&now);
     while(index < count) {
-        member = (const volatile MappedRegistry *)(reg(index++));
-        do {
-            memcpy(&buffer, (const void *)member, sizeof(buffer));
-        } while(memcmp(&buffer, (const void *)member, sizeof(buffer)));
+        reg.copy(index++, buffer);
         if(buffer.type == MappedRegistry::EXPIRED)
             continue;
         else if(buffer.type == MappedRegistry::TEMPORARY && !buffer.inuse)
@@ -947,12 +936,12 @@ static void grant(char **argv)
     else
         shell::errexit(2, "*** sipwitch: grant: %s: unknown group", argv[1]);
 
-    fsys::fileinfo(DEFAULT_VARPATH "/lib/sipwitch", &ino);
+    fsys::info(DEFAULT_VARPATH "/lib/sipwitch", &ino);
     chmod(DEFAULT_VARPATH "/lib/sipwitch", ino.st_mode | 070);
     if(chown(DEFAULT_VARPATH "/lib/sipwitch", ino.st_uid, gid))
         shell::errexit(2, "*** sipwitch: grant: %s: cannot change owner", argv[1]);
 
-    fsys::fileinfo(DEFAULT_VARPATH "/cache/sipwitch", &ino);
+    fsys::info(DEFAULT_VARPATH "/cache/sipwitch", &ino);
     chmod(DEFAULT_VARPATH "/cache/sipwitch", ino.st_mode | 070);
     if(chown(DEFAULT_VARPATH "/cache/sipwitch", ino.st_uid, gid))
         shell::errexit(2, "*** sipwitch: grant: %s: cannot change owner", argv[1]);
@@ -1004,7 +993,7 @@ static void disable(char **argv)
 
     while(*(++argv)) {
         snprintf(target, sizeof(target), "%s/lib/sipwitch/%s.xml", DEFAULT_VARPATH, *argv);
-        fsys::remove(target);
+        fsys::erase(target);
     }
     exit(0);
 }

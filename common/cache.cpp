@@ -96,7 +96,7 @@ void cache::userdump(void)
         linked_pointer<UserCache> up = user_keys[i];
         while(is(up)) {
             if(!up->expires || up->expires > now) {
-                Socket::getaddress((struct sockaddr *)(&up->address), buffer, sizeof(buffer));
+                Socket::query((struct sockaddr *)(&up->address), buffer, sizeof(buffer));
                 if(up->expires)
                     fprintf(fp, "%s=%s; expires=%ld\n",
                         up->userid, buffer, (long)(up->expires - now));

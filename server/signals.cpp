@@ -236,7 +236,7 @@ void notify::start(void)
     if(!dirpath)
         dirpath = control::env("prefix");
 
-    if(fsys::isdir(dirpath))
+    if(fsys::is_dir(dirpath))
         thread.background();
     else
         shell::log(shell::ERR, "notify failed; %s missing", dirpath);
@@ -304,7 +304,7 @@ void notify::run(void)
 
                 // only if xml files updated do we care...
                 const char *ext = strrchr(event->name, '.');
-                if(ext && case_eq(ext, ".xml")) {
+                if(ext && eq_case(ext, ".xml")) {
                     shell::log(DEBUG2, "%s updated", event->name);
                     ++updates;
                 }

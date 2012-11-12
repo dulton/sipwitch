@@ -15,6 +15,7 @@
 
 #include <sipwitch-config.h>
 #include <sipwitch/sipwitch.h>
+#include <stddef.h>
 
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
@@ -54,7 +55,7 @@ static unsigned short port = 9000;
 subscriber::subscriber() :
 modules::sipwitch()
 {
-    memset(&provider, 0, sizeof(provider));
+    memset((void *)&provider, 0, sizeof(provider));
     provider.rid = -1;
     provider.type = MappedRegistry::EXTERNAL;
     // we already know provider is normally external / outside NAT....
@@ -76,8 +77,8 @@ void subscriber::update(void)
 
     changed = false;
     len = strlen(contact);
-    Socket::getinterface((struct sockaddr *)&provider.contact, dest.getAddr());
-    Socket::getaddress((struct sockaddr *)&provider.contact, contact + len, sizeof(contact) - len);
+    Socket::via((struct sockaddr *)&provider.contact, dest.getAddr());
+    Socket::query((struct sockaddr *)&provider.contact, contact + len, sizeof(contact) - len);
     len = strlen(contact);
     snprintf(contact + len, sizeof(contact) - len, ":%u", sip_port);
     shell::debug(3, "registering %s with %s", contact, server);
@@ -128,15 +129,15 @@ void subscriber::reload(service *cfg)
         key = sp->getId();
         value = sp->getPointer();
         if(key && value) {
-            if(!stricmp(key, "count") && !isConfigured())
+            if(!stricmp(key, "count") && !is_configured())
                 count = atoi(value);
-            else if(!stricmp(key, "interface") && !isConfigured())
+            else if(!stricmp(key, "interface") && !is_configured())
                 iface = strdup(value);
             else if(!stricmp(key, "interval"))
                 interval = atol(value);
-            else if(!stricmp(key, "priority") && !isConfigured())
+            else if(!stricmp(key, "priority") && !is_configured())
                 priority = atoi(value);
-            else if(!stricmp(key, "port") && !isConfigured())
+            else if(!stricmp(key, "port") && !is_configured())
                 port = atoi(value);
             // very rare we may wish to override provider network/nat state
             else if(!stricmp(key, "network"))
@@ -182,7 +183,7 @@ void subscriber::reload(service *cfg)
         sp.next();
     }
 
-    if(!isConfigured() && count)
+    if(!is_configured() && count)
         stats::allocate(1);
 }
 

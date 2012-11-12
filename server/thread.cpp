@@ -70,7 +70,7 @@ void thread::publish(void)
     if(destination != LOCAL)
         goto final;
 
-    if(!reginfo || !reginfo->isUser())
+    if(!reginfo || !reginfo->is_user())
         goto final;
 
     if(!String::equal(reginfo->userid, identity))
@@ -745,7 +745,7 @@ bool thread::authorize(void)
     if(local_port != stack::sip_port)
         goto remote;
 
-    if(Socket::equalhost((struct sockaddr *)&iface, request_address.getAddr()))
+    if(eq_host((struct sockaddr *)&iface, request_address.getAddr()))
         goto local;
 
     goto remote;
@@ -862,7 +862,7 @@ trying:
         if(stack::sip_public)
             allowed = true;
         else
-            allowed = reginfo->isFeature(USER_PROFILE_INCOMING);
+            allowed = reginfo->has_feature(USER_PROFILE_INCOMING);
     }
 
     if(allowed) {
@@ -1067,7 +1067,7 @@ remote:
         goto invalid;
 
     if(!stack::sip_public)
-        if(!reginfo->isFeature(USER_PROFILE_OUTGOING))
+        if(!reginfo->has_feature(USER_PROFILE_OUTGOING))
             goto invalid;
 
     refer = server::referRemote(reginfo, requesting, buffer, sizeof(buffer));
@@ -1536,7 +1536,7 @@ void thread::registration(void)
         // auto-detect registration from ephemerial ports...
         contact_port = atoi(port);
         contact_host = reguri->host;
-        if(!Socket::isNumeric(reguri->host) || !String::equal(contact_host, via_host) || contact_port == via_port) {
+        if(!Socket::is_numeric(reguri->host) || !String::equal(contact_host, via_host) || contact_port == via_port) {
             // non-ephemeral or source based registration required...
             contact_host = via_host;
             contact_port = via_port;
@@ -1569,7 +1569,7 @@ void thread::registration(void)
         error = SIP_NOT_FOUND;
 //      if(!String::ifind(stack::sip.localnames, reguri->host, " ,;:\t\n")) {
             stack::getInterface((struct sockaddr *)&iface, request_address.getAddr());
-            if(!Socket::equalhost((struct sockaddr *)&iface, request_address.getAddr()) && atoi(port) == stack::sip_port)
+            if(!eq_host((struct sockaddr *)&iface, request_address.getAddr()) && atoi(port) == stack::sip_port)
                 goto reply;
 //      }
 
@@ -1706,7 +1706,7 @@ reply:
     else
         eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, SIP_BAD_REQUEST, NULL);
     EXOSIP_UNLOCK
-    if(reginfo && reginfo->isUser() && answer == SIP_OK)
+    if(reginfo && reginfo->is_user() && answer == SIP_OK)
         messages::update(identity);
 }
 

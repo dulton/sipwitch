@@ -34,7 +34,7 @@ void history::set(shell::loglevel_t lid, const char *msg)
     Time now;
     char buf[20];
 
-    now.get(buf);
+    now.put(buf);
     snprintf(text, sizeof(text), "%s %02d %s",
         buf, (int)lid, msg);
 
