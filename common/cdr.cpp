@@ -125,7 +125,7 @@ cdr *cdr::get(void) {
     private_lock.acquire();
     if(freelist) {
         rec = (cdr *)freelist;
-        freelist = rec->next;
+        freelist = rec->getNext();
         private_lock.release();
         rec->uuid[0] = 0;
         rec->ident[0] = 0;

@@ -44,23 +44,23 @@ void Cache::expire(LinkedObject **root, LinkedObject **freelist)
 {
     Cache *prior = NULL;
     Cache *node = (Cache *)*root;
-    Cache *next;
+    Cache *after;
     time_t now;
 
     time(&now);
 
     while(node) {
-        next = (Cache *)node->next;
+        after = (Cache *)node->Next;
         if(node->expires && now > node->expires) {
             if(!prior)
-                *root = next;
+                *root = after;
             else
-                prior->next = next;
+                prior->Next = after;
             node->enlist(freelist);
         }
         else
             prior = node;
-        node = next;
+        node = after;
     }
 }
 
@@ -170,7 +170,7 @@ void UserCache::add(const char *id, struct sockaddr *addr, time_t create, unsign
 
     if(user_freelist) {
         cp = (UserCache *)user_freelist;
-        user_freelist = cp->next;
+        user_freelist = cp->Next;
     }
     else {
         caddr_t mp = (caddr_t)cache_heap.alloc(sizeof(UserCache));

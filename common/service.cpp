@@ -214,9 +214,9 @@ service::instance::~instance()
 
 void service::keyclone::splice(keyclone *trunk)
 {
-    parent = trunk;
-    if(parent)
-        enlistTail(&trunk->child);
+    Parent = trunk;
+    if(Parent)
+        enlistTail(&trunk->Child);
 }
 
 service::service(const char *name, size_t s) :

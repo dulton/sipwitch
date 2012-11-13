@@ -167,10 +167,10 @@ void forward::remove(int id)
     while(is(mp)) {
         if(mp->entry->rid == id) {
             if(prior)
-                prior->next = mp->next;
+                prior->Next = mp->Next;
             else
-                index[path] = (regmap *)mp->next;
-            mp->next = freelist;
+                index[path] = (regmap *)mp->Next;
+            mp->Next = freelist;
             freelist = *mp;
             shell::debug(3, "forward unmap %s from %d", mp->entry->userid, id);
             --active;
@@ -191,13 +191,13 @@ void forward::add(MappedRegistry *rr)
     locking.modify();
     map = freelist;
     if(map)
-        freelist = (regmap *)map->next;
+        freelist = (regmap *)map->Next;
     else {
         ++allocated;
         map = (regmap *)pager.alloc(sizeof(regmap));
     }
     map->entry = rr;
-    map->next = index[path];
+    map->Next = index[path];
     index[path] = map;
     locking.commit();
     shell::debug(3, "forward mapped %s as %d", rr->userid, rr->rid);

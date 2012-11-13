@@ -108,7 +108,7 @@ public:
         void splice(keyclone *trunk);
 
         inline void reset(const char *tag)
-            {id = (char *)tag;};
+            {Id = (char *)tag;};
     };
 
     /**

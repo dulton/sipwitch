@@ -125,12 +125,12 @@ void dispatch::send(events *msg)
     linked_pointer<dispatch> dp = root;
     LinkedObject *next;
     while(is(dp)) {
-        next = dp->next;
+        next = dp->Next;
         if(::send(dp->session, (const char *)msg, sizeof(events), 0) < (ssize_t)sizeof(events)) {
 disconnect:
             shell::log(DEBUG3, "releasing client events for %ld", (long)dp->session);
             dp->release();
-            dp->next = freelist;
+            dp->Next = freelist;
             freelist = *dp;
         }
         // disconnect detection...
