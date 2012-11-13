@@ -239,7 +239,7 @@ service::~service()
 {
     // we must zap the xml tree root node, lest it try to delete it's "id"
     // or child nodes, since all was allocated from the "pager" heap.
-    reset<keynode>(root);
+    reset_unsafe<keynode>(root);
     memalloc::purge();
 }
 

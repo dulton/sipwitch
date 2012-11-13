@@ -554,7 +554,7 @@ void server::confirm(void)
         temp = clone->getFirst();
         while(is(temp)) {
             clone = (keyclone *)alloc(sizeof(keynode));
-            copy<keyclone>(clone, (keyclone *)*temp);
+            copy_unsafe<keyclone>(clone, (keyclone *)*temp);
             clone->splice(entry);
             temp.next();
         }
