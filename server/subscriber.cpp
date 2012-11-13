@@ -55,7 +55,7 @@ static unsigned short port = 9000;
 subscriber::subscriber() :
 modules::sipwitch()
 {
-    memset((void *)&provider, 0, sizeof(provider));
+    zero<MappedRegistry>(provider);
     provider.rid = -1;
     provider.type = MappedRegistry::EXTERNAL;
     // we already know provider is normally external / outside NAT....

@@ -374,7 +374,7 @@ bool registry::remove(const char *id)
     if(rr && rr->inuse)
         rtn = false;
     else if(rr) {
-        memcpy((void *)&save, (void *)rr, sizeof(save));
+        store<mapped>(save, rr);
         expire(rr);
     }
     else
@@ -460,7 +460,7 @@ void registry::cleanup(time_t period)
         expired = false;
         time(&now);
         rr = static_cast<mapped*>(reg(regcount++));
-        memcpy((void *)&save, (void *)rr, sizeof(save));
+        store<mapped>(save, rr);
         locking.modify();
         if(rr->type != MappedRegistry::EXPIRED && rr->expires && rr->expires + period < now && !rr->inuse) {
             expire(rr);
@@ -1309,7 +1309,7 @@ bool registry::mapped::expire(Socket::address& saddr)
     if(!active_count) {
         registry::mapped save;
         Mutex::protect(this);
-        memcpy((void *)&save, (void *)this, sizeof(save));
+        store<registry::mapped>(save, this);
         type = MappedRegistry::EXPIRED;
         expires = 0;
         Mutex::release(this);

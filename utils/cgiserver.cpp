@@ -1063,6 +1063,7 @@ static void call_instance(void)
         reply(buffer);
     }
     fault(6, "Unknown Call");
+    reset<MappedCall>(map);
 }
 
 static void call_range(void)
@@ -1095,6 +1096,7 @@ static void call_range(void)
     }
     response(buffer, size, "]");
     reply(buffer);
+    reset<MappedCall>(map);
 }
 
 static void stat_periodic(void)
@@ -1127,6 +1129,7 @@ static void stat_periodic(void)
         reply(buffer);
     }
     fault(7, "Unknown Stat");
+    reset<stats>(map);
 }
 
 static void stat_instance(void)
@@ -1159,6 +1162,7 @@ static void stat_instance(void)
         reply(buffer);
     }
     fault(7, "Unknown Stat");
+    reset<stats>(map);
 }
 
 static void stat_range(void)
@@ -1188,6 +1192,7 @@ static void stat_range(void)
     }
     response(buffer, size, "]");
     reply(buffer);
+    reset<stats>(map);
 }
 
 static void user_instance(void)
@@ -1252,6 +1257,7 @@ static void user_instance(void)
         reply(buffer);
     }
     fault(8, "Unknown User");
+    reset<MappedRegistry>(map);
 }
 
 static void user_range(void)
@@ -1287,6 +1293,7 @@ static void user_range(void)
     }
     response(buffer, size, "]");
     reply(buffer);
+    reset<MappedRegistry>(map);
 }
 
 static void server_realm(void)

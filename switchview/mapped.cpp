@@ -167,6 +167,7 @@ static void remapStats(void)
 
     table->setUpdatesEnabled(true);
     table->update();
+    reset<stats>(map);
 }
 
 static void remapCalls(void)
@@ -216,6 +217,7 @@ static void remapCalls(void)
 
     table->setUpdatesEnabled(true);
     table->update();
+    reset<MappedCall>(map);
 }
 
 static void remapUsers(void)
@@ -300,6 +302,7 @@ static void remapUsers(void)
 
     table->setUpdatesEnabled(true);
     table->update();
+    reset<MappedRegistry>(buffer);
 }
 
 Mapped::Mapped() :
