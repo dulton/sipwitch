@@ -93,6 +93,7 @@ static void corefiles(void)
 }
 #endif
 
+#ifdef HAVE_PWD_H
 static const char *userpath(const char *path)
 {
     if(!path)
@@ -107,6 +108,7 @@ static const char *userpath(const char *path)
 #endif
     return path;
 }
+#endif
 
 static void usage(void)
 {

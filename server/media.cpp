@@ -30,7 +30,6 @@ static volatile bool running = false;
 static volatile int hiwater = 0;
 
 #ifdef  _MSWINDOWS_
-static socket_t control;
 static unsigned portcount = 0;
 #else
 static int control[2];

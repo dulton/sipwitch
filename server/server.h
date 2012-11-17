@@ -18,6 +18,11 @@
 #include <sipwitch-config.h>
 #include <sipwitch/sipwitch.h>
 #include <ucommon/secure.h>
+
+#ifdef WIN32
+#undef alloca
+#endif
+
 #include <eXosip2/eXosip.h>
 #include <ctype.h>
 
