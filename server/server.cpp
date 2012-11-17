@@ -342,13 +342,14 @@ void server::confirm(void)
     new(mp) stack::subnet(&acl, "::1", "loopback");
 
 #if defined(HAVE_NET_IF_H) || defined(HAVE_PWD_H)
-    int ifcount = 0, index = 0;
+    int ifcount = 0;
 #endif
 
 #ifdef  HAVE_NET_IF_H
     char ifbuf[8192];
     struct ifconf ifc;
     struct ifreq *ifr;
+    int index = 0;
 
     ifc.ifc_len = sizeof(ifbuf);
     ifc.ifc_buf = ifbuf;
