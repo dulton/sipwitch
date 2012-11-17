@@ -176,6 +176,8 @@ public:
          */
         protocols();
 
+        virtual ~protocols();
+
         /**
          * Create a SIP registration on a remote server.  Registration events
          * are then returned to the plugin through the registration callback

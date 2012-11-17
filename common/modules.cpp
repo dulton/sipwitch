@@ -36,6 +36,10 @@ modules::protocols::protocols()
     instance = this;
 }
 
+modules::protocols::~protocols()
+{
+}
+
 modules::sipwitch::sipwitch() :
 service::callback(MODULE_RUNLEVEL)
 {
