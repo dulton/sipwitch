@@ -443,5 +443,5 @@ AC_SUBST(MODFLAGS)
 AC_SUBST(DLOPEN)
 AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile
 server/Makefile switchview/Makefile utils/Makefile test/Makefile
-libsipwitch.pc sipwitch.spec sipwitch-config)
+libsipwitch.pc sipwitch.spec sipwitch-config directive)
 
