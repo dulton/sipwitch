@@ -10,7 +10,7 @@
 
 AC_INIT(autogen.sh)
 
-VERSION="1.4.0"
+VERSION="1.5.0"
 LT_VERSION="1:9:0"
 UCOMMON_REQUIRES="6.0.0"
 
@@ -61,39 +61,7 @@ SIPWITCH_FLAGS=""
 SERVER_FLAGS=""
 SERVER_LIBS=""
 
-AC_ARG_ENABLE(qt,
-    [  --disable-qt        disable support for qt],
-    enable_qt=$enableval,enable_qt="yes")
-
-if test "x${enable_qt}" = "xyes" ; then
-    PKG_CHECK_MODULES(QT, QtGui >= 4.0.1,,enable_qt="no") ; fi
-
 AC_CHECK_PROG(PKG_CONFIG, [pkg-config], [pkg-config])
-
-if test "x${enable_qt}" = "xyes" ; then
-    dnl Check needed because in some cases the QtGui includedir
-    dnl doesn't contain the subsystem dir.
-
-    QT_INCLUDE_DIR=$($PKG_CONFIG --variable=includedir QtGui)
-    EXTRA_QT_INCLUDE_DIR="$QT_INCLUDE_DIR/Qt"
-    AC_CHECK_FILE([$QT_INCLUDE_DIR/QWidget],
-                  AC_MSG_NOTICE([No extra QT_INCLUDE_DIR needed]),
-
-                  AC_CHECK_FILE([$EXTRA_QT_INCLUDE_DIR/QWidget],
-                        QT_CFLAGS="$QT_CFLAGS -I$EXTRA_QT_INCLUDE_DIR",
-                        AC_MSG_WARN([QWidget not found])))
-    AC_MSG_NOTICE([Set QT_CFLAGS... $QT_CFLAGS])
-    AC_CHECK_PROGS(MOC, [moc moc-qt4], [no])
-    AC_CHECK_PROGS(RCC, [rcc], [no])
-    AC_CHECK_PROGS(UIC, [uic uic-qt4], [no])
-
-    QTAPPS="switchview"
-
-    AC_SUBST(QT_CFLAGS)
-    AC_SUBST(QT_LIBS)
-fi
-
-AC_SUBST(QTAPPS)
 
 AC_ARG_ENABLE(openssl,
     [  --enable-openssl        enable support for openssl],
@@ -442,6 +410,6 @@ AC_SUBST(CXXFLAGS)
 AC_SUBST(MODFLAGS)
 AC_SUBST(DLOPEN)
 AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile
-server/Makefile switchview/Makefile utils/Makefile test/Makefile
+server/Makefile utils/Makefile test/Makefile
 libsipwitch.pc sipwitch.spec sipwitch-config directive)
 

@@ -15,8 +15,8 @@ EXTRA_DIST = autogen.sh README *.pc.in FEATURES  TODO Doxyfile BUILDS \
 	CMakeLists.txt directive.in
 #  *.pc.in *.spec.in *.spec
 
-SUBDIRS = common server @QTAPPS@ utils inc test
-DIST_SUBDIRS = common server switchview utils inc test 
+SUBDIRS = common server utils inc test
+DIST_SUBDIRS = common server utils inc test 
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsipwitch.pc

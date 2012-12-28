@@ -21,7 +21,6 @@ BuildRequires: ucommon-devel >= 6.0.0
 BuildRequires: libeXosip2-devel >= 3.0.0
 BuildRequires: avahi-devel
 BuildRequires: openssl-devel
-BuildRequires: qt4-devel
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(preun): initscripts
@@ -58,10 +57,6 @@ Summary: Forward registration and routing plugin
 %package plugin-subscriber
 Requires: %{name} = %{version}-%{release}
 Summary: Subscriber gateway plugin for sipwitch
-
-%package gui
-Summary: user agent to monitor running sipwitch process
-Requires: sipwitch
 
 %description
 GNU SIP Witch is a secure peer-to-peer VoIP server.  Calls can be made even
@@ -112,10 +107,6 @@ proxy bridging between a subscribers local subnet and an isp.  In theory
 this would be deployed in an isp supplied premise router to enable a
 local user to subscribe a series of local softphone/sip devices with a
 remote voip service provider.
-
-%description gui
-This package offers the switchview user agent to monitor the activity of
-your locally installed sipwitch service.
 
 %prep
 %setup -q
@@ -187,14 +178,6 @@ echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
 %{_libdir}/pkgconfig/*.pc
 %{_bindir}/sipwitch-config
 %{_mandir}/man1/sipwitch-config.*
-
-%files gui
-%defattr(-,root,root,0755)
-%{_bindir}/switchview
-/etc/xdg/autostart/switchview-autostart.desktop
-%{_datadir}/applications/switchview.desktop
-%{_datadir}/pixmaps/switchview.png
-%{_mandir}/man1/switchview.1*
 
 %post runtime
 /sbin/ldconfig
