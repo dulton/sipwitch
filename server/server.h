@@ -562,6 +562,7 @@ private:
     class __LOCAL message : public LinkedObject
     {
     public:
+        context_t context;
         time_t expires;
         char user[MAX_USERID_SIZE];
         char type[64];
