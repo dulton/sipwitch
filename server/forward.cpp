@@ -357,9 +357,9 @@ char *forward::referLocal(MappedRegistry *rr, const char *target, char *buffer, 
         return NULL;
 
     if(sip_tlsmode)
-        snprintf(buffer, sizeof(buffer), "sips:%s@%s", target, refer);
+        snprintf(buffer, size, "sips:%s@%s", target, refer);
     else
-        snprintf(buffer, sizeof(buffer), "sip:%s@%s", target, refer);
+        snprintf(buffer, size, "sip:%s@%s", target, refer);
     return buffer;
 }
 
