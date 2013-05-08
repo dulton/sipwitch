@@ -435,11 +435,11 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     // check validity of some options...
 
     if(*concurrency < 0)
-        shell::errexit(1, "sipwitch: concurrency: %ld: %s\n",
+        shell::errexit(1, "sipw: concurrency: %ld: %s\n",
             *concurrency, _TEXT("negative levels invalid"));
 
     if(*histbuf < 0)
-        shell::errexit(1, "sipwitch: history: %ld: %s\n",
+        shell::errexit(1, "sipw: history: %ld: %s\n",
             *histbuf, _TEXT("negative buffer limit invalid"));
 
     // bind sip interface and port from command line options...
@@ -528,15 +528,20 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 
     if(grp) {
         umask(007);
-        setgid(grp->gr_gid);
+        if(setgid(grp->gr_gid))
+			shell::error("*** sipw: %u: %s\n", grp->gr_gid,
+				_TEXT("cannot set group"));
     }
 
     int uid = 0;
 
     if(pwd) {
         umask(007);
-        if(!grp)
-            setgid(pwd->pw_gid);
+        if(!grp) {
+            if(setgid(pwd->pw_gid))
+				shell::error("*** sip: %u: %s\n", pwd->pw_gid,
+					_TEXT("cannot set group"));
+		}
         uid = pwd->pw_uid;
     }
 
@@ -555,7 +560,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     dir::create(args.getsym("cache"), fsys::GROUP_PRIVATE);
 
     if(fsys::prefix(prefix))
-        shell::errexit(3, "*** sipwitch: %s: %s\n",
+        shell::errexit(3, "*** sip: %s: %s\n",
             prefix, _TEXT("data directory unavailable"));
 
     shell::loglevel_t level = (shell::loglevel_t)*verbose;
@@ -586,13 +591,16 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     args.setsym("HOME", home);
 
     if(!control::attach(&args))
-        shell::errexit(1, "*** sipwitch: %s\n",
+        shell::errexit(1, "*** sipw: %s\n",
             _TEXT("no control file; exiting"));
 
     // drop root privilege
 #ifdef  HAVE_PWD_H
-    if(uid)
-        setuid(uid);
+    if(uid) {
+        if(setuid(uid))
+			shell::error("*** sipw: %u: %s\n", uid,
+				_TEXT("cannot set user"));
+	}
 #endif
 
     if(is(restart))
