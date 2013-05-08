@@ -8,8 +8,8 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 #
 
-set(server_src server.cpp registry.cpp stack.cpp thread.cpp call.cpp messages.cpp media.cpp system.cpp signals.cpp history.cpp protocols.cpp)
-set(server_inc server.h)
+set(server_src server.cpp registry.cpp stack.cpp thread.cpp call.cpp messages.cpp media.cpp system.cpp signals.cpp history.cpp protocols.cpp voip.cpp)
+set(server_inc server.h voip.h)
 
 if(NOT HAVE_PLUGINS)
     set(server_src ${server_src} forward.cpp scripting.cpp)

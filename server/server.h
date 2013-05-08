@@ -23,41 +23,19 @@
 #undef alloca
 #endif
 
-#include <eXosip2/eXosip.h>
 #include <ctype.h>
-
-#if defined(EXOSIP_OPT_BASE_OPTION) && !defined(EXOSIP_OPT_DONT_SEND_101)
-#define EXOSIP_API4
-#endif
+#include "voip.h"
 
 #ifdef  EXOSIP_API4
-
-typedef eXosip_t *context_t;
-
 #define EXOSIP_CONTEXT  stack::sip.context
 #define OPTION_CONTEXT  stack::sip.context,
 #define EXOSIP_LOCK     eXosip_lock(stack::sip.context);
 #define EXOSIP_UNLOCK   eXosip_unlock(stack::sip.context);
 #else
-
-typedef void *context_t;
-
 #define EXOSIP_CONTEXT
 #define OPTION_CONTEXT
 #define EXOSIP_LOCK     eXosip_lock();
 #define EXOSIP_UNLOCK   eXosip_unlock();
-#endif
-
-#ifndef SESSION_EXPIRES
-#define SESSION_EXPIRES "session-expires"
-#endif
-
-#ifndef SESSION_EVENT
-#define SESSION_EVENT   "event"
-#endif
-
-#ifndef ALLOW_EVENTS
-#define ALLOW_EVENTS    "allow-events"
 #endif
 
 #define P_SIPWITCH_NODE "P-sipwitch-node"
@@ -145,7 +123,7 @@ public:
         } index;
         struct sockaddr_internet address;
         struct sockaddr_storage peering;
-        context_t context;
+        sip::context_t context;
 
         time_t created;
         status_t status;
@@ -275,7 +253,7 @@ private:
     public:
         registry::mapped *reg;
         int cid, tid, did;
-        context_t context;
+        sip::context_t context;
         time_t activates;
         uint32_t sequence;
         call *parent;
@@ -417,7 +395,7 @@ private:
     unsigned invite_expires;
 
 public:
-    context_t context;
+    sip::context_t context;
 
     static stack sip;
 
@@ -562,7 +540,7 @@ private:
     class __LOCAL message : public LinkedObject
     {
     public:
-        context_t context;
+        sip::context_t context;
         time_t expires;
         char user[MAX_USERID_SIZE];
         char type[64];
@@ -631,7 +609,7 @@ private:
     unsigned via_hops;
     unsigned via_port, from_port, contact_port;
     destination_t destination;
-    context_t source_context, target_context;
+    sip::context_t source_context, target_context;
 
     char *sip_realm;
     osip_proxy_authenticate_t *proxy_auth;
