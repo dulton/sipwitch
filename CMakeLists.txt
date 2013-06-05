@@ -86,9 +86,13 @@ if (WIN32)
 else()
     option(BUILD_STATIC "Set to ON to build static libraries" OFF)
     option(HAVE_SIGWAIT2 "Set to OFF to build with single argument" ON)
+    MARK_AS_ADVANCED(HAVE_SIGWAIT2)
+
     set(HAVE_SIGWAIT true)
     option(EXOSIP2_TLS "Set to OFF to disable eXosip2 TLS support check" ON)
 endif()
+
+MARK_AS_ADVANCED(EXOSIP2_TLS)
 
 MESSAGE( STATUS "Configuring GNU sipwitch ${VERSION}...")
 
