@@ -1857,12 +1857,16 @@ void thread::run(void)
             else
                 server::registration(sevent->rid, modules::REG_FAILED);
             break;
+#ifndef EXOSIP_API4
         case EXOSIP_REGISTRATION_TERMINATED:
             stack::siplog(sevent->response);
-            server::registration(sevent->rid, modules::REG_TERMINATED);
+            server::registration(sevent->rid, modules::REG_FAILED);
             break;
+#endif
         case EXOSIP_REGISTRATION_SUCCESS:
+#ifndef EXOSIP_API4
         case EXOSIP_REGISTRATION_REFRESHED:
+#endif
             stack::siplog(sevent->response);
             server::registration(sevent->rid, modules::REG_SUCCESS);
             break;
@@ -1904,16 +1908,6 @@ void thread::run(void)
                 break;
             stack::close(session);
             break;
-        case EXOSIP_CALL_TIMEOUT:
-            stack::siplog(sevent->response);
-            authorizing = CALL;
-            if(sevent->cid <= 0)
-                break;
-            session = stack::access(sevent->cid);
-            if(!session)
-                break;
-            session->parent->failed(this, session);
-            break;
         case EXOSIP_CALL_ANSWERED:
             stack::siplog(sevent->response);
             authorizing = CALL;
@@ -1941,6 +1935,18 @@ void thread::run(void)
             }
             session->parent->answer(this, session);
             break;
+#ifndef EXOSIP_API4
+        case EXOSIP_CALL_TIMEOUT:
+            stack::siplog(sevent->response);
+            authorizing = CALL;
+            if(sevent->cid <= 0)
+                break;
+            session = stack::access(sevent->cid);
+            if(!session)
+                break;
+            session->parent->failed(this, session);
+            break;
+#endif
         case EXOSIP_CALL_SERVERFAILURE:
         case EXOSIP_CALL_REQUESTFAILURE:
         case EXOSIP_CALL_GLOBALFAILURE:

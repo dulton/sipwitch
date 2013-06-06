@@ -47,7 +47,7 @@ using namespace UCOMMON_NAMESPACE;
 class __EXPORT modules
 {
 public:
-    typedef enum {REG_FAILED, REG_SUCCESS, REG_TERMINATED} regmode_t;
+    typedef enum {REG_FAILED, REG_SUCCESS} regmode_t;
 
     /**
      * Common base class for sipwitch plugin services.  This provides

@@ -194,10 +194,6 @@ void subscriber::registration(int id, modules::regmode_t mode)
 
     switch(mode) {
     case modules::REG_FAILED:
-        shell::log(shell::ERR, "service provider offline");
-        provider.status = MappedRegistry::OFFLINE;
-        return;
-    case modules::REG_TERMINATED:
         shell::log(shell::ERR, "service provider failed");
         provider.rid = -1;
         provider.status = MappedRegistry::OFFLINE;

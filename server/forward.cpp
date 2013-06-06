@@ -402,9 +402,6 @@ void forward::registration(int id, modules::regmode_t mode)
 {
     switch(mode) {
     case modules::REG_FAILED:
-        disable(id);
-        return;
-    case modules::REG_TERMINATED:
         remove(id);
         return;
     case modules::REG_SUCCESS:
