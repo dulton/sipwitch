@@ -82,17 +82,13 @@ if (WIN32)
     set(HAVE_SIGWAIT false)
     set(HAVE_SIGWAIT2 off CACHE BOOL "disable sigwait on windows" FORCE)
     MARK_AS_ADVANCED(FORCE HAVE_SIGWAIT2)
-    option(EXOSIP2_TLS "Set to ON to check eXosip2 TLS support" OFF)
 else()
     option(BUILD_STATIC "Set to ON to build static libraries" OFF)
     option(HAVE_SIGWAIT2 "Set to OFF to build with single argument" ON)
     MARK_AS_ADVANCED(HAVE_SIGWAIT2)
 
     set(HAVE_SIGWAIT true)
-    option(EXOSIP2_TLS "Set to OFF to disable eXosip2 TLS support check" ON)
 endif()
-
-MARK_AS_ADVANCED(EXOSIP2_TLS)
 
 MESSAGE( STATUS "Configuring GNU sipwitch ${VERSION}...")
 
@@ -145,16 +141,11 @@ check_include_files(ioctl.h HAVE_IOCTL_H)
 check_include_files(pwd.h HAVE_PWD_H)
 check_include_files(eXosip2/eXosip.h HAVE_EXOSIP2)
 
-if(NOT HAVE_EXOSIP2)
-    set(EXOSIP2_TLS OFF CACHE BOOL "no tls if no exosip2" FORCE)
-    MARK_AS_ADVANCED(EXOSIP2_TLS)
+if(HAVE_EXOSIP2)
+    check_include_files(openssl/ssl.h HAVE_OPENSSL)
 endif()
 
-if(EXOSIP2_TLS AND HAVE_EXOSIP2)
-    check_include_files(openssl/ssl.h HAVE_TLS)
-endif()
-
-if(HAVE_TLS)
+if(HAVE_OPENSSL)
     if(WIN32 AND NOT CYGWIN AND NOT MINGW)
         set (EXOSIP2_LIBS eXosip2 osip2 osipparser2 ssleay32 libeay32 gdi32)
     else()

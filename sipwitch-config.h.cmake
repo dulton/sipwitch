@@ -37,6 +37,6 @@
 #cmakedefine HAVE_SYS_INOTIFY_H 1
 #cmakedefine HAVE_SYS_SOCKIO_H 1
 #cmakedefine HAVE_SYS_STAT_H 1
-#cmakedefine HAVE_TLS 1
+#cmakedefine HAVE_OPENSSL 1
 
 #define OSIP2_LIST_PTR  &
