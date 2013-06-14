@@ -21,10 +21,9 @@ BuildRequires: ucommon-devel >= 6.0.0
 BuildRequires: libeXosip2-devel >= 3.0.0
 BuildRequires: avahi-devel
 BuildRequires: openssl-devel
-Requires(post): chkconfig
-Requires(preun): chkconfig
-Requires(preun): initscripts
-Requires(postun): initscripts
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
 Requires: %{name}-runtime = %{version}-%{release}
 
 %package runtime
@@ -111,7 +110,7 @@ remote voip service provider.
 %prep
 %setup -q
 %build
-%configure --with-pkg-config --disable-static --with-initrddir=%{_initrddir}
+%configure --with-pkg-config --disable-static --with-initrddir=none
 
 %{__make} %{?_smp_mflags}
 
@@ -138,7 +137,7 @@ echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
 %attr(04755,root,root) %{_bindir}/sippasswd
 %dir %{_libdir}/sipwitch
 %config(noreplace) %{_sysconfdir}/logrotate.d/sipwitch
-%attr(0755,root,root) %{_initrddir}/sipwitch
+%attr(0755,root,root) %{_libdir}/systemd/system/sipwitch.service
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/sipwitch
 %attr(0770,root,root) %dir %{_sysconfdir}/sipwitch.d
 %attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
@@ -183,18 +182,13 @@ echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
 /sbin/ldconfig
 
 %post
-/sbin/chkconfig --add sipwitch
+%systemd_post sipwitch.service
 
 %preun
-if [ $1 = 0 ] ; then
-    /sbin/service sipwitch stop >/dev/null 2>&1
-    /sbin/chkconfig --del sipwitch
-fi
+%systemd_preun sipwitch.service
 
 %postun
-if [ "$1" -ge "1" ] ; then
-    /sbin/service sipwitch condrestart >/dev/null 2>&1 || :
-fi
+%systemd_postun_with_restart sipwitch.service 
 
 %postun runtime
 /sbin/ldconfig
