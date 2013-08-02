@@ -15,7 +15,7 @@ Release: 0%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/sipwitch
 Group: Applications/Communications
-Source: http://www.gnutelephony.org/dist/tarballs/sipwitch-%{version}.tar.gz
+Source: http://dev.gnutelephony.org/dist/tarballs/sipwitch-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: ucommon-devel >= 6.0.0
 BuildRequires: libeXosip2-devel >= 3.0.0
