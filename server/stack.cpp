@@ -712,13 +712,19 @@ void stack::start(service *cfg)
 {
     assert(cfg != NULL);
 
+#ifdef  EXOSIP_API4
+    unsigned ver = 4;
+#else
+    unsigned ver = 3;
+#endif
+
     if(!iface && sip_iface)
         iface = sip_iface;
 
     thread *thr;
     unsigned thidx = 0;
-    shell::log(DEBUG1, "starting sip stack; %d maps and %d threads at priority %d",
-        mapped_calls, threading, priority);
+    shell::log(DEBUG1, "starting sip stack v%d; %d maps and %d threads at priority %d",
+        ver, mapped_calls, threading, priority);
 #ifdef  EXOSIP_API4
     sip.context = eXosip_malloc();
 #endif
