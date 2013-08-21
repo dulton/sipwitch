@@ -342,11 +342,11 @@ bool listen(context_t ctx, int proto, const char *addr, unsigned port, bool tls)
         return false;
 
 #ifdef  AF_INET6
-    if(family == AF_INET6 && !addr)
-        addr = "::0";
+    if(family == AF_INET6 && addr && (!strcmp(addr, "::0") || !strcmp(addr, "::*")))
+        addr = NULL;
 #endif
-    if(!addr)
-        addr = "*";
+    if(addr && !strcmp(addr, "*"))
+        addr = NULL;
 
     // port always even...
     port = port & 0xfffe;
@@ -710,11 +710,11 @@ bool listen(context_t ctx, int proto, const char *addr, unsigned port, bool tls)
     int tlsmode = 0;
 
 #ifdef  AF_INET6
-    if(family == AF_INET6 && !addr)
-        addr = "::0";
+    if(family == AF_INET6 && addr && (!strcmp(addr, "::0") || !strcmp(addr, "::*")))
+        addr = NULL;
 #endif
-    if(!addr)
-        addr = "*";
+    if(addr && !strcmp(addr, "*"))
+        addr = NULL;
 
     // port always even...
     port = port & 0xfffe;
