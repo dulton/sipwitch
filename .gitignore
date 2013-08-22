@@ -3,6 +3,7 @@ autoconf/
 CMakeFiles/
 autom4te.cache/
 demo-*
+directive
 configure
 configure.lineno
 config.h.in
