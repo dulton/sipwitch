@@ -24,7 +24,6 @@
 #endif
 
 #include <ctype.h>
-#include "voip.h"
 
 #ifdef  EXOSIP_API4
 #define EXOSIP_CONTEXT  stack::sip.context
@@ -123,7 +122,7 @@ public:
         } index;
         struct sockaddr_internet address;
         struct sockaddr_storage peering;
-        sip::context_t context;
+        voip::context_t context;
 
         time_t created;
         status_t status;
@@ -253,7 +252,7 @@ private:
     public:
         registry::mapped *reg;
         int cid, tid, did;
-        sip::context_t context;
+        voip::context_t context;
         time_t activates;
         uint32_t sequence;
         call *parent;
@@ -395,7 +394,7 @@ private:
     unsigned invite_expires;
 
 public:
-    sip::context_t context;
+    voip::context_t context;
 
     static stack sip;
 
@@ -540,7 +539,7 @@ private:
     class __LOCAL message : public LinkedObject
     {
     public:
-        sip::context_t context;
+        voip::context_t context;
         time_t expires;
         char user[MAX_USERID_SIZE];
         char type[64];
@@ -609,7 +608,7 @@ private:
     unsigned via_hops;
     unsigned via_port, from_port, contact_port;
     destination_t destination;
-    sip::context_t source_context, target_context;
+    voip::context_t source_context, target_context;
 
     char *sip_realm;
     osip_proxy_authenticate_t *proxy_auth;

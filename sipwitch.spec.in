@@ -33,6 +33,7 @@ Summary: Runtime library support for sipwitch
 %package devel
 Requires: ucommon-devel >= 6.0.0
 Requires: %{name}-runtime = %{version}-%{release}
+Requires: libeXosip2-devel >= 3.0.0
 Group: Development/Libraries
 Summary: Headers for building sipwitch plugins
 

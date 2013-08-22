@@ -23,7 +23,7 @@ pkgxmldir=$(sysconfdir)/sipwitch.d
 pkglibdir=$(libdir)/sipwitch
 systemddir=$(libdir)/systemd/system
 logrotatedir=$(sysconfdir)/logrotate.d
-noinst_HEADERS = server.h voip.h
+noinst_HEADERS = server.h
 pkglib_LTLIBRARIES = forward.la scripting.la subscriber.la
 
 if ZEROCONF
@@ -33,8 +33,7 @@ EXTRA_LTLIBRARIES += zeroconf.la
 endif
 
 sipw_SOURCES = server.cpp registry.cpp stack.cpp thread.cpp protocols.cpp \
-	call.cpp messages.cpp media.cpp system.cpp signals.cpp history.cpp \
-	voip.cpp
+	call.cpp messages.cpp media.cpp system.cpp signals.cpp history.cpp
 sipw_LDADD = $(LDADD) @SIPWITCH_EXOSIP2@ @DAEMON_LIBS@ $(DLOPEN)
 sipw_LDFLAGS = @LDFLAGS@
 

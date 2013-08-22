@@ -26,12 +26,11 @@ sipwitch-cgi
 sipwitch-config
 sipwitch-config.h
 sipwitch-config.h.in
-utils/sipquery
 switchview/switchview
 utils/sipwitch-cgi
-sippasswd
-sipquery
-sipwitch
+utils/sippasswd
+utils/sipquery
+utils/sipwitch
 moc_*.c*
 qrc_*.c*
 ui_*.c*
