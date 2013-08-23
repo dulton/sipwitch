@@ -32,6 +32,12 @@ else
 EXTRA_LTLIBRARIES += zeroconf.la
 endif
 
+if SRVRESOLV
+pkglib_LTLIBRARIES += srvresolv.la
+else
+EXTRA_LTLIBRARIES += srvresolv.la
+endif
+
 sipw_SOURCES = server.cpp registry.cpp stack.cpp thread.cpp protocols.cpp \
 	call.cpp messages.cpp media.cpp system.cpp signals.cpp history.cpp
 sipw_LDADD = $(LDADD) @SIPWITCH_EXOSIP2@ @DAEMON_LIBS@ $(DLOPEN)
@@ -52,6 +58,9 @@ subscriber_la_LDFLAGS = -module $(MODFLAGS) $(PLUGINS_ADD)
 
 zeroconf_la_SOURCES = zeroconf.cpp 
 zeroconf_la_LDFLAGS = -module $(MODFLAGS) @ZEROCONF_LIBS@ $(PLUGINS_ADD)
+
+srvresolv_la_SOURCES = srvresolv.cpp
+srvresolv_la_LDFLAGS = -module $(MODFLAGS) @SRVRESOLV_LIBS@ $(PLUGINS_ADD)
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(logrotatedir)
