@@ -1243,7 +1243,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     int cid;
     unsigned icount = 0;
     time_t now;
-    struct sockaddr_storage peering;
+    struct sockaddr_storage peering, abuf;
 
     time(&now);
 
@@ -1258,6 +1258,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
     // default if no target route lookup...
 
+    target = server::resolve(uri_target, &abuf);
     if(!target) {
         if(!port)
             port = 5060;
