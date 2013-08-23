@@ -1229,8 +1229,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     assert(s != NULL && s->parent != NULL);
     assert(uri_target != NULL);
 
-    struct sockaddr *target;
-    Socket::address resolve;
+    struct sockaddr *target = NULL;
     stack::session *invited;
     stack::call *call = s->parent;
     linked_pointer<stack::segment> sp = call->segments.begin();
@@ -1252,9 +1251,22 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     String::set(network, sizeof(network), "*");
     uri::userid(uri_target, username, sizeof(username));
     uri::hostid(uri_target, route, sizeof(route));
+    int port = uri::portid(uri_target);
+    const char *rp = NULL;
 
-    resolve.set(route, 5060);
-    target = resolve.getAddr();
+    // remote target plugin support to be added here...
+
+    // default if no target route lookup...
+
+    if(!target) {
+        if(!port)
+            port = 5060;
+
+        Socket::address resolve;
+        resolve.set(route, port);
+        target = resolve.getAddr();
+    }
+
     if(target) {
         stack::subnet *subnet = server::getPolicy(target);
         if(subnet) {
@@ -1264,6 +1276,8 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
         else
             service::published(&peering);
         server::release(subnet);
+        if(uri::server(target, route, sizeof(route)))
+            rp = route;
     }
     else
         service::published(&peering);
@@ -1280,7 +1294,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     invite = NULL;
 
     EXOSIP_LOCK
-    if(eXosip_call_build_initial_invite(OPTION_CONTEXT &invite, touri, s->from, NULL, call->subject)) {
+    if(eXosip_call_build_initial_invite(OPTION_CONTEXT &invite, touri, s->from, rp, call->subject)) {
         shell::log(shell::ERR, "cannot invite %s; build failed", uri_target);
         EXOSIP_UNLOCK
         return icount;

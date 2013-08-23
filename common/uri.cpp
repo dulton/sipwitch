@@ -95,6 +95,34 @@ bool uri::userid(const char *addr, char *buf, size_t size)
     return true;
 }
 
+unsigned short uri::portid(const char *uri)
+{
+    const char *pp = NULL;
+    const char *fp = NULL;
+
+    if(eq(uri, "sips:", 5))
+        uri += 5;
+    else if(eq(uri, "sip:", 4)) {
+        uri += 4;
+    }
+
+    if(*uri == '[') {
+        pp = strchr(uri, ']');
+        if(pp)
+            pp = strchr(pp, ':');
+    }
+    else {
+        pp = strrchr(uri, ':');
+        fp = strchr(uri, ':');
+        if(fp != pp)
+            pp = NULL;
+    }
+    if(pp)
+        return atoi(++pp);
+    else
+        return 0;
+}
+
 bool uri::rewrite(const char *sipuri, char *buffer, size_t size)
 {
     const char *schema = "sip:";
@@ -217,6 +245,28 @@ void uri::publish(const char *uri, char *buf, const char *user, size_t size)
         snprintf(buf, size, "%s:%s@%s", schema, user, uri);
     else
         snprintf(buf, size, "%s:%s", schema, uri);
+}
+
+bool uri::server(struct sockaddr *addr, char *buf, size_t size)
+{
+    assert(addr != NULL);
+    assert(buf != NULL);
+    assert(size > 0);
+
+    char host[256];
+
+    buf[0] = 0;
+
+    if(!Socket::query(addr, host, sizeof(host)))
+        return false;
+
+#ifdef  AF_INET6
+    if(addr->sa_family == AF_INET6)
+        snprintf(buf, size, "sip:[%s]:%u", host, (unsigned)ntohs(((struct sockaddr_in6 *)(addr))->sin6_port) & 0xffff);
+    else
+#endif
+        snprintf(buf, size, "sip:%s:%u", host, (unsigned)ntohs(((struct sockaddr_in *)(addr))->sin_port) & 0xffff);
+    return true;
 }
 
 void uri::identity(struct sockaddr *addr, char *buf, const char *user, size_t size)
