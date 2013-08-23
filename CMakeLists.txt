@@ -110,14 +110,21 @@ endif()
 
 pkg_check_modules(USES_ZEROCONF avahi-client>=0.3.0)
 
-pkg_check_modules(USES_LIBNOTIFY libnotify>=0.4.0)
-if(USES_LIBNOTIFY_FOUND)
-    add_definitions(-DUSES_LIBNOTIFY)
+check_include_files(ruli.h HAVE_RULI_H)
+
+if(HAVE_RULI_H)
+    set(SRVRESOLV_RULI true)
+    set(SRVRESOLV_FOUND true)
+    set(RULI_LIBRARIES ruli)
+endif()
+
+if(USES_ZEROCONF_FOUND)
+    set(ZEROCONF_AVAHI true)
 endif()
 
 include_directories(${USES_UCOMMON_INCLUDE_DIRS})
-link_directories(${USES_UCOMMON_LIBRARY_DIRS} ${USES_LIBNOTIFY_LIBRARY_DIRS})
-add_definitions(${USES_UCOMMON_CFLAGS} ${USES_LIBNOTIFY_CFLAGS})
+link_directories(${USES_UCOMMON_LIBRARY_DIRS})
+add_definitions(${USES_UCOMMON_CFLAGS})
 
 # by default we build static libs for windows, shared libs for unix.
 # we may also set this from a top level cmake or -DWITH_XX_LIBS

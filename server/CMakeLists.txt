@@ -40,6 +40,16 @@ if(HAVE_PLUGINS)
     install(TARGETS sipwitch-forward sipwitch-scripting sipwitch-subscriber DESTINATION ${INSTALL_PLUGINS})
 endif()
 
+if(HAVE_PLUGINS AND SRVRESOLV_FOUND)
+    add_library(sipwitch-srvresolv MODULE srvresolv.cpp)
+    add_dependencies(sipwitch-srvresolv sipwitch-runtime ucommon)
+    target_link_libraries(sipwitch-srvresolv sipwitch-runtime ${RULI_LIBRARIES} ${USES_UCOMMON_LIBRARIES})
+    set_target_properties(sipwitch-srvresolv PROPERTIES OUTPUT_NAME srvresolv SUFFIX ${MODULE_EXT} PREFIX "")
+
+    install(TARGETS sipwitch-srvresolv DESTINATION ${INSTALL_PLUGINS})
+endif()
+
+
 if(HAVE_PLUGINS AND USES_ZEROCONF_FOUND)
     add_library(sipwitch-zeroconf MODULE zeroconf.cpp)
     add_dependencies(sipwitch-zeroconf sipwitch-runtime ucommon)
