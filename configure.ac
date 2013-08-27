@@ -8,9 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-AC_INIT(autogen.sh)
+AC_INIT([sipwitch],[1.7.1])
+AC_CONFIG_SRCDIR([autogen.sh])
 
-VERSION="1.7.1"
 LT_VERSION="1:12:0"
 UCOMMON_REQUIRES="6.0.0"
 
@@ -24,7 +24,7 @@ AC_PROG_LN_S
 AC_LIBTOOL_WIN32_DLL
 AC_LIBTOOL_DLOPEN
 AM_PROG_LIBTOOL
-AM_INIT_AUTOMAKE(sipwitch, [$VERSION])
+AM_INIT_AUTOMAKE([dist-shar dist-zip])
 AM_CONFIG_HEADER(sipwitch-config.h)
 
 AC_C_RESTRICT
