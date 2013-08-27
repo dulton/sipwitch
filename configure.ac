@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-AC_INIT([sipwitch],[1.7.1])
+AC_INIT([sipwitch],[1.7.2])
 AC_CONFIG_SRCDIR([autogen.sh])
 
 LT_VERSION="1:12:0"
