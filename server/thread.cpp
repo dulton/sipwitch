@@ -1745,19 +1745,17 @@ void thread::getDevice(registry::mapped *rr)
 
 void thread::options(void)
 {
-    osip_message_t *reply = NULL;
+    voip::msg_t reply = NULL;
 
-    EXOSIP_LOCK
-    if(eXosip_options_build_answer(OPTION_CONTEXT sevent->tid, SIP_OK, &reply) == 0) {
+    if(voip::make_options_response(context, sevent->tid, SIP_OK, &reply)) {
         osip_message_set_header(reply, ACCEPT, "application/sdp, text/plain");
         osip_message_set_header(reply, ALLOW, "INVITE,ACK,CANCEL,OPTIONS,INFO,REFER,MESSAGE,SUBSCRIBE,NOTIFY,REGISTER,PRACK");
         osip_message_set_header(reply, ALLOW_EVENTS, "talk, hold, refer");
         stack::siplog(reply);
-        eXosip_options_send_answer(OPTION_CONTEXT sevent->tid, SIP_OK, reply);
+        voip::send_options_response(context, sevent->tid, SIP_OK, reply);
     }
     else
-        eXosip_options_send_answer(OPTION_CONTEXT sevent->tid, SIP_BAD_REQUEST, NULL);
-    EXOSIP_UNLOCK
+        voip::send_options_response(context, sevent->tid, SIP_BAD_REQUEST, NULL);
 }
 
 void thread::shutdown(void)

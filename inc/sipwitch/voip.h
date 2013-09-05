@@ -56,16 +56,21 @@ public:
 	typedef	int	tid_t;		// transaction id
 	typedef	int did_t;		// dialog id
 	typedef	int	call_t;		// call id
+	typedef	osip_header_t	*hdr_t;
 	typedef	osip_message_t	*msg_t;
 	typedef	osip_from_t		*from_t;
 	typedef	osip_via_t		*via_t;
 	typedef	osip_to_t		*to_t;
+	typedef	osip_uri_t		*uri_t;
 	typedef	unsigned long timeout_t;
 
 	static bool make_request_message(context_t ctx, const char *method, const char *to, const char *from, msg_t *msg, const char *route = NULL);
 	static bool make_response_message(context_t ctx, tid_t tid, int status, msg_t *msg);
 	static void send_request_message(context_t ctx, msg_t msg);
 	static void send_response_message(context_t ctx, tid_t tid, int status, msg_t msg = NULL);
+
+	static bool make_options_response(context_t ctx, tid_t tid, int status, msg_t *msg);
+	static void send_options_response(context_t ctx, tid_t tid, int status, msg_t msg = NULL);
 
 	static bool make_invite_request(context_t ctx, const char *to, const char *from, const char *subject, msg_t *msg, const char *route = NULL);
 	static call_t send_invite_request(context_t ctx, msg_t msg);

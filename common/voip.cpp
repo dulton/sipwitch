@@ -118,6 +118,29 @@ void voip::send_prack_message(context_t ctx, tid_t tid, msg_t msg)
     eXosip_unlock(ctx);
 }
 
+bool voip::make_options_response(context_t ctx, tid_t tid, int status, msg_t *msg)
+{
+    if(!msg)
+        return false;
+
+    *msg = NULL;
+    eXosip_lock(ctx);
+    eXosip_options_build_answer(ctx, tid, status, msg);
+    if(!*msg) {
+        eXosip_unlock(ctx);
+        return false;
+    }
+    return true;
+}
+
+void voip::send_options_response(context_t ctx, tid_t tid, int status, msg_t msg)
+{
+    if(!msg)
+        eXosip_lock(ctx);
+    eXosip_options_send_answer(ctx, tid, status, msg);
+    eXosip_unlock(ctx);
+}
+
 bool voip::make_answer_response(context_t ctx, tid_t tid, int status, msg_t *msg)
 {
     if(!msg)
@@ -463,6 +486,28 @@ voip::call_t voip::send_invite_request(context_t ctx, msg_t msg)
     return rtn;
 }
 
+bool voip::make_options_response(context_t ctx, tid_t tid, int status, msg_t *msg)
+{
+    if(!msg)
+        return false;
+    *msg = NULL;
+    eXosip_lock();
+    eXosip_options_build_answer(tid, status, msg);
+    if(!*msg) {
+        eXosip_unlock();
+        return false;
+    }
+    return true;
+}
+
+void voip::send_options_response(context_t ctx, tid_t tid, int status, msg_t msg)
+{
+    if(!msg)
+        eXosip_lock();
+    eXosip_options_send_answer(tid, status, msg);
+    eXosip_unlock();
+}
+
 bool voip::make_answer_response(context_t ctx, tid_t tid, int status, msg_t *msg)
 {
     if(!msg)
@@ -484,7 +529,6 @@ void voip::send_answer_response(context_t ctx, tid_t tid, int status, msg_t msg)
     eXosip_call_send_answer(tid, status, msg);
     eXosip_unlock();
 }
-
 
 void voip::send_request_message(context_t ctx, msg_t msg)
 {
