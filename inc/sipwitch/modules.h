@@ -101,6 +101,15 @@ public:
         virtual bool resolve(const char *uri , struct sockaddr_storage *addr);
 
         /**
+         * Selective resolve of specific domains, called before resolve.
+         * @param host of remote server.
+         * @param port of remote server (0 = unspecified/srv).
+         * @param addr buffer to use.
+         * @return true if resolved.
+         */
+        virtual bool preroute(const char *uri , struct sockaddr_storage *addr);
+
+        /**
          * Notify plugins a user registration has been expired or released.
          * @param user registration that was expired.
          */

@@ -112,6 +112,13 @@ struct sockaddr *server::resolve(const char *uri, struct sockaddr_storage *addr)
 
     linked_pointer<modules::sipwitch> cb = getModules();
     while(is(cb)) {
+        if(cb->preroute(uri, addr))
+            return (struct sockaddr *)addr;
+        cb.next();
+    }
+
+    cb = getModules();
+    while(is(cb)) {
         if(cb->resolve(uri, addr))
             return (struct sockaddr *)addr;
         cb.next();
