@@ -111,6 +111,8 @@ public:
 	static void release(context_t ctx);
 	static void show(msg_t msg);
 
+	static void server_allows(voip::msg_t msg);
+	static void server_accepts(voip::msg_t msg);
 };
 
 #ifndef SESSION_EXPIRES

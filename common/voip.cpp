@@ -828,3 +828,14 @@ void voip::show(msg_t msg)
     }
 }
 
+void voip::server_accepts(voip::msg_t msg)
+{
+    osip_message_set_header(msg, ACCEPT, "application/sdp, text/plain");
+}
+
+void voip::server_allows(voip::msg_t msg)
+{
+    osip_message_set_header(msg, ALLOW, "INVITE,ACK,CANCEL,OPTIONS,INFO,REFER,MESSAGE,SUBSCRIBE,NOTIFY,REGISTER,PRACK");
+    osip_message_set_header(msg, ALLOW_EVENTS, "talk, hold, refer");
+}
+

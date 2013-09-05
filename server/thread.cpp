@@ -1748,9 +1748,8 @@ void thread::options(void)
     voip::msg_t reply = NULL;
 
     if(voip::make_options_response(context, sevent->tid, SIP_OK, &reply)) {
-        osip_message_set_header(reply, ACCEPT, "application/sdp, text/plain");
-        osip_message_set_header(reply, ALLOW, "INVITE,ACK,CANCEL,OPTIONS,INFO,REFER,MESSAGE,SUBSCRIBE,NOTIFY,REGISTER,PRACK");
-        osip_message_set_header(reply, ALLOW_EVENTS, "talk, hold, refer");
+        voip::server_accepts(reply);
+        voip::server_allows(reply);
         stack::siplog(reply);
         voip::send_options_response(context, sevent->tid, SIP_OK, reply);
     }
