@@ -1310,8 +1310,7 @@ void thread::challenge(void)
         eXosip_message_build_answer(OPTION_CONTEXT sevent->tid, SIP_UNAUTHORIZED, &reply);
         if(reply != NULL) {
             osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
-            osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
-            osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
+            voip::server_allows(reply);
             stack::siplog(reply);
             eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, SIP_UNAUTHORIZED, reply);
         }
@@ -1320,8 +1319,7 @@ void thread::challenge(void)
         eXosip_message_build_answer(OPTION_CONTEXT sevent->tid, SIP_UNAUTHORIZED, &reply);
         if(reply != NULL) {
             osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
-            osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
-            osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
+            voip::server_allows(reply);
             stack::siplog(reply);
             eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, SIP_UNAUTHORIZED, reply);
         }
@@ -1329,9 +1327,8 @@ void thread::challenge(void)
     case CALL:
         eXosip_call_build_answer(OPTION_CONTEXT sevent->tid, SIP_UNAUTHORIZED, &reply);
         if(reply != NULL) {
-            osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
-            osip_message_set_header(reply, ALLOW_EVENTS, "talk, hold, refer");
             osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
+            voip::server_allows(reply);
             stack::siplog(reply);
             eXosip_call_send_answer(OPTION_CONTEXT sevent->tid, SIP_UNAUTHORIZED, reply);
         }
@@ -1478,8 +1475,7 @@ reply:
             snprintf(temp, sizeof(temp), "%lu", (long)registry::getExpires());
             osip_message_set_expires(reply, temp);
         }
-        osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
-        osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
+        voip::server_allows(reply);
         stack::siplog(reply);
         eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, error, reply);
     }
@@ -1590,8 +1586,7 @@ reply:
                     stack::getScheme(), reguri->username, binding);
                 osip_message_set_contact(reply, buftemp);
             }
-            osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
-            osip_message_set_header(reply, ALLOW_EVENTS , "talk, hold, refer");
+            voip::server_allows(reply);
             stack::siplog(reply);
             eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, error, reply);
         }
@@ -1699,8 +1694,7 @@ reply:
                 stack::getScheme(), reginfo->userid, binding, (long)interval);
             osip_message_set_contact(reply, buftemp);
         }
-        osip_message_set_header(reply, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
-        osip_message_set_header(reply, ALLOW_EVENTS, "talk, hold, refer");
+        voip::server_allows(reply);
         stack::siplog(reply);
         eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, answer, reply);
     }

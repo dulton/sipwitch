@@ -839,3 +839,9 @@ void voip::server_allows(voip::msg_t msg)
     osip_message_set_header(msg, ALLOW_EVENTS, "talk, hold, refer");
 }
 
+void voip::server_supports(voip::msg_t msg)
+{
+    server_allows(msg);
+    osip_message_set_supported(msg, "100rel,replaces,timer");
+}
+

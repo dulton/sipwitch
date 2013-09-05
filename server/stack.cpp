@@ -472,8 +472,7 @@ failed:
         EXOSIP_UNLOCK
         return;
     }
-    osip_message_set_header(msg, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
-    osip_message_set_header(msg, ALLOW_EVENTS, "talk, hold, refer");
+    voip::server_allows(msg);
     osip_message_set_header(msg, "Referred-By", source->identity);
     eXosip_call_send_request(OPTION_CONTEXT did, msg);
     target->state = session::REFER;
@@ -519,8 +518,7 @@ void stack::infomsg(session *source, eXosip_event_t *sevent)
         snprintf(type, sizeof(type), "%s", ct->type);
     osip_message_set_content_type(msg, type);
     osip_message_set_body(msg, body->body, strlen(body->body));
-    osip_message_set_header(msg, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
-    osip_message_set_header(msg, ALLOW_EVENTS, "talk, hold, refer");
+    voip::server_allows(msg);
     eXosip_call_send_request(OPTION_CONTEXT did, msg);
     EXOSIP_UNLOCK
 }
@@ -1316,9 +1314,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
     divert(call, invite);
 
-    osip_message_set_header(invite, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
-    osip_message_set_header(invite, ALLOW_EVENTS, "talk, hold, refer");
-    osip_message_set_supported(invite, "100rel,replaces,timer");
+    voip::server_supports(invite);
 
     if(digest && s->reg) {
         char *authbuf = new char[1024];
@@ -1570,9 +1566,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
 
         divert(call, invite);
 
-        osip_message_set_header(invite, ALLOW, "INVITE, ACK, CANCEL, BYE, REFER, OPTIONS, NOTIFY, SUBSCRIBE, PRACK, MESSAGE, INFO");
-        osip_message_set_header(invite, ALLOW_EVENTS, "talk, hold, refer");
-        osip_message_set_supported(invite, "100rel,replaces,timer");
+        voip::server_supports(invite);
 
         if(call->expires) {
             snprintf(expheader, sizeof(expheader), "%ld", (long)(call->expires - now));
