@@ -42,7 +42,7 @@ static char *remove_quotes(char *c)
     return o;
 }
 
-thread::thread() : DetachedThread(stack::sip.stacksize)
+thread::thread(voip::context_t ctx) : DetachedThread(stack::sip.stacksize)
 {
     to = NULL;
     from = NULL;
@@ -50,6 +50,7 @@ thread::thread() : DetachedThread(stack::sip.stacksize)
     routed = NULL;
     reginfo = NULL;
     session = NULL;
+    context = ctx;
 }
 
 void thread::publish(void)
@@ -1764,7 +1765,6 @@ void thread::shutdown(void)
     shutdown_flag = true;
     while(active_count)
         Thread::sleep(50);
-    eXosip_quit(EXOSIP_CONTEXT);
     while(shutdown_count < startup_count)
         Thread::sleep(50);
 }
@@ -1817,7 +1817,7 @@ void thread::run(void)
         identbuf[0] = 0;
 
         if(!shutdown_flag)
-            sevent = eXosip_event_wait(OPTION_CONTEXT 0, stack::sip.timing);
+            sevent = voip::get_event(context, stack::sip.timing);
 
         activated = false;
         accepted = NULL;
@@ -1828,6 +1828,7 @@ void thread::run(void)
 
         if(shutdown_flag) {
             shell::log(DEBUG1, "stopping event thread %d", instance);
+            voip::release(context);
             ++shutdown_count;
             return; // exits thread...
         }

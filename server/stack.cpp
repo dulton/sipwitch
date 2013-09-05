@@ -722,25 +722,18 @@ void stack::start(service *cfg)
         iface = sip_iface;
 
     thread *thr;
-    unsigned thidx = 0;
     shell::log(DEBUG1, "starting sip stack v%d; %d maps and %d threads at priority %d",
         ver, mapped_calls, threading, priority);
-#ifdef  EXOSIP_API4
-    sip.context = eXosip_malloc();
-#endif
-    eXosip_init(EXOSIP_CONTEXT);
 
+    tcp_context = udp_context = tls_context = out_context = NULL;
+
+#ifdef  EXOSIP_API4
+    sip.out_context = eXosip_malloc();
+#endif
     mapped_array<MappedCall>::create(control::env("callmap"), mapped_calls);
     if(!sip)
         shell::log(shell::FAIL, "calls could not be mapped");
     initialize();
-#ifdef  AF_INET6
-    if(sip_family == AF_INET6) {
-        eXosip_enable_ipv6(1);
-        if(!iface)
-            iface = "::0";
-    }
-#endif
 
 #ifdef  HAVE_TLS
     if(sip_tlsmode) {
@@ -771,34 +764,54 @@ void stack::start(service *cfg)
 #else
     Socket::family(sip_family);
 #endif
-
-    if(eXosip_listen_addr(OPTION_CONTEXT sip_protocol, iface, sip_port, sip_family, sip_tlsmode)) {
-#ifdef  AF_INET6
-        if(!iface && sip_family == AF_INET6)
-            iface = "::0";
-#endif
-        if(!iface)
-            iface = "*";
-        shell::log(shell::FAIL, "sip cannot bind interface %s, port %d", iface, sip_port);
-    }
-    #ifdef  AF_INET6
-    if(!iface && sip_family == AF_INET6)
-        iface = "::0";
-#endif
-    if(!iface)
-        iface = "*";
-
-    shell::log(shell::DEBUG1, "binding interface %s, port %d", iface, sip_port);
-
     osip_trace_initialize_syslog(TRACE_LEVEL0, (char *)"sipwitch");
-    eXosip_set_user_agent(OPTION_CONTEXT agent);
+
+    if(sip_protocol == IPPROTO_TCP) {
+        voip::create(&tcp_context, agent, sip_family);
+        voip::create(&udp_context, agent, sip_family);
+        out_context = tcp_context;
+    }
+    else {
+        voip::create(&udp_context, agent, sip_family);
+        voip::create(&tcp_context, agent, sip_family);
+        out_context = udp_context;
+    }
+
+#ifdef  HAVE_TLS
+    voip::create(&tls_context, agent, family);
+#endif
 
 #if defined(EXOSIP2_OPTION_SEND_101) && !defined(EXOSIP_API4)
     eXosip_set_option(EXOSIP_OPT_DONT_SEND_101, &send101);
 #endif
 
-    while(thidx++ < threading) {
-        thr = new thread();
+    threading = 0;
+    if(udp_context) {
+        ++threading;
+        if(!voip::listen(udp_context, IPPROTO_UDP, iface, sip_port))
+            shell::log(shell::FAIL, "cannot listen port %u for udp", sip_port);
+        else
+            shell::log(shell::NOTIFY, "listening port %u for udp", sip_port);
+        thr = new thread(udp_context);
+        thr->start(priority);
+    }
+
+    if(tcp_context) {
+        ++threading;
+        if(!voip::listen(tcp_context, IPPROTO_TCP, iface, sip_port))
+            shell::log(shell::FAIL, "cannot listen port %u for tcp", sip_port);
+        shell::log(shell::NOTIFY, "listening port %u for tcp", sip_port);
+        thr = new thread(tcp_context);
+        thr->start(priority);
+
+    }
+
+    if(tls_context) {
+        ++threading;
+        if(!voip::listen(tls_context, IPPROTO_TCP, iface, sip_port, true))
+            shell::log(shell::FAIL, "cannot listen port %u for tls", sip_port + 1);
+        shell::log(shell::NOTIFY, "listening port %u for tls", sip_port + 1);
+        thr = new thread(tls_context);
         thr->start(priority);
     }
 

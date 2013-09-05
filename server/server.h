@@ -26,10 +26,10 @@
 #include <ctype.h>
 
 #ifdef  EXOSIP_API4
-#define EXOSIP_CONTEXT  stack::sip.context
-#define OPTION_CONTEXT  stack::sip.context,
-#define EXOSIP_LOCK     eXosip_lock(stack::sip.context);
-#define EXOSIP_UNLOCK   eXosip_unlock(stack::sip.context);
+#define EXOSIP_CONTEXT  stack::sip.out_context
+#define OPTION_CONTEXT  stack::sip.out_context,
+#define EXOSIP_LOCK     eXosip_lock(stack::sip.out_context);
+#define EXOSIP_UNLOCK   eXosip_unlock(stack::sip.out_context);
 #else
 #define EXOSIP_CONTEXT
 #define OPTION_CONTEXT
@@ -394,7 +394,10 @@ private:
     unsigned invite_expires;
 
 public:
-    voip::context_t context;
+    voip::context_t out_context;
+    voip::context_t tcp_context;
+    voip::context_t udp_context;
+    voip::context_t tls_context;
 
     static stack sip;
 
@@ -587,7 +590,7 @@ private:
     service::keynode *routed;
     registry::mapped *reginfo;
     MappedRegistry *accepted;
-    eXosip_event_t *sevent;
+    voip::event_t sevent;
     bool activated;
     char binding[MAX_URI_SIZE];
     char buffer[MAX_URI_SIZE];
@@ -609,7 +612,7 @@ private:
     unsigned via_hops;
     unsigned via_port, from_port, contact_port;
     destination_t destination;
-    voip::context_t source_context, target_context;
+    voip::context_t context;
 
     char *sip_realm;
     osip_proxy_authenticate_t *proxy_auth;
@@ -617,7 +620,7 @@ private:
 
     enum {CALL, MESSAGE, REGISTRAR, NONE} authorizing;
 
-    thread();
+    thread(voip::context_t ctx);
 
     static void wait(unsigned count);
 

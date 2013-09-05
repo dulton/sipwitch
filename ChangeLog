@@ -1,5 +1,5 @@
-from 1.7.2 to 1.7.3
--
+from 1.7.2 to 1.8.0
+- start conversion for new v4 api multi-protocol support
 
 from 1.7.1 to 1.7.2
 - modernized autoconf support
