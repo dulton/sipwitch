@@ -113,7 +113,8 @@ public:
 
 	static void server_allows(voip::msg_t msg);
 	static void server_accepts(voip::msg_t msg);
-	static void server_supports(voip::msg_t msg);
+	static void server_supports(voip::msg_t msg, const char *txt);
+	static void server_requires(voip::msg_t msg, const char *txt);
 };
 
 #ifndef SESSION_EXPIRES

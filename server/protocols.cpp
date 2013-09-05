@@ -44,7 +44,7 @@ int proto::create_registration(const char *uri, const char *server, const char *
     EXOSIP_LOCK
     rid = eXosip_register_build_initial_register(OPTION_CONTEXT uri, server, contact, (int)expires, &msg);
     if(msg) {
-        osip_message_set_supported(msg, "100rel");
+        voip::server_supports(msg, "100rel");
         osip_message_set_header(msg, "Event", "Registration");
         osip_message_set_header(msg, "Allow-Events", "presence");
         eXosip_register_send_register(OPTION_CONTEXT rid, msg);

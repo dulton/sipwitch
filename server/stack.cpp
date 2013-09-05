@@ -1314,7 +1314,8 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
     divert(call, invite);
 
-    voip::server_supports(invite);
+    voip::server_allows(invite);
+    voip::server_supports(invite, "100rel,replaces,timer");
 
     if(digest && s->reg) {
         char *authbuf = new char[1024];
@@ -1566,7 +1567,8 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
 
         divert(call, invite);
 
-        voip::server_supports(invite);
+        voip::server_allows(invite);
+        voip::server_supports(invite, "100rel,replaces,timer");
 
         if(call->expires) {
             snprintf(expheader, sizeof(expheader), "%ld", (long)(call->expires - now));

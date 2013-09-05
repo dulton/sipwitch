@@ -409,7 +409,7 @@ unconnected:
         EXOSIP_LOCK
         eXosip_call_build_answer(OPTION_CONTEXT source->tid, 200, &reply);
         if(reply != NULL) {
-            osip_message_set_require(reply, "100rel");
+            voip::server_requires(reply, "100rel");
             osip_message_set_header(reply, "RSeq", "1");
             if(body && body->body) {
                 sdp = media::reinvite(s, body->body);
@@ -442,7 +442,7 @@ unconnected:
         eXosip_call_build_request(OPTION_CONTEXT did, "INVITE", &reply);
         if(reply != NULL) {
             if(stack::sip_protocol == IPPROTO_UDP)
-                osip_message_set_supported(reply, "100rel,replaces");
+                voip::server_supports(reply, "100rel,replaces");
             if(body && body->body) {
                 osip_message_set_body(reply, body->body, strlen(body->body));
                 osip_message_set_content_type(reply, "application/sdp");
@@ -591,7 +591,7 @@ void stack::call::relay(thread *thread, session *s)
     eXosip_call_build_answer(OPTION_CONTEXT tid, status, &reply);
     if(reply) {
         if(stack::sip_protocol == IPPROTO_UDP)
-            osip_message_set_require(reply, "100rel");
+            voip::server_requires(reply, "100rel");
         osip_message_set_header(reply, "RSeq", "1");
         if(body && body->body) {
             osip_message_set_body(reply, body->body, strlen(body->body));

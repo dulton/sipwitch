@@ -1106,7 +1106,7 @@ void thread::send_reply(int error)
         eXosip_call_build_answer(OPTION_CONTEXT sevent->tid, error, &reply);
         if(reply != NULL) {
             if(context == stack::sip.udp_context)
-                osip_message_set_require(reply, "100rel");
+                voip::server_requires(reply, "100rel");
             stack::siplog(reply);
             eXosip_call_send_answer(OPTION_CONTEXT sevent->tid, error, reply);
         }
@@ -1118,7 +1118,7 @@ void thread::send_reply(int error)
         eXosip_message_build_answer(OPTION_CONTEXT sevent->tid, error, &reply);
         if(reply != NULL) {
             if(context == stack::sip.udp_context)
-                osip_message_set_require(reply, "100rel");
+                voip::server_requires(reply, "100rel");
             stack::siplog(reply);
             eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, error, reply);
         }
