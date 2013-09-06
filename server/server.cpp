@@ -105,41 +105,18 @@ const char *server::referRemote(MappedRegistry *rr, const char *target, char *bu
     return refer;
 }
 
-const char *server::schema(const char *uri)
-{
-    assert(uri != NULL && *uri != 0);
-    const char *sp = NULL;
-
-    linked_pointer<modules::sipwitch> cb = getModules();
-    while(is(cb) && sp == NULL) {
-        sp = cb->schema(uri);
-        cb.next();
-    }
-    // if no schema known, assume sips...
-    if(!sp)
-        sp = "sips";
-    return sp;
-}
-
-struct sockaddr *server::resolve(const char *uri, struct sockaddr_storage *addr)
+const char *server::resolve(const char *uri, struct sockaddr_storage *addr)
 {
     assert(uri != NULL && *uri != 0);
     assert(addr != NULL);
 
     linked_pointer<modules::sipwitch> cb = getModules();
-    while(is(cb)) {
-        if(cb->preroute(uri, addr))
-            return (struct sockaddr *)addr;
+    const char *sp = NULL;
+    while(!sp && is(cb)) {
+        sp = cb->resolve(uri, addr);
         cb.next();
     }
-
-    cb = getModules();
-    while(is(cb)) {
-        if(cb->resolve(uri, addr))
-            return (struct sockaddr *)addr;
-        cb.next();
-    }
-    return NULL;
+    return sp;
 }
 
 const char *server::referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size)

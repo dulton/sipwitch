@@ -62,19 +62,9 @@ void modules::sipwitch::period(long slice)
 {
 }
 
-const char *modules::sipwitch::schema(const char *uri)
+const char *modules::sipwitch::resolve(const char *uri, struct sockaddr_storage *addr)
 {
     return NULL;
-}
-
-bool modules::sipwitch::resolve(const char *uri, struct sockaddr_storage *addr)
-{
-    return false;
-}
-
-bool modules::sipwitch::preroute(const char *uri, struct sockaddr_storage *addr)
-{
-    return false;
 }
 
 bool modules::sipwitch::announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *msgbody)

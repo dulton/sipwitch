@@ -39,7 +39,7 @@ private:
     void stop(service *cfg);
     void reload(service *cfg);
 
-    bool resolve(const char *uri, struct sockaddr_storage *addr);
+    const char *resolve(const char *uri, struct sockaddr_storage *addr);
 };
 
 srvresolv::srvresolv() :
@@ -64,27 +64,31 @@ void srvresolv::reload(service *cfg)
     active = true;
 }
 
-bool srvresolv::resolve(const char *uri, struct sockaddr_storage *addr)
+const char *srvresolv::resolve(const char *uri, struct sockaddr_storage *addr)
 {
     int protocol = sip_protocol;
     const char *svc = "sip";
+    const char *schema = "sip";
 
     if(!uri || !addr)
-        return false;
+        return NULL;
 
     if(uri::portid(uri))
-        return false;
+        return NULL;
 
     if(eq(uri, "sips:", 5)) {
         protocol = IPPROTO_TCP;
+        schema = "sips";
         svc = "sips";
     }
     else if(eq(uri, "tcp:", 4)) {
         protocol = IPPROTO_TCP;
+        schema = "tcp";
         svc = "sip";
     }
     else if(eq(uri, "udp:", 4)) {
         protocol = IPPROTO_UDP;
+        schema = "udp";
         svc = "sip";
     }
     else if(!eq(uri, "sip:", 4)) {
@@ -92,13 +96,14 @@ bool srvresolv::resolve(const char *uri, struct sockaddr_storage *addr)
         while(*cp && *cp != ':' && *cp != '@')
             ++cp;
         if(*cp == ':')  // if foreign protocol, always return false...  
-            return false;
+            return NULL;
+        schema = "sip";
     }
 
     char host[256];
     uri::hostid(uri, host, sizeof(host));
     if(Socket::is_numeric(host))
-        return false;
+        return NULL;
 
     struct addrinfo hint, *list = NULL;
     memset(&hint, 0, sizeof(hint));
@@ -120,11 +125,11 @@ bool srvresolv::resolve(const char *uri, struct sockaddr_storage *addr)
     ruli_getaddrinfo(host, svc, &hint, &list);
 
     if(!list)
-        return false;    
+        return NULL;    
     
     Socket::store(addr, list->ai_addr);
     ruli_freeaddrinfo(list);
-    return true;
+    return schema;
 }
 
 #else

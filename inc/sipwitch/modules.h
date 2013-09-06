@@ -96,25 +96,9 @@ public:
          * @param host of remote server.
          * @param port of remote server (0 = unspecified/srv).
          * @param addr buffer to use.
-         * @return true if resolved.
+         * @return schema assocated with uri, or NULL if not found.
          */
-        virtual bool resolve(const char *uri , struct sockaddr_storage *addr);
-
-        /**
-         * Selective resolve of specific domains, called before resolve.
-         * @param host of remote server.
-         * @param port of remote server (0 = unspecified/srv).
-         * @param addr buffer to use.
-         * @return true if resolved.
-         */
-        virtual bool preroute(const char *uri , struct sockaddr_storage *addr);
-
-        /**
-         * Provide a sip schema for special or unrecognized protocols...
-         * @param uri offered.
-         * @return schema that provides it, NULL if ignored.
-         */
-        virtual const char *schema(const char *uri);
+        virtual const char *resolve(const char *uri , struct sockaddr_storage *addr);
 
         /**
          * Notify plugins a user registration has been expired or released.

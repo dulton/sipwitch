@@ -1257,53 +1257,38 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     struct sockaddr_storage peering, abuf;
     voip::context_t context = stack::sip.out_context;
     const char *out_target = uri_target;
-    const char *schema = NULL;
     char rewrite[MAX_URI_SIZE];
+    const char *schema = server::resolve(out_target, &abuf);
 
-    if(eq(out_target, "sips:", 5)) {
-        context = stack::sip.tls_context;
+    if(!schema) {
+        if(eq(uri_target, "tcp:", 4))
+            schema = "tcp";
+        else if(eq(uri_target, "udp:", 4))
+            schema = "udp";
+        else if(eq(uri_target, "sips:", 5))
+            context = stack::sip.tls_context;
     }
-    else if(eq(out_target, "tcp:", 4)) {
-        context = stack::sip.tcp_context;
-        schema = "sip";
-        uri_target += 4;
-    }
-    else if(eq(out_target, "udp:", 4)) {
-        context = stack::sip.udp_context;
-        schema = "sip";
-        uri_target += 4;
-    }
-    else if(!eq(out_target, "sip:", 4)) {
-        // compute for unrecognized uri schemas...
+
+    if(schema) {
         while(*uri_target && *uri_target != ':' && *uri_target != '@')
             ++uri_target;
-        // foreign protocols tls by default unless plugin override
-        if(*uri_target == ':') {
+        if(*uri_target == ':')
             ++uri_target;
-            schema = server::schema(out_target);
-            if(!schema)
-                schema = "sips";
-            if(eq(schema, "tcp")) {
-                schema = "sip";
-                context = stack::sip.tcp_context;
-            }
-            else if(eq(schema, "udp")) {
-                schema = "sip";
-                context = stack::sip.udp_context;
-            }
-            else if(eq(schema, "sips"))
-                context = stack::sip.tls_context;
-            else
-                schema = "sip";
-        }
-        // no schema is sip: schema...
-        else {
+        else
             uri_target = out_target;
+        target = (struct sockaddr *)&abuf;
+
+        if(eq(schema, "tcp")) {
+            context = stack::sip.tcp_context;
             schema = "sip";
         }
-    }
-        
-    if(schema) {
+        else if(eq(schema, "udp")) {
+            context = stack::sip.udp_context;
+            schema = "sip";
+        }
+        else if(eq(schema, "sips"))
+            context = stack::sip.tls_context;
+
         // special schema rewrite for plugin based schema references    
         snprintf(rewrite, sizeof(rewrite), "%s:%s", schema, uri_target);
         uri_target = rewrite;
@@ -1322,7 +1307,6 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
     // default if no target route lookup...
 
-    target = server::resolve(out_target, &abuf);
     if(!target) {
         if(!port)
             port = 5060;
@@ -1353,7 +1337,6 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
             return icount;
         sp.next();
     }
-
 
     snprintf(touri, sizeof(touri), "<%s>", uri_target);
 
