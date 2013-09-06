@@ -78,6 +78,8 @@ cidr(acl, ifaddr(addr, id), id)
     active = true;
     String::set(netname, sizeof(netname), id);
 
+    shell::log(DEBUG3, "adding policy %s for %s", id, addr);
+
     if(eq(id, "world") || eq(id, "any") || eq(id, "nat")) {
         if(eq(id, "nat") || eq(id, "any"))
             String::set(netname, sizeof(netname), "*");
