@@ -87,7 +87,7 @@ bool srvresolv::resolve(const char *uri, struct sockaddr_storage *addr)
         protocol = IPPROTO_UDP;
         svc = "sip";
     }
-    else if(!eq(uri, "sip:", 4) {
+    else if(!eq(uri, "sip:", 4)) {
         const char *cp = uri;
         while(*cp && *cp != ':' && *cp != '@')
             ++cp;
