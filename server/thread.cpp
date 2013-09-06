@@ -1304,39 +1304,27 @@ void thread::challenge(void)
         "Digest realm=\"%s\", nonce=\"%s\", algorithm=%s",
                 registry::getRealm(), nonce, registry::getDigest());
 
-    EXOSIP_LOCK
     switch(authorizing) {
     case REGISTRAR:
-        eXosip_message_build_answer(OPTION_CONTEXT sevent->tid, SIP_UNAUTHORIZED, &reply);
-        if(reply != NULL) {
-            osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
-            voip::server_allows(reply);
-            stack::siplog(reply);
-            eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, SIP_UNAUTHORIZED, reply);
-        }
-        break;
     case MESSAGE:
-        eXosip_message_build_answer(OPTION_CONTEXT sevent->tid, SIP_UNAUTHORIZED, &reply);
-        if(reply != NULL) {
+        if(voip::make_response_message(context, sevent->tid, SIP_UNAUTHORIZED, &reply)) {
             osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
             voip::server_allows(reply);
             stack::siplog(reply);
-            eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, SIP_UNAUTHORIZED, reply);
+            voip::send_response_message(context, sevent->tid, SIP_UNAUTHORIZED, reply);
         }
         break;
     case CALL:
-        eXosip_call_build_answer(OPTION_CONTEXT sevent->tid, SIP_UNAUTHORIZED, &reply);
-        if(reply != NULL) {
+        if(voip::make_answer_response(context, sevent->tid, SIP_UNAUTHORIZED, & reply)) {
             osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
             voip::server_allows(reply);
             stack::siplog(reply);
-            eXosip_call_send_answer(OPTION_CONTEXT sevent->tid, SIP_UNAUTHORIZED, reply);
+            voip::send_answer_response(context, sevent->tid, SIP_UNAUTHORIZED, reply);
         }
         break;
     case NONE:
         break;
     }
-    EXOSIP_UNLOCK
 }
 
 bool thread::getsource(void)
