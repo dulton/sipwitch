@@ -62,6 +62,11 @@ void modules::sipwitch::period(long slice)
 {
 }
 
+const char *modules::sipwitch::schema(const char *uri)
+{
+    return NULL;
+}
+
 bool modules::sipwitch::resolve(const char *uri, struct sockaddr_storage *addr)
 {
     return false;

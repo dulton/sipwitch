@@ -110,6 +110,13 @@ public:
         virtual bool preroute(const char *uri , struct sockaddr_storage *addr);
 
         /**
+         * Provide a sip schema for special or unrecognized protocols...
+         * @param uri offered.
+         * @return schema that provides it, NULL if ignored.
+         */
+        virtual const char *schema(const char *uri);
+
+        /**
          * Notify plugins a user registration has been expired or released.
          * @param user registration that was expired.
          */

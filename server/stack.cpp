@@ -1274,13 +1274,27 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
         uri_target += 4;
     }
     else if(!eq(out_target, "sip:", 4)) {
+        // compute for unrecognized uri schemas...
         while(*uri_target && *uri_target != ':' && *uri_target != '@')
             ++uri_target;
-        // foreign protocols always tls by default for now...
+        // foreign protocols tls by default unless plugin override
         if(*uri_target == ':') {
             ++uri_target;
-            schema = "sips";
-            context = stack::sip.tls_context;
+            schema = server::schema(out_target);
+            if(!schema)
+                schema = "sips";
+            if(eq(schema, "tcp")) {
+                schema = "sip";
+                context = stack::sip.tcp_context;
+            }
+            else if(eq(schema, "udp")) {
+                schema = "sip";
+                context = stack::sip.udp_context;
+            }
+            else if(eq(schema, "sips"))
+                context = stack::sip.tls_context;
+            else
+                schema = "sip";
         }
         // no schema is sip: schema...
         else {
@@ -1290,6 +1304,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     }
         
     if(schema) {
+        // special schema rewrite for plugin based schema references    
         snprintf(rewrite, sizeof(rewrite), "%s:%s", schema, uri_target);
         uri_target = rewrite;
     }
