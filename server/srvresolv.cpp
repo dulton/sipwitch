@@ -69,6 +69,7 @@ const char *srvresolv::resolve(const char *uri, struct sockaddr_storage *addr)
     int protocol = sip_protocol;
     const char *svc = "sip";
     const char *schema = "sip";
+    bool flip = false;
 
     if(!uri || !addr)
         return NULL;
@@ -97,8 +98,10 @@ const char *srvresolv::resolve(const char *uri, struct sockaddr_storage *addr)
             ++cp;
         if(*cp == ':')  // if foreign protocol, always return false...  
             return NULL;
-        schema = "sip";
+        flip = true;
     }
+    else
+        flip = true;
 
     char host[256];
     uri::hostid(uri, host, sizeof(host));
@@ -123,6 +126,23 @@ const char *srvresolv::resolve(const char *uri, struct sockaddr_storage *addr)
 #endif
     hint.ai_flags = AI_CANONNAME;
     ruli_getaddrinfo(host, svc, &hint, &list);
+
+    if(!list && flip) {
+        if(hint.ai_protocol == IPPROTO_TCP) {
+            hint.ai_protocol = IPPROTO_UDP;
+            hint.ai_socktype = SOCK_DGRAM;
+        }
+        else {
+            hint.ai_protocol = IPPROTO_TCP;
+            hint.ai_socktype = SOCK_STREAM;
+        }
+        ruli_getaddrinfo(host, svc, &hint, &list);
+    }
+    
+    if(flip && hint.ai_protocol == IPPROTO_TCP)
+        schema = "tcp";
+    else if(flip)
+        schema = "udp";
 
     if(!list)
         return NULL;    

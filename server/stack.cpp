@@ -1294,6 +1294,12 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
         uri_target = rewrite;
     }
 
+    // if resolver target not supported, we fallback to internal defaults
+    if(!context) {
+        target = NULL;
+        context = stack::sip.out_context;
+    }
+
     time(&now);
 
     // compute network and subnet..
