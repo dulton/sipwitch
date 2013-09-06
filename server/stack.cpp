@@ -1255,6 +1255,44 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     unsigned icount = 0;
     time_t now;
     struct sockaddr_storage peering, abuf;
+    voip::context_t context = stack::sip.out_context;
+    const char *out_target = uri_target;
+    const char *schema = NULL;
+    char rewrite[MAX_URI_SIZE];
+
+    if(eq(out_target, "sips:", 5)) {
+        context = stack::sip.tls_context;
+    }
+    else if(eq(out_target, "tcp:", 4)) {
+        context = stack::sip.tcp_context;
+        schema = "sip";
+        uri_target += 4;
+    }
+    else if(eq(out_target, "udp:", 4)) {
+        context = stack::sip.udp_context;
+        schema = "sip";
+        uri_target += 4;
+    }
+    else if(!eq(out_target, "sip:", 4)) {
+        while(*uri_target && *uri_target != ':' && *uri_target != '@')
+            ++uri_target;
+        // foreign protocols always tls by default for now...
+        if(*uri_target == ':') {
+            ++uri_target;
+            schema = "sips";
+            context = stack::sip.tls_context;
+        }
+        // no schema is sip: schema...
+        else {
+            uri_target = out_target;
+            schema = "sip";
+        }
+    }
+        
+    if(schema) {
+        snprintf(rewrite, sizeof(rewrite), "%s:%s", schema, uri_target);
+        uri_target = rewrite;
+    }
 
     time(&now);
 
@@ -1269,7 +1307,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
     // default if no target route lookup...
 
-    target = server::resolve(uri_target, &abuf);
+    target = server::resolve(out_target, &abuf);
     if(!target) {
         if(!port)
             port = 5060;
@@ -1300,6 +1338,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
             return icount;
         sp.next();
     }
+
 
     snprintf(touri, sizeof(touri), "<%s>", uri_target);
 

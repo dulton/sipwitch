@@ -79,8 +79,21 @@ bool srvresolv::resolve(const char *uri, struct sockaddr_storage *addr)
         protocol = IPPROTO_TCP;
         svc = "sips";
     }
-    else if(!eq(uri, "sip:", 4) && sip_tlsmode)
-        svc = "sips";
+    else if(eq(uri, "tcp:", 4)) {
+        protocol = IPPROTO_TCP;
+        svc = "sip";
+    }
+    else if(eq(uri, "udp:", 4)) {
+        protocol = IPPROTO_UDP;
+        svc = "sip";
+    }
+    else if(!eq(uri, "sip:", 4) {
+        const char *cp = uri;
+        while(*cp && *cp != ':' && *cp != '@')
+            ++cp;
+        if(*cp == ':')  // if foreign protocol, always return false...  
+            return false;
+    }
 
     char host[256];
     uri::hostid(uri, host, sizeof(host));
