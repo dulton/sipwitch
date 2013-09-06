@@ -1213,7 +1213,10 @@ bool thread::authenticate(void)
 
     if(stack::sip.restricted) {
         if(!getsource() || !access || !String::ifind(stack::sip.restricted, access->getName(), ",; \t\n")) {
-            if(via_host)
+            if(access && via_host && !String::ifind(stack::sip.restricted, access->getName(), ",; \t\n"))
+                shell::log(shell::NOTIFY, "restricted %s from <%s> for %s:%u",
+                    access->getName(), stack::sip.restricted, via_host, via_port);
+            else if(via_host)
                 shell::log(shell::NOTIFY, "rejecting restricted %s from %s:%u", auth->username, via_host, via_port);
             else
                 shell::log(shell::NOTIFY, "rejecting restricted %s", auth->username);
