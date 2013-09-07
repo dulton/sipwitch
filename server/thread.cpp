@@ -1815,8 +1815,10 @@ void thread::run(void)
             return; // exits thread...
         }
 
-        if(!sevent)
+        if(!sevent) {
+            voip::automatic_action(context);
             continue;
+        }
 
         ++active_count;
         shell::debug(2, "sip: event %d; cid=%d, did=%d, instance=%d",
