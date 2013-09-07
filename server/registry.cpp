@@ -1107,7 +1107,7 @@ void registry::detach(mapped *rr)
     locking.release();
 }
 
-unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease, const char *target_contact, const char *target_network, struct sockaddr *target_peering)
+unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease, const char *target_contact, const char *target_network, struct sockaddr *target_peering, voip::context_t context)
 {
     assert(!isnull(target_addr));
     assert(target_contact != NULL && *target_contact != 0);
@@ -1165,6 +1165,7 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
         if(origin)
             delete origin;
     }
+    tp->context = context;
     Socket::store(&tp->peering, target_peering);
     String::set(tp->network, sizeof(tp->network), target_network);
     String::set(tp->contact, sizeof(tp->contact), target_contact);
@@ -1377,7 +1378,7 @@ bool registry::mapped::refresh(Socket::address& saddr, time_t lease, const char 
     return false;
 }
 
-unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease, const char *target_contact, const char *target_network, struct sockaddr *target_peering)
+unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease, const char *target_contact, const char *target_network, struct sockaddr *target_peering, voip::context_t context)
 {
     assert(!isnull(target_addr));
     assert(target_contact != NULL && *target_contact != 0);
@@ -1422,6 +1423,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
         if(tp->expires < now)
             time(&tp->created);
         tp->expires = lease;
+        tp->context = context;
         Socket::store(&tp->peering, target_peering);
         String::set(tp->contact, sizeof(tp->contact), target_contact);
         String::set(tp->network, sizeof(tp->network), target_network);
@@ -1447,6 +1449,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
     }
     time(&expired->created);
     expired->expires = lease;
+    expired->context = context;
     memcpy(&expired->address, ai, len);
     Socket::store(&expired->peering, target_peering);
     String::set(expired->contact, sizeof(expired->contact), target_contact);
@@ -1459,7 +1462,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
     return count;
 }
 
-unsigned registry::mapped::setTargets(Socket::address& target_addr)
+unsigned registry::mapped::setTargets(Socket::address& target_addr, voip::context_t context)
 {
     assert(!isnull(target_addr));
 
@@ -1507,6 +1510,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr)
         stack::sipAddress(&tp->address, tp->contact, userid);
 
         tp->expires = 0l;
+        tp->context = context;
         tp->status = registry::target::READY;
         tp->enlist(&source.internal.targets);
         ++count;

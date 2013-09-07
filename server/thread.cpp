@@ -1569,9 +1569,7 @@ reply:
             shell::debug(3, "querying %s", reguri->username);
         else
             shell::debug(3, "query rejected for %s; error=%d", reguri->username, error);
-        EXOSIP_LOCK
-        eXosip_message_build_answer(OPTION_CONTEXT sevent->tid, error, &reply);
-        if(reply != NULL) {
+        if(voip::make_response_message(context, sevent->tid, error, &reply)) {
             if(error == SIP_OK) {
                 snprintf(buftemp, sizeof(buftemp), "<%s:%s@%s>",
                     stack::getScheme(), reguri->username, binding);
@@ -1579,11 +1577,10 @@ reply:
             }
             voip::server_allows(reply);
             stack::siplog(reply);
-            eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, error, reply);
+            voip::send_response_message(context, sevent->tid, error, reply);
         }
         else
-            eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, SIP_BAD_REQUEST, NULL);
-        EXOSIP_UNLOCK
+            voip::send_response_message(context, sevent->tid, SIP_BAD_REQUEST, NULL);
         return;
     }
 
@@ -1641,9 +1638,9 @@ void thread::reregister(const char *contact, time_t interval)
     refresh = reginfo->refresh(contact_address, expire, contact);
     if(!refresh) {
         if(reginfo->type == MappedRegistry::USER)
-            count = reginfo->addTarget(contact_address, expire, contact, network, (struct sockaddr *)&peering);
+            count = reginfo->addTarget(contact_address, expire, contact, network, (struct sockaddr *)&peering, context);
         else
-            count = reginfo->setTarget(contact_address, expire, contact, network, (struct sockaddr *)&peering);
+            count = reginfo->setTarget(contact_address, expire, contact, network, (struct sockaddr *)&peering, context);
     }
     if(refresh)
         shell::debug(2, "refreshing %s for %ld seconds from %s:%u", getIdent(), (long)interval, contact_host, contact_port);
@@ -1670,10 +1667,7 @@ void thread::reregister(const char *contact, time_t interval)
         }
     }
 reply:
-    EXOSIP_LOCK
-    eXosip_message_build_answer(OPTION_CONTEXT sevent->tid, answer, &reply);
-    if(reply != NULL) {
-
+    if(voip::make_response_message(context, sevent->tid, answer, &reply)) {
         if(answer == SIP_OK) {
             if(reginfo->ext) {
                 snprintf(buftemp, sizeof(buftemp), "<%s:%d@%s>;expires=%ld",
@@ -1687,11 +1681,10 @@ reply:
         }
         voip::server_allows(reply);
         stack::siplog(reply);
-        eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, answer, reply);
+        voip::send_response_message(context, sevent->tid, answer, reply);
     }
     else
-        eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, SIP_BAD_REQUEST, NULL);
-    EXOSIP_UNLOCK
+        voip::send_response_message(context, sevent->tid, SIP_BAD_REQUEST, NULL);
     if(reginfo && reginfo->is_user() && answer == SIP_OK)
         messages::update(identity);
 }

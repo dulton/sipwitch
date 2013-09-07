@@ -42,7 +42,7 @@ using namespace UCOMMON_NAMESPACE;
 static mempager mempool(PAGING_SIZE);
 static bool running = true;
 
-static bool activating(int argc, char **args)
+static bool activating(int argc, char **args, voip::context_t context)
 {
     assert(args != NULL);
 
@@ -63,7 +63,7 @@ static bool activating(int argc, char **args)
         return false;
     }
     time(&reg->created);
-    if(!reg->setTargets(*addr))
+    if(!reg->setTargets(*addr, context))
         rtn = false;
     server::activate(reg);
     registry::detach(reg);
@@ -1317,7 +1317,8 @@ invalid:
         }
 
         if(eq(argv[0], "activate")) {
-            if(!activating(argc, argv))
+            // TODO: we will need protocol entry in future
+            if(!activating(argc, argv, stack::sip.out_context))
                 control::reply("cannot activate");
             continue;
         }

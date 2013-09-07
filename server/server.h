@@ -74,9 +74,9 @@ public:
         void update(void);
         bool expire(Socket::address& addr);
         bool refresh(Socket::address& addr, time_t expires, const char *target_contact);
-        unsigned setTargets(Socket::address& addr);
-        unsigned addTarget(Socket::address& via, time_t expires, const char *contact, const char *policy, struct sockaddr *peer);
-        unsigned setTarget(Socket::address& via, time_t expires, const char *contact, const char *policy, struct sockaddr *peer);
+        unsigned setTargets(Socket::address& addr, voip::context_t context);
+        unsigned addTarget(Socket::address& via, time_t expires, const char *contact, const char *policy, struct sockaddr *peer, voip::context_t context);
+        unsigned setTarget(Socket::address& via, time_t expires, const char *contact, const char *policy, struct sockaddr *peer, voip::context_t context);
         void addContact(const char *id);
         void addPublished(const char *id);
         void addRoute(const char *pat, unsigned pri, const char *prefix, const char *suffix);
