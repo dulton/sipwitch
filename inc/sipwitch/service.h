@@ -61,6 +61,10 @@
 #include <sipwitch/cdr.h>
 #endif
 
+#ifndef _SIPWITCH_VOIP_H_
+#include <sipwitch/voip.h>
+#endif
+
 #define CONFIG_KEY_SIZE 177
 
 NAMESPACE_SIPWITCH
@@ -232,6 +236,11 @@ public:
         virtual void publish(service *cfg);
 
     public:
+        voip::context_t out_context;
+        voip::context_t tcp_context;
+        voip::context_t udp_context;
+        voip::context_t tls_context;
+
         inline static void bind(unsigned short port)
             {sip_port = port;}
 

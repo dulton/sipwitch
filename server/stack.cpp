@@ -722,8 +722,7 @@ void stack::start(service *cfg)
         iface = sip_iface;
 
     thread *thr;
-    shell::log(DEBUG1, "starting sip stack v%d; %d maps and %d threads at priority %d",
-        ver, mapped_calls, threading, priority);
+    shell::log(DEBUG1, "starting sip stack v%d; %d maps", ver, mapped_calls);
 
     tcp_context = udp_context = tls_context = out_context = NULL;
 

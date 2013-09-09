@@ -27,6 +27,7 @@
 #include <ucommon/ucommon.h>
 
 #include <sipwitch/namespace.h>
+#include <sipwitch/voip.h>
 #include <sipwitch/mapped.h>
 #include <sipwitch/events.h>
 #include <sipwitch/service.h>
@@ -35,7 +36,6 @@
 #include <sipwitch/cache.h>
 #include <sipwitch/db.h>
 #include <sipwitch/stats.h>
-#include <sipwitch/voip.h>
 #include <sipwitch/uri.h>
 #include <sipwitch/cdr.h>
 

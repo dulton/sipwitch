@@ -217,7 +217,7 @@ public:
     static void cleanup(time_t period);
 };
 
-class __LOCAL stack : private service::callback, private mapped_array<MappedCall>, public OrderedIndex
+class __LOCAL stack : public service::callback, private mapped_array<MappedCall>, public OrderedIndex
 {
 private:
     friend class proxy;
@@ -394,11 +394,6 @@ private:
     unsigned invite_expires;
 
 public:
-    voip::context_t out_context;
-    voip::context_t tcp_context;
-    voip::context_t udp_context;
-    voip::context_t tls_context;
-
     static stack sip;
 
     class __LOCAL subnet : public cidr
