@@ -153,6 +153,26 @@ service::callback::~callback()
     LinkedObject::delist(&runlevels[runlevel]);
 }
 
+voip::context_t service::callback::getContext(const char *uri)
+{
+    if(!uri)
+        return NULL;
+
+    if(eq(uri, "sip:", 4))
+        return out_context;
+
+    if(eq(uri, "sips:", 5))
+        return tls_context;
+
+    if(eq(uri, "tcp:", 4))
+        return tcp_context;
+
+    if(eq(uri, "udp:", 4))
+        return udp_context;
+
+    return NULL;
+}
+
 void service::callback::snapshot(FILE *fp)
 {
 }

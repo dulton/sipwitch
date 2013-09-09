@@ -249,6 +249,7 @@ public:
 
         static void bind(const char *addr);
 
+        voip::context_t getContext(const char *uri);
     };
 
     service(const char *name, size_t s = 0);
