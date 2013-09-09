@@ -25,6 +25,21 @@ static int family = AF_INET;
 
 #ifdef	EXOSIP_API4
 
+bool voip::publish(voip::context_t ctx, const char *uri, const char *contact, const char *event, const char *duration, const char *type, const char *body)
+{
+    bool result = true;
+    voip::msg_t msg = NULL;
+
+    eXosip_lock(ctx);
+    eXosip_build_publish(ctx, &msg, uri, contact, NULL, event, duration, type, body);
+    if(msg)
+        eXosip_publish(ctx, msg, uri);
+    else
+        result = false;
+    eXosip_unlock(ctx);
+    return result;
+}
+
 void voip::add_authentication(context_t ctx, const char *user, const char *secret, const char *realm, bool automatic) 
 {
     eXosip_lock(ctx);
@@ -415,6 +430,21 @@ void voip::release(context_t ctx)
 #else
 
 static bool active = false;
+
+bool voip::publish(voip::context_t ctx, const char *uri, const char *contact, const char *event, const char *duration, const char *type, const char *body)
+{
+    bool result = true;
+    voip::msg_t msg = NULL;
+
+    eXosip_lock();
+    eXosip_build_publish(&msg, uri, contact, NULL, event, duration, type, body);
+    if(msg)
+        eXosip_publish(msg, uri);
+    else
+        result = false;
+    eXosip_unlock();
+    return result;
+}
 
 void voip::add_authentication(context_t ctx, const char *user, const char *secret, const char *realm, bool automatic) 
 {

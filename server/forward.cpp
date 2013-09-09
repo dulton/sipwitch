@@ -36,7 +36,9 @@ public:
     char *volatile realm;
     char *volatile digest;
     char *volatile server;
+    char *volatile schema;
     char *volatile refer;
+    voip::context_t context;
     time_t  expires;
     bool enabled;
     condlock_t locking;
@@ -213,6 +215,8 @@ void forward::reload(service *cfg)
     bool enable = false;
     const char *key = NULL, *value;
     char *tmp_realm = (char *)realm, *tmp_digest = cfg->dup((char *)digest);
+    char *tmp_schema = (char *)"sip";
+    voip::context_t tmp_context = out_context;
     linked_pointer<service::keynode> fp = cfg->getList("forward");
     linked_pointer<service::keynode> sp = cfg->getList("registry");
 
@@ -243,6 +247,18 @@ void forward::reload(service *cfg)
                     server = NULL;
                 }
             }
+            else if(String::equal(key, "schema") || String::equal(key, "context")) {
+                tmp_schema = cfg->dup(value);
+                tmp_context = getContext(tmp_schema);
+                if(tmp_context) {
+                    if(eq(tmp_schema, "tcp") || eq(tmp_schema, "udp"))
+                        tmp_schema = (char *)"sip";
+                }
+                else {
+                    tmp_schema = (char *)"sip";
+                    tmp_context = out_context;
+                }
+            }
             else if(String::equal(key, "server")) {
                 if(uri::resolve(value, buffer, sizeof(buffer))) {
                     server = cfg->dup(buffer);
@@ -271,6 +287,8 @@ void forward::reload(service *cfg)
         refer = NULL;
 
     String::upper(tmp_digest);
+    context = tmp_context;
+    schema = tmp_schema;
     realm = tmp_realm;
     digest = tmp_digest;
 
@@ -298,17 +316,23 @@ void forward::activating(MappedRegistry *rr)
 
     // must also have extension to forward...
     if(rr->remote[0] && rr->ext && rr->type == MappedRegistry::USER) {
-        snprintf(uri, sizeof(uri), "sip:%s@%s", rr->userid, server);
-        snprintf(reg, sizeof(reg), "sip:%s", server);
-        snprintf(contact, sizeof(contact), "sip:%s@", rr->remote);
+        snprintf(uri, sizeof(uri), "%s:%s@%s", schema, rr->userid, server);
+        snprintf(reg, sizeof(reg), "%s:%s", schema, server);
+        snprintf(contact, sizeof(contact), "%s:%s@", schema, rr->remote);
         len = strlen(contact);
         Socket::query((struct sockaddr *)&rr->contact, contact + len, sizeof(contact) - len);
         len = strlen(contact);
         snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::service((struct sockaddr *)&rr->contact));
         shell::debug(3, "registering %s with %s", contact, server);
-        rr->rid = modules::create_registration(uri, reg, contact, (int)expires);
-        if(rr->rid != -1)
+        voip::msg_t msg = NULL;
+        rr->rid = voip::make_registry_request(context, uri, reg, contact, (unsigned)expires, &msg);
+        if(rr->rid != -1 && msg) {
+            voip::server_supports(msg, "100rel");
+            osip_message_set_header(msg, "Event", "Registration");
+            osip_message_set_header(msg, "Allow-Events", "presence");
+            voip::send_registry_request(context, rr->rid, msg);
             add(rr);
+        }
     }
 }
 
@@ -329,7 +353,7 @@ bool forward::announce(MappedRegistry *rr, const char *msgtype, const char *even
     snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::service((struct sockaddr *)&rr->contact));
     shell::debug(3, "publishing %s with %s", contact, server);
 
-    modules::publish(uri_to, contact, event, expiration, msgtype, body);
+    voip::publish(context, uri_to, contact, event, expiration, msgtype, body);
     return true;
 }
 
@@ -345,7 +369,7 @@ void forward::expiring(MappedRegistry *rr)
     if(!enabled)
         return;
 
-    modules::release_registration(id);
+    voip::release_registry(context, id);
 }
 
 char *forward::referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size)
@@ -392,7 +416,7 @@ bool forward::authenticate(int id, const char *remote_realm)
         remove(id);
         return false;
     }
-    modules::add_authentication(rr->userid, secret, remote_realm);
+    voip::add_authentication(context, rr->userid, secret, remote_realm, true);
     service::release(node);
     releaseMap(rr);
     return true;

@@ -15,6 +15,7 @@
 
 #include <sipwitch-config.h>
 #include <sipwitch/sipwitch.h>
+#include <ucommon/secure.h>
 #include <stddef.h>
 
 NAMESPACE_SIPWITCH
@@ -47,8 +48,10 @@ static const char *iface = NULL;
 static char *server = NULL;
 static char *proxy = NULL;
 static char *userid = NULL;
+static char *schema = (char *)"sip";
 static char *volatile secret = NULL;
 static char *identity = NULL;
+static voip::context_t context = NULL;
 static MappedRegistry provider; // fake provider record to be used...
 static unsigned short port = 9000;
 
@@ -70,10 +73,10 @@ void subscriber::update(void)
     unsigned len;
     Socket::address dest = server;
 
-    modules::random_uuid(provider.remote);
-    snprintf(uri, sizeof(uri), "sip:%s@%s", userid, server);
-    snprintf(reg, sizeof(reg), "sip:%s", server);
-    snprintf(contact, sizeof(contact), "sip:%s@", provider.remote);
+    Random::uuid(provider.remote);
+    snprintf(uri, sizeof(uri), "%s:%s@%s", schema, userid, server);
+    snprintf(reg, sizeof(reg), "%s:%s", schema, server);
+    snprintf(contact, sizeof(contact), "%s:%s@", schema, provider.remote);
 
     changed = false;
     len = strlen(contact);
@@ -83,11 +86,17 @@ void subscriber::update(void)
     snprintf(contact + len, sizeof(contact) - len, ":%u", sip_port);
     shell::debug(3, "registering %s with %s", contact, server);
 
-    provider.rid = modules::create_registration(uri, reg, contact, (int)refresh);
-    if(provider.rid == -1)
+    voip::msg_t msg = NULL;
+    provider.rid = voip::make_registry_request(context, uri, reg, contact, (unsigned)refresh, &msg);
+    if(provider.rid == -1 || !msg)
         provider.status = MappedRegistry::OFFLINE;
-    else
+    else {
+        voip::server_supports(msg, "100rel");
+        osip_message_set_header(msg, "Event", "Registration");
+        osip_message_set_header(msg, "Allow-Events", "presence");
+        voip::send_registry_request(context, provider.rid, msg);
         provider.status = MappedRegistry::IDLE;
+    }
 }
 
 void subscriber::start(service *cfg)
@@ -104,6 +113,9 @@ void subscriber::start(service *cfg)
 
 void subscriber::stop(service *cfg)
 {
+    if(provider.rid != -1)
+        voip::release_registry(context, provider.rid);
+
     assert(cfg != NULL);
 }
 
@@ -139,6 +151,18 @@ void subscriber::reload(service *cfg)
                 priority = atoi(value);
             else if(!stricmp(key, "port") && !is_configured())
                 port = atoi(value);
+            else if((String::equal(key, "schema") || String::equal(key, "context")) && !is_configured()) {
+                schema = cfg->dup(value);
+                context = getContext(schema);
+                if(context) {
+                    if(eq(schema, "tcp") || eq(schema, "udp"))
+                        schema = (char *)"sip";
+                }
+                else {
+                    schema = (char *)"sip";
+                    context = out_context;
+                }
+            }
             // very rare we may wish to override provider network/nat state
             else if(!stricmp(key, "network"))
                 String::set(provider.network, sizeof(provider.network), value);
@@ -219,7 +243,7 @@ bool subscriber::authenticate(int id, const char *remote_realm)
         return false;
     }
 
-    modules::add_authentication(userid, secret, remote_realm);
+    voip::add_authentication(context, userid, secret, remote_realm, true);
     return true;
 }
 

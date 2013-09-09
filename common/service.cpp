@@ -158,16 +158,16 @@ voip::context_t service::callback::getContext(const char *uri)
     if(!uri)
         return NULL;
 
-    if(eq(uri, "sip:", 4))
+    if(eq(uri, "sip:", 4) || eq(uri, "sip"))
         return out_context;
 
-    if(eq(uri, "sips:", 5))
+    if(eq(uri, "sips:", 5) || eq(uri, "sips"))
         return tls_context;
 
-    if(eq(uri, "tcp:", 4))
+    if(eq(uri, "tcp:", 4) || eq(uri, "tcp"))
         return tcp_context;
 
-    if(eq(uri, "udp:", 4))
+    if(eq(uri, "udp:", 4) || eq(uri, "udp"))
         return udp_context;
 
     return NULL;

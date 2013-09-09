@@ -103,6 +103,8 @@ public:
 	static void default_action(context_t ctx, event_t ev);
 	static void automatic_action(context_t ctx);
 
+	static bool publish(context_t ctx, const char *uri, const char *contact, const char *event, const char *duration, const char *type, const char *body);
+
 	static event_t get_event(context_t ctx, timeout_t timeout);
 	static void release_event(event_t ev);
 
