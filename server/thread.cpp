@@ -1774,6 +1774,7 @@ void thread::expiration(void)
 
 void thread::run(void)
 {
+    time_t current, prior = 0;
     osip_body_t *body;
 
     instance = ++startup_count;
@@ -1808,10 +1809,14 @@ void thread::run(void)
             return; // exits thread...
         }
 
-        if(!sevent) {
+        time(&current);
+        if(current != prior) {
+            prior = current;
             voip::automatic_action(context);
-            continue;
         }
+
+        if(!sevent)
+            continue;
 
         ++active_count;
         shell::debug(2, "sip: event %d; cid=%d, did=%d, instance=%d",
