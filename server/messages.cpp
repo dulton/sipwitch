@@ -251,9 +251,7 @@ int messages::remote(const char *to, message *msg, const char *digest)
         osip_free(req);
     }
     if(im) {
-        printf("BODY %s\n", msg->body);
-        osip_message_set_body(im, msg->body, msg->msglen);
-        osip_message_set_content_type(im, msg->type);
+        voip::attach(im, msg->type, msg->body, msg->msglen);
         stack::siplog(im);
         if(!eXosip_message_send_request(OPTION_CONTEXT im))
             error = SIP_OK;
@@ -302,8 +300,7 @@ int messages::deliver(message *msg)
                     im->to = NULL;
                 }
                 osip_message_set_to(im, to);
-                osip_message_set_body(im, msg->body, msg->msglen);
-                osip_message_set_content_type(im, msg->type);
+                voip::attach(im, msg->type, msg->body, msg->msglen);
                 stack::siplog(im);
                 if(!eXosip_message_send_request(OPTION_CONTEXT im))
                     ++msgcount;
