@@ -575,7 +575,7 @@ private:
     friend class stack;
     friend class stack::call;
 
-    unsigned instance;
+    const char *instance;
     unsigned extension;
     stack::subnet *access;
     char network[MAX_NETWORK_SIZE];
@@ -615,7 +615,7 @@ private:
 
     enum {CALL, MESSAGE, REGISTRAR, NONE} authorizing;
 
-    thread(voip::context_t ctx);
+    thread(voip::context_t ctx, const char *tag);
 
     static void wait(unsigned count);
 

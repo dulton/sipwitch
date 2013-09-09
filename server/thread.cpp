@@ -42,7 +42,7 @@ static char *remove_quotes(char *c)
     return o;
 }
 
-thread::thread(voip::context_t ctx) : DetachedThread(stack::sip.stacksize)
+thread::thread(voip::context_t ctx, const char *tag) : DetachedThread(stack::sip.stacksize)
 {
     to = NULL;
     from = NULL;
@@ -50,6 +50,7 @@ thread::thread(voip::context_t ctx) : DetachedThread(stack::sip.stacksize)
     routed = NULL;
     reginfo = NULL;
     session = NULL;
+    instance = tag;
     context = ctx;
 }
 
@@ -1773,11 +1774,10 @@ void thread::run(void)
     time_t current, prior = 0;
     osip_body_t *body;
 
-    instance = ++startup_count;
-    shell::log(DEBUG1, "starting event thread %d", instance);
+    ++startup_count;
+    shell::log(DEBUG1, "starting event thread %s", instance);
 
     for(;;) {
-        assert(instance > 0);
         assert(reginfo == NULL);
         assert(dialed.keys == NULL);
         assert(routed == NULL);
@@ -1799,7 +1799,7 @@ void thread::run(void)
         via_header = NULL;
 
         if(shutdown_flag) {
-            shell::log(DEBUG1, "stopping event thread %d", instance);
+            shell::log(DEBUG1, "stopping event thread %s", instance);
             voip::release(context);
             ++shutdown_count;
             return; // exits thread...
@@ -1815,7 +1815,7 @@ void thread::run(void)
             continue;
 
         ++active_count;
-        shell::debug(2, "sip: event %d; cid=%d, did=%d, instance=%d",
+        shell::debug(2, "sip: event %d; cid=%d, did=%d, instance=%s",
             sevent->type, sevent->cid, sevent->did, instance);
 
         switch(sevent->type) {

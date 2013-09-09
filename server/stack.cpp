@@ -788,7 +788,7 @@ void stack::start(service *cfg)
             shell::log(shell::FAIL, "cannot listen port %u for udp", sip_port);
         else
             shell::log(shell::NOTIFY, "listening port %u for udp", sip_port);
-        thr = new thread(udp_context);
+        thr = new thread(udp_context, "udp");
         thr->start(priority);
     }
 
@@ -797,7 +797,7 @@ void stack::start(service *cfg)
         if(!voip::listen(tcp_context, IPPROTO_TCP, iface, sip_port))
             shell::log(shell::FAIL, "cannot listen port %u for tcp", sip_port);
         shell::log(shell::NOTIFY, "listening port %u for tcp", sip_port);
-        thr = new thread(tcp_context);
+        thr = new thread(tcp_context, "tcp");
         thr->start(priority);
 
     }
@@ -807,7 +807,7 @@ void stack::start(service *cfg)
         if(!voip::listen(tls_context, IPPROTO_TCP, iface, sip_port, true))
             shell::log(shell::FAIL, "cannot listen port %u for tls", sip_port + 1);
         shell::log(shell::NOTIFY, "listening port %u for tls", sip_port + 1);
-        thr = new thread(tls_context);
+        thr = new thread(tls_context, "tls");
         thr->start(priority);
     }
 
