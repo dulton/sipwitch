@@ -1176,13 +1176,9 @@ bool thread::authenticate(stack::session *s)
     if(!sip_realm || !*sip_realm || !userid || !secret || !*userid)
         return false;
 
-    EXOSIP_LOCK
-    eXosip_add_authentication_info(OPTION_CONTEXT userid, userid, secret, NULL, sip_realm);
-    eXosip_automatic_action(EXOSIP_CONTEXT);
-    EXOSIP_UNLOCK
+    voip::add_authentication(context, userid, secret, sip_realm, true);
     return true;
 }
-
 
 bool thread::authenticate(void)
 {
