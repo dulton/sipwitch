@@ -261,9 +261,6 @@ void stack::background::run(void)
             Conditional::unlock();
         }
         messages::automatic();
-        EXOSIP_LOCK
-        eXosip_automatic_action(EXOSIP_CONTEXT);
-        EXOSIP_UNLOCK
     }
 }
 
