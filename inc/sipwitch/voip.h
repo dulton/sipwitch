@@ -112,6 +112,7 @@ public:
 	static void create(context_t *ctx, const char *agent, int family = AF_INET);
 	static void release(context_t ctx);
 	static void show(msg_t msg);
+	static void header(msg_t msg, const char *key, const char *value);
 
 	static void server_allows(voip::msg_t msg);
 	static void server_accepts(voip::msg_t msg);

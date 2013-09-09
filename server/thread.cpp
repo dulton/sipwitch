@@ -1308,7 +1308,7 @@ void thread::challenge(void)
     case REGISTRAR:
     case MESSAGE:
         if(voip::make_response_message(context, sevent->tid, SIP_UNAUTHORIZED, &reply)) {
-            osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
+            voip::header(reply, WWW_AUTHENTICATE, buffer);
             voip::server_allows(reply);
             stack::siplog(reply);
             voip::send_response_message(context, sevent->tid, SIP_UNAUTHORIZED, reply);
@@ -1316,7 +1316,7 @@ void thread::challenge(void)
         break;
     case CALL:
         if(voip::make_answer_response(context, sevent->tid, SIP_UNAUTHORIZED, & reply)) {
-            osip_message_set_header(reply, WWW_AUTHENTICATE, buffer);
+            voip::header(reply, WWW_AUTHENTICATE, buffer);
             voip::server_allows(reply);
             stack::siplog(reply);
             voip::send_answer_response(context, sevent->tid, SIP_UNAUTHORIZED, reply);

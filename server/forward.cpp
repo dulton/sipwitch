@@ -328,8 +328,8 @@ void forward::activating(MappedRegistry *rr)
         rr->rid = voip::make_registry_request(context, uri, reg, contact, (unsigned)expires, &msg);
         if(rr->rid != -1 && msg) {
             voip::server_supports(msg, "100rel");
-            osip_message_set_header(msg, "Event", "Registration");
-            osip_message_set_header(msg, "Allow-Events", "presence");
+            voip::header(msg, "Event", "Registration");
+            voip::header(msg, "Allow-Events", "presence");
             voip::send_registry_request(context, rr->rid, msg);
             add(rr);
         }

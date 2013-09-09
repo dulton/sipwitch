@@ -246,7 +246,7 @@ int messages::remote(const char *to, message *msg, const char *digest)
             ",nonce=\"%s\""
             ",algorithm=%s"
             ,msg->reply, registry::getRealm(), req, *response, *once, registry::getDigest());
-        osip_message_set_header(im, AUTHORIZATION, authbuf);
+        voip::header(im, AUTHORIZATION, authbuf);
         delete[] authbuf;
         osip_free(req);
     }

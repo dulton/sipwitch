@@ -92,8 +92,8 @@ void subscriber::update(void)
         provider.status = MappedRegistry::OFFLINE;
     else {
         voip::server_supports(msg, "100rel");
-        osip_message_set_header(msg, "Event", "Registration");
-        osip_message_set_header(msg, "Allow-Events", "presence");
+        voip::header(msg, "Event", "Registration");
+        voip::header(msg, "Allow-Events", "presence");
         voip::send_registry_request(context, provider.rid, msg);
         provider.status = MappedRegistry::IDLE;
     }

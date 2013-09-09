@@ -472,7 +472,7 @@ failed:
         return;
     }
     voip::server_allows(msg);
-    osip_message_set_header(msg, "Referred-By", source->identity);
+    voip::header(msg, "Referred-By", source->identity);
     eXosip_call_send_request(OPTION_CONTEXT did, msg);
     target->state = session::REFER;
     target->tid = sevent->tid;
@@ -1213,23 +1213,23 @@ void stack::divert(stack::call *call, osip_message_t *invite)
 
     if(String::equal(call->diverting, "all")) {
         snprintf(touri, sizeof(touri), "<%s>;reason=unconditional", route);
-        osip_message_set_header(invite, "Diversion", touri);
+        voip::header(invite, "Diversion", touri);
     }
     else if(String::equal(call->diverting, "na")) {
         snprintf(touri, sizeof(touri), "<%s>;reason=no-answer", route);
-        osip_message_set_header(invite, "Diversion", touri);
+        voip::header(invite, "Diversion", touri);
     }
     else if(String::equal(call->diverting, "busy")) {
         snprintf(touri, sizeof(touri), "<%s>;reason=user-busy", route);
-        osip_message_set_header(invite, "Diversion", touri);
+        voip::header(invite, "Diversion", touri);
     }
     else if(String::equal(call->diverting, "dnd")) {
         snprintf(touri, sizeof(touri), "<%s>;reason=do-not-disturb", route);
-        osip_message_set_header(invite, "Diversion", touri);
+        voip::header(invite, "Diversion", touri);
     }
     else if(String::equal(call->diverting, "away")) {
         snprintf(touri, sizeof(touri), "<%s>;reason=away", route);
-        osip_message_set_header(invite, "Diversion", touri);
+        voip::header(invite, "Diversion", touri);
     }
 }
 
@@ -1386,16 +1386,16 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
             ",nonce=\"%s\""
             ",algorithm=%s"
             ,s->reg->userid, registry::getRealm(), req, *response, *once, registry::getDigest());
-        osip_message_set_header(invite, AUTHORIZATION, authbuf);
+        voip::header(invite, AUTHORIZATION, authbuf);
         delete[] authbuf;
         osip_free(req);
     }
     else
-        osip_message_set_header(invite, P_SIPWITCH_NODE, "no");
+        voip::header(invite, P_SIPWITCH_NODE, "no");
 
     if(call->expires) {
         snprintf(expheader, sizeof(expheader), "%ld", (long)(call->expires - now));
-        osip_message_set_header(invite, SESSION_EXPIRES, expheader);
+        voip::header(invite, SESSION_EXPIRES, expheader);
     }
 
     char sdp[MAX_SDP_BUFFER];
@@ -1613,7 +1613,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
 
         if(call->expires) {
             snprintf(expheader, sizeof(expheader), "%ld", (long)(call->expires - now));
-            osip_message_set_header(invite, SESSION_EXPIRES, expheader);
+            voip::header(invite, SESSION_EXPIRES, expheader);
         }
 
         nat = NULL;

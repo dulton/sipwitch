@@ -879,3 +879,7 @@ void voip::server_supports(voip::msg_t msg, const char *txt)
     osip_message_set_supported(msg, txt);
 }
 
+void voip::header(voip::msg_t msg, const char *key, const char *value)
+{
+    osip_message_set_header(msg, key, value);
+}
