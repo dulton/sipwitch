@@ -216,9 +216,11 @@ int messages::remote(const char *to, message *msg, const char *digest)
     osip_message_t *im = NULL;
     int error = SIP_BAD_REQUEST;
 
-    EXOSIP_LOCK
-    eXosip_message_build_request(OPTION_CONTEXT &im, "MESSAGE", to, msg->from, NULL);
-    if(im && digest) {
+    // TODO: REWRITE BASED ON INVITE REMOTE PROCESSING FOR CONTEXT, ETC
+
+    voip::context_t ctx = stack::sip.out_context;
+
+    if(voip::make_request_message(ctx, "MESSAGE", to, msg->from, &im, NULL)) {
         char *authbuf = new char[1024];
         stringbuf<64> response;
         stringbuf<64> once;
@@ -253,10 +255,9 @@ int messages::remote(const char *to, message *msg, const char *digest)
     if(im) {
         voip::attach(im, msg->type, msg->body, msg->msglen);
         stack::siplog(im);
-        if(!eXosip_message_send_request(OPTION_CONTEXT im))
-            error = SIP_OK;
+        voip::send_request_message(ctx, im);
+        error = SIP_OK;
     }
-    EXOSIP_UNLOCK
     return error;
 }
 
@@ -288,10 +289,9 @@ int messages::deliver(message *msg)
             stack::sipAddress(&tp->address, to + 1, msg->user, sizeof(to) - 6);
             to[0] = '<';
             String::add(to, sizeof(to), ";lr>");
-            EXOSIP_LOCK
             im = NULL;
-            eXosip_message_build_request(OPTION_CONTEXT &im, "MESSAGE", tp->contact, msg->from, to);
-            if(im != NULL) {
+
+            if(voip::make_request_message(tp->context, "MESSAGE", tp->contact, msg->from, &im, to)) { 
                 stack::sipAddress(&tp->address, to + 1, msg->user, sizeof(to) - 2);
                 to[0] = '<';
                 String::add(to, sizeof(to), ">");
@@ -301,11 +301,9 @@ int messages::deliver(message *msg)
                 }
                 osip_message_set_to(im, to);
                 voip::attach(im, msg->type, msg->body, msg->msglen);
-                stack::siplog(im);
-                if(!eXosip_message_send_request(OPTION_CONTEXT im))
-                    ++msgcount;
+                voip::send_request_message(tp->context, im);
+                ++msgcount;
             }
-            EXOSIP_UNLOCK
         }
         tp.next();
     }

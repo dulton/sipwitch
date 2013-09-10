@@ -25,18 +25,6 @@
 
 #include <ctype.h>
 
-#ifdef  EXOSIP_API4
-#define EXOSIP_CONTEXT  stack::sip.out_context
-#define OPTION_CONTEXT  stack::sip.out_context,
-#define EXOSIP_LOCK     eXosip_lock(stack::sip.out_context);
-#define EXOSIP_UNLOCK   eXosip_unlock(stack::sip.out_context);
-#else
-#define EXOSIP_CONTEXT
-#define OPTION_CONTEXT
-#define EXOSIP_LOCK     eXosip_lock();
-#define EXOSIP_UNLOCK   eXosip_unlock();
-#endif
-
 #define P_SIPWITCH_NODE "P-sipwitch-node"
 
 #define SECOND_TIMEOUT  (1000l)
@@ -539,7 +527,6 @@ private:
     class __LOCAL message : public LinkedObject
     {
     public:
-        voip::context_t context;
         time_t expires;
         char user[MAX_USERID_SIZE];
         char type[64];

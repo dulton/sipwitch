@@ -397,7 +397,7 @@ void stack::clear(session *s)
             cr->source->sequence, cr->source->cid, s->sequence, s->cid);
         if(s->state != session::CLOSED) {
             s->state = session::CLOSED;
-            eXosip_call_terminate(OPTION_CONTEXT s->cid, s->did);
+            voip::release_call(s->context, s->cid, s->did);
         }
         s->delist(&hash[s->cid % keysize]);
         s->cid = 0;
