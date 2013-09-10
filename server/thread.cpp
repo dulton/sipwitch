@@ -652,7 +652,7 @@ bool thread::authorize(void)
 
     error = SIP_ADDRESS_INCOMPLETE;
 
-    if(stack::sip_tlsmode)
+    if(context == stack::sip.tls_context)
         scheme = "sips";
 
     if(!uri_host && registry::getDomain())
