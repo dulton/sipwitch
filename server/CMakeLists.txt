@@ -34,7 +34,7 @@ if(HAVE_PLUGINS)
 
     add_library(sipwitch-subscriber MODULE subscriber.cpp)
     add_dependencies(sipwitch-subscriber sipwitch-runtime ucommon)
-    target_link_libraries(sipwitch-subscriber sipwitch-runtime ucommon ${USES_UCOMMON_LIBRARIES})
+    target_link_libraries(sipwitch-subscriber sipwitch-runtime usecure ucommon ${USES_UCOMMON_LIBRARIES})
     set_target_properties(sipwitch-subscriber PROPERTIES OUTPUT_NAME subscriber SUFFIX ${MODULE_EXT} PREFIX "")
 
     install(TARGETS sipwitch-forward sipwitch-scripting sipwitch-subscriber DESTINATION ${INSTALL_PLUGINS})
