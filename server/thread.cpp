@@ -1101,35 +1101,31 @@ void thread::send_reply(int error)
 
     osip_message_t *reply = NULL;
 
-    EXOSIP_LOCK
     switch(authorizing) {
     case CALL:
-        eXosip_call_build_answer(OPTION_CONTEXT sevent->tid, error, &reply);
-        if(reply != NULL) {
+        if(voip::make_answer_response(context, sevent->tid, error, &reply)) {
             if(context == stack::sip.udp_context)
                 voip::server_requires(reply, "100rel");
             stack::siplog(reply);
-            eXosip_call_send_answer(OPTION_CONTEXT sevent->tid, error, reply);
+            voip::send_answer_response(context, sevent->tid, error, reply);
         }
         else
-            eXosip_call_send_answer(OPTION_CONTEXT sevent->tid, SIP_BAD_REQUEST, NULL);
+            voip::send_answer_response(context, sevent->tid, SIP_BAD_REQUEST, NULL);
         break;
     case REGISTRAR:
     case MESSAGE:
-        eXosip_message_build_answer(OPTION_CONTEXT sevent->tid, error, &reply);
-        if(reply != NULL) {
+        if(voip::make_response_message(context, sevent->tid, error, &reply)) {
             if(context == stack::sip.udp_context)
                 voip::server_requires(reply, "100rel");
             stack::siplog(reply);
-            eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, error, reply);
+            voip::send_response_message(context, sevent->tid, error, reply);
         }
         else
-            eXosip_call_send_answer(OPTION_CONTEXT sevent->tid, SIP_BAD_REQUEST, NULL);
-        break;
+            voip::send_response_message(context, sevent->tid, SIP_BAD_REQUEST, NULL);
+break;
     default:
         break;
     }
-    EXOSIP_UNLOCK
 }
 
 bool thread::authenticate(stack::session *s)
@@ -1454,9 +1450,7 @@ reply:
         shell::debug(2, "rejecting %s; error=%d", auth->username, error);
 
     server::release(user);
-    EXOSIP_LOCK
-    eXosip_message_build_answer(OPTION_CONTEXT sevent->tid, error, &reply);
-    if(reply != NULL) {
+    if(voip::make_response_message(context, sevent->tid, error, &reply)) {
         if(error == SIP_OK) {
             snprintf(temp, sizeof(temp), ";expires=%lu", (long)registry::getExpires());
             osip_message_set_contact(reply, temp);
@@ -1465,11 +1459,10 @@ reply:
         }
         voip::server_allows(reply);
         stack::siplog(reply);
-        eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, error, reply);
+        voip::send_response_message(context, sevent->tid, error, reply);
     }
     else
-        eXosip_message_send_answer(OPTION_CONTEXT sevent->tid, SIP_BAD_REQUEST, NULL);
-    EXOSIP_UNLOCK
+        voip::send_response_message(context, sevent->tid, SIP_BAD_REQUEST, NULL);
 }
 
 void thread::registration(void)
