@@ -308,7 +308,7 @@ void stack::enableDumping(void)
     stack::sip.dumping = true;
 }
 
-void stack::siplog(osip_message_t *msg)
+void stack::siplog(voip::msg_t msg)
 {
     fsys_t log;
     char *text = NULL;
@@ -438,13 +438,13 @@ int stack::getDialog(session *s)
     return did;
 }
 
-void stack::refer(session *source, eXosip_event_t *sevent)
+void stack::refer(session *source, voip::event_t sevent)
 {
     assert(source);
     assert(sevent);
 
-    osip_header_t *header = NULL;
-    osip_message_t *msg = NULL;
+    voip::hdr_t header = NULL;
+    voip::msg_t msg = NULL;
     session *target = NULL;
     call *cr = source->parent;
     voip::did_t did;
@@ -474,15 +474,15 @@ failed:
     target->tid = sevent->tid;
 }
 
-void stack::infomsg(session *source, eXosip_event_t *sevent)
+void stack::infomsg(session *source, voip::event_t sevent)
 {
     assert(source);
     assert(sevent);
 
     char type[128];
-    osip_content_type_t *ct;
-    osip_message_t *msg = NULL;
-    osip_body_t *body = NULL;
+    voip::ctype_t ct;
+    voip::msg_t msg = NULL;
+    voip::body_t body = NULL;
     session *target = NULL;
     call *cr = source->parent;
 
@@ -1198,7 +1198,7 @@ set:
     return ap;
 }
 
-void stack::divert(stack::call *call, osip_message_t *invite)
+void stack::divert(stack::call *call, voip::msg_t invite)
 {
     char route[MAX_URI_SIZE];
     char touri[MAX_URI_SIZE];
@@ -1243,7 +1243,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     char network[MAX_NETWORK_SIZE];
     char touri[MAX_URI_SIZE];
     char route[MAX_URI_SIZE];
-    osip_message_t *invite = NULL;
+    voip::msg_t invite = NULL;
     char expheader[32];
     char seqid[64];
     int cid;
@@ -1529,7 +1529,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
     char sdp[MAX_SDP_BUFFER];
 
     time_t now;
-    osip_message_t *invite;
+    voip::msg_t invite;
     char expheader[32];
     char seqid[64];
     char route[MAX_URI_SIZE];

@@ -361,7 +361,7 @@ private:
     void snapshot(FILE *fp);
     bool check(void);
 
-    static void divert(stack::call *cr, osip_message_t *msg);
+    static void divert(stack::call *cr, voip::msg_t msg);
 
     unsigned threading, priority;
     size_t stacksize;
@@ -435,12 +435,12 @@ public:
     static char *sipPublish(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
     static char *sipContact(struct sockaddr_internet *addr, char *buf, const char *user = NULL, const char *display = NULL, size_t size = MAX_URI_SIZE);
     static Socket::address *getAddress(const char *uri, Socket::address *addr = NULL);
-    static void siplog(osip_message_t *msg);
+    static void siplog(voip::msg_t msg);
     static void enableDumping(void);
     static void clearDumping(void);
     static void disableDumping(void);
-    static void refer(session *session, eXosip_event_t *sevent);
-    static void infomsg(session *session, eXosip_event_t *sevent);
+    static void refer(session *session, voip::event_t sevent);
+    static void infomsg(session *session, voip::event_t sevent);
     static void setDialog(session *session, voip::did_t did);
     static int getDialog(session *session);
     static void release(MappedCall *map);
@@ -598,8 +598,8 @@ private:
     voip::context_t context;
 
     char *sip_realm;
-    osip_proxy_authenticate_t *proxy_auth;
-    osip_www_authenticate_t *www_auth;
+    voip::proxyauth_t proxy_auth;
+    voip::proxyauth_t www_auth;
 
     enum {CALL, MESSAGE, REGISTRAR, NONE} authorizing;
 

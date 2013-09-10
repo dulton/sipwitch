@@ -213,7 +213,7 @@ int messages::remote(const char *to, message *msg, const char *digest)
 {
     shell::debug(3, "instant message delivered to %s from %s", to, msg->reply);
 
-    osip_message_t *im = NULL;
+    voip::msg_t im = NULL;
     int error = SIP_BAD_REQUEST;
 
     // TODO: REWRITE BASED ON INVITE REMOTE PROCESSING FOR CONTEXT, ETC
@@ -267,7 +267,7 @@ int messages::deliver(message *msg)
 
     linked_pointer<registry::target> tp;
     registry::mapped *rr = registry::access(msg->user);
-    osip_message_t *im;
+    voip::msg_t im;
     time_t now;
     unsigned msgcount = 0;
     char to[MAX_URI_SIZE];

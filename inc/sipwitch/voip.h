@@ -51,19 +51,25 @@ public:
 	inline  static void unlock(context_t ctx) {eXosip_unlock();}
 	#endif
 
-	typedef eXosip_event_t  *event_t;
-	typedef int reg_t;		// registration id
-	typedef	int	tid_t;		// transaction id
-	typedef	int did_t;		// dialog id
-	typedef	int	call_t;		// call id
-	typedef	osip_header_t	*hdr_t;
-	typedef	osip_message_t	*msg_t;
-	typedef osip_body_t		*body_t;
-	typedef	osip_from_t		*from_t;
-	typedef	osip_via_t		*via_t;
-	typedef	osip_to_t		*to_t;
-	typedef	osip_uri_t		*uri_t;
-	typedef	unsigned long timeout_t;
+	typedef eXosip_event_t		*event_t;
+	typedef int reg_t;			// registration id
+	typedef	int	tid_t;			// transaction id
+	typedef	int did_t;			// dialog id
+	typedef	int	call_t;			// call id
+	typedef	osip_header_t		*hdr_t;
+	typedef	osip_message_t		*msg_t;
+	typedef	osip_contact_t		*contact_t;
+	typedef	osip_uri_param_t	*uri_param_t;
+	typedef osip_body_t			*body_t;
+	typedef	osip_content_type_t	*ctype_t;
+	typedef	osip_from_t			*from_t;
+	typedef	osip_via_t			*via_t;
+	typedef	osip_to_t			*to_t;
+	typedef	osip_uri_t			*uri_t;
+	typedef	unsigned long		timeout_t;
+	typedef osip_authorization_t		*auth_t;
+	typedef	osip_generic_param_t		*param_t;
+	typedef	osip_proxy_authenticate_t	*proxyauth_t;
 
 	static bool make_request_message(context_t ctx, const char *method, const char *to, const char *from, msg_t *msg, const char *route = NULL);
 	static bool make_response_message(context_t ctx, tid_t tid, int status, msg_t *msg);

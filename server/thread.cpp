@@ -57,17 +57,17 @@ thread::thread(voip::context_t ctx, const char *tag) : DetachedThread(stack::sip
 void thread::publish(void)
 {
     int error = SIP_BAD_REQUEST;
-    osip_body_t *mbody = NULL;
+    voip::body_t mbody = NULL;
+    voip::ctype_t ct;
     const char *tmp = NULL;
     registry::target::status_t status = registry::target::UNKNOWN;
     bool presence = false;
     bool basic = true;
-    osip_content_type_t *ct;
     char msgtype[128];
     const char *content = msgtype;
     const char *expires = NULL;
     const char *event = NULL;
-    osip_header_t *msgheader;
+    voip::hdr_t msgheader;
 
     if(destination != LOCAL)
         goto final;
@@ -175,8 +175,8 @@ final:
 
 void thread::message(void)
 {
-    osip_content_type_t *ct;
-    osip_body_t *body = NULL;
+    voip::ctype_t ct;
+    voip::body_t body = NULL;
     char address[MAX_URI_SIZE];
     char fromhdr[MAX_URI_SIZE];
     char target[MAX_URI_SIZE];
@@ -267,10 +267,10 @@ void thread::message(void)
 void thread::invite(void)
 {
     const char *target = dialing;
-    osip_body_t *body = NULL;
+    voip::body_t body = NULL;
     stack::call *call = session->parent;
     unsigned toext = 0;
-    osip_header_t *msgheader = NULL;
+    voip::hdr_t msgheader = NULL;
     char fromext[32];
     cdr *cdrnode = NULL;
     const char *domain = registry::getDomain();
@@ -631,7 +631,7 @@ bool thread::authorize(void)
     const char *refer = NULL;
     const char *uri_host;
     struct sockaddr_internet iface;
-    osip_header_t *msgheader = NULL;
+    voip::hdr_t msgheader = NULL;
     bool anon = false;
     UserCache *usercache = NULL;
     bool allowed = false;
@@ -1099,7 +1099,7 @@ void thread::send_reply(int error)
 {
     assert(error >= 100);
 
-    osip_message_t *reply = NULL;
+    voip::msg_t reply = NULL;
 
     switch(authorizing) {
     case CALL:
@@ -1179,7 +1179,7 @@ bool thread::authenticate(stack::session *s)
 
 bool thread::authenticate(void)
 {
-    osip_authorization_t *auth = NULL;
+    voip::auth_t auth = NULL;
     service::keynode *node = NULL, *leaf;
     stringbuf<64> digest;
     int error = SIP_PROXY_AUTHENTICATION_REQUIRED;
@@ -1290,7 +1290,7 @@ failed:
 
 void thread::challenge(void)
 {
-    osip_message_t *reply = NULL;
+    voip::msg_t reply = NULL;
     char nonce[32];
     time_t now;
 
@@ -1325,7 +1325,7 @@ void thread::challenge(void)
 
 bool thread::getsource(void)
 {
-    osip_generic_param_t *param;
+    voip::param_t param;
     int vpos = 0;
 
     if(is(via_address))
@@ -1335,7 +1335,7 @@ bool thread::getsource(void)
     via_port = 5060;
     via_header = NULL;
     while(sevent->request && osip_list_eol(OSIP2_LIST_PTR sevent->request->vias, vpos) == 0) {
-        via_header = (osip_via_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->vias, vpos++);
+        via_header = (voip::via_t)osip_list_get(OSIP2_LIST_PTR sevent->request->vias, vpos++);
         ++via_hops;
     }
 
@@ -1375,13 +1375,13 @@ bool thread::getsource(void)
 
 void thread::validate(void)
 {
-    osip_authorization_t *auth = NULL;
+    voip::auth_t auth = NULL;
     service::keynode *node = NULL, *leaf;
     stringbuf<64> digest;
     int error = SIP_PROXY_AUTHENTICATION_REQUIRED;
     const char *cp;
     char temp[64];
-    osip_message_t *reply = NULL;
+    voip::msg_t reply = NULL;
     service::usernode user;
     const char *hash = NULL;
     digest_t calc = registry::getDigest();
@@ -1467,18 +1467,18 @@ reply:
 
 void thread::registration(void)
 {
-    osip_contact_t *contact = NULL;
-    osip_uri_param_t *param = NULL;
-    osip_uri_t *reguri = NULL;
+    voip::contact_t contact = NULL;
+    voip::uri_param_t param = NULL;
+    voip::uri_t reguri = NULL;
     char *port;
     int interval = -1;
     int pos = 0;
     int error = SIP_ADDRESS_INCOMPLETE;
-    osip_message_t *reply = NULL;
+    voip::msg_t reply = NULL;
     struct sockaddr_internet iface;
 
     while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
-        contact = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
+        contact = (voip::contact_t)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
         if(contact && contact->url) {
             osip_contact_param_get_byname(contact, (char *)"expires", &param);
             if(param && param->gvalue)
@@ -1592,10 +1592,10 @@ void thread::reregister(const char *contact, time_t interval)
     assert(identity != NULL && *identity != 0);
 
     int answer = SIP_OK;
-    osip_message_t *reply = NULL;
+    voip::msg_t reply = NULL;
     time_t expire;
     unsigned count = 0;
-    osip_contact_t *c = NULL;
+    voip::contact_t c = NULL;
     int pos = 0;
     bool refresh;
 
@@ -1649,7 +1649,7 @@ void thread::reregister(const char *contact, time_t interval)
         goto reply;
 
     while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
-        c = (osip_contact_t *)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
+        c = (voip::contact_t)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos++);
         if(c && c->url && c->url->username) {
             reginfo->addContact(c->url->username);
             shell::log(shell::INFO, "registering service %s:%s@%s:%s",
@@ -1741,9 +1741,9 @@ void thread::wait(unsigned count) {
 
 void thread::expiration(void)
 {
-    osip_header_t *msgheader = NULL;
-    osip_uri_param_t *expires = NULL;
-    osip_contact_t *contact;
+    voip::hdr_t msgheader = NULL;
+    voip::uri_param_t expires = NULL;
+    voip::contact_t contact;
     int pos = 0;
 
     assert(sevent->request != NULL);
@@ -1753,7 +1753,7 @@ void thread::expiration(void)
     if(msgheader && msgheader->hvalue)
         header_expires = atol(msgheader->hvalue);
     else while(osip_list_eol(OSIP2_LIST_PTR sevent->request->contacts, pos) == 0) {
-        contact = (osip_contact_t*)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos);
+        contact = (voip::contact_t)osip_list_get(OSIP2_LIST_PTR sevent->request->contacts, pos);
         if(osip_contact_param_get_byname(contact, (char *)"expires", &expires) != 0 && expires != NULL) {
             header_expires = atol(expires->gvalue);
             break;
@@ -1765,7 +1765,7 @@ void thread::expiration(void)
 void thread::run(void)
 {
     time_t current, prior = 0;
-    osip_body_t *body;
+    voip::body_t body;
 
     ++startup_count;
     shell::log(DEBUG1, "starting event thread %s", instance);
@@ -1817,8 +1817,8 @@ void thread::run(void)
             shell::debug(4, "sip: registration response %d", sevent->response->status_code);
             if(sevent->response && sevent->response->status_code == 401) {
                 sip_realm = NULL;
-                proxy_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->proxy_authenticates, 0);
-                www_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->www_authenticates,0);
+                proxy_auth = (voip::proxyauth_t)osip_list_get(OSIP2_LIST_PTR sevent->response->proxy_authenticates, 0);
+                www_auth = (voip::proxyauth_t)osip_list_get(OSIP2_LIST_PTR sevent->response->www_authenticates,0);
                 if(proxy_auth)
                     sip_realm = osip_proxy_authenticate_get_realm(proxy_auth);
                 else if(www_auth)
@@ -1952,8 +1952,8 @@ void thread::run(void)
             case SIP_UNAUTHORIZED:
             case SIP_PROXY_AUTHENTICATION_REQUIRED:
                 sip_realm = NULL;
-                proxy_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->proxy_authenticates, 0);
-                www_auth = (osip_proxy_authenticate_t*)osip_list_get(OSIP2_LIST_PTR sevent->response->www_authenticates,0);
+                proxy_auth = (voip::proxyauth_t)osip_list_get(OSIP2_LIST_PTR sevent->response->proxy_authenticates, 0);
+                www_auth = (voip::proxyauth_t)osip_list_get(OSIP2_LIST_PTR sevent->response->www_authenticates,0);
                 if(proxy_auth)
                     sip_realm = osip_proxy_authenticate_get_realm(proxy_auth);
                 else if(www_auth)
