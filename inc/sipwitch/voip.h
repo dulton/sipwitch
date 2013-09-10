@@ -106,6 +106,8 @@ public:
 	static bool publish(context_t ctx, const char *uri, const char *contact, const char *event, const char *duration, const char *type, const char *body);
 
 	static event_t get_event(context_t ctx, timeout_t timeout);
+	static void call_reference(context_t ctx, call_t cid, void *route);
+	static void free_message_request(context_t ctx, voip::msg_t msg);
 	static void release_event(event_t ev);
 
 	static bool listen(context_t ctx, int proto = IPPROTO_UDP, const char *iface = NULL, unsigned port = 5060, bool tls = false);

@@ -251,7 +251,9 @@ private:
     {
     public:
         registry::mapped *reg;
-        int cid, tid, did;
+        voip::call_t cid;
+        voip::tid_t tid;
+        voip::did_t did;
         voip::context_t context;
         time_t activates;
         uint32_t sequence;
@@ -287,7 +289,7 @@ private:
     class __LOCAL segment : public OrderedObject
     {
     public:
-        segment(call *cr, int cid, int did = -1, int tid = 0);
+        segment(voip::context_t context, call *cr, voip::call_t cid, voip::did_t did = -1, voip::tid_t tid = 0);
 
         static void *operator new(size_t size);
         static void operator delete(void *obj);
@@ -432,8 +434,8 @@ public:
 
     static const char *getScheme(void);
     static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
-    static session *create(int cid, int did, int tid);
-    static session *create(call *cr, int cid);
+    static session *create(voip::context_t context, voip::call_t cid, voip::did_t did, voip::tid_t tid);
+    static session *create(voip::context_t context, call *cr, voip::call_t cid);
     static void destroy(session *s);
     static void destroy(call *cr);
     static void disjoin(call *cr);
@@ -449,7 +451,7 @@ public:
     static void enableDumping(void);
     static void clearDumping(void);
     static void disableDumping(void);
-    static void refer(voip::context_t context, session *session, eXosip_event_t *sevent);
+    static void refer(session *session, eXosip_event_t *sevent);
     static void infomsg(session *session, eXosip_event_t *sevent);
     static void setDialog(session *session, int did);
     static int getDialog(session *session);

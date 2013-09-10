@@ -2034,7 +2034,7 @@ void thread::run(void)
             if(sevent->cid < 1)
                 break;
             expiration();
-            session = stack::create(sevent->cid, sevent->did, sevent->tid);
+            session = stack::create(context, sevent->cid, sevent->did, sevent->tid);
             if(!session) {
                 send_reply(SIP_TEMPORARILY_UNAVAILABLE);
                 break;
@@ -2084,7 +2084,7 @@ void thread::run(void)
                 if(sevent->cid > 0)
                     session = stack::access(sevent->cid);
                 if(session)
-                    stack::refer(context, session, sevent);
+                    stack::refer(session, sevent);
             }
             break;
         case EXOSIP_MESSAGE_NEW:
@@ -2103,7 +2103,7 @@ void thread::run(void)
                 if(sevent->cid > 0)
                     session = stack::access(sevent->cid);
                 if(session)
-                    stack::refer(context, session, sevent);
+                    stack::refer(session, sevent);
             }
             else if(MSG_IS_BYE(sevent->request)) {
                 if(sevent->cid > 0)

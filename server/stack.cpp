@@ -131,16 +131,20 @@ cidr(acl, ifaddr(addr, id), id)
     }
 }
 
-stack::segment::segment(call *cr, int cid, int did, int tid) : OrderedObject()
+stack::segment::segment(voip::context_t context, call *cr, int cid, int did, int tid) : OrderedObject()
 {
     assert(cr != NULL);
     assert(cid > 0);
 
     time_t now;
 
+    if(!context)
+        context = stack::sip.out_context;
+
     ++cr->count;
     time(&now);
     enlist(&(cr->segments));
+    sid.context = context;
     sid.enlist(&hash[cid % keysize]);
     sid.sequence = (uint32_t)now;
     sid.sequence &= 0xffffffffl;
@@ -434,7 +438,7 @@ int stack::getDialog(session *s)
     return did;
 }
 
-void stack::refer(voip::context_t context, session *source, eXosip_event_t *sevent)
+void stack::refer(session *source, eXosip_event_t *sevent)
 {
     assert(source);
     assert(sevent);
@@ -458,14 +462,14 @@ void stack::refer(voip::context_t context, session *source, eXosip_event_t *seve
     if(did < 1)
         goto failed;
 
-    if(!voip::make_dialog_refer(context, did, header->hvalue, &msg)) {
+    if(!voip::make_dialog_refer(target->context, did, header->hvalue, &msg)) {
 failed:
-        voip::send_answer_response(context, sevent->tid, SIP_SERVICE_UNAVAILABLE, NULL);
+        voip::send_answer_response(source->context, sevent->tid, SIP_SERVICE_UNAVAILABLE, NULL);
         return;
     }
     voip::server_allows(msg);
     voip::header(msg, "Referred-By", source->identity);
-    voip::send_dialog_message(context, did, msg);
+    voip::send_dialog_message(target->context, did, msg);
     target->state = session::REFER;
     target->tid = sevent->tid;
 }
@@ -496,20 +500,15 @@ void stack::infomsg(session *source, eXosip_event_t *sevent)
         return;
 
     osip_message_get_body(sevent->request, 0, &body);
-    EXOSIP_LOCK
-    eXosip_call_build_info(OPTION_CONTEXT did, &msg);
-    if(!msg) {
-        EXOSIP_UNLOCK
+    if(!voip::make_dialog_info(target->context, did, &msg))
         return;
-    }
     if(ct->subtype)
         snprintf(type, sizeof(type), "%s/%s", ct->type, ct->subtype);
     else
         snprintf(type, sizeof(type), "%s", ct->type);
     voip::attach(msg, type, body->body);
     voip::server_allows(msg);
-    eXosip_call_send_request(OPTION_CONTEXT did, msg);
-    EXOSIP_UNLOCK
+    voip::send_dialog_message(target->context, did, msg);
 }
 
 void stack::disjoin(call *cr)
@@ -635,19 +634,19 @@ void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
     }
 }
 
-stack::session *stack::create(call *cr, int cid)
+stack::session *stack::create(voip::context_t context, call *cr, voip::call_t cid)
 {
     assert(cr != NULL);
     assert(cid > 0);
 
     locking.exclusive();
-    segment *sp = new segment(cr, cid);
+    segment *sp = new segment(context, cr, cid);
     ++cr->invited;
     locking.share();
     return &sp->sid;
 }
 
-stack::session *stack::create(int cid, int did, int tid)
+stack::session *stack::create(voip::context_t context, voip::call_t cid, voip::did_t did, voip::tid_t tid)
 {
     assert(cid > 0);
 
@@ -661,7 +660,7 @@ stack::session *stack::create(int cid, int did, int tid)
 
     locking.modify();
     cr = new call;
-    sp = new segment(cr, cid, did, tid);    // after count set to 0!
+    sp = new segment(context, cr, cid, did, tid);    // after count set to 0!
     cr->source = &(sp->sid);
     cr->map = map;
 
@@ -1336,10 +1335,8 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
     invite = NULL;
 
-    EXOSIP_LOCK
-    if(eXosip_call_build_initial_invite(OPTION_CONTEXT &invite, touri, s->from, rp, call->subject)) {
+    if(!voip::make_invite_request(context, touri, s->from, call->subject, &invite, rp)) { 
         shell::log(shell::ERR, "cannot invite %s; build failed", uri_target);
-        EXOSIP_UNLOCK
         return icount;
     }
 
@@ -1393,28 +1390,26 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
     if(media::invite(s, network, &nat, sdp) == NULL) {
         shell::log(shell::ERR, "cannot assign media proxy for %s", uri_target);
-        EXOSIP_UNLOCK
+        voip::free_message_request(context, invite);
         return icount;
     }
 
     voip::attach(invite, SDP_BODY, sdp);
     stack::siplog(invite);
-    cid = eXosip_call_send_initial_invite(OPTION_CONTEXT invite);
+    cid = voip::send_invite_request(context, invite);
     if(cid > 0) {
         snprintf(seqid, sizeof(seqid), "%08x-%d", s->sequence, s->cid);
         uri::publish(call->request, route, seqid, sizeof(route));
-        eXosip_call_set_reference(OPTION_CONTEXT cid, route);
+        voip::call_reference(context, cid, route);
         ++icount;
     }
     else {
         media::release(&nat);
         shell::log(shell::ERR, "invite failed for %s", uri_target);
-        EXOSIP_UNLOCK
         return icount;
     }
 
-    EXOSIP_UNLOCK
-    invited = stack::create(call, cid);
+    invited = stack::create(context, call, cid);
     registry::incUse(NULL, stats::OUTGOING);
     String::set(invited->identity, sizeof(invited->identity), uri_target);
     String::set(invited->display, sizeof(invited->display), username);
@@ -1575,11 +1570,10 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
         route[0] = '<';
         String::add(route, sizeof(route), ";lr>");
 
-        EXOSIP_LOCK
-        if(eXosip_call_build_initial_invite(OPTION_CONTEXT &invite, touri, s->from, route, call->subject)) {
+        if(!voip::make_invite_request(tp->context, touri, s->from, call->subject, &invite, route)) { 
             stack::sipPublish(&tp->address, route, NULL, sizeof(route));
             shell::log(shell::ERR, "cannot invite %s; build failed", route);
-            goto unlock;
+            goto next;
         }
 
         // if not routing, then separate to from request-uri for forwarding
@@ -1609,28 +1603,27 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
         if(media::invite(s, tp->network, &nat, sdp) == NULL) {
             stack::sipPublish(&tp->address, route, NULL, sizeof(route));
             shell::log(shell::ERR, "no media proxy available for %s", route);
-            goto unlock;
+            voip::free_message_request(tp->context, invite);
+            goto next;
         }
 
         voip::attach(invite, SDP_BODY, sdp);
         stack::siplog(invite);
-        cid = eXosip_call_send_initial_invite(OPTION_CONTEXT invite);
+        cid = voip::send_invite_request(tp->context, invite);
         if(cid > 0) {
             snprintf(seqid, sizeof(seqid), "%08x-%d", s->sequence, s->cid);
             stack::sipAddress((struct sockaddr_internet *)&tp->peering, route, seqid, sizeof(route));
-            eXosip_call_set_reference(OPTION_CONTEXT cid, route);
+            voip::call_reference(tp->context, cid, route);
             ++icount;
         }
         else {
             media::release(&nat);
             stack::sipPublish(&tp->address, route, NULL, sizeof(route));
             shell::log(shell::ERR, "invite failed for %s", route);
-            goto unlock;
+            goto next;
         }
 
-        EXOSIP_UNLOCK
-
-        invited = stack::create(call, cid);
+        invited = stack::create(tp->context, call, cid);
 
         String::set(invited->network, sizeof(invited->network), tp->network);
         invited->peering = tp->peering;
@@ -1665,9 +1658,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
         default:
             shell::debug(3, "inviting %s\n", route);
         }
-        goto next;
-unlock:
-        EXOSIP_UNLOCK
+
 next:
         tp.next();
     }

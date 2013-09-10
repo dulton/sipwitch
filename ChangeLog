@@ -1,6 +1,8 @@
 from 1.8.0 to 1.8.1
 - expose stack contexts directly to plugins
 - plugins can call voip api directly, no need for redirection api
+- call sessions now have contexts
+- invites now use contexts
 
 from 1.7.2 to 1.8.0
 - startup and shutdown multi-context aware for v4 api
