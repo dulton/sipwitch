@@ -58,6 +58,7 @@ public:
 	typedef	int	call_t;		// call id
 	typedef	osip_header_t	*hdr_t;
 	typedef	osip_message_t	*msg_t;
+	typedef osip_body_t		*body_t;
 	typedef	osip_from_t		*from_t;
 	typedef	osip_via_t		*via_t;
 	typedef	osip_to_t		*to_t;

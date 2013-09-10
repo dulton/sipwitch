@@ -201,24 +201,21 @@ void stack::call::closingLocked(session *s)
 
 void stack::call::reply_source(int error)
 {
-    osip_message_t *reply = NULL;
+    voip::msg_t reply = NULL;
 
     shell::debug(3, "sip: sending source reply %d", error);
 
     if(error == SIP_CALL_IS_BEING_FORWARDED && answering)
         answering = 16;
 
-    EXOSIP_LOCK
-    eXosip_call_build_answer(OPTION_CONTEXT source->tid, error, &reply);
-    if(reply != NULL) {
+    if(voip::make_answer_response(source->context, source->tid, error, &reply)) {
         stack::siplog(reply);
-        eXosip_call_send_answer(OPTION_CONTEXT source->tid, error, reply);
+        voip::send_answer_response(source->context, source->tid, error, reply);
     }
     else {
         shell::debug(3, "sip: source reply %d failed", error);
-        eXosip_call_send_answer(OPTION_CONTEXT source->tid, SIP_BAD_REQUEST, NULL);
+        voip::send_answer_response(source->context, source->tid, SIP_BAD_REQUEST, NULL);
     }
-    EXOSIP_UNLOCK
 }
 
 void stack::call::set(state_t flag, char id, const char *text)
@@ -346,9 +343,10 @@ void stack::call::failed(thread *thread, session *s)
 
 void stack::call::reinvite(thread *thread, session *s)
 {
-    osip_message_t *reply = NULL;
-    osip_body_t *body = NULL;
+    voip::msg_t reply = NULL;
+    voip::body_t body = NULL;
     voip::did_t did = source->did;
+    voip::context_t ctx = source->context;
     session *update = source;
     bool holding = false;
     char *sdp;
@@ -360,8 +358,10 @@ void stack::call::reinvite(thread *thread, session *s)
     Mutex::protect(this);
     if(s == source) {
         update = target;
-        if(target)
+        if(target) {
+            ctx = target->context;
             did = target->did;
+        }
         else
             goto unconnected;
     }
@@ -379,14 +379,11 @@ void stack::call::reinvite(thread *thread, session *s)
         if(s == source) {
 unconnected:
             Mutex::release(this);
-            EXOSIP_LOCK
-            eXosip_call_build_answer(OPTION_CONTEXT source->tid, 500, &reply);
-            if(reply != NULL) {
+            if(voip::make_answer_response(source->context, source->tid, 500, &reply)) {
                 voip::header(reply, "Reply-After", "8");
                 stack::siplog(reply);
-                eXosip_call_send_answer(OPTION_CONTEXT source->tid, 500, reply);
+                voip::send_answer_response(source->context, source->tid, 500, reply);
             }
-            EXOSIP_UNLOCK
             return;
         }
         if(state != ANSWERED && state != RINGBACK) {
@@ -400,9 +397,7 @@ unconnected:
             arm((timeout_t)(thread->header_expires * 1000l));
         }
         Mutex::release(this);
-        EXOSIP_LOCK
-        eXosip_call_build_answer(OPTION_CONTEXT source->tid, 200, &reply);
-        if(reply != NULL) {
+        if(voip::make_answer_response(source->context, source->tid, 200, &reply)) {
             voip::server_requires(reply, "100rel");
             voip::header(reply, "RSeq", "1");
             if(body && body->body) {
@@ -413,9 +408,8 @@ unconnected:
                     error = SIP_TEMPORARILY_UNAVAILABLE;
             }
             stack::siplog(reply);
-            eXosip_call_send_answer(OPTION_CONTEXT source->tid, error, reply);
+            voip::send_answer_response(source->context, source->tid, error, reply);
         }
-        EXOSIP_UNLOCK
         return;
     case HOLDING:
     case JOINED:
@@ -430,18 +424,15 @@ unconnected:
         }
         Mutex::release(this);
 
-        EXOSIP_LOCK
-        eXosip_call_build_request(OPTION_CONTEXT did, "INVITE", &reply);
-        if(reply != NULL) {
+        if(voip::make_dialog_request(ctx, did, "INVITE", &reply)) {
             if(stack::sip_protocol == IPPROTO_UDP)
                 voip::server_supports(reply, "100rel,replaces");
             if(body && body->body)
                 voip::attach(reply, SDP_BODY, body->body);
             stack::siplog(reply);
-            eXosip_call_send_request(OPTION_CONTEXT did, reply);
+            voip::send_dialog_message(ctx, did, reply);
             update->state = session::REINVITE;
         }
-        EXOSIP_UNLOCK
         if(!reply)
             goto failed;
         return;
@@ -457,9 +448,11 @@ failed:
 
 void stack::call::answer(thread *thread, session *s)
 {
-    osip_message_t *reply = NULL;
+    voip::msg_t reply = NULL;
+    voip::msg_t ack = NULL;
     voip::did_t did;
     voip::tid_t tid;
+    voip::context_t ctx;
 
     assert(thread != NULL);
     assert(s != NULL);
@@ -482,6 +475,7 @@ void stack::call::answer(thread *thread, session *s)
         if(thread->sevent->did > -1)
             s->did = thread->sevent->did;
         tid = source->tid;
+        ctx = source->context;
         break;
     case JOINED:
     case HOLDING:
@@ -491,10 +485,10 @@ void stack::call::answer(thread *thread, session *s)
         if(thread->sevent->did > -1)
             s->did = thread->sevent->did;
         did = target->did;
+        ctx = target->context;
         Mutex::release(this);
-        EXOSIP_LOCK
-        eXosip_call_send_ack(OPTION_CONTEXT did, NULL);
-        EXOSIP_UNLOCK
+        if(voip::make_ack_message(ctx, did, &ack))
+            voip::send_ack_message(ctx, did, ack);
         return;
     default:
         Mutex::release(this);
@@ -503,16 +497,12 @@ void stack::call::answer(thread *thread, session *s)
         return;
     }
     Mutex::release(this);
-    EXOSIP_LOCK
-    eXosip_call_build_answer(OPTION_CONTEXT tid, SIP_OK, &reply);
-    if(reply != NULL) {
+    if(voip::make_answer_response(ctx, tid, SIP_OK, &reply)) {
         voip::attach(reply, SDP_BODY, s->sdp);
         stack::siplog(reply);
-        eXosip_call_send_answer(OPTION_CONTEXT tid, SIP_OK, reply);
-        EXOSIP_UNLOCK
+        voip::send_answer_response(ctx, tid, SIP_OK, reply);
     }
     else {
-        EXOSIP_UNLOCK
         shell::debug(2, "answer failed for call %08x:%u",
             source->sequence, source->cid);
         failed(thread, source);
@@ -524,18 +514,18 @@ void stack::call::message_reply(thread *thread, session *s)
     assert(thread != NULL);
     assert(s != NULL);
 
-    int tid;
+    voip::tid_t tid;
+    voip::context_t ctx;
 
     Mutex::protect(this);
     tid = s->tid;
+    ctx = s->context;
     Mutex::release(this);
 
     if(tid < 1)
         return;
 
-    EXOSIP_LOCK
-    eXosip_call_send_answer(OPTION_CONTEXT tid, thread->sevent->response->status_code, NULL);
-    EXOSIP_UNLOCK
+    voip::send_answer_response(ctx, tid, thread->sevent->response->status_code, NULL);
 }
 
 
@@ -546,14 +536,19 @@ void stack::call::relay(thread *thread, session *s)
 
     int status = thread->sevent->response->status_code;
     int tid = -1;
-    osip_body_t *body = NULL;
-    osip_message_t *reply = NULL;
+    voip::body_t body = NULL;
+    voip::msg_t reply = NULL;
+    voip::context_t ctx = stack::sip.out_context;
 
     Mutex::protect(this);
-    if(s == source && target)
+    if(s == source && target) {
         tid = target->tid;
-    else if(s == target)
+        ctx = target->context;
+    }
+    else if(s == target) {
         tid = source->tid;
+        ctx = source->context;
+    }
 
     osip_message_get_body(thread->sevent->response, 0, &body);
 
@@ -577,17 +572,14 @@ void stack::call::relay(thread *thread, session *s)
     if(tid < 1)
         return;
 
-    EXOSIP_LOCK
-    eXosip_call_build_answer(OPTION_CONTEXT tid, status, &reply);
-    if(reply) {
+    if(voip::make_answer_response(ctx, tid, status, &reply)) {
         if(stack::sip_protocol == IPPROTO_UDP)
             voip::server_requires(reply, "100rel");
         voip::header(reply, "RSeq", "1");
         if(body && body->body) 
             voip::attach(reply, SDP_BODY, body->body); 
-        eXosip_call_send_answer(OPTION_CONTEXT tid, status, reply);
+        voip::send_answer_response(ctx, tid, status, reply);
     }
-    EXOSIP_UNLOCK
 }
 
 void stack::call::confirm(thread *thread, session *s)
@@ -595,9 +587,10 @@ void stack::call::confirm(thread *thread, session *s)
     assert(thread != NULL);
     assert(s != NULL);
 
-    osip_message_t *ack = NULL;
+    voip::msg_t ack = NULL;
     time_t now;
     voip::did_t did = -1;
+    voip::context_t ctx = NULL;
 
     Mutex::protect(this);
     if(target == NULL) {
@@ -621,10 +614,14 @@ void stack::call::confirm(thread *thread, session *s)
         else
             arm((timeout_t)DAY_TIMEOUT);
     case HOLDING:
-        if(s == source)
+        if(s == source) {
+            ctx = target->context;
             did = target->did;
-        else if(s == target)
+        }
+        else if(s == target) {
             did = source->did;
+            ctx = source->context;
+        }
         break;
     default:
         Mutex::release(this);
@@ -633,17 +630,14 @@ void stack::call::confirm(thread *thread, session *s)
         return;
     }
     Mutex::release(this);
-    EXOSIP_LOCK
-    eXosip_call_build_ack(OPTION_CONTEXT did, &ack);
-    if(ack) {
+    if(voip::make_ack_message(ctx, did, &ack)) {
         stack::siplog(ack);
-        eXosip_call_send_ack(OPTION_CONTEXT did, ack);
+        voip::send_ack_message(ctx, did, ack);
     }
     else {
         shell::debug(2, "confirm failed to send for call %08x:%u",
             source->sequence, source->cid);
     }
-    EXOSIP_UNLOCK
 }
 
 void stack::call::busy(thread *thread, session *s)
