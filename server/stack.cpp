@@ -708,9 +708,6 @@ void stack::start(service *cfg)
 
     tcp_context = udp_context = tls_context = out_context = NULL;
 
-#ifdef  EXOSIP_API4
-    sip.out_context = eXosip_malloc();
-#endif
     mapped_array<MappedCall>::create(control::env("callmap"), mapped_calls);
     if(!sip)
         shell::log(shell::FAIL, "calls could not be mapped");
