@@ -26,8 +26,8 @@ static class __LOCAL subscriber : private modules::sipwitch
 private:
     static subscriber _sub;
 
-    void registration(int id, modules::regmode_t mode);
-    bool authenticate(int id, const char *remote_realm);
+    void registration(voip::reg_t, modules::regmode_t mode);
+    bool authenticate(voip::reg_t id, const char *remote_realm);
     void update(void);
 
 public:
@@ -211,7 +211,7 @@ void subscriber::reload(service *cfg)
         stats::allocate(1);
 }
 
-void subscriber::registration(int id, modules::regmode_t mode)
+void subscriber::registration(voip::reg_t id, modules::regmode_t mode)
 {
     if(id == -1 || id != provider.rid)
         return;
@@ -231,7 +231,7 @@ void subscriber::registration(int id, modules::regmode_t mode)
     }
 }
 
-bool subscriber::authenticate(int id, const char *remote_realm)
+bool subscriber::authenticate(voip::reg_t id, const char *remote_realm)
 {
     if(id == -1 || id != provider.rid)
         return false;

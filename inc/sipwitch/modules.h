@@ -25,6 +25,10 @@
 #include <ucommon/string.h>
 #endif
 
+#ifndef __SIPWITCH_VOIP_H_
+#include <sipwitch/voip.h>
+#endif
+
 #ifndef __SIPWITCH_SERVICE_H_
 #include <sipwitch/service.h>
 #endif
@@ -114,7 +118,7 @@ public:
          * @param id of registration (eXosip rid).
          * @param result of registration
          */
-        virtual void registration(int id, regmode_t reg);
+        virtual void registration(voip::reg_t id, regmode_t reg);
 
         /**
          * Used to verify authentication of a registered session.  This is
@@ -123,7 +127,7 @@ public:
          * @param realm of this registration.
          * @return true if valid, false if invalid or to ignore in this plugin.
          */
-        virtual bool authenticate(int id, const char *realm);
+        virtual bool authenticate(voip::reg_t id, const char *realm);
 
         /**
          * Enables plugin to redirect locally dialed destination to new uri.

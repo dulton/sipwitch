@@ -442,7 +442,7 @@ public:
     static void detach(session *s);
     static void clear(session *s);
     static void close(session *s);
-    static session *access(int cid);
+    static session *access(voip::call_t cid);
     static char *sipAddress(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
     static char *sipPublish(struct sockaddr_internet *addr, char *buf, const char *user = NULL, size_t size = MAX_URI_SIZE);
     static char *sipContact(struct sockaddr_internet *addr, char *buf, const char *user = NULL, const char *display = NULL, size_t size = MAX_URI_SIZE);
@@ -453,7 +453,7 @@ public:
     static void disableDumping(void);
     static void refer(session *session, eXosip_event_t *sevent);
     static void infomsg(session *session, eXosip_event_t *sevent);
-    static void setDialog(session *session, int did);
+    static void setDialog(session *session, voip::did_t did);
     static int getDialog(session *session);
     static void release(MappedCall *map);
     static MappedCall *get(void);
@@ -524,8 +524,8 @@ public:
     static void activate(MappedRegistry *rr);
     static void expire(MappedRegistry *rr);
     static void logging(MappedRegistry *rr, const char *reason);
-    static void registration(int id, modules::regmode_t mode);
-    static bool authenticate(int id, const char *realm);
+    static void registration(voip::reg_t id, modules::regmode_t mode);
+    static bool authenticate(voip::reg_t id, const char *realm);
     static const char *resolve(const char *uri, struct sockaddr_storage *addr);
     static const char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
     static const char *referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size);

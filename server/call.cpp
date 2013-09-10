@@ -354,7 +354,7 @@ void stack::call::reinvite(thread *thread, session *s)
 {
     osip_message_t *reply = NULL;
     osip_body_t *body = NULL;
-    int did = source->did;
+    voip::did_t did = source->did;
     session *update = source;
     bool holding = false;
     char *sdp;
@@ -464,7 +464,8 @@ failed:
 void stack::call::answer(thread *thread, session *s)
 {
     osip_message_t *reply = NULL;
-    int did, tid;
+    voip::did_t did;
+    voip::tid_t tid;
 
     assert(thread != NULL);
     assert(s != NULL);
@@ -602,7 +603,7 @@ void stack::call::confirm(thread *thread, session *s)
 
     osip_message_t *ack = NULL;
     time_t now;
-    int did = -1;
+    voip::did_t did = -1;
 
     Mutex::protect(this);
     if(target == NULL) {

@@ -138,7 +138,7 @@ const char *server::referLocal(MappedRegistry *rr, const char *target, char *buf
     return refer;
 }
 
-bool server::authenticate(int id, const char *realm)
+bool server::authenticate(voip::reg_t id, const char *realm)
 {
     linked_pointer<modules::sipwitch> cb = getModules();
 
@@ -150,7 +150,7 @@ bool server::authenticate(int id, const char *realm)
     return false;
 }
 
-void server::registration(int id, modules::regmode_t mode)
+void server::registration(voip::reg_t id, modules::regmode_t mode)
 {
     linked_pointer<modules::sipwitch> cb = getModules();
 

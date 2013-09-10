@@ -1,3 +1,6 @@
+from 1.8.1 to 1.8.2
+- lots of voip type casting fixes
+
 from 1.8.0 to 1.8.1
 - expose stack contexts directly to plugins
 - plugins can call voip api directly, no need for redirection api

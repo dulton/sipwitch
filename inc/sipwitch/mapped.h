@@ -27,6 +27,10 @@
 #include <sipwitch/namespace.h>
 #endif
 
+#ifndef _SIPWITCH_VOIP_H_
+#include <sipwitch/voip.h>
+#endif
+
 #ifndef _SIPWITCH_STATS_H_
 #include <sipwitch/stats.h>
 #endif
@@ -100,7 +104,7 @@ public:
     status_t status;
     enum {EXPIRED = 0, USER, GATEWAY, SERVICE, REJECT, REFER, TEMPORARY, EXTERNAL} type;
     bool hidden;
-    int rid;                    // registry remap or peer id
+    voip::reg_t rid;            // registry remap or peer id
     unsigned ext;               // 0 or extnum
     unsigned count;             // active regs count
     volatile unsigned inuse;    // in use for call count

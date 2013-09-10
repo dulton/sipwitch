@@ -59,11 +59,11 @@ bool modules::sipwitch::announce(MappedRegistry *rr, const char *msgtype, const 
     return false;
 }
 
-void modules::sipwitch::registration(int id, regmode_t mode)
+void modules::sipwitch::registration(voip::reg_t id, regmode_t mode)
 {
 }
 
-bool modules::sipwitch::authenticate(int id, const char *realm)
+bool modules::sipwitch::authenticate(voip::reg_t id, const char *realm)
 {
     return false;
 }

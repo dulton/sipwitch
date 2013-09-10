@@ -49,12 +49,12 @@ public:
 
     forward();
 
-    void activate(int id);
-    void disable(int id);
-    bool isActive(int id);
-    void remove(int id);
+    void activate(voip::reg_t id);
+    void disable(voip::reg_t id);
+    bool isActive(voip::reg_t id);
+    void remove(voip::reg_t id);
     void add(MappedRegistry *rr);
-    MappedRegistry *find(int id);
+    MappedRegistry *find(voip::reg_t id);
     void releaseMap(MappedRegistry *rr);
 
 private:
@@ -62,7 +62,7 @@ private:
     void reload(service *cfg);
     void activating(MappedRegistry *rr);
     void expiring(MappedRegistry *rr);
-    void registration(int id, modules::regmode_t mode);
+    void registration(voip::reg_t id, modules::regmode_t mode);
     bool announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body);
     bool authenticate(int id, const char *remote_realm);
     char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
@@ -93,7 +93,7 @@ void forward::releaseMap(MappedRegistry *rr)
         locking.release();
 }
 
-bool forward::isActive(int id)
+bool forward::isActive(voip::reg_t id)
 {
     bool activeflag = false;
 
@@ -112,7 +112,7 @@ bool forward::isActive(int id)
     return activeflag;
 }
 
-MappedRegistry *forward::find(int id)
+MappedRegistry *forward::find(voip::reg_t id)
 {
     linked_pointer<regmap> mp;
     int path = id % INDEX_SIZE;
@@ -127,7 +127,7 @@ MappedRegistry *forward::find(int id)
     return NULL;
 }
 
-void forward::disable(int id)
+void forward::disable(voip::reg_t id)
 {
     linked_pointer<regmap> mp;
     int path = id % INDEX_SIZE;
@@ -143,7 +143,7 @@ void forward::disable(int id)
     locking.release();
 }
 
-void forward::activate(int id)
+void forward::activate(voip::reg_t id)
 {
     linked_pointer<regmap> mp;
     int path = id % INDEX_SIZE;
@@ -159,7 +159,7 @@ void forward::activate(int id)
     locking.release();
 }
 
-void forward::remove(int id)
+void forward::remove(voip::reg_t id)
 {
     regmap *prior = NULL;
     linked_pointer<regmap> mp;

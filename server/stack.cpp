@@ -418,7 +418,7 @@ void stack::destroy(session *s)
     destroy(s->parent);
 }
 
-void stack::setDialog(session *s, int did)
+void stack::setDialog(session *s, voip::did_t did)
 {
     assert(s != NULL && s->parent != NULL);
     Mutex::protect(s->parent);
@@ -428,7 +428,7 @@ void stack::setDialog(session *s, int did)
 
 int stack::getDialog(session *s)
 {
-    int did = -1;
+    voip::did_t did = -1;
 
     if(s && s->parent) {
         Mutex::protect(s->parent);
@@ -447,7 +447,7 @@ void stack::refer(session *source, eXosip_event_t *sevent)
     osip_message_t *msg = NULL;
     session *target = NULL;
     call *cr = source->parent;
-    int did;
+    voip::did_t did;
 
     if(cr->source == source)
         target = cr->target;
@@ -491,7 +491,7 @@ void stack::infomsg(session *source, eXosip_event_t *sevent)
     else if(cr->target == source)
         target = cr->source;
 
-    int did = getDialog(target);
+    voip::did_t did = getDialog(target);
     if(did < 1)
         return;
 
@@ -668,7 +668,7 @@ stack::session *stack::create(voip::context_t context, voip::call_t cid, voip::d
     return cr->source;
 }
 
-stack::session *stack::access(int cid)
+stack::session *stack::access(voip::call_t cid)
 {
     assert(cid > 0);
 
