@@ -883,3 +883,17 @@ void voip::header(voip::msg_t msg, const char *key, const char *value)
 {
     osip_message_set_header(msg, key, value);
 }
+
+void voip::attach(msg_t msg, const char *type, const char *body, size_t size)
+{
+    if(body)
+        osip_message_set_body(msg, body, size);
+    if(type)
+        osip_message_set_content_type(msg, type);
+}
+
+void voip::attach(msg_t msg, const char *type, const char *body)
+{
+    attach(msg, type, body, strlen(body));
+}
+

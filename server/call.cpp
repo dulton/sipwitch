@@ -413,10 +413,8 @@ unconnected:
             voip::header(reply, "RSeq", "1");
             if(body && body->body) {
                 sdp = media::reinvite(s, body->body);
-                if(sdp) {
-                    osip_message_set_body(reply, sdp, strlen(sdp));
-                    osip_message_set_content_type(reply, "application/sdp");
-                }
+                if(sdp)
+                    voip::attach(reply, SDP_BODY, sdp);
                 else
                     error = SIP_TEMPORARILY_UNAVAILABLE;
             }
@@ -443,10 +441,8 @@ unconnected:
         if(reply != NULL) {
             if(stack::sip_protocol == IPPROTO_UDP)
                 voip::server_supports(reply, "100rel,replaces");
-            if(body && body->body) {
-                osip_message_set_body(reply, body->body, strlen(body->body));
-                osip_message_set_content_type(reply, "application/sdp");
-            }
+            if(body && body->body)
+                voip::attach(reply, SDP_BODY, body->body);
             stack::siplog(reply);
             eXosip_call_send_request(OPTION_CONTEXT did, reply);
             update->state = session::REINVITE;
@@ -515,8 +511,7 @@ void stack::call::answer(thread *thread, session *s)
     EXOSIP_LOCK
     eXosip_call_build_answer(OPTION_CONTEXT tid, SIP_OK, &reply);
     if(reply != NULL) {
-        osip_message_set_body(reply, s->sdp, strlen(s->sdp));
-        osip_message_set_content_type(reply, "application/sdp");
+        voip::attach(reply, SDP_BODY, s->sdp);
         stack::siplog(reply);
         eXosip_call_send_answer(OPTION_CONTEXT tid, SIP_OK, reply);
         EXOSIP_UNLOCK
@@ -593,10 +588,8 @@ void stack::call::relay(thread *thread, session *s)
         if(stack::sip_protocol == IPPROTO_UDP)
             voip::server_requires(reply, "100rel");
         voip::header(reply, "RSeq", "1");
-        if(body && body->body) {
-            osip_message_set_body(reply, body->body, strlen(body->body));
-            osip_message_set_content_type(reply, "application/sdp");
-        }
+        if(body && body->body) 
+            voip::attach(reply, SDP_BODY, body->body); 
         eXosip_call_send_answer(OPTION_CONTEXT tid, status, reply);
     }
     EXOSIP_UNLOCK

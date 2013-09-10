@@ -113,6 +113,8 @@ public:
 	static void release(context_t ctx);
 	static void show(msg_t msg);
 	static void header(msg_t msg, const char *key, const char *value);
+	static void attach(msg_t msg, const char *type, const char *body);
+	static void attach(msg_t msg, const char *type, const char *body, size_t size);
 
 	static void server_allows(voip::msg_t msg);
 	static void server_accepts(voip::msg_t msg);
@@ -131,6 +133,8 @@ public:
 #ifndef SESSION_EVENT
 #define SESSION_EVENT   "event"
 #endif
+
+#define	SDP_BODY	"application/sdp"
 
 END_NAMESPACE
 

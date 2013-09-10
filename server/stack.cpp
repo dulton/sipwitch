@@ -506,8 +506,7 @@ void stack::infomsg(session *source, eXosip_event_t *sevent)
         snprintf(type, sizeof(type), "%s/%s", ct->type, ct->subtype);
     else
         snprintf(type, sizeof(type), "%s", ct->type);
-    osip_message_set_content_type(msg, type);
-    osip_message_set_body(msg, body->body, strlen(body->body));
+    voip::attach(msg, type, body->body);
     voip::server_allows(msg);
     eXosip_call_send_request(OPTION_CONTEXT did, msg);
     EXOSIP_UNLOCK
@@ -1398,8 +1397,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
         return icount;
     }
 
-    osip_message_set_body(invite, sdp, strlen(sdp));
-    osip_message_set_content_type(invite, "application/sdp");
+    voip::attach(invite, SDP_BODY, sdp);
     stack::siplog(invite);
     cid = eXosip_call_send_initial_invite(OPTION_CONTEXT invite);
     if(cid > 0) {
@@ -1614,8 +1612,7 @@ int stack::inviteLocal(stack::session *s, registry::mapped *rr, destination_t de
             goto unlock;
         }
 
-        osip_message_set_body(invite, sdp, strlen(sdp));
-        osip_message_set_content_type(invite, "application/sdp");
+        voip::attach(invite, SDP_BODY, sdp);
         stack::siplog(invite);
         cid = eXosip_call_send_initial_invite(OPTION_CONTEXT invite);
         if(cid > 0) {
