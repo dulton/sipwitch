@@ -336,7 +336,6 @@ private:
         void joinLocked(session *s);
         void cancelLocked(void);
         cdr *log(void);
-        void refer(thread *thread, session *s);
         void bye(thread *thread, session *s);
         void set(state_t state, char id, const char *text);
 
