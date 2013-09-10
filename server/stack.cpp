@@ -818,9 +818,21 @@ void stack::stop(service *cfg)
 
 bool stack::check(void)
 {
-    shell::log(shell::INFO, "checking sip stack...");
-    EXOSIP_LOCK
-    EXOSIP_UNLOCK
+    if(tcp_context) {
+        shell::log(shell::INFO, "checking tcp context...");
+        voip::lock(tcp_context);
+        voip::unlock(tcp_context);
+    }
+    if(udp_context) {
+        shell::log(shell::INFO, "checking udp context...");
+        voip::lock(udp_context);
+        voip::unlock(udp_context);
+    }
+    if(tls_context) {
+        shell::log(shell::INFO, "checking tls context...");
+        voip::lock(tls_context);
+        voip::unlock(tls_context);
+    }
     return true;
 }
 

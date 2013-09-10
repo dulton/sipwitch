@@ -43,12 +43,12 @@ class __EXPORT voip
 public:
 	#ifdef  EXOSIP_API4
 	typedef eXosip_t    *context_t;
-	inline  void lock(context_t ctx) {eXosip_lock(ctx);}
-	inline  void unlock(context_t ctx) {eXosip_unlock(ctx);}
+	inline  static void lock(context_t ctx) {eXosip_lock(ctx);}
+	inline  static void unlock(context_t ctx) {eXosip_unlock(ctx);}
 	#else
 	typedef void        *context_t;
-	inline  void lock(context_t ctx) {eXosip_lock();}
-	inline  void unlock(context_t ctx) {eXosip_unlock();}
+	inline  static void lock(context_t ctx) {eXosip_lock();}
+	inline  static void unlock(context_t ctx) {eXosip_unlock();}
 	#endif
 
 	typedef eXosip_event_t  *event_t;
