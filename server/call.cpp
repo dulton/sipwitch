@@ -71,9 +71,7 @@ void stack::call::cancelLocked(void)
                 s->state = session::CLOSED;
             else if(s->cid > 0 && s->state != session::CLOSED) {
                 s->state = session::CLOSED;
-                EXOSIP_LOCK
-                eXosip_call_terminate(OPTION_CONTEXT s->cid, s->did);
-                EXOSIP_UNLOCK
+                voip::release_call(s->context, s->cid, s->did);
             }
         }
         sp.next();
@@ -110,9 +108,7 @@ void stack::call::joinLocked(session *join)
                 s->state = session::CLOSED;
             else if(s->cid > 0 && s->state != session::CLOSED) {
                 s->state = session::CLOSED;
-                EXOSIP_LOCK
-                eXosip_call_terminate(OPTION_CONTEXT s->cid, s->did);
-                EXOSIP_UNLOCK
+                voip::release_call(s->context, s->cid, s->did);
             }
         }
         sp.next();
@@ -173,9 +169,7 @@ void stack::call::disconnectLocked(void)
             sp->sid.state = session::CLOSED;
         else if(sp->sid.cid > 0 && sp->sid.state != session::CLOSED) {
             sp->sid.state = session::CLOSED;
-            EXOSIP_LOCK
-            eXosip_call_terminate(OPTION_CONTEXT sp->sid.cid, sp->sid.did);
-            EXOSIP_UNLOCK
+            voip::release_call(sp->sid.context, sp->sid.cid, sp->sid.did);
         }
         sp.next();
     }
