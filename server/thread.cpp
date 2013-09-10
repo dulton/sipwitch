@@ -2168,8 +2168,7 @@ void thread::run(void)
 
         server::release(authorized);
         server::release(dialed);
-
-        eXosip_event_free(sevent);
+        voip::release_event(sevent);
         --active_count;
     }
 }
