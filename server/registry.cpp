@@ -1122,6 +1122,9 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
     if(!ai)
         return 0;
 
+    if(!context)
+        context = stack::sip.out_context;
+
     len = Socket::len(ai);
 
     locking.exclusive();
@@ -1136,6 +1139,7 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
         tp = new target;
         time(&tp->created);
         tp->enlist(&source.internal.targets);
+        tp->context = context;   // make sure def context
         count = 1;
         tp->status = registry::target::READY;
         tp->address.address.sa_family = 0;
@@ -1395,6 +1399,9 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
     if(!ai)
         return 0;
 
+    if(!context)
+        context = stack::sip.out_context;
+
     locking.exclusive();
     tp = source.internal.targets;
     if(lease > expires)
@@ -1438,6 +1445,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
         if(!oi)
             oi = ai;
         expired = new target;
+        expired->context = context;
         expired->enlist(&source.internal.targets);
         expired->status = registry::target::READY;
         memcpy(&contact, oi, len);
@@ -1481,6 +1489,9 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr, voip::contex
         return 0;
     }
 
+    if(!context)
+        context = stack::sip.out_context;
+
     tp = source.internal.targets;
     while(tp) {
         delete *tp;
@@ -1492,6 +1503,7 @@ unsigned registry::mapped::setTargets(Socket::address& target_addr, voip::contex
         len = Socket::len(al->ai_addr);
 
         tp = new target;
+        tp->context = context;
         time(&tp->created);
         subnet = server::getPolicy(al->ai_addr);
         if(subnet) {

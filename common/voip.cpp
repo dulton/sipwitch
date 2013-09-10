@@ -40,12 +40,26 @@ bool voip::publish(voip::context_t ctx, const char *uri, const char *contact, co
     return result;
 }
 
+void voip::call_reference(context_t ctx, voip::call_t cid, void *route)
+{
+    eXosip_lock(ctx);
+    eXosip_call_set_reference(ctx, cid, route);
+    eXosip_unlock(ctx);
+}
+
 void voip::add_authentication(context_t ctx, const char *user, const char *secret, const char *realm, bool automatic) 
 {
     eXosip_lock(ctx);
     eXosip_add_authentication_info(ctx, user, user, secret, NULL, realm);
     if(automatic)
         eXosip_automatic_action(ctx);
+    eXosip_unlock(ctx);
+}
+
+void voip::free_message_request(context_t ctx, msg_t msg)
+{
+    if(msg)
+        osip_message_free(msg);
     eXosip_unlock(ctx);
 }
 
@@ -446,12 +460,26 @@ bool voip::publish(voip::context_t ctx, const char *uri, const char *contact, co
     return result;
 }
 
+void voip::call_reference(context_t ctx, voip::call_t cid, const char *route)
+{
+    eXosip_lock();
+    eXosip_call_set_reference(cid, route);
+    eXosip_unlock();
+}
+
 void voip::add_authentication(context_t ctx, const char *user, const char *secret, const char *realm, bool automatic) 
 {
     eXosip_lock();
     eXosip_add_authentication_info(user, user, secret, NULL, realm);
     if(automatic)
         eXosip_automatic_action();
+    eXosip_unlock();
+}
+
+void voip::free_message_request(context_t ctx, msg_t msg)
+{
+    if(msg)
+        osip_message_free(msg);
     eXosip_unlock();
 }
 
@@ -896,4 +924,5 @@ void voip::attach(msg_t msg, const char *type, const char *body)
 {
     attach(msg, type, body, strlen(body));
 }
+
 
