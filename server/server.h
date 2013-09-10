@@ -450,7 +450,7 @@ public:
     static void enableDumping(void);
     static void clearDumping(void);
     static void disableDumping(void);
-    static void refer(session *session, eXosip_event_t *sevent);
+    static void refer(voip::context_t context, session *session, eXosip_event_t *sevent);
     static void infomsg(session *session, eXosip_event_t *sevent);
     static void setDialog(session *session, int did);
     static int getDialog(session *session);

@@ -2084,7 +2084,7 @@ void thread::run(void)
                 if(sevent->cid > 0)
                     session = stack::access(sevent->cid);
                 if(session)
-                    stack::refer(session, sevent);
+                    stack::refer(context, session, sevent);
             }
             break;
         case EXOSIP_MESSAGE_NEW:
@@ -2103,7 +2103,7 @@ void thread::run(void)
                 if(sevent->cid > 0)
                     session = stack::access(sevent->cid);
                 if(session)
-                    stack::refer(session, sevent);
+                    stack::refer(context, session, sevent);
             }
             else if(MSG_IS_BYE(sevent->request)) {
                 if(sevent->cid > 0)

@@ -434,7 +434,7 @@ int stack::getDialog(session *s)
     return did;
 }
 
-void stack::refer(session *source, eXosip_event_t *sevent)
+void stack::refer(voip::context_t context, session *source, eXosip_event_t *sevent)
 {
     assert(source);
     assert(sevent);
@@ -452,31 +452,22 @@ void stack::refer(session *source, eXosip_event_t *sevent)
 
     osip_message_header_get_byname(sevent->request, "Refer-To", 0, &header);
     if(!header || !header->hvalue)
-        goto norefer;
+        goto failed;
 
     did = getDialog(target);
-    if(did < 1) {
-norefer:
-        EXOSIP_LOCK
+    if(did < 1)
         goto failed;
-    }
 
-    EXOSIP_LOCK
-    eXosip_call_build_refer(OPTION_CONTEXT did, header->hvalue, &msg);
-    if(!msg) {
+    if(!voip::make_dialog_refer(context, did, header->hvalue, &msg)) {
 failed:
-        eXosip_call_build_answer(OPTION_CONTEXT sevent->tid, SIP_SERVICE_UNAVAILABLE, &msg);
-        if(msg)
-            eXosip_call_send_answer(OPTION_CONTEXT sevent->tid, SIP_SERVICE_UNAVAILABLE, msg);
-        EXOSIP_UNLOCK
+        voip::send_answer_response(context, sevent->tid, SIP_SERVICE_UNAVAILABLE, NULL);
         return;
     }
     voip::server_allows(msg);
     voip::header(msg, "Referred-By", source->identity);
-    eXosip_call_send_request(OPTION_CONTEXT did, msg);
+    voip::send_dialog_message(context, did, msg);
     target->state = session::REFER;
     target->tid = sevent->tid;
-    EXOSIP_UNLOCK
 }
 
 void stack::infomsg(session *source, eXosip_event_t *sevent)
