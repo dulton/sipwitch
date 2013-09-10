@@ -47,6 +47,15 @@ void voip::call_reference(context_t ctx, voip::call_t cid, void *route)
     eXosip_unlock(ctx);
 }
 
+void voip::option(context_t ctx, int opt, const void *value)
+{
+    if(ctx && value) {
+        eXosip_lock(ctx);
+        eXosip_set_option(ctx, opt, value);
+        eXosip_unlock(ctx);
+    }
+}
+
 void voip::add_authentication(context_t ctx, const char *user, const char *secret, const char *realm, bool automatic) 
 {
     eXosip_lock(ctx);
@@ -465,6 +474,15 @@ void voip::call_reference(context_t ctx, voip::call_t cid, const char *route)
     eXosip_lock();
     eXosip_call_set_reference(cid, route);
     eXosip_unlock();
+}
+
+void voip::option(voip::context_t ctx, int opt, const void *value)
+{
+    if(ctx && value) {
+        eXosip_lock();
+        eXosip_set_option(opt, value);
+        eXosip_unlock();
+    }
 }
 
 void voip::add_authentication(context_t ctx, const char *user, const char *secret, const char *realm, bool automatic) 

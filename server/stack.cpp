@@ -524,9 +524,7 @@ void stack::disjoin(call *cr)
                 s->closed = true;
             }
             if(s->cid > 0 && s->state != session::CLOSED) {
-                EXOSIP_LOCK
-                eXosip_call_terminate(OPTION_CONTEXT s->cid, s->did);
-                EXOSIP_UNLOCK
+                voip::release_call(s->context, s->cid, s->did);
                 s->state = session::CLOSED;
             }
         }
@@ -561,9 +559,7 @@ void stack::destroy(call *cr)
 
         if(sp->sid.cid > 0) {
             if(sp->sid.state != session::CLOSED) {
-                EXOSIP_LOCK
-                eXosip_call_terminate(OPTION_CONTEXT sp->sid.cid, sp->sid.did);
-                EXOSIP_UNLOCK
+                voip::release_call(sp->sid.context, sp->sid.cid, sp->sid.did);
             }
             sp->sid.delist(&hash[sp->sid.cid % keysize]);
         }
@@ -913,11 +909,11 @@ void stack::reload(service *cfg)
                 send101 = 0;
             else if(eq(key, "keepalive") && !is_configured()) {
                 val = atoi(value);
-                eXosip_set_option(OPTION_CONTEXT EXOSIP_OPT_UDP_KEEP_ALIVE, &val);
+                voip::option(udp_context, EXOSIP_OPT_UDP_KEEP_ALIVE, &val);
             }
             else if(eq(key, "learn") && !is_configured()) {
                 val = tobool(value);
-                eXosip_set_option(OPTION_CONTEXT EXOSIP_OPT_UDP_LEARN_PORT, &val);
+                voip::option(udp_context, EXOSIP_OPT_UDP_LEARN_PORT, &val);
             }
             else if(eq(key, "restricted")) {
                 if(eq(value, "none"))

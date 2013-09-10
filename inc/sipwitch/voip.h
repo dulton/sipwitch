@@ -109,6 +109,7 @@ public:
 	static void call_reference(context_t ctx, call_t cid, void *route);
 	static void free_message_request(context_t ctx, voip::msg_t msg);
 	static void release_event(event_t ev);
+	static void option(context_t ctx, int opt, const void *value);
 
 	static bool listen(context_t ctx, int proto = IPPROTO_UDP, const char *iface = NULL, unsigned port = 5060, bool tls = false);
 	static void create(context_t *ctx, const char *agent, int family = AF_INET);
