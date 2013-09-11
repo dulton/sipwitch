@@ -1305,11 +1305,11 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
     // default if no target route lookup...
 
+    Socket::address resolve;
     if(!target) {
         if(!port)
             port = 5060;
 
-        Socket::address resolve;
         resolve.set(route, port);
         target = resolve.getAddr();
     }
