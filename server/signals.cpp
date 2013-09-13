@@ -86,7 +86,7 @@ void signals::run(void)
         switch(signo) {
         case SIGALRM:
             shell::log(shell::INFO, "system housekeeping");
-            registry::cleanup(period);
+            // registry::cleanup(period);
             events::sync(period);
             cache::cleanup();
             break;

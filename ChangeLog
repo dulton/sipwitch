@@ -1,5 +1,6 @@
 from 1.8.2 to 1.8.3
 - remote message routing
+- faster reg cleanup for short time interval registrations
 
 from 1.8.1 to 1.8.2
 - lots of voip type casting fixes

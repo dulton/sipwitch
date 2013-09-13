@@ -449,12 +449,13 @@ void registry::expire(mapped *rr)
     rr->enlist(&freelist);
 }
 
-void registry::cleanup(time_t period)
+unsigned registry::cleanup(time_t period)
 {
     mapped *rr, save;
     unsigned regcount = 0;
     time_t now;
     bool expired;
+    unsigned count = 0;
 
     while(regcount < mapped_entries) {
         expired = false;
@@ -472,9 +473,12 @@ void registry::cleanup(time_t period)
         }
         locking.commit();
         Thread::yield();
-        if(expired)
+        if(expired) {
+            ++count;
             server::expire(&save);
+        }
     }
+    return count;
 }
 
 void registry::reload(service *cfg)

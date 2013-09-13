@@ -226,7 +226,12 @@ void stack::background::run(void)
     shell::log(DEBUG1, "starting background thread");
     timeout_t timeout, current;
     Timer expiration = interval;
+    time_t then = 0, now;
     stack::call *next;
+    time_t period = 10;
+
+    time(&then);
+    then /= period;
 
     for(;;) {
         Conditional::lock();
@@ -263,6 +268,16 @@ void stack::background::run(void)
         else {
             signalled = false;
             Conditional::unlock();
+        }
+        time(&now);
+        now /= period;
+        if(now > then) {
+            then = now;
+            unsigned released = registry::cleanup(10);
+            if(released)
+                shell::log(shell::DEBUG1, "registry cleanup; %d expired", released);
+            else
+                shell::log(shell::DEBUG1, "registry cleanup; no entries expired");
         }
         messages::automatic();
     }

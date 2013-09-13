@@ -202,7 +202,7 @@ public:
     static pattern *getRouting(unsigned trs, const char *id);
     static void detach(mapped *m);
     static bool remove(const char *id);
-    static void cleanup(time_t period);
+    static unsigned cleanup(time_t period);
 };
 
 class __LOCAL stack : public service::callback, private mapped_array<MappedCall>, public OrderedIndex
