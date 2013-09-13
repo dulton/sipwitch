@@ -40,7 +40,7 @@ bool voip::publish(voip::context_t ctx, const char *uri, const char *contact, co
     return result;
 }
 
-void voip::call_reference(context_t ctx, voip::call_t cid, void *route)
+void voip::call_reference(context_t ctx, call_t cid, void *route)
 {
     eXosip_lock(ctx);
     eXosip_call_set_reference(ctx, cid, route);
@@ -469,10 +469,10 @@ bool voip::publish(voip::context_t ctx, const char *uri, const char *contact, co
     return result;
 }
 
-void voip::call_reference(context_t ctx, voip::call_t cid, const char *route)
+void voip::call_reference(context_t ctx, call_t cid, const char *route)
 {
     eXosip_lock();
-    eXosip_call_set_reference(cid, route);
+    eXosip_call_set_reference(cid, (void *)route);
     eXosip_unlock();
 }
 

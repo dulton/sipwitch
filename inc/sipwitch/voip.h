@@ -113,7 +113,7 @@ public:
 	static bool publish(context_t ctx, const char *uri, const char *contact, const char *event, const char *duration, const char *type, const char *body);
 
 	static event_t get_event(context_t ctx, timeout_t timeout);
-	static void call_reference(context_t ctx, call_t cid, void *route);
+	static void call_reference(context_t ctx, call_t cid, const char *route);
 	static void free_message_request(context_t ctx, voip::msg_t msg);
 	static void release_event(event_t ev);
 	static void option(context_t ctx, int opt, const void *value);
