@@ -54,6 +54,88 @@ thread::thread(voip::context_t ctx, const char *tag) : DetachedThread(stack::sip
     context = ctx;
 }
 
+const char *thread::eid(eXosip_event_type ev)
+{
+    switch(ev) {
+#ifndef EXOSIP_API4
+    case EXOSIP_REGISTRATION_REFRESHED:
+#endif
+    case EXOSIP_REGISTRATION_SUCCESS:
+        return "register";
+    case EXOSIP_CALL_INVITE:
+        return "invite";
+    case EXOSIP_CALL_REINVITE:
+        return "reinvite";
+#ifndef EXOSIP_API4
+    case EXOSIP_CALL_TIMEOUT:
+        return "timeout";
+#endif
+    case EXOSIP_CALL_NOANSWER:
+    case EXOSIP_SUBSCRIPTION_NOANSWER:
+    case EXOSIP_NOTIFICATION_NOANSWER:
+        return "noanswer";
+    case EXOSIP_MESSAGE_PROCEEDING:
+    case EXOSIP_NOTIFICATION_PROCEEDING:
+    case EXOSIP_CALL_MESSAGE_PROCEEDING:
+    case EXOSIP_SUBSCRIPTION_PROCEEDING:
+    case EXOSIP_CALL_PROCEEDING:
+        return "proceed";
+    case EXOSIP_CALL_RINGING:
+        return "ring";
+    case EXOSIP_MESSAGE_ANSWERED:
+    case EXOSIP_CALL_ANSWERED:
+    case EXOSIP_CALL_MESSAGE_ANSWERED:
+    case EXOSIP_SUBSCRIPTION_ANSWERED:
+    case EXOSIP_NOTIFICATION_ANSWERED:
+        return "answer";
+    case EXOSIP_SUBSCRIPTION_REDIRECTED:
+    case EXOSIP_NOTIFICATION_REDIRECTED:
+    case EXOSIP_CALL_MESSAGE_REDIRECTED:
+    case EXOSIP_CALL_REDIRECTED:
+    case EXOSIP_MESSAGE_REDIRECTED:
+        return "redirect";
+#ifndef EXOSIP_API4
+    case EXOSIP_REGISTRATION_TERMINATED:
+#endif
+    case EXOSIP_REGISTRATION_FAILURE:
+        return "noreg";
+    case EXOSIP_SUBSCRIPTION_REQUESTFAILURE:
+    case EXOSIP_NOTIFICATION_REQUESTFAILURE:
+    case EXOSIP_CALL_REQUESTFAILURE:
+    case EXOSIP_CALL_MESSAGE_REQUESTFAILURE:
+    case EXOSIP_MESSAGE_REQUESTFAILURE:
+        return "failed";
+    case EXOSIP_SUBSCRIPTION_SERVERFAILURE:
+    case EXOSIP_NOTIFICATION_SERVERFAILURE:
+    case EXOSIP_CALL_SERVERFAILURE:
+    case EXOSIP_CALL_MESSAGE_SERVERFAILURE:
+    case EXOSIP_MESSAGE_SERVERFAILURE:
+        return "server";
+    case EXOSIP_SUBSCRIPTION_GLOBALFAILURE:
+    case EXOSIP_NOTIFICATION_GLOBALFAILURE:
+    case EXOSIP_CALL_GLOBALFAILURE:
+    case EXOSIP_CALL_MESSAGE_GLOBALFAILURE:
+    case EXOSIP_MESSAGE_GLOBALFAILURE:
+        return "global";
+    case EXOSIP_CALL_ACK:
+        return "ack";
+    case EXOSIP_CALL_CLOSED:
+    case EXOSIP_CALL_RELEASED:
+        return "bye";
+    case EXOSIP_CALL_CANCELLED:
+        return "cancel";
+    case EXOSIP_MESSAGE_NEW:
+    case EXOSIP_CALL_MESSAGE_NEW:
+    case EXOSIP_IN_SUBSCRIPTION_NEW:
+        return "new";
+    case EXOSIP_SUBSCRIPTION_NOTIFY:
+        return "notify";
+    default:
+        break;
+    }
+    return "unknown";
+}
+
 void thread::publish(void)
 {
     int error = SIP_BAD_REQUEST;
@@ -1808,8 +1890,8 @@ void thread::run(void)
             continue;
 
         ++active_count;
-        shell::debug(2, "sip: event %d; cid=%d, did=%d, instance=%s",
-            sevent->type, sevent->cid, sevent->did, instance);
+        shell::debug(2, "sip: event %s(%d); cid=%d, did=%d, instance=%s",
+            eid(sevent->type), sevent->type, sevent->cid, sevent->did, instance);
 
         switch(sevent->type) {
         case EXOSIP_REGISTRATION_FAILURE:

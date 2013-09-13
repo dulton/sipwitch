@@ -606,6 +606,7 @@ private:
     thread(voip::context_t ctx, const char *tag);
 
     static void wait(unsigned count);
+    static const char *eid(eXosip_event_type ev);
 
     void send_reply(int error);
     void expiration(void);
