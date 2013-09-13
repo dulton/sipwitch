@@ -273,7 +273,7 @@ void stack::background::run(void)
         now /= period;
         if(now > then) {
             then = now;
-            unsigned released = registry::cleanup(10);
+            unsigned released = registry::cleanup(period);
             if(released)
                 shell::log(shell::DEBUG1, "registry cleanup; %d expired", released);
             else
