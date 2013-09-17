@@ -146,6 +146,12 @@ public:
 
 #define	SDP_BODY	"application/sdp"
 
+// private sipwitch headers...
+
+#define P_SIPWITCH_NODE		"P-sipwitch-node"	// internodal calling
+#define	P_SIPWITCH_FEATURE	"P-sipwitch-feat"	// feature code reply
+
+
 END_NAMESPACE
 
 #endif
