@@ -37,6 +37,7 @@
 #cmakedefine HAVE_SYS_INOTIFY_H 1
 #cmakedefine HAVE_SYS_SOCKIO_H 1
 #cmakedefine HAVE_SYS_STAT_H 1
+#cmakedefine HAVE_RESOLV_H 1
 #cmakedefine HAVE_OPENSSL 1
 
 #cmakedefine SRVRESOLV_RULI 1

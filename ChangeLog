@@ -1,3 +1,6 @@
+from 1.8.3 to 1.9.0
+- will eliminate libruli, integrate srv resolver
+
 from 1.8.2 to 1.8.3
 - remote message routing
 - faster reg cleanup for short time interval registrations
