@@ -34,7 +34,6 @@
 #include <sipwitch/modules.h>
 #include <sipwitch/control.h>
 #include <sipwitch/cache.h>
-#include <sipwitch/db.h>
 #include <sipwitch/stats.h>
 #include <sipwitch/uri.h>
 #include <sipwitch/cdr.h>

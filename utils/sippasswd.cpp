@@ -49,7 +49,7 @@ static char *getpass(const char *prompt)
 
 PROGRAM_MAIN(argc, argv)
 {
-    char *realm = NULL, *secret, *verify;
+    const char *realm = NULL, *secret, *verify;
     const char *mode = "md5";
     char buffer[128];
     char replace[128];
@@ -141,13 +141,14 @@ PROGRAM_MAIN(argc, argv)
 
     // create work directory if it does not exist
     dir::create(DEFAULT_VARPATH "/lib/sipwitch", fsys::GROUP_PRIVATE);
+    dir::create(DEFAULT_VARPATH "/lib/sipwitch/digests", fsys::GROUP_PRIVATE);
 
     // make sure always created root only
-    fs.open(DEFAULT_VARPATH "/lib/sipwitch/digests.db", fsys::OWNER_PRIVATE,
-        fsys::RDONLY);
+    string_t path = str(DEFAULT_VARPATH "/lib/sipwitch/digests/") + realm;
+    fs.open(*path, fsys::OWNER_PRIVATE, fsys::RDONLY);
     fs.close();
 
-    fp = fopen(DEFAULT_VARPATH "/lib/sipwitch/digests.db", "r+");
+    fp = fopen(*path, "r+");
     if(!fp)
         shell::errexit(1, "*** sippasswd: cannot access digest");
 

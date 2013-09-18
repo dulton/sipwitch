@@ -571,10 +571,10 @@ void registry::reload(service *cfg)
     if(!String::equal(realm, oldrealm)) {
         secure::uuid(session_uuid);
         shell::log(shell::NOTIFY, "new realm %s", realm);
-        digests::clear();
+        digests::reload();
     } else if(!String::equal(digest, olddigest)) {
         shell::log(shell::INFO, "digest changed to %s", digest);
-        digests::clear();
+        digests::reload();
     }
 
     oldrealm = realm;

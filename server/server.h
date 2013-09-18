@@ -50,6 +50,20 @@ class thread;
 
 typedef enum {EXTERNAL, LOCAL, PUBLIC, ROUTED, FORWARDED, REDIRECTED} destination_t;
 
+class __LOCAL digests
+{
+public:
+    static void reload(void);
+
+    static const char *get(const char *id);
+
+    static bool set(const char *id, const char *hash);
+
+    static void release(const char *hash);
+
+    static void load(void);
+};
+
 class __LOCAL registry : private service::callback, private mapped_array<MappedRegistry>
 {
 public:

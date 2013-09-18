@@ -39,7 +39,8 @@ EXTRA_LTLIBRARIES += srvresolv.la
 endif
 
 sipw_SOURCES = server.cpp registry.cpp stack.cpp thread.cpp call.cpp \
-	messages.cpp media.cpp system.cpp signals.cpp history.cpp
+	messages.cpp media.cpp system.cpp signals.cpp history.cpp \
+	digests.cpp
 sipw_LDADD = $(LDADD) @SIPWITCH_EXOSIP2@ @DAEMON_LIBS@ $(DLOPEN)
 sipw_LDFLAGS = @LDFLAGS@
 

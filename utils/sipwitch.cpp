@@ -302,9 +302,6 @@ static void realm(char **argv)
     else
         shell::errexit(3, "*** sipwitch: realm: root permission required\n");
 
-    // if previous digests cached, clear them as they are now invalid...
-    ::remove(DEFAULT_VARPATH "/lib/sipwitch/digests.db");
-
     // if server is up, also sync server with realm change...
     fp = fopen(control, "w");
     if(fp) {

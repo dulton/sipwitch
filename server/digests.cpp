@@ -13,14 +13,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <sipwitch-config.h>
-#include <ucommon/ucommon.h>
-#include <ucommon/export.h>
-#include <sipwitch/db.h>
+#include "server.h"
 
 #define     INDEX_KEYSIZE   177
 
-using namespace SIPWITCH_NAMESPACE;
+NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
 class __LOCAL key : public LinkedObject
@@ -43,12 +40,13 @@ LinkedObject(&private_paths[NamedObject::keyindex(keyid, INDEX_KEYSIZE)])
     hash = private_cache.dup(keyhash);
 }
 
-void digests::clear(void)
+void digests::reload(void)
 {
     private_lock.modify();
     memset(private_paths, 0, sizeof(private_paths));
     private_cache.purge();
     private_lock.commit();
+    load();
 }
 
 const char *digests::get(const char *id)
@@ -102,9 +100,13 @@ bool digests::set(const char *id, const char *hash)
 
 void digests::load(void)
 {
-    FILE *fp = fopen(DEFAULT_VARPATH "/lib/sipwitch/digests.db", "r");
+    FILE *fp;
     char buffer[256];
     char *cp, *ep;
+
+    dir::create(DEFAULT_VARPATH "/lib/sipwitch/digests", fsys::GROUP_PRIVATE);
+    string_t path = str(DEFAULT_VARPATH "/lib/sipwitch/digests/") + registry::getRealm();
+    fp = fopen(*path, "r");
 
     if(!fp)
         return;
@@ -131,3 +133,4 @@ void digests::load(void)
     fclose(fp);
 }
 
+END_NAMESPACE
