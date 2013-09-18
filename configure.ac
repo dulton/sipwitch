@@ -183,6 +183,7 @@ PKG_CHECK_MODULES(EXOSIP2, eXosip2 >= 3.0.0, [
             [EXOSIP2_LIBS="$with_libeXosip2"],[EXOSIP2_LIBS="-leXosip2"])
 
     AC_CHECK_HEADER(resolv.h,[
+        AC_DEFINE(HAVE_RESOLV_H, 1, [have resolver support])
         EXOSIP2_LIBS="$EXOSIP2_LIBS -lresolv"
     ],[])
 
