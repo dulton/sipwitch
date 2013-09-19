@@ -81,7 +81,12 @@ protected:
 
 public:
     srv(const char *uri);
+    srv();
     ~srv();
+
+    void set(const char *uri);
+
+    void clear(void);
 
     inline struct sockaddr *operator*() const
 	    {return entry;};
@@ -94,7 +99,7 @@ public:
 
     struct sockaddr *next(void);
 
-    static voip::context_t route(struct sockaddr_storage *addr, const char *uri, char *buf, size_t size);
+    voip::context_t route(const char *uri, char *buf, size_t size);
 
 };
 

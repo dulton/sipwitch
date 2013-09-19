@@ -49,7 +49,25 @@ srv::srv(const char *uri) : Socket::address()
 #ifdef  _MSWINDOWS_
     Socket::init();
 #endif
+    srvlist = NULL;
+    entry = NULL;
+    count = 0;
 
+    set(uri);
+}
+
+srv::srv() : Socket::address()
+{
+#ifdef  _MSWINDOWS_
+    Socket::init();
+#endif
+    srvlist = NULL;
+    entry = NULL;
+    count = 0;
+}
+
+void srv::set(const char *uri)
+{
     int protocol = IPPROTO_UDP;
     int port = uri::portid(uri);
     char host[256], svc[10];
@@ -62,9 +80,7 @@ srv::srv(const char *uri) : Socket::address()
     bool nosrv = false;
 #endif
 
-    srvlist = NULL;
-    entry = NULL;
-	count = 0;
+    clear();
 
     String::set(svc, sizeof(svc), "sip");
 
@@ -249,6 +265,11 @@ nosrv:
 
 srv::~srv()
 {
+    clear();
+}
+
+void srv::clear(void)
+{
     if(srvlist) {
         delete[] srvlist;
         srvlist = NULL;
@@ -258,6 +279,9 @@ srv::~srv()
         freeaddrinfo(list);
         list = NULL;
     } 
+
+    entry = NULL;
+	count = 0;
 }       
 
 struct sockaddr *srv::next(void)
@@ -285,7 +309,7 @@ struct sockaddr *srv::next(void)
     return entry;
 }
 
-voip::context_t srv::route(struct sockaddr_storage *save, const char *uri, char *buf, size_t size)
+voip::context_t srv::route(const char *uri, char *buf, size_t size)
 {
     char host[256];
     const char *schema = "sip";
@@ -324,19 +348,17 @@ voip::context_t srv::route(struct sockaddr_storage *save, const char *uri, char 
             snprintf(buf, size, "%s:%s:%u", schema, host, port);
         sid = buf;
     }
-    srv addr(sid);
-	const struct sockaddr *ap = *addr;
-    if(!ap)
+    set(sid);
+    if(!entry)
         return NULL;
-    if(!Socket::query(ap, host, sizeof(host)))
+    if(!Socket::query(entry, host, sizeof(host)))
         return NULL;
-    Socket::store(save, ap);
 #ifdef	AF_INET6
-	if(ap->sa_family == AF_INET6)
-		snprintf(buf, size, "%s:[%s]:%u", schema, host, (unsigned)ntohs(((struct sockaddr_in6 *)(ap))->sin6_port) & 0xffff);
+	if(entry->sa_family == AF_INET6)
+		snprintf(buf, size, "%s:[%s]:%u", schema, host, (unsigned)ntohs(((struct sockaddr_in6 *)(entry))->sin6_port) & 0xffff);
 	else
 #endif
-		snprintf(buf, size, "%s:%s:%u", schema, host, (unsigned)ntohs(((struct sockaddr_in *)(ap))->sin_port) & 0xffff);
+		snprintf(buf, size, "%s:%s:%u", schema, host, (unsigned)ntohs(((struct sockaddr_in *)(entry))->sin_port) & 0xffff);
     return ctx;
 }
 

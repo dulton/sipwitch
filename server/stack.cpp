@@ -1258,8 +1258,9 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     int cid;
     unsigned icount = 0;
     time_t now;
-    struct sockaddr_storage address, peering;
-    voip::context_t context = srv::route(&address, uri_target, route, sizeof(route));
+    srv resolv;
+    struct sockaddr_storage peering;
+    voip::context_t context = resolv.route(uri_target, route, sizeof(route));
     const char *schema = NULL;
     char rewrite[MAX_URI_SIZE];
 
@@ -1294,7 +1295,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     String::set(network, sizeof(network), "*");
     uri::userid(uri_target, username, sizeof(username));
 
-    stack::subnet *subnet = server::getPolicy((struct sockaddr *)&address);
+    stack::subnet *subnet = server::getPolicy(*resolv);
     if(subnet) {
         memcpy(&peering, &subnet->iface, sizeof(struct sockaddr_storage));
         String::set(network, sizeof(network), subnet->getId());
@@ -1395,7 +1396,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     snprintf(invited->from, sizeof(invited->from), "<%s>", uri_target);
     String::set(invited->network, sizeof(invited->network), network);
     invited->nat = nat;
-    uri::identity((struct sockaddr *)&address, invited->sysident, username, sizeof(invited->sysident));
+    uri::identity(*resolv, invited->sysident, username, sizeof(invited->sysident));
     invited->peering = peering;
 
     shell::debug(3, "inviting %s\n", uri_target);
