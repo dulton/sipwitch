@@ -185,6 +185,7 @@ public:
         friend class service;
         friend class modules;
         friend class events;
+        friend class srv;
 
         unsigned runlevel;
         bool active_flag;
@@ -236,10 +237,10 @@ public:
         virtual void publish(service *cfg);
 
     public:
-        voip::context_t out_context;
-        voip::context_t tcp_context;
-        voip::context_t udp_context;
-        voip::context_t tls_context;
+        static voip::context_t out_context;
+        static voip::context_t tcp_context;
+        static voip::context_t udp_context;
+        static voip::context_t tls_context;
 
         inline static void bind(unsigned short port)
             {sip_port = port;}

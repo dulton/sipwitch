@@ -37,6 +37,10 @@
 #include <sipwitch/namespace.h>
 #endif
 
+#ifndef __SIPWITCH_VOIP_H_
+#include <sipwitch/voip.h>
+#endif
+
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
@@ -47,6 +51,7 @@ using namespace UCOMMON_NAMESPACE;
 class __EXPORT uri
 {
 public:
+    static voip::context_t route(const char *uri, char *buf, size_t size);
     static bool resolve(const char *sipuri, char *buffer, size_t size);
     static bool rewrite(const char *sipuri, char *buffer, size_t size);
     static void serviceid(const char *sipuri, char *buffer, size_t size);
@@ -56,6 +61,41 @@ public:
     static unsigned short portid(const char *sipuri);
     static void identity(struct sockaddr *address, char *buffer, const char *user, size_t size);
     static void publish(const char *uri, char *buffer, const char *user, size_t size);
+    static voip::context_t context(const char *uri);
+};
+
+class __EXPORT srv : protected Socket::address
+{
+protected:
+    class srvaddrinfo
+    {
+    public:
+	struct sockaddr_storage addr;
+	uint16_t weight, priority;
+    };
+
+    class srvaddrinfo *srvlist;
+    struct sockaddr *entry;
+    uint16_t pri;
+    unsigned count;
+
+public:
+    srv(const char *uri);
+    ~srv();
+
+    inline struct sockaddr *operator*() const
+	    {return entry;};
+
+    inline operator bool() const
+	    {return entry != NULL;}
+
+    inline bool operator!() const
+	    {return entry == NULL;}
+
+    struct sockaddr *next(void);
+
+    static voip::context_t route(struct sockaddr_storage *addr, const char *uri, char *buf, size_t size);
+
 };
 
 END_NAMESPACE

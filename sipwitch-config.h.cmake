@@ -40,7 +40,6 @@
 #cmakedefine HAVE_RESOLV_H 1
 #cmakedefine HAVE_OPENSSL 1
 
-#cmakedefine SRVRESOLV_RULI 1
 #cmakedefine ZEROCONF_AVAHI 1
 
 #define OSIP2_LIST_PTR  &

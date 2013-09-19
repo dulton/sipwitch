@@ -105,20 +105,6 @@ const char *server::referRemote(MappedRegistry *rr, const char *target, char *bu
     return refer;
 }
 
-const char *server::resolve(const char *uri, struct sockaddr_storage *addr)
-{
-    assert(uri != NULL && *uri != 0);
-    assert(addr != NULL);
-
-    linked_pointer<modules::sipwitch> cb = getModules();
-    const char *sp = NULL;
-    while(!sp && is(cb)) {
-        sp = cb->resolve(uri, addr);
-        cb.next();
-    }
-    return sp;
-}
-
 const char *server::referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size)
 {
     assert(target != NULL && *target != 0);

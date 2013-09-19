@@ -56,6 +56,11 @@ condlock_t service::locking;
 service *service::cfg = NULL;
 volatile service::dialmode_t service::dialmode = service::ALL_DIALING;
 
+voip::context_t service::callback::out_context = NULL;
+voip::context_t service::callback::tcp_context = NULL;
+voip::context_t service::callback::udp_context = NULL;
+voip::context_t service::callback::tls_context = NULL;
+
 static struct sockaddr_storage peering;
 static time_t started = 0l;
 static time_t periodic = 0l;

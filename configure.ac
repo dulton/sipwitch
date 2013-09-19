@@ -8,10 +8,10 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-AC_INIT([sipwitch],[1.8.3])
+AC_INIT([sipwitch],[1.8.4])
 AC_CONFIG_SRCDIR([autogen.sh])
 
-LT_VERSION="1:16:0"
+LT_VERSION="1:17:0"
 UCOMMON_REQUIRES="6.0.0"
 
 AC_CONFIG_AUX_DIR(autoconf)
@@ -354,17 +354,6 @@ if test -z "$zeroconf" ; then
     ],[zeroconf="$zeroconf"])
 fi
 
-srvresolv=""
-SRVRESOLV_LIBS=""
-
-if test -z "$srvresolv" ; then
-    AC_CHECK_HEADER(ruli.h, [
-        AC_DEFINE(SRVRESOLV_RULI, 1, [srv resolv by ruli])
-        SRVRESOLV_LIBS="-lruli"
-        srvresolv="ruli"
-    ],[srvresolv="$srvresolv"])
-fi
-
 AH_BOTTOM([
 #ifndef HAVE_LOCALTIME_R
 #define localtime_r(x, y)   localtime(x)
@@ -395,7 +384,6 @@ else
 fi
 
 AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
-AM_CONDITIONAL(SRVRESOLV, test ! -z "$srvresolv")
 
 AC_SUBST(cgibindir)
 AC_SUBST(plugindir)
@@ -419,7 +407,6 @@ AC_SUBST(SIPWITCH_FLAGS)
 AC_SUBST(SIPWITCH_LIBS)
 AC_SUBST(SIPWITCH_EXOSIP2)
 AC_SUBST(ZEROCONF_LIBS)
-AC_SUBST(SRVRESOLV_LIBS)
 AC_SUBST(CXXFLAGS)
 AC_SUBST(MODFLAGS)
 AC_SUBST(DLOPEN)

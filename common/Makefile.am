@@ -15,7 +15,7 @@ AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
 lib_LTLIBRARIES = libsipwitch.la 
 
 libsipwitch_la_LDFLAGS = @LDFLAGS@ $(RELEASE) @SIPWITCH_EXOSIP2@ @USECURE_LINK@
-libsipwitch_la_SOURCES = service.cpp control.cpp cache.cpp \
+libsipwitch_la_SOURCES = service.cpp control.cpp cache.cpp srv.cpp \
 	events.cpp uri.cpp stats.cpp modules.cpp cdr.cpp voip.cpp
 
 

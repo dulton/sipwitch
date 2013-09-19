@@ -721,8 +721,6 @@ void stack::start(service *cfg)
     thread *thr;
     shell::log(DEBUG1, "starting sip stack v%d; %d maps", ver, mapped_calls);
 
-    tcp_context = udp_context = tls_context = out_context = NULL;
-
     mapped_array<MappedCall>::create(control::env("callmap"), mapped_calls);
     if(!sip)
         shell::log(shell::FAIL, "calls could not be mapped");
@@ -1247,7 +1245,6 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     assert(s != NULL && s->parent != NULL);
     assert(uri_target != NULL);
 
-    struct sockaddr *target = NULL;
     stack::session *invited;
     stack::call *call = s->parent;
     linked_pointer<stack::segment> sp = call->segments.begin();
@@ -1261,50 +1258,34 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     int cid;
     unsigned icount = 0;
     time_t now;
+    struct sockaddr_storage address, peering;
+    voip::context_t context = srv::route(&address, uri_target, route, sizeof(route));
+    const char *schema = NULL;
+    char rewrite[MAX_URI_SIZE];
+
+    if(!context)
+        return icount;
+
+/*
     struct sockaddr_storage peering, abuf;
     voip::context_t context = stack::sip.out_context;
     const char *out_target = uri_target;
     char rewrite[MAX_URI_SIZE];
     const char *schema = server::resolve(out_target, &abuf);
+*/
 
-    if(!schema) {
-        if(eq(uri_target, "tcp:", 4))
-            schema = "tcp";
-        else if(eq(uri_target, "udp:", 4))
-            schema = "udp";
-        else if(eq(uri_target, "sips:", 5))
-            context = stack::sip.tls_context;
+    if(eq(uri_target, "tcp:", 4)) {
+        uri_target += 4;
+        schema = "sip";
+    }
+    else if(eq(uri_target, "udp:", 4)) {
+        uri_target += 4;
+        schema = "sip";
     }
 
     if(schema) {
-        while(*uri_target && *uri_target != ':' && *uri_target != '@')
-            ++uri_target;
-        if(*uri_target == ':')
-            ++uri_target;
-        else
-            uri_target = out_target;
-        target = (struct sockaddr *)&abuf;
-
-        if(eq(schema, "tcp")) {
-            context = stack::sip.tcp_context;
-            schema = "sip";
-        }
-        else if(eq(schema, "udp")) {
-            context = stack::sip.udp_context;
-            schema = "sip";
-        }
-        else if(eq(schema, "sips"))
-            context = stack::sip.tls_context;
-
-        // special schema rewrite for plugin based schema references    
         snprintf(rewrite, sizeof(rewrite), "%s:%s", schema, uri_target);
         uri_target = rewrite;
-    }
-
-    // if resolver target not supported, we fallback to internal defaults
-    if(!context) {
-        target = NULL;
-        context = stack::sip.out_context;
     }
 
     time(&now);
@@ -1312,37 +1293,15 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     // compute network and subnet..
     String::set(network, sizeof(network), "*");
     uri::userid(uri_target, username, sizeof(username));
-    uri::hostid(uri_target, route, sizeof(route));
-    int port = uri::portid(uri_target);
-    const char *rp = NULL;
 
-    // remote target plugin support to be added here...
-
-    // default if no target route lookup...
-
-    Socket::address resolve;
-    if(!target) {
-        if(!port)
-            port = 5060;
-
-        resolve.set(route, port);
-        target = resolve.getAddr();
-    }
-
-    if(target) {
-        stack::subnet *subnet = server::getPolicy(target);
-        if(subnet) {
-            memcpy(&peering, &subnet->iface, sizeof(struct sockaddr_storage));
-            String::set(network, sizeof(network), subnet->getId());
-        }
-        else
-            service::published(&peering);
-        server::release(subnet);
-        if(uri::server(target, route, sizeof(route)))
-            rp = route;
+    stack::subnet *subnet = server::getPolicy((struct sockaddr *)&address);
+    if(subnet) {
+        memcpy(&peering, &subnet->iface, sizeof(struct sockaddr_storage));
+        String::set(network, sizeof(network), subnet->getId());
     }
     else
         service::published(&peering);
+    server::release(subnet);
 
     // make sure we do not re-invite an existing active member again
     while(is(sp)) {
@@ -1355,7 +1314,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
     invite = NULL;
 
-    if(!voip::make_invite_request(context, touri, s->from, call->subject, &invite, rp)) { 
+    if(!voip::make_invite_request(context, touri, s->from, call->subject, &invite, route)) { 
         shell::log(shell::ERR, "cannot invite %s; build failed", uri_target);
         return icount;
     }
@@ -1436,12 +1395,8 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
     snprintf(invited->from, sizeof(invited->from), "<%s>", uri_target);
     String::set(invited->network, sizeof(invited->network), network);
     invited->nat = nat;
-    if(target) {
-        uri::identity(target, invited->sysident, username, sizeof(invited->sysident));
-        invited->peering = peering;
-    }
-    else
-        snprintf(invited->sysident, sizeof(invited->sysident), "%s@unknown", username);
+    uri::identity((struct sockaddr *)&address, invited->sysident, username, sizeof(invited->sysident));
+    invited->peering = peering;
 
     shell::debug(3, "inviting %s\n", uri_target);
     return icount;

@@ -1,5 +1,5 @@
 from 1.8.3 to 1.8.4
-- will eliminate libruli, integrate srv resolver
+- eliminated libruli, integrate libresolv based srv resolver
 
 from 1.8.2 to 1.8.3
 - remote message routing

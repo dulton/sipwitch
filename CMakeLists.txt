@@ -13,7 +13,7 @@ PROJECT(sipwitch)
 INCLUDE(CheckIncludeFiles)
 INCLUDE(CheckFunctionExists)
 INCLUDE(FindPkgConfig)
-set (VERSION 1.8.3)
+set (VERSION 1.8.4)
 
 set(RC_VERSION ${VERSION})
 STRING(REGEX REPLACE "[.]" "," RC_VERSION ${RC_VERSION})
@@ -109,14 +109,6 @@ else()
 endif()
 
 pkg_check_modules(USES_ZEROCONF avahi-client>=0.3.0)
-
-check_include_files(ruli.h HAVE_RULI_H)
-
-if(HAVE_RULI_H)
-    set(SRVRESOLV_RULI true)
-    set(SRVRESOLV_FOUND true)
-    set(RULI_LIBRARIES ruli)
-endif()
 
 if(USES_ZEROCONF_FOUND)
     set(ZEROCONF_AVAHI true)

@@ -215,74 +215,30 @@ int messages::remote(const char *to, message *msg, const char *digest)
 
     voip::msg_t im = NULL;
     int error = SIP_BAD_REQUEST;
-    struct sockaddr *target = NULL;
-    struct sockaddr_storage abuf;
-    voip::context_t ctx = stack::sip.out_context;
-    const char *out = to;
+    struct sockaddr_storage address;
+    char route[MAX_URI_SIZE];
+    voip::context_t ctx = srv::route(&address, to, route, sizeof(route));
     char rewrite[MAX_URI_SIZE];
-    const char *schema = server::resolve(to, &abuf);
+    const char *schema = NULL;
 
-    if(!schema) {
-        if(eq(out, "tcp:", 4))
-            schema = "tcp";
-        else if(eq(out, "udp:", 4))
-            schema = "udp";
-        else if(eq(out, "sips:", 5))
-            ctx = stack::sip.tls_context;
+    if(!ctx)
+        return error;
+
+    if(eq(to, "tcp:", 4)) {
+        schema = "sip";
+        to += 4;
+    }
+    else if(eq(to, "udp:", 4)) {
+        schema = "sip";
+        to += 4;
     }
 
     if(schema) {
-        while(*to && *to != ':' && *to != '@')
-            ++to;
-        if(*to == ':')
-            ++to;
-        else
-            to = out;
-        target = (struct sockaddr *)&abuf;
-
-        if(eq(schema, "tcp")) {
-            ctx = stack::sip.tcp_context;
-            schema = "sip";
-        }
-        else if(eq(schema, "udp")) {
-            ctx = stack::sip.udp_context;
-            schema = "sip";
-        }
-        else if(eq(schema, "sips"))
-            ctx = stack::sip.tls_context;
-
-        // special schema rewrite for plugin based schema references    
         snprintf(rewrite, sizeof(rewrite), "%s:%s", schema, to);
         to = rewrite;
     }
 
-    // if resolver target not supported, we fallback to internal defaults
-    if(!ctx) {
-        target = NULL;
-        ctx = stack::sip.out_context;
-    }
-
-    int port = uri::portid(to);
-    const char *rp = NULL;
-
-    // remote target plugin support to be added here...
-
-    // default if no target route lookup...
-
-    char route[MAX_URI_SIZE];
-    Socket::address resolve;
-    if(!target) {
-        if(!port)
-            port = 5060;
-
-        resolve.set(route, port);
-        target = resolve.getAddr();
-    }
-
-    if(target && uri::server(target, route, sizeof(route)))
-            rp = route;
-
-    if(voip::make_request_message(ctx, "MESSAGE", to, msg->from, &im, rp)) {
+    if(voip::make_request_message(ctx, "MESSAGE", to, msg->from, &im, route)) {
         char *authbuf = new char[1024];
         stringbuf<64> response;
         stringbuf<64> once;

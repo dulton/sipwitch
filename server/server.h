@@ -526,7 +526,6 @@ public:
     static void logging(MappedRegistry *rr, const char *reason);
     static void registration(voip::reg_t id, modules::regmode_t mode);
     static bool authenticate(voip::reg_t id, const char *realm);
-    static const char *resolve(const char *uri, struct sockaddr_storage *addr);
     static const char *referLocal(MappedRegistry *rr, const char *target, char *buffer, size_t size);
     static const char *referRemote(MappedRegistry *rr, const char *target, char *buffer, size_t size);
     static bool checkId(const char *id);

@@ -17,6 +17,7 @@
 #include <ucommon/ucommon.h>
 #include <ucommon/export.h>
 #include <sipwitch/uri.h>
+#include <sipwitch/service.h>
 
 using namespace SIPWITCH_NAMESPACE;
 using namespace UCOMMON_NAMESPACE;
@@ -245,6 +246,36 @@ void uri::publish(const char *uri, char *buf, const char *user, size_t size)
         snprintf(buf, size, "%s:%s@%s", schema, user, uri);
     else
         snprintf(buf, size, "%s:%s", schema, uri);
+}
+
+voip::context_t uri::route(const char *uri, char *buf, size_t size)
+{
+    buf[0] = 0;
+    const char *schema="sip:";
+    voip::context_t ctx = service::callback::out_context;
+    
+    if(eq(uri, "sips:", 5)) {
+        ctx = service::callback::tls_context;
+        schema="sips:";
+        uri += 5;
+    }
+    else if(!strncmp(uri, "sip:", 4))
+        uri += 4;
+    else if(!strncmp(uri, "tcp:", 4)) {
+        ctx = service::callback::tcp_context;
+        uri += 4;
+    }
+    else if(!strncmp(uri, "udp:", 4)) {
+        ctx = service::callback::udp_context;
+        uri += 4;
+    }
+
+    const char *sp = strchr(uri, '@');
+    if(sp)
+        uri = ++sp;
+
+    snprintf(buf, size, "%s%s", schema, uri);
+    return ctx;
 }
 
 bool uri::server(struct sockaddr *addr, char *buf, size_t size)
