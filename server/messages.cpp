@@ -215,7 +215,6 @@ int messages::remote(const char *to, message *msg, const char *digest)
 
     voip::msg_t im = NULL;
     int error = SIP_BAD_REQUEST;
-    struct sockaddr_storage address;
     char route[MAX_URI_SIZE];
     srv resolv;
     voip::context_t ctx = resolv.route(to, route, sizeof(route));
