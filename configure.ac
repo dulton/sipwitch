@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-AC_INIT([sipwitch],[1.8.5])
+AC_INIT([sipwitch],[1.8.6])
 AC_CONFIG_SRCDIR([autogen.sh])
 
 LT_VERSION="1:18:0"
@@ -182,11 +182,6 @@ PKG_CHECK_MODULES(EXOSIP2, eXosip2 >= 3.0.0, [
         AC_HELP_STRING([--with-libeXosip2=xxx],[specify eXosip2 library]),
             [EXOSIP2_LIBS="$with_libeXosip2"],[EXOSIP2_LIBS="-leXosip2"])
 
-    AC_CHECK_HEADER(resolv.h,[
-        AC_DEFINE(HAVE_RESOLV_H, 1, [have resolver support])
-        EXOSIP2_LIBS="$EXOSIP2_LIBS -lresolv"
-    ],[])
-
     AC_CHECK_HEADER(eXosip2/eXosip.h,,[
         AC_ERROR("libeXosip2 must be installed or build --disable-sipwitch-server")
     ])
@@ -201,6 +196,11 @@ PKG_CHECK_MODULES(EXOSIP2, eXosip2 >= 3.0.0, [
 PKG_CHECK_MODULES(LIBOSIP2, libosip2 >= 3.0.0)
 AC_DEFINE(OSIP2_LIST_PTR, [&], [define pointer mode])
 SIPWITCH_EXOSIP2="$EXOSIP2_LIBS $LIBOSIP2_LIBS"
+
+AC_CHECK_HEADER(resolv.h,[
+    AC_DEFINE(HAVE_RESOLV_H, 1, [have resolver support])
+    EXOSIP2_LIBS="$EXOSIP2_LIBS -lresolv"
+],[])
 
 case "$target" in
 *mingw*)

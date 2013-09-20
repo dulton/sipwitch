@@ -169,7 +169,7 @@ void srv::set(const char *uri)
     if(!acount)
         goto nosrv;
 
-    srvlist = new srvaddrinfo[acount];
+    srvlist = new srv::address[acount];
     while(qcount-- > 0 && cp < ep) {
         result = dn_expand(mp, ep, cp, hbuf, sizeof(hbuf));
         if(result < 0)
@@ -219,7 +219,7 @@ void srv::set(const char *uri)
 
         if(sp) {
             uint16_t rand;
-            srvaddrinfo *current = NULL;
+            srv::address *current = NULL;
 
             Random::fill((unsigned char *)&rand, sizeof(rand));
             rand &= 0x7fff;
@@ -288,7 +288,7 @@ struct sockaddr *srv::next(void)
 {
 #ifdef  HAVE_RESOLV_H
     unsigned index = 0;
-    srvaddrinfo *node = NULL, *np = NULL;
+    srv::address *node = NULL, *np = NULL;
     ++pri;
     while(index < count) {
         np = &srvlist[index++];

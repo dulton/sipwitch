@@ -64,15 +64,16 @@ public:
 
 class __EXPORT srv : protected Socket::address
 {
-protected:
-    class srvaddrinfo
+public:
+    class address
     {
     public:
 	struct sockaddr_storage addr;
 	uint16_t weight, priority;
     };
 
-    class srvaddrinfo *srvlist;
+protected:
+    address *srvlist;
     struct sockaddr *entry;
     uint16_t pri;
     unsigned count;
