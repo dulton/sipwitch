@@ -41,6 +41,10 @@
 #include <sipwitch/control.h>
 #endif
 
+#ifndef _SIPWITCH_URI_H_
+#include <sipwitch/uri.h>
+#endif
+
 NAMESPACE_SIPWITCH
 using namespace UCOMMON_NAMESPACE;
 
@@ -56,7 +60,7 @@ public:
     /**
      * Common base class for sipwitch plugin services.  This provides
      * interfaces for server and runtime library callbacks to notify
-     * plugins about server operatios and events.
+     * plugins about server operations and events.
      * @author David Sugar <dyfet@gnutelephony.org>
      */
     class __EXPORT sipwitch : public service::callback
@@ -159,6 +163,15 @@ public:
          * Construct a generic service instance.
          */
         generic();
+
+    public:
+        /**
+         * New srv resolver plugin.
+         * @param host uri to resolve.
+         * @param hints for resolver
+         * @return srv address[] object array or NULL.
+         */
+        virtual srv::address *resolve(const char *uri, struct addrinfo *hints);
     };
 
     /**

@@ -275,7 +275,10 @@ public:
     keynode *getList(const char *path);
 
     inline static LinkedObject *getModules(void)
-        {return service::callback::runlevels[3];};
+        {return service::callback::runlevels[3];}
+
+    inline static LinkedObject *getGenerics(void)
+        {return service::callback::runlevels[2];}
 
     /**
      * Set and publish public "appearing" address of the server.  This
@@ -303,10 +306,10 @@ public:
     static keynode *list(const char *p);
 
     inline static keynode *getEnviron(void)
-        {return getProtected("environ");};
+        {return getProtected("environ");}
 
     inline keynode *getRoot(void)
-        {return &root;};
+        {return &root;}
 
     static string_t getContact(void);
 
@@ -314,10 +317,10 @@ public:
         {contact = dup(text);}
 
     static inline const char *getInterface(void)
-        {return service::callback::sip_iface;};
+        {return service::callback::sip_iface;}
 
     static inline unsigned short getPort(void)
-        {return service::callback::sip_port;};
+        {return service::callback::sip_port;}
 
     virtual void dump(FILE *fp);
     virtual void confirm(void);

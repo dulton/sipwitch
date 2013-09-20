@@ -18,6 +18,7 @@
 #include <ucommon/export.h>
 #include <sipwitch/uri.h>
 #include <sipwitch/service.h>
+#include <sipwitch/modules.h>
 
 #ifdef  HAVE_RESOLV_H
 extern "C" {
@@ -135,6 +136,18 @@ void srv::set(const char *uri)
     if(atoi(svc) > 0)
         hint.ai_flags |= AI_NUMERICSERV;
 #endif
+
+    linked_pointer<modules::generic> cb = service::getGenerics();
+    while(is(cb)) {
+        srvlist = cb->resolve(uri, &hint);
+        if(srvlist) {
+            count = 1;
+            entry = (struct sockaddr *)&srvlist[0].addr;
+            pri = srvlist[0].priority;
+            return;
+        }
+        cb.next();
+    }
 
 #ifdef  HAVE_RESOLV_H
     int result;

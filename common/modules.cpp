@@ -37,6 +37,11 @@ service::callback(GENERIC_RUNLEVEL)
 {
 }
 
+srv::address *modules::generic::resolve(const char *uri, struct addrinfo *hints)
+{
+    return NULL;
+}
+
 void modules::sipwitch::activating(MappedRegistry *rr)
 {
 }
