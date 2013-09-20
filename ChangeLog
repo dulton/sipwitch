@@ -1,6 +1,7 @@
-from 1.8.4 to ???
+from 1.8.4 to 1.8.5
 - more complete work on srv class
 - route no longer static member of srv
+- new resolver used in plugins
 
 from 1.8.3 to 1.8.4
 - eliminated libruli, integrate libresolv based srv resolver

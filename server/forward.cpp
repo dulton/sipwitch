@@ -216,7 +216,7 @@ void forward::reload(service *cfg)
     const char *key = NULL, *value;
     char *tmp_realm = (char *)realm, *tmp_digest = cfg->dup((char *)digest);
     char *tmp_schema = (char *)"sip";
-    voip::context_t tmp_context = out_context;
+    voip::context_t tmp_context = NULL;
     linked_pointer<service::keynode> fp = cfg->getList("forward");
     linked_pointer<service::keynode> sp = cfg->getList("registry");
 
@@ -232,12 +232,14 @@ void forward::reload(service *cfg)
         sp.next();
     }
 
+    srv resolver;
+
     while(is(fp)) {
         key = fp->getId();
         value = fp->getPointer();
         if(key && value) {
             if(String::equal(key, "refer")) {
-                if(uri::resolve(value, buffer, sizeof(buffer))) {
+                if(resolver.route(value, buffer, sizeof(buffer))) {
                     refer = cfg->dup(buffer);
                     refering = true;
                     shell::debug(2, "forward refer resolved as %s", buffer);
@@ -247,20 +249,9 @@ void forward::reload(service *cfg)
                     server = NULL;
                 }
             }
-            else if(String::equal(key, "schema") || String::equal(key, "context")) {
-                tmp_schema = cfg->dup(value);
-                tmp_context = getContext(tmp_schema);
-                if(tmp_context) {
-                    if(eq(tmp_schema, "tcp") || eq(tmp_schema, "udp"))
-                        tmp_schema = (char *)"sip";
-                }
-                else {
-                    tmp_schema = (char *)"sip";
-                    tmp_context = out_context;
-                }
-            }
             else if(String::equal(key, "server")) {
-                if(uri::resolve(value, buffer, sizeof(buffer))) {
+                tmp_context = resolver.route(value, buffer, sizeof(buffer));
+                if(context) {
                     server = cfg->dup(buffer);
                     shell::debug(2, "forward server resolved as %s", buffer);
                 }
@@ -287,7 +278,8 @@ void forward::reload(service *cfg)
         refer = NULL;
 
     String::upper(tmp_digest);
-    context = tmp_context;
+    if(tmp_context)
+        context = tmp_context;
     schema = tmp_schema;
     realm = tmp_realm;
     digest = tmp_digest;

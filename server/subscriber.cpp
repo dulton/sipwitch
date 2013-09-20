@@ -134,6 +134,8 @@ void subscriber::reload(service *cfg)
     const char *key = NULL, *value;
     linked_pointer<service::keynode> sp = cfg->getList("subscriber");
     char buffer[160];
+    srv resolver;
+    voip::context_t tmp_context = NULL;
 
     updated = 0l;
 
@@ -151,25 +153,14 @@ void subscriber::reload(service *cfg)
                 priority = atoi(value);
             else if(!stricmp(key, "port") && !is_configured())
                 port = atoi(value);
-            else if((String::equal(key, "schema") || String::equal(key, "context")) && !is_configured()) {
-                schema = cfg->dup(value);
-                context = getContext(schema);
-                if(context) {
-                    if(eq(schema, "tcp") || eq(schema, "udp"))
-                        schema = (char *)"sip";
-                }
-                else {
-                    schema = (char *)"sip";
-                    context = out_context;
-                }
-            }
             // very rare we may wish to override provider network/nat state
             else if(!stricmp(key, "network"))
                 String::set(provider.network, sizeof(provider.network), value);
             else if(!stricmp(key, "refresh"))
                 refresh = atoi(value);
             else if(!stricmp(key, "registrar") || !stricmp(key, "server")) {
-                if(uri::resolve(value, buffer, sizeof(buffer))) {
+                tmp_context = resolver.route(value, buffer, sizeof(buffer));
+                if(tmp_context) {
                     changed = true;
                     server = cfg->dup(buffer);
                     shell::debug(2, "subscriber provider is %s", buffer);
@@ -206,6 +197,9 @@ void subscriber::reload(service *cfg)
         }
         sp.next();
     }
+
+    if(tmp_context)
+        context = tmp_context;
 
     if(!is_configured() && count)
         stats::allocate(1);

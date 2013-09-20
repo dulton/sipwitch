@@ -52,8 +52,6 @@ class __EXPORT uri
 {
 public:
     static voip::context_t route(const char *uri, char *buf, size_t size);
-    static bool resolve(const char *sipuri, char *buffer, size_t size);
-    static bool rewrite(const char *sipuri, char *buffer, size_t size);
     static void serviceid(const char *sipuri, char *buffer, size_t size);
     static bool server(struct sockaddr *address, char *buffer, size_t size);
     static bool userid(const char *sipuri, char *buffer, size_t size);
