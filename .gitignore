@@ -48,6 +48,7 @@ ui_*.h
 *.spec
 *.rpm
 *.tar.gz
+*.shar.gz
 *.changes
 *.dsc
 *.zip
