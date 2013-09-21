@@ -199,7 +199,7 @@ SIPWITCH_EXOSIP2="$EXOSIP2_LIBS $LIBOSIP2_LIBS"
 
 AC_CHECK_HEADER(resolv.h,[
     AC_DEFINE(HAVE_RESOLV_H, 1, [have resolver support])
-    EXOSIP2_LIBS="$EXOSIP2_LIBS -lresolv"
+    SIPWITCH_EXOSIP2="$EXOSIP2_LIBS -lresolv"
 ],[])
 
 case "$target" in
