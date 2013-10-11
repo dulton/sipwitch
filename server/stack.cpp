@@ -275,9 +275,9 @@ void stack::background::run(void)
             then = now;
             unsigned released = registry::cleanup(period);
             if(released)
-                shell::log(shell::DEBUG1, "registry cleanup; %d expired", released);
+                shell::debug(9, "registry cleanup; %d expired", released);
             else
-                shell::log(shell::DEBUG1, "registry cleanup; no entries expired");
+                shell::debug(9, "registry cleanup; no entries expired");
         }
         messages::automatic();
     }

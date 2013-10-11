@@ -321,7 +321,7 @@ if test -z "$INITRDDIR" ; then
     INITRDDIR="$default_cfgpath/init.d" ; fi
 
 if test -z "$DEFAULTDIR" ; then
-    DEFAULTDIR="$default_cfgpath/defailt" ; fi
+    DEFAULTDIR="$default_cfgpath/default" ; fi
 
 case "$SIPWITCH_FLAGS -I/usr/include" in
 *-I${default_incpath}*)
