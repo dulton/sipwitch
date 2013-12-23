@@ -1,0 +1,106 @@
+Source: sipwitch
+Priority: optional
+Maintainer: David Sugar <dyfet@gnutelephony.org>
+Build-Depends: debhelper (>= 7.0.50),
+               dpkg-dev (>= 1.13.19),
+               libavahi-client-dev,
+               libexosip2-dev (>= 3),
+               libucommon-dev (>= 6.0.0),
+               pkg-config
+Standards-Version: 3.9.1
+Homepage: http://www.gnutelephony.org
+Section: net
+
+Package: libsipwitch-dev
+Section: libdevel
+Architecture: any
+Depends: libsipwitch1 (= ${binary:Version}), libucommon-dev, libexosip2-dev (>= 3), ${misc:Depends}
+Description: Headers and static link library for libswitch
+ This package offers header files for developing plugins and services that
+ use sipwitch.  These can be compiled separately from sipwitch itself and
+ are loaded at server runtime.  Some external utilities may also be developed
+ which use the libsipwitch library.
+
+Package: sipwitch-cgi
+Architecture: any
+Depends: sipwitch (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Suggests: apache2 | httpd
+Description: sipwitch xmlrpc cgi interface
+ This package offers a means to perform remote management of a sipwitch
+ server using the cgi interface of an installed web server.  The primary
+ service this offers is xmlrpc access to sipwitch shared memory and
+ control interfaces in a manner analgolous to the sipwitch command utility.
+
+Package: sipwitch-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Recommends: sipwitch (= ${binary:Version}), libsipwitch-dev
+Depends: libsipwitch1 (= ${binary:Version}), ${misc:Depends}
+Description: Debugging symbols for sipwitch
+ This package includes debugging symbols for the sipwitch daemon and plugins,
+ for the runtime library, and for all sipwitch utilities.  Because the debug
+ package should not pull in different plugins that may not normally be
+ used just to debug the server, they are not offered as a dependency.
+ .
+ Most people will not need this package.
+
+Package: libsipwitch1
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Runtime library for sipwitch server
+ This is the runtime library used by GNU SIP Witch and plugins.  This runtime
+ library may also be used by other sipwitch related daemons in the future and
+ is offered as a shared library.
+
+Package: sipwitch-plugin-zeroconf
+Architecture: any
+Depends: sipwitch (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Description: Zeroconf plugin for sipwitch
+ This plugin activates zeroconf network services for sipwitch and publishes
+ sipwitch as a sip service.  In theory zeroconf aware SIP user agents should
+ then be able to automatically connect to sipwitch without configuration.
+
+Package: sipwitch-plugin-forward
+Architecture: any
+Depends: sipwitch (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Description: Forward registration and redirection module for sipwitch
+ This plugin enables you to cross-register secure extensions with sipwitch
+ and with an insecure IP-PBX such as Asterisk.  Secure destinations called
+ to sipwitch extension number will route peer to peer, and all other
+ destination numbers will be forwarded to the insecure IP-PBX.
+
+Package: sipwitch-plugin-scripting
+Architecture: any
+Depends: sipwitch (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Description: Scripting plugin for sipwitch
+ This plugin enables shell scripting in connection with specific sipwitch
+ events.  Typical events include when a user registers with or de-registeres
+ from the server.  Shell arguments may include additional information such
+ as the effected sipwitch registration id.
+
+Package: sipwitch-plugin-subscriber
+Architecture: any
+Depends: sipwitch (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Description: Subscriber gateway plugin for sipwitch
+ This module is meant to eventually offer generic support for premise
+ routers when used by providers to offer sip/voip service to a subscriber.
+ It offers rtp proxying and routing based on the assumption that all calls
+ will be handed off to an external voip provider and automatic rtp
+ proxy bridging between a subscribers local subnet and an isp.  In theory
+ this would be deployed in an isp supplied premise router to enable a
+ local user to subscribe a series of local softphone/sip devices with a
+ remote voip service provider.
+
+Package: sipwitch
+Architecture: any
+Depends: libsipwitch1 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser
+Description: secure peer-to-peer VoIP server for the SIP protocol
+ GNU SIP Witch is a secure peer-to-peer VoIP server.  Calls can be made even
+ behind NAT firewalls, and without needing a service provider.  SIP Witch can
+ be used on the desktop to create bottom-up secure calling networks as a
+ free software alternative to Skype.  SIP Witch can also be used as a stand-
+ alone SIP-based office telephone server, or to create secure VoIP networks
+ for an existing IP-PBX such as Asterisk, FreeSWITCH, or Yate.
+

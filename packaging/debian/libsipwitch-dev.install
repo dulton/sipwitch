@@ -1,0 +1,5 @@
+usr/include/sipwitch/*
+usr/lib/lib*.so
+usr/lib/pkgconfig/*
+usr/bin/sipwitch-config
+usr/share/man/man1/sipwitch-config.1*

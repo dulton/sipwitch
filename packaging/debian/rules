@@ -1,0 +1,42 @@
+#!/usr/bin/make -f
+
+# Ensure at build time that the library has no dependencies on undefined
+# symbols, and speed up loading.
+LDFLAGS = $(shell dpkg-buildflags --get LDFLAGS)
+CPPFLAGS = $(shell dpkg-buildflags --get CPPFLAGS)
+CXXFLAGS = $(shell dpkg-buildflags --get CXXFLAGS)
+CFLAGS = $(shell dpkg-buildflags --get CFLAGS)
+LDFLAGS += -Wl,-z,defs -Wl,--as-needed
+
+DEB_CONFIGURE_EXTRA_FLAGS = --with-initrddir=none 
+DEB_DH_INSTALL_ARGS := --sourcedir=debian/tmp
+DEB_DH_STRIP_ARGS := --dbg-package=sipwitch-dbg
+DEB_INSTALL_CHANGELOG_ALL := ChangeLog
+DEB_UPDATE_RCD_PARAMS_sipwitch := start 95 2 3 4 5 . stop 05 1 .
+DEBIAN_DIR := $(shell echo ${MAKEFILE_LIST} | awk '{print $$1}' | xargs dirname )
+
+%:
+	dh $@
+
+.PHONY: override_dh_strip override_dh_fixperms override_dh_auto_install override_dh_auto_configure
+
+override_dh_auto_configure:
+	dh_auto_configure -- --disable-silent-rules \
+		CFLAGS="$(CFLAGS) $(CPPFLAGS)" \
+		CXXFLAGS="$(CXXFLAGS) $(CPPFLAGS)" \
+		LDFLAGS="$(LDFLAGS)"
+
+override_dh_strip:
+	dh_strip $(DEB_DH_STRIP_ARGS)
+
+override_dh_auto_install:
+	dh_auto_install
+	mkdir -p debian/tmp/etc/network/if-up.d
+	mkdir -p debian/tmp/etc/network/if-down.d
+	install -m0755 debian/sipwitch.ifup debian/tmp/etc/network/if-up.d/sipwitch
+	install -m0755 debian/sipwitch.ifdown debian/tmp/etc/network/if-down.d/sipwitch
+
+override_dh_fixperms:
+	dh_fixperms
+	chmod 4755 debian/sipwitch/usr/bin/sippasswd
+

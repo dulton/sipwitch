@@ -1,0 +1,424 @@
+sipwitch (1.8.6-0gt1) UNRELEASED; urgency=low
+
+  * Fixed configure check for resolv.h
+
+ -- David Sugar <dyfet@gnutelephony.org>  Fri, 20 Sep 2013 16:54:59 -0400
+
+sipwitch (1.8.5-0gt1) UNRELEASED; urgency=medium
+
+  * new srv resolver now used in plugins, old uri resolver removed
+
+ -- David Sugar <dyfet@gnutelephony.org>  Fri, 20 Sep 2013 03:36:24 -0400
+
+sipwitch (1.8.4-0gt1) UNRELEASED; urgency=medium
+
+  * srvresolv plugin replaced with integrated srv resolver support
+  * cleaner rewrite of all remote uri handling
+
+ -- David Sugar <dyfet@gnutelephony.org>  Thu, 19 Sep 2013 13:42:51 -0400
+
+sipwitch (1.8.3-0gt1) UNRELEASED; urgency=low
+
+  * remote message routing improved
+  * new digest db organization
+
+ -- David Sugar <dyfet@gnutelephony.org>  Wed, 18 Sep 2013 10:27:13 -0400
+
+sipwitch (1.8.2-0gt1) UNRELEASED; urgency=low
+
+  * Basic exosip2 v4 api support completed
+
+ -- David Sugar <dyfet@gnutelephony.org>  Wed, 11 Sep 2013 08:43:37 -0400
+
+sipwitch (1.8.1-0gt1) UNRELEASED; urgency=low
+
+  * Re-organized plugin api to enable direct access to exosip voip functions
+
+ -- David Sugar <dyfet@gnutelephony.org>  Tue, 10 Sep 2013 08:19:43 -0400
+
+sipwitch (1.8.0-0gt1) UNRELEASED; urgency=low
+
+  * Initial multi-protocol support, valid for registration only so far
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sat, 07 Sep 2013 12:46:51 -0400
+
+sipwitch (1.7.1-0gt1) UNRELEASED; urgency=low
+
+  * Support for libruli and srv resolver plugin introduced
+
+ -- David Sugar <dyfet@gnutelephony.org>  Fri, 23 Aug 2013 12:40:12 -0400
+
+sipwitch (1.7.0-0gt1) UNRELEASED; urgency=low
+
+  * sipwitch runtime library now integrates eXosip2.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Thu, 22 Aug 2013 08:26:22 -0400
+
+sipwitch (1.6.0-0gt1) UNRELEASED; urgency=high
+
+  * Fixed for official exosip2 4.0 release
+
+ -- David Sugar <dyfet@gnutelephony.org>  Thu, 06 Jun 2013 13:55:43 -0400
+
+sipwitch (1.5.0-0gt1) UNRELEASED; urgency=low
+
+  * Switchview gui moved to separate package
+
+ -- David Sugar <dyfet@gnutelephony.org>  Fri, 28 Dec 2012 09:03:18 -0400
+
+sipwitch (1.4.0-0gt1) UNRELEASED; urgency=low
+
+  * Updated for ucommon version 6 abi
+
+ -- David Sugar <dyfet@gnutelephony.org>  Fri, 16 Nov 2012 10:49:15 -0400
+
+sipwitch (1.3.3-0gt1) UNRELEASED; urgency=low
+
+  * Rebuild with newer exosip2
+  * Systemd fixes, not used on debian
+
+ -- David Sugar <dyfet@gnutelephony.org>  Tue, 23 Oct 2012 14:32:03 -0400
+
+sipwitch (1.3.2-0gt2) UNRELEASED; urgency=low
+
+  * Fix for debianized init script
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 24 Sep 2012 12:23:55 -0400
+
+sipwitch (1.3.2-0gt1) UNRELEASED; urgency=low
+
+  * New public uri access security mode
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sat, 22 Sep 2012 17:21:29 -0400
+
+sipwitch (1.3.1-0gt1) UNRELEASED; urgency=low
+
+  * Future-proofing for exosip2 4.x
+
+ -- David Sugar <dyfet@gnutelephony.org>  Thu, 09 Aug 2012 10:52:26 -0400
+
+sipwitch (1.3.0-0gt1) UNRELEASED; urgency=low
+
+  * Contact for autoconfiguring clients; can be set in cfg or computed
+
+ -- David Sugar <dyfet@gnutelephony.org>  Tue, 07 Aug 2012 08:56:08 -0400
+
+sipwitch (1.2.5-0gt1) UNRELEASED; urgency=low
+
+  * Fixed group and user permission setting issue
+  * Fix overlinking of runtime and plugins
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 25 Jun 2012 08:26:45 -0400
+
+sipwitch (1.2.4-1) UNRELEASED; urgency=low
+
+  * New <access> rules for <world>, <any>, and <nat>
+
+ -- David Sugar <dyfet@gnutelephony.org>  Tue, 24 Apr 2012 15:19:07 -0400
+
+sipwitch (1.2.3-1) UNRELEASED; urgency=medium
+
+  * Ability to examine policies with sipwitch utility
+  * XML Parsing bugfix for comments
+
+ -- David Sugar <dyfet@gnutelephony.org>  Tue, 28 Feb 2012 11:32:52 -0500
+
+sipwitch (1.2.2-1) UNRELEASED; urgency=low
+
+  * Cache used to stream database updates, and management improvements
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sat, 11 Feb 2012 09:42:01 -0500
+
+sipwitch (1.2.1-1) UNRELEASED; urgency=low
+
+  * Support for usercache functionality
+  * Revised manpages
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 15 Jan 2012 15:44:52 -0500
+
+sipwitch (1.2.0-1) UNRELEASED; urgency=high
+
+  * Fix for cpu loading with subscriber plugin
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 02 Jan 2012 09:31:23 -0500
+
+sipwitch (1.1.4-1) UNRELEASED; urgency=low
+
+  * Icon theming in switchview
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 11 Dec 2011 17:53:00 -0500
+
+sipwitch (1.1.3-1) UNRELEASED; urgency=medium
+
+  * Defensive checks against tight loops
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sat, 12 Nov 2011 12:57:31 -0500
+
+sipwitch (1.1.2-1) UNRELEASED; urgency=low
+
+  * reorg of sipwitch cgi subpackage. 
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 09 Oct 2011 16:52:20 -0400
+
+sipwitch (1.1.1-1) UNRELEASED; urgency=low
+
+  * use of inotify to watch config directory.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 01 Aug 2011 05:44:40 -0400
+
+sipwitch (1.1.0-1) UNRELEASED; urgency=low
+
+  * Added gui
+
+ -- David Sugar <dyfet@gnutelephony.org>  Thu, 30 Jun 2011 19:07:28 -0400
+
+sipwitch (1.0.3-1) UNRELEASED; urgency=medium
+
+  * Fix for init script related issues.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sat, 25 Jun 2011 09:08:09 -0400
+
+sipwitch (1.0.2-1) UNRELEASED; urgency=low
+
+  * New linkage for plugins with exosip redirect api.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 29 May 2011 07:55:49 -0400
+
+sipwitch (1.0.1-1) UNRELEASED; urgency=low
+
+  * Updated for ucommon 5.0 release.
+    - local path handling for plugins on local test builds
+    - plugins now log errors after errlog initialized
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 22 May 2011 09:50:47 -0400
+
+sipwitch (1.0.0-1) UNRELEASED; urgency=medium
+
+  * Stable 1.0 release.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Tue, 10 May 2011 17:18:21 -0400
+
+sipwitch (0.10.6-1) UNRELEASED; urgency=low
+
+  * New sync event in events ipc.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 08 May 2011 14:29:37 -0400
+
+sipwitch (0.10.3-1) UNRELEASED; urgency=low
+
+  * Lots of code cleanup and portability changes.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 20 Mar 2011 11:14:42 -0400
+
+sipwitch (0.10.1-1) UNRELEASED; urgency=low
+
+  * Consolidated utility programs into main sipwitch utility.
+  * Server events streaming ipc.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 28 Feb 2011 19:13:22 -0500
+
+sipwitch (0.10.0-1) UNRELEASED; urgency=low
+
+  * Uses ucommon usecure for digests.
+  * Notify plugin dropped (new companion gui to be introduced later...)
+
+ -- David Sugar <dyfet@gnutelephony.org>  Fri, 25 Feb 2011 06:43:05 -0500
+
+sipwitch (0.9.3-1) UNRELEASED; urgency=low
+
+  * Fix for domains.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Wed, 23 Feb 2011 18:59:48 -0500
+
+sipwitch (0.9.2-1) UNRELEASED; urgency=low
+
+  * Updated tls support and some bugs.
+    - resolved registration with contact (Bug: #5).
+    - resolved exiting issues and 0.0.0.0 interface binding (Bug: #4).
+
+ -- David Sugar <dyfet@gnutelephony.org>  Tue, 09 Nov 2010 07:59:08 -0500
+
+sipwitch (0.9.1-1) UNRELEASED; urgency=low
+
+  * Fix for unit test.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 15 Aug 2010 10:32:11 -0400
+
+sipwitch (0.9.0-1) UNRELEASED; urgency=low
+
+  * Uses ucommon 3.3.4 or later.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Wed, 11 Aug 2010 23:08:51 -0400
+
+sipwitch (0.8.4-1) UNRELEASED; urgency=low
+
+  * Better handling of unresolvable request uri's
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 11 Jul 2010 20:24:32 -0400
+
+sipwitch (0.8.3-1) UNRELEASED; urgency=low
+
+  * Sipwitch reconfigures on network changes
+
+ -- David Sugar <dyfet@gnutelephony.org>  Tue, 18 May 2010 18:50:28 -0400
+
+sipwitch (0.8.2-1) UNRELEASED; urgency=low
+
+  * Requires ucommon 2.1.3
+
+ -- David Sugar <dyfet@gnutelephony.org>  Wed, 05 May 2010 10:07:55 -0400
+
+sipwitch (0.8.1-1) UNRELEASED; urgency=low
+
+  * Requires ucommon 2.1.2
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 25 Apr 2010 12:29:56 -0400
+
+sipwitch (0.8.0-1) UNRELEASED; urgency=low
+
+  * Uses ucommon 2.1.x
+  * Introduces libnotify plugin
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 29 Mar 2010 16:54:53 -0400
+
+sipwitch (0.7.5-1) UNRELEASED; urgency=low
+
+  * Init script fix for current distributions
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 22 Mar 2010 18:37:59 -0400
+
+sipwitch (0.7.4-1) UNRELEASED; urgency=low
+
+  * New upstream release and better description
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 15 Mar 2010 13:36:53 -0400
+
+sipwitch (0.7.3-2) UNRELEASED; urgency=low
+
+  *  Added setuid override
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 15 Mar 2010 07:49:42 -0400
+
+sipwitch (0.7.3-1) UNRELEASED; urgency=low
+
+  * Separate cgi package introduced for sipwitch webservices
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sat, 13 Mar 2010 17:38:14 -0500
+
+sipwitch (0.7.2-1) UNRELEASED; urgency=low
+
+  * Added examples back to package
+  * Added debug support for rules in dh7
+  * Enhanced runtime server debug support
+  * Automatic adding of hostname to localnames
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 22 Feb 2010 09:40:47 -0500
+
+sipwitch (0.7.1-1) UNRELEASED; urgency=low
+
+  * new default config
+  * fixed broken issue in debian init script
+  * better seperatation of user vs root startup modes
+
+ -- David Sugar <dyfet@gnutelephony.org>  Fri, 12 Feb 2010 09:15:05 -0500
+
+sipwitch (0.7.0-1) UNRELEASED; urgency=low
+
+  * new core NAT functionality introduced
+  * definition of sip domain and realm consolidated
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 07 Feb 2010 19:00:52 -0500
+
+sipwitch (0.6.2-1) UNRELEASED; urgency=low
+
+  * only create extensions for generated accounts if using extension dialing
+  * can change uid setting when server is live
+  * use uuid for realm if no realm is set
+  * maintainer sipwitch config file cleaned up with saner default options
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sat, 23 Jan 2010 02:03:42 -0500
+
+sipwitch (0.6.1-1) UNRELEASED; urgency=low
+
+  * Upstream fix for packing systems that do not use fakeroot
+
+ -- David Sugar <dyfet@gnutelephony.org>  Wed, 20 Jan 2010 07:24:13 -0500
+
+sipwitch (0.6.0-1) UNRELEASED; urgency=medium
+
+  * Updated sipdigest to use sipwitch server library
+  * Introduction of separate user account digest hash database
+  * Digest hash database usable as an authentication source
+  * New sippasswd utility to set sip user's digest secret
+  * Sipwitch automatic integration of login accounts as sip users
+  * Templaes for integrating login accounts and setting default properties
+
+ -- David Sugar <dyfet@gnutelephony.org>  Tue, 19 Jan 2010 17:07:11 -0500
+
+sipwitch (0.5.13-1) UNRELEASED; urgency=low
+
+  *  Externalization of sip realm support for user password sync.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 17 Jan 2010 12:05:40 -0500
+
+sipwitch (0.5.12-1) UNRELEASED; urgency=low
+
+  * clearer definition of users, admins, services, and profiles
+  * inbound anonymous calling fixed
+  * missing man pages added
+
+ -- David Sugar <dyfet@gnutelephony.org>  Fri, 18 Dec 2009 08:37:10 -0500
+
+sipwitch (0.5.11-2) UNRELEASED; urgency=low
+
+  * Re-packaged using debhelper support for init, cron, and logrotate
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 07 Dec 2009 08:53:02 -0500
+
+sipwitch (0.5.11-1) UNRELEASED; urgency=low
+
+  * Fix for gcc 4.4 strict pointer aliasing.
+  * Addition of library configuration script.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 30 Nov 2009 10:13:26 -0500
+
+sipwitch (0.5.10-1) UNRELEASED; urgency=medium
+
+  * Fix for clients that register from ephimeral sockets (telepathy)
+  * Removal of swig and snmp; greatly simplified packaging
+
+ -- David Sugar <dyfet@gnutelephony.org>  Tue, 24 Nov 2009 12:02:16 -0500
+
+sipwitch (0.5.7-1) UNRELEASED; urgency=high
+
+  * Fix for memory corruption bug.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Fri, 14 Aug 2009 20:11:00 -0400
+
+sipwitch (0.5.6-1) UNRELEASED; urgency=low
+
+  * refer method support for call transfer added.
+  * rewrite of media proxy/network peering detection added.
+  * rtpproxy plugin removed; will be integrated to core server.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Thu, 18 Jun 2009 10:11:13 -0400
+
+sipwitch (0.5.5-1) UNRELEASED; urgency=low
+
+  * Changes in configure to better support python, php, and init scripts.
+  * Support dist-packages path for python on newer distros
+
+ -- David Sugar <dyfet@gnutelephony.org>  Wed, 10 Jun 2009 09:31:38 -0400
+
+sipwitch (0.5.4-1) UNRELEASED; urgency=medium
+
+  * Fix for correct domain or request identity in session->identity.
+  * Cleanup of debian control file and packaging.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sat, 02 May 2009 09:18:02 -0400
+
+sipwitch (0.5.3-1) UNRELEASED; urgency=low
+
+  * Initial release.
+
+ -- David Sugar <dyfet@gnutelephony.org>  Tue, 03 Mar 2009 12:55:04 -0400

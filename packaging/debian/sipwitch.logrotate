@@ -1,0 +1,29 @@
+# rotate sipwitch call log every week...
+
+/var/log/sipwitch.log {
+	missingok
+	notifempty
+	daily
+	compress
+	delaycompress
+	rotate 5
+}
+
+/var/log/sipwitch.stats {
+	missingok
+	notifempty
+	daily
+	compress
+	delaycompress
+	rotate 5
+}
+
+/var/log/sipwitch.calls {
+	missingok
+	notifempty
+	weekly
+	compress
+	delaycompress
+	rotate 5
+}
+
