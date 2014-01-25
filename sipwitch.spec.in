@@ -138,7 +138,7 @@ echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
 %attr(04755,root,root) %{_bindir}/sippasswd
 %dir %{_libdir}/sipwitch
 %config(noreplace) %{_sysconfdir}/logrotate.d/sipwitch
-%attr(0755,root,root) %{_libdir}/systemd/system/sipwitch.service
+%attr(0755,root,root) %{_prefix}/lib/systemd/system/sipwitch.service
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/sipwitch
 %attr(0770,root,root) %dir %{_sysconfdir}/sipwitch.d
 %attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
