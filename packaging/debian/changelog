@@ -1,3 +1,9 @@
+sipwitch (1.8.7-0gt1) UNRELEASED; urgency=low
+
+  * Updated for systemd support
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 17 Feb 2014 15:18:32 -0400
+
 sipwitch (1.8.6-0gt1) UNRELEASED; urgency=low
 
   * Fixed configure check for resolv.h

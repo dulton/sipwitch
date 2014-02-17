@@ -16,7 +16,7 @@ DEB_UPDATE_RCD_PARAMS_sipwitch := start 95 2 3 4 5 . stop 05 1 .
 DEBIAN_DIR := $(shell echo ${MAKEFILE_LIST} | awk '{print $$1}' | xargs dirname )
 
 %:
-	dh $@
+	dh $@ --with=systemd
 
 .PHONY: override_dh_strip override_dh_fixperms override_dh_auto_install override_dh_auto_configure
 

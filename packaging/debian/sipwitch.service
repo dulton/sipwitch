@@ -1,0 +1,16 @@
+[Unit]
+Description=GNU SIP Witch, a SIP telephony service daemon.
+After=network.target
+
+[Service]
+Type=simple
+PIDFile=/var/run/sipwitch/pidfile
+EnvironmentFile=-/etc/conf.d/sipwitch
+EnvironmentFile=-/etc/sysconfig/sipwitch
+EnvironmentFile=-/etc/default/sipwitch
+ExecStartPre=-/bin/rm -f /var/run/sipwitch/control
+ExecStart=/usr/sbin/sipw -f $OPTIONS
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
