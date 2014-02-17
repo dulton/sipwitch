@@ -225,7 +225,7 @@ echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
 - fixed anonymous inbound.
 - added missing manpages.
 
-* Thu Nov 18 2009 David Sugar <dyfet@gnutelephony.org> - 0.5.9-0
+* Sun Nov 18 2009 David Sugar <dyfet@gnutelephony.org> - 0.5.9-0
 - removed snmp/mib from this package
 - removed unused swig support and complex packaging it required.
 
