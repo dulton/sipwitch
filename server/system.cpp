@@ -53,6 +53,7 @@ static shell::flagopt nolocalusers('n', "--no-localusers", _TEXT("disable local 
 static shell::counteropt priority('p', "--priority", _TEXT("set priority level"), "level");
 static shell::flagopt hotspot(0, "--public", _TEXT("public access mode"));
 static shell::flagopt restart('r', "--restartable", _TEXT("set to restartable process"));
+static shell::flagopt sservice('S', "--service", _TEXT("system service mode"));
 static shell::flagopt trace('t', "--trace", _TEXT("trace sip messages"));
 #ifdef HAVE_PWD_H
 static shell::stringopt user('u', "--user", _TEXT("user to run as"), "userid", NULL);
@@ -566,6 +567,11 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     shell::loglevel_t level = (shell::loglevel_t)*verbose;
     history::set(*histbuf);
 
+#ifdef	HAVE_SYSTEMD
+	if(is(sservice))				// systemd services no need for fork...
+		detached = true;
+#endif
+
     // daemonify process....
     if(daemon) {
         if(!detached)
@@ -607,6 +613,11 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
         args.restart();
 
     up(args.getsym("pidfile"));
+#ifdef	HAVE_SYSTEMD
+	if(is(sservice)) {
+		sd_notify(0, "READY=1");	
+	}
+#endif
 }
 
 // stub code for windows service daemon...

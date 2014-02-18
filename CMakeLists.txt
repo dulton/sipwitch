@@ -114,6 +114,11 @@ if(USES_ZEROCONF_FOUND)
     set(ZEROCONF_AVAHI true)
 endif()
 
+pkg_check_modules(USES_SYSTEMD libsystemd-daemon>=200)
+if(USES_SYSTEMD_FOUND)
+    set(HAVE_SYSTEMD true)
+endif()
+
 include_directories(${USES_UCOMMON_INCLUDE_DIRS})
 link_directories(${USES_UCOMMON_LIBRARY_DIRS})
 add_definitions(${USES_UCOMMON_CFLAGS})

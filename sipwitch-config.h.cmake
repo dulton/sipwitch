@@ -38,6 +38,7 @@
 #cmakedefine HAVE_SYS_SOCKIO_H 1
 #cmakedefine HAVE_SYS_STAT_H 1
 #cmakedefine HAVE_RESOLV_H 1
+#cmakedefine HAVE_SYSTEMD 1
 #cmakedefine HAVE_OPENSSL 1
 
 #cmakedefine ZEROCONF_AVAHI 1

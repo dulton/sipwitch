@@ -1,3 +1,6 @@
+from 1.8.8 to 1.8.9
+- systemd notify support
+
 from 1.8.7 to 1.8.8
 - missing usecure linkage...
 

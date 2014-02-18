@@ -372,6 +372,11 @@ AC_CHECK_LIB(msvcrt, fopen, [
     DAEMON_LIBS="-ladvapi32"
 ])
 
+PKG_CHECK_MODULES(SYSTEMD, libsystemd-daemon >= 200, [
+    AC_DEFINE(HAVE_SYSTEMD, 1, [systemd daemon support])
+    DAEMON_LIBS="$DAEMON_LIBS $SYSTEMD_LIBS"
+],[SYSTEMD_LIBS=""]) 
+
 AM_CONDITIONAL(STATIC_MODULES, test "$enable_shared" = "no")
 if test "$enable_shared" = "no" ; then
     MODFLAGS="-static"

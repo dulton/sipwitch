@@ -19,6 +19,10 @@
 #include <sipwitch/sipwitch.h>
 #include <ucommon/secure.h>
 
+#ifdef  HAVE_SYSTEMD
+#include <systemd/sd-daemon.h>
+#endif
+
 #ifdef WIN32
 #undef alloca
 #endif
