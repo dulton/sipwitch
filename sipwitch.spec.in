@@ -21,6 +21,7 @@ BuildRequires: ucommon-devel >= 6.0.0
 BuildRequires: libeXosip2-devel >= 3.0.0
 BuildRequires: avahi-devel
 BuildRequires: openssl-devel
+BuildRequires: systemd-devel >= 200
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
