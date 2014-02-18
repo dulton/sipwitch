@@ -372,7 +372,7 @@ AC_CHECK_LIB(msvcrt, fopen, [
     DAEMON_LIBS="-ladvapi32"
 ])
 
-PKG_CHECK_MODULES(SYSTEMD, libsystemd-daemon >= 200, [
+PKG_CHECK_MODULES(SYSTEMD, libsystemd-daemon >= 44, [
     AC_DEFINE(HAVE_SYSTEMD, 1, [systemd daemon support])
     DAEMON_LIBS="$DAEMON_LIBS $SYSTEMD_LIBS"
 ],[SYSTEMD_LIBS=""]) 

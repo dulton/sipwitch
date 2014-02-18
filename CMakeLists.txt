@@ -114,7 +114,7 @@ if(USES_ZEROCONF_FOUND)
     set(ZEROCONF_AVAHI true)
 endif()
 
-pkg_check_modules(USES_SYSTEMD libsystemd-daemon>=200)
+pkg_check_modules(USES_SYSTEMD libsystemd-daemon>=44)
 if(USES_SYSTEMD_FOUND)
     set(HAVE_SYSTEMD true)
 endif()
