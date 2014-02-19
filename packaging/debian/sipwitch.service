@@ -10,7 +10,7 @@ EnvironmentFile=-/etc/conf.d/sipwitch
 EnvironmentFile=-/etc/sysconfig/sipwitch
 EnvironmentFile=-/etc/default/sipwitch
 ExecStartPre=-/bin/rm -f /var/run/sipwitch/control
-ExecStart=/usr/sbin/sipw -f $OPTIONS
+ExecStart=/usr/sbin/sipw -S $OPTIONS
 Restart=always
 NotifyAccess=main
 
