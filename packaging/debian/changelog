@@ -1,3 +1,9 @@
+sipwitch (1.9.0-0gt1) UNRELEASED; urgency=low
+
+  * Daemon now can operate as systemd notify service
+
+ -- David Sugar <dyfet@gnutelephony.org>  Mon, 10 Mar 2014 08:23:43 -0400
+
 sipwitch (1.8.8-0gt1) UNRELEASED; urgency=low
 
   * Updated for systemd support
