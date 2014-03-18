@@ -53,4 +53,4 @@ ui_*.h
 *.dsc
 *.zip
 *~
-
+TAGS
