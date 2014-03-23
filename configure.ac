@@ -126,7 +126,7 @@ AC_ARG_WITH(netscripting,
 # and cgi bin path
 AC_ARG_WITH(cgibindir,
     AC_HELP_STRING([--with-cgibindir=path], [specific cgi-bin path]), [
-        cgibindir="$with_initrddir"
+        cgibindir="$with_cgibindir"
 ])
 
 if test -z "$cgibindir" ; then
