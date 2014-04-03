@@ -39,16 +39,9 @@ using namespace UCOMMON_NAMESPACE;
 
 #define PAGING_SIZE (2048l * sizeof(void *))
 
-#define ENABLE_ALLOW_INVITE     0x0001
-#define ENABLE_ALLOW_ACK        0x0002
-#define ENABLE_ALLOW_CANCEL     0x0004
-#define ENABLE_ALLOW_REFER      0x0008
-#define ENABLE_ALLOW_OPTIONS    0x0010
-#define ENABLE_ALLOW_NOTIFY     0x0020
-#define ENABLE_ALLOW_SUBSCRIBE  0x0040
-#define ENABLE_ALLOW_PRACK      0x0080
-#define ENABLE_ALLOW_MESSAGE    0x0100
-#define ENABLE_ALLOW_INFO       0x0200
+#define ALLOWS_INVITE       0x0001
+#define ALLOWS_MESSAGE      0x0002
+#define ALLOWS_DEFAULT      0x0003
 
 class thread;
 
@@ -131,6 +124,7 @@ public:
         time_t created;
         status_t status;
         volatile time_t expires;
+        unsigned long allows;
         char contact[MAX_URI_SIZE];
         char network[MAX_NETWORK_SIZE];
 
