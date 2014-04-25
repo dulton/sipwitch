@@ -28,6 +28,7 @@
 #cmakedefine HAVE_NET_IF_H 1
 #cmakedefine HAVE_PWD_H 1
 #cmakedefine HAVE_SETPGRP 1
+#cmakedefine HAVE_SETGROUPS 1
 #cmakedefine HAVE_SETRLIMIT 1
 #cmakedefine HAVE_SIGWAIT 1
 #cmakedefine HAVE_SIGWAIT2 1

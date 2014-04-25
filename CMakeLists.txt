@@ -171,6 +171,7 @@ if(WIN32 AND NOT CYGWIN)
 endif()
 
 check_function_exists(setrlimit HAVE_SETRLIMIT)
+check_function_exists(setgroups HAVE_SETGROUPS)
 check_function_exists(setpgrp HAVE_SETPGRP)
 check_function_exists(getuid HAVE_GETUID)
 check_function_exists(mkfifo HAVE_MKFIFO)

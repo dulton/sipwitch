@@ -528,6 +528,9 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     }
 
     if(grp) {
+#ifdef	HAVE_SETGROUPS
+		setgroups(0, NULL);
+#endif
         umask(007);
         if(setgid(grp->gr_gid))
 			shell::error("*** sipw: %u: %s\n", grp->gr_gid,
@@ -537,6 +540,9 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
     int uid = 0;
 
     if(pwd) {
+#ifdef	HAVE_SETGROUPS
+		setgroups(0, NULL);
+#endif
         umask(007);
         if(!grp) {
             if(setgid(pwd->pw_gid))
