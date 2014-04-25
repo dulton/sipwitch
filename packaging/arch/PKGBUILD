@@ -13,7 +13,7 @@ arch=('x86_64' 'i686')
 url="http://www.gnutelephony.org"
 license=('GPL3')
 groups=()
-depends=('ucommon>=6.0.0' 'avahi' 'libexosip2')
+depends=('ucommon>=6.0.0' 'avahi' 'libexosip2' 'pkgconfig')
 makedepends=()
 options=()
 install=sipwitch.install
@@ -24,7 +24,7 @@ md5sums=('9813083c7cbd473cab740672185b41f2')
 
 build() {
 	cd "$srcdir/$pkgname-$pkgver"
-	./configure --prefix=/usr --with-initrddir=none
+	./configure --prefix=/usr --with-pkg-config --with-initrddir=none
 	make
 }
 

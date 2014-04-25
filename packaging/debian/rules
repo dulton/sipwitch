@@ -21,7 +21,8 @@ DEBIAN_DIR := $(shell echo ${MAKEFILE_LIST} | awk '{print $$1}' | xargs dirname 
 .PHONY: override_dh_strip override_dh_fixperms override_dh_auto_install override_dh_auto_configure
 
 override_dh_auto_configure:
-	dh_auto_configure -- --disable-silent-rules \
+	dh_auto_configure -- \
+		--disable-silent-rules --with-pkg-config \
 		CFLAGS="$(CFLAGS) $(CPPFLAGS)" \
 		CXXFLAGS="$(CXXFLAGS) $(CPPFLAGS)" \
 		LDFLAGS="$(LDFLAGS)"
