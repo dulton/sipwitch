@@ -1,0 +1,4 @@
+# we want a setuid sippasswd...
+sipwitch: setuid-binary usr/bin/sippasswd 4755 root/root
+
+

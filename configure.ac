@@ -249,7 +249,7 @@ if test "$UCOMMON_MODEL" = "CC" ; then
     LIBTOOL='$(SHELL) $(top_srcdir)/cmodel.sh'" ${LIBTOOL}" ; fi
 
 AC_CHECK_HEADERS(sys/resource.h syslog.h net/if.h sys/sockio.h ioctl.h pwd.h sys/inotify.h)
-AC_CHECK_FUNCS(setrlimit setpgrp setrlimit getuid mkfifo gethostname symlink)
+AC_CHECK_FUNCS(setrlimit setgroups setpgrp setrlimit getuid mkfifo gethostname symlink)
 
 AC_LANG_CPLUSPLUS
 COMPILER_FLAGS=""
