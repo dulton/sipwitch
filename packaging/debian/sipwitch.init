@@ -26,6 +26,8 @@
 # chkconfig: - 95 15
 # description: GNU SIP Witch telephony service.
 
+. /lib/lsb/init-functions
+
 DAEMON="/usr/sbin/sipw"
 NAME="sipwitch"
 DESC="sipwitch"
