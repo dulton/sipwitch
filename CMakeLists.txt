@@ -22,14 +22,25 @@ set(RC_VERSION "${RC_VERSION},0")
 set(SOVERSION ${VERSION})
 STRING(REGEX REPLACE "[.].*$" "" SOVERSION ${SOVERSION})
 
-set(INSTALL_INCLUDEDIR include)
-set(INSTALL_BINDIR bin)
-set(INSTALL_SBINDIR sbin)
-set(INSTALL_LIBEXEC libexec)
+if(NOT INSTALL_INCLUDEDIR)
+    set(INSTALL_INCLUDEDIR "include")
+endif()
+
+if(NOT INSTALL_BINDIR)
+    set(INSTALL_BINDIR "bin")
+endif()
+
+if(NOT INSTALL_SBINDIR)
+    set(INSTALL_SBINDIR "sbin")
+endif()
+
+if(NOT INSTALL_LIBEXEC)
+    set(INSTALL_LIBEXEC "libexec")
+endif()
 
 if(WIN32)
-    set(MODULE_EXT .mll)
-    set(INSTALL_MANDIR man)
+    set(MODULE_EXT ".mll")
+    set(INSTALL_MANDIR "man")
     set(INSTALL_DOCDIR doc/${PROJECT_NAME})
     set(INSTALL_LOCALE locale)
     set(INSTALL_LIBDIR bin)
@@ -45,14 +56,38 @@ else()
             set(LIB_SUFFIX 64)
         endif()
     endif()
-    set(INSTALL_MANDIR share/man)
-    set(INSTALL_LOCALE share/locale)
-    set(INSTALL_DOCDIR share/doc/${PROJECT_NAME})
-    set(INSTALL_INFODIR share/info)
-    set(INSTALL_LIBDIR lib${LIB_SUFFIX})
-    set(INSTALL_PLUGINS ${INSTALL_LIBDIR}/sipwitch)
-    set(INSTALL_PIXMAPS share/pixmaps)
-    set(INSTALL_APPLICATIONS share/applications)
+    if(NOT INSTALL_MANDIR)
+        set(INSTALL_MANDIR share/man)
+    endif()
+
+    if(NOT INSTALL_LOCALE)
+        set(INSTALL_LOCALE share/locale)
+    endif()
+
+    if(NOT INSTALL_DOCTDIR)
+        set(INSTALL_DOCDIR share/doc/${PROJECT_NAME})
+    endif()
+
+    if(NOT INSTALL_INFODIR)
+        set(INSTALL_INFODIR share/info)
+    endif()
+
+    if(NOT INSTALL_LIBDIR)
+        set(INSTALL_LIBDIR lib${LIB_SUFFIX})
+    endif()
+
+    if(NOT INSTALL_PLUGINS)
+        set(INSTALL_PLUGINS ${INSTALL_LIBDIR}/sipwitch)
+    endif()
+
+    if(NOT INSTALL_PIXMAPS)
+        set(INSTALL_PIXMAPS share/pixmaps)
+    endif()
+
+    if(NOT INSTALL_APPLICATIONS)
+        set(INSTALL_APPLICATIONS share/applications)
+    endif()
+
     set(TRANSLATIONS share/${PROJECT_NAME}/translations)
     set(SYSCONFDIR "/etc" CACHE PATH "config directory")
     set(STATEDIR "/var" CACHE PATH "state directory")
@@ -183,6 +218,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 file(GLOB runtime_src common/*.cpp)
 file(GLOB runtime_inc inc/sipwitch/*.h)
+file(GLOB sipwitch_man utils/*.[1|8])
+file(GLOB sipwitch_conf server/*.conf)
 
 STRING(COMPARE EQUAL "${BUILD_RUNTIME_TYPE}" "SHARED" HAVE_PLUGINS)
 
@@ -215,11 +252,11 @@ add_dependencies(sipwitch-control usecure ucommon)
 target_link_libraries(sipwitch-control usecure ucommon ${SECURE_LIBS} ${UCOMMON_LIBS})
 set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipwitch)
 
-
-install(FILES   ${runtime_inc}  DESTINATION ${INSTALL_INCLUDEDIR}/sipwitch  COMPONENT headers)
+install(FILES   ${sipwitch_conf} DESTINATION ${SYSCONFDIR})
+install(FILES   ${sipwitch_man} DESTINATION ${INSTALL_MANDIR})
+install(FILES   ${runtime_inc}  DESTINATION ${INSTALL_INCLUDEDIR}/sipwitch)
 install(TARGETS sipwitch-runtime DESTINATION ${INSTALL_LIBDIR})
 install(TARGETS sipwitch-control sipwitch-cgi DESTINATION ${INSTALL_BINDIR})
 install(TARGETS sipwitch-passwd DESTINATION ${INSTALL_BINDIR} PERMISSIONS SETUID)
-
 
 
