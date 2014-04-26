@@ -17,7 +17,7 @@ endif()
 
 add_executable(sipwitch ${server_src} ${server_inc})
 add_dependencies(sipwitch sipwitch-runtime usecure ucommon eXosip2)
-target_link_libraries(sipwitch sipwitch-runtime usecure ucommon ${EXOSIP2_LIBS} ${SECURE_LIBS} ${UCOMMON_LIBS} ${USES_SYSTEMD_LIBRARIES})
+target_link_libraries(sipwitch sipwitch-runtime usecure ucommon ${EXOSIP2_LIBS} ${USES_UCOMMON_LIBRARIES} ${USES_SYSTEMD_LIBRARIES})
 set_target_properties(sipwitch PROPERTIES OUTPUT_NAME sipw)
 install(TARGETS sipwitch DESTINATION ${INSTALL_SBINDIR})
 

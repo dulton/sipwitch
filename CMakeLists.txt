@@ -233,23 +233,23 @@ add_subdirectory(server)
 
 add_executable(sipwitch-query utils/sipquery.cpp)
 add_dependencies(sipwitch-query usecure ucommon eXosip2)
-target_link_libraries(sipwitch-query usecure ucommon ${EXOSIP2_LIBS} ${SECURE_LIBS} ${UCOMMON_LIBS})
+target_link_libraries(sipwitch-query usecure ucommon ${EXOSIP2_LIBS} ${USES_UCOMMON_LIBRARIES})
 set_target_properties(sipwitch-query PROPERTIES OUTPUT_NAME sipquery)
 
 install(TARGETS sipwitch-query DESTINATION ${INSTALL_BINDIR})
 
 add_executable(sipwitch-cgi utils/cgiserver.cpp)
 add_dependencies(sipwitch-cgi ucommon)
-target_link_libraries(sipwitch-cgi ucommon ${UCOMMON_LIBS})
+target_link_libraries(sipwitch-cgi ucommon ${USES_UCOMMON_LIBRARIES})
 
 add_executable(sipwitch-passwd utils/sippasswd.cpp)
 add_dependencies(sipwitch-passwd usecure ucommon)
-target_link_libraries(sipwitch-passwd usecure ucommon ${SECURE_LIBS} ${UCOMMON_LIBS})
+target_link_libraries(sipwitch-passwd usecure ucommon ${USES_UCOMMON_LIBRARIES})
 set_target_properties(sipwitch-passwd PROPERTIES OUTPUT_NAME sippasswd)
 
 add_executable(sipwitch-control utils/sipwitch.cpp)
 add_dependencies(sipwitch-control usecure ucommon)
-target_link_libraries(sipwitch-control usecure ucommon ${SECURE_LIBS} ${UCOMMON_LIBS})
+target_link_libraries(sipwitch-control usecure ucommon ${USES_UCOMMON_LIBRARIES})
 set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipwitch)
 
 install(FILES   ${sipwitch_conf} DESTINATION ${SYSCONFDIR})
