@@ -224,11 +224,11 @@ file(GLOB sipwitch_xml server/*.xml*)
 
 STRING(COMPARE EQUAL "${BUILD_RUNTIME_TYPE}" "SHARED" HAVE_PLUGINS)
 
-add_library(sipwitch-runtime ${BUILD_RUNTIME_TYPE} ${runtime_src} ${runtime_inc})
-set_target_properties(sipwitch-runtime PROPERTIES VERSION ${VERSION} SOVERSION ${SOVERSION})
-add_dependencies(sipwitch-runtime ucommon)
-target_link_libraries(sipwitch-runtime ${USES_UCOMMON_LIBRARIES} ${EXOSIP2_LIBS})
-set_target_properties(sipwitch-runtime PROPERTIES OUTPUT_NAME sipwitch)
+add_library(sipwitch ${BUILD_RUNTIME_TYPE} ${runtime_src} ${runtime_inc})
+set_target_properties(sipwitch PROPERTIES VERSION ${VERSION} SOVERSION ${SOVERSION})
+add_dependencies(sipwitch ucommon)
+target_link_libraries(sipwitch ${USES_UCOMMON_LIBRARIES} ${EXOSIP2_LIBS})
+set_target_properties(sipwitch PROPERTIES OUTPUT_NAME sipwitch)
 
 add_subdirectory(server)
 
@@ -267,7 +267,7 @@ install(FILES   ${sipwitch_conf} DESTINATION ${SYSCONFDIR})
 install(FILES   ${sipwitch_xml} DESTINATION ${SYSCONFDIR}/sipwitch.d)
 install(FILES   ${sipwitch_man} DESTINATION ${INSTALL_MANDIR})
 install(FILES   ${runtime_inc}  DESTINATION ${INSTALL_INCLUDEDIR}/sipwitch)
-install(TARGETS sipwitch-runtime DESTINATION ${INSTALL_LIBDIR})
+install(TARGETS sipwitch DESTINATION ${INSTALL_LIBDIR})
 install(TARGETS sipwitch-control sipwitch-cgi DESTINATION ${INSTALL_BINDIR})
 install(TARGETS sipwitch-passwd DESTINATION ${INSTALL_BINDIR} PERMISSIONS SETUID)
 
