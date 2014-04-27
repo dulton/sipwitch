@@ -330,6 +330,11 @@ if(CMAKE_GENERATOR MATCHES "Unix Makefiles")
         COMMAND git archive --format tar --output="${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}-${VERSION}.tar" --prefix="${PACKAGE}-${VERSION}/" HEAD
         COMMAND gzip "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}-${VERSION}.tar"
     )
+
+    add_custom_target(uninstall
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        COMMAND xargs <install_manifest.txt
+    )
 endif()
 
 
