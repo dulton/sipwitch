@@ -1,3 +1,14 @@
+Changes from 1.9.0 to 1.9.1
+- cmake builds fully usable for all purposes
+- cmake system config option
+- use of configure.ac for cmake lib abi versioning
+- fixed cmake target names for consistency
+- updated manpages
+- fixed packaging for pkgconfig
+- sipwitch setusers support
+- fixed init for debian, added lintian overrides
+- removed obsolete systemd syslog.target
+
 from 1.8.8 to 1.9.0
 - systemd notify support
 
