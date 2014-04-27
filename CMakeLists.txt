@@ -14,6 +14,7 @@ INCLUDE(CheckIncludeFiles)
 INCLUDE(CheckFunctionExists)
 INCLUDE(FindPkgConfig)
 set (VERSION 1.9.0)
+set (PACKAGE "sipwitch")
 
 set(RC_VERSION ${VERSION})
 STRING(REGEX REPLACE "[.]" "," RC_VERSION ${RC_VERSION})
@@ -220,7 +221,6 @@ check_function_exists(symlink HAVE_SYMLINK)
 check_function_exists(atexit HAVE_ATEXIT)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sipwitch-config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/sipwitch-config.h)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libsipwitch.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/libsipwitch.pc)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 file(GLOB runtime_src common/*.cpp)
@@ -262,18 +262,36 @@ target_link_libraries(sipwitch-control usecure ucommon ${USES_UCOMMON_LIBRARIES}
 set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipwitch)
 
 if(CMAKE_SYSTEM_NAME STREQUAL Linux)
-    file(GLOB sipwitch_log server/*.log)
-    file(GLOB sipwitch_cron server/*.cron)
-    file(GLOB sipwitch_def server/*.defaults)
-    file(GLOB sipwitch_init server/*.service)
-    install(FILES   ${sipwitch_log} DESTINATION ${SYSCONFDIR}/logrotate.d RENAME sipwitch)
-    install(FILES   ${sipwitch_cron} DESTINATION ${SYSCONFDIR}/cron.hourly RENAME sipwitch)
-    install(FILES   ${sipwitch_def} DESTINATION ${SYSCONFDIR}/default RENAME sipwitch)
-    install(FILES   ${sipwitch_init} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/system)
+    # in DEBIAN we would set this off, in opensuse/rpm based, on...
+    option(SYSTEM_CONFIG "Set to ON to write system config" OFF)
+    if(SYSTEM_CONFIG)
+        file(GLOB sipwitch_log server/*.log)
+        file(GLOB sipwitch_cron server/*.cron)
+        file(GLOB sipwitch_def server/*.defaults)
+        file(GLOB sipwitch_init server/*.service)
+        install(FILES   ${sipwitch_log} DESTINATION ${SYSCONFDIR}/logrotate.d RENAME sipwitch)
+        install(FILES   ${sipwitch_cron} DESTINATION ${SYSCONFDIR}/cron.hourly RENAME sipwitch)
+        install(FILES   ${sipwitch_def} DESTINATION ${SYSCONFDIR}/default RENAME sipwitch)
+        install(FILES   ${sipwitch_init} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/system)
+    endif()
 endif()
-if(NOT WIN32)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libsipwitch.pc DESTINATION ${INSTALL_LIBDIR}/pkgconfig)
+
+if(NOT UNIX)
+    foreach(flag ${EXOSIP2_FLAGS})
+        set(PACKAGE_FLAGS "${PACKAGE_FLAGS} ${flag}")
+    endforeach()
+    foreach(lib ${EXOSIP2_LIBS})
+        STRING(REGEX REPLACE "^[-]l" "" slib ${lib})
+        set(PACKAGE_LIBS "${PACKAGE_LIBS} -l${slib}")
+    endforeach()
+
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sipwitch-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/sipwitch-config)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libsipwitch.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/libsipwitch.pc)
+
+    install(FILES libsipwitch.pc DESTINATION ${INSTALL_LIBDIR}/pkgconfig)
+    install(FILES sipwitch-config DESTINATION ${INSTALL_BINDIR})
 endif()
+
 install(FILES   ${sipwitch_conf} DESTINATION ${SYSCONFDIR})
 install(FILES   ${sipwitch_xml} DESTINATION ${SYSCONFDIR}/sipwitch.d)
 install(FILES   ${sipwitch_man1} DESTINATION ${INSTALL_MANDIR}/man1)
@@ -282,5 +300,31 @@ install(FILES   ${runtime_inc}  DESTINATION ${INSTALL_INCLUDEDIR}/sipwitch)
 install(TARGETS sipwitch DESTINATION ${INSTALL_LIBDIR})
 install(TARGETS sipwitch-control sipwitch-cgi DESTINATION ${INSTALL_BINDIR})
 install(TARGETS sipwitch-passwd DESTINATION ${INSTALL_BINDIR} PERMISSIONS SETUID)
+
+if(CMAKE_GENERATOR MATCHES "Unix Makefiles")
+    add_custom_target(cleandist
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}[-_]*.gz"
+        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}_*.dsc"
+        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}-*.rpm"
+        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}[-_]*.deb"
+        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/*${PACKAGE}*[-_]*.deb"
+        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}-*.zip"
+        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/*${PACKAGE}*.changes"
+    )
+
+    add_custom_target(srpm
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMAND rm -f *.rpm
+        COMMAND rpmbuild  -bs --nodeps --define "_sourcedir ." --define "_srcrpmdir ." --sign ${PACKAGE}.spec
+    )
+
+    add_custom_target(dist
+        DEPENDS cleandist
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMAND git archive --format tar --output="${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}-${VERSION}.tar" --prefix="${PACKAGE}-${VERSION}/" HEAD
+        COMMAND gzip "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}-${VERSION}.tar"
+    )
+endif()
 
 
