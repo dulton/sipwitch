@@ -299,7 +299,12 @@ install(FILES   ${sipwitch_man8} DESTINATION ${INSTALL_MANDIR}/man8)
 install(FILES   ${runtime_inc}  DESTINATION ${INSTALL_INCLUDEDIR}/sipwitch)
 install(TARGETS sipwitch DESTINATION ${INSTALL_LIBDIR})
 install(TARGETS sipwitch-control sipwitch-cgi DESTINATION ${INSTALL_BINDIR})
-install(TARGETS sipwitch-passwd DESTINATION ${INSTALL_BINDIR} PERMISSIONS SETUID)
+
+if(SYSTEM_SETUID)
+    install(TARGETS sipwitch-passwd DESTINATION ${INSTALL_BINDIR} PERMISSIONS SETUID)
+else()
+    install(TARGETS sipwitch-passwd DESTINATION ${INSTALL_BINDIR})
+endif()
 
 if(CMAKE_GENERATOR MATCHES "Unix Makefiles")
     add_custom_target(cleandist
