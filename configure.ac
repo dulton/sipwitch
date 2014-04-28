@@ -130,7 +130,7 @@ AC_ARG_WITH(cgibindir,
 ])
 
 if test -z "$cgibindir" ; then
-    cgibindir='${libdir}/cgi-bin' ; fi
+    cgibindir='${exec_prefix}/lib/cgi-bin' ; fi
 
 # make list that is parsed...
 

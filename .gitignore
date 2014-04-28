@@ -21,11 +21,10 @@ libtool
 stamp-h1
 server/*.test
 server/sipw
-sipwitch-cgi
+sipwitch.cgi
 sipwitch-config
 sipwitch-config.h
 sipwitch-config.h.in
-sipwitch-cgi
 sippasswd
 sipquery
 sipwitch
