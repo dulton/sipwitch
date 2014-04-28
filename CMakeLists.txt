@@ -50,7 +50,7 @@ if(NOT INSTALL_LIBEXEC)
 endif()
 
 if(WIN32)
-    set(MODULE_EXT ".mll")
+    set(MODULE_EXT ".dll")
     set(INSTALL_MANDIR "man")
     set(INSTALL_DOCDIR doc/${PROJECT_NAME})
     set(INSTALL_LOCALE locale)
