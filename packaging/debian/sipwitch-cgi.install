@@ -1,3 +1,2 @@
-usr/lib*/cgi-bin/sipwitch
-usr/bin/sipwitch-cgi
-usr/share/man/man8/sipwitch-cgi.8*
+usr/lib/cgi-bin/sipwitch.cgi
+usr/share/man/man8/sipwitch.cgi.8*
