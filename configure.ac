@@ -344,6 +344,7 @@ AC_DEFINE_UNQUOTED(DEFAULT_CFGPATH, "$default_cfgpath", [config path])
 AC_DEFINE_UNQUOTED(DEFAULT_VARPATH, "$default_varpath", [run path])
 AC_DEFINE_UNQUOTED(DEFAULT_LIBPATH, "$default_libpath", [lib path])
 AC_DEFINE_UNQUOTED(DEFAULT_LIBEXEC, "$default_libexec", [script path])
+AC_DEFINE_UNQUOTED(MODULE_EXT, "$shrext_cmds", [module extensions])
 
 zeroconf=""
 ZEROCONF_LIBS=""
@@ -358,13 +359,6 @@ AH_BOTTOM([
 #ifndef HAVE_LOCALTIME_R
 #define localtime_r(x, y)   localtime(x)
 #endif
-
-#ifdef  _MSC_VER
-#define MODULE_EXT ".dll"
-#else
-#define MODULE_EXT ".so"
-#endif
-
 ])
 
 DAEMON_LIBS=""
