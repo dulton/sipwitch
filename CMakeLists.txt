@@ -344,6 +344,14 @@ if(CMAKE_GENERATOR MATCHES "Unix Makefiles")
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMAND xargs <install_manifest.txt
     )
+
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/packaging/debian/")
+        add_custom_target(deb
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            COMMAND rm -f *.deb *.debian.tar.gz *.dsc *.changes
+            COMMAND cape-source --sign ${PACKAGE}-${VERSION}.tar.gz packaging
+        )
+    endif()
 endif()
 
 
