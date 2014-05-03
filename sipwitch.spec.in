@@ -120,6 +120,7 @@ remote voip service provider.
       -DINSTALL_SBINDIR=%{_sbindir} \
       -DINSTALL_LIBEXEC=%{_libexecdir} \
       -DINSTALL_LIBDIR=%{_libdir} \
+	  -DINSTALL_CGIBIN=/var/www/cgi-bin \
       -DSYSTEM_CONFIG:BOOL=TRUE \
 	  .
 
@@ -140,16 +141,16 @@ remote voip service provider.
 %attr(04755,root,root) %{_bindir}/sippasswd
 %dir %{_libdir}/sipwitch
 %config(noreplace) %{_sysconfdir}/logrotate.d/sipwitch
-%attr(0755,root,root) %{_prefix}/lib/systemd/system/sipwitch.service
+%attr(0755,root,root) %{_unitdir}/sipwitch.service
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/sipwitch
-%attr(0770,root,root) %dir %{_sysconfdir}/sipwitch.d
-%attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
-%attr(0660,root,root) %config(noreplace) %{_sysconfdir}/default/sipwitch
-%attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.d/*.xml*
+%attr(0775,root,root) %dir %{_sysconfdir}/sipwitch.d
+%attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
+%attr(0664,root,root) %config(noreplace) %{_sysconfdir}/default/sipwitch
+%attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.d/*.xml*
 
 %files cgi
 %{_mandir}/man8/sipwitch.cgi.8*
-%{_prefix}/lib/cgi-bin/sipwitch.cgi
+/var/www/cgi-bin/sipwitch.cgi
 
 %files runtime
 %{_libdir}/*.so.*
