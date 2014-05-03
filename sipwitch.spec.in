@@ -121,6 +121,7 @@ remote voip service provider.
       -DINSTALL_LIBEXEC=%{_libexecdir} \
       -DINSTALL_LIBDIR=%{_libdir} \
 	  -DINSTALL_CGIBIN=/var/www/cgi-bin \
+	  -DINSTALL_UNITDIR=%{_unitdir} \
       -DSYSTEM_CONFIG:BOOL=TRUE \
 	  .
 
