@@ -11,9 +11,9 @@
 AUTOMAKE_OPTIONS = no-dependencies dist-zip
 EXTRA_DIST = autogen.sh README *.pc.in FEATURES  TODO Doxyfile BUILDS \
 	SUPPORT NOTES MODULES cmodel.sh sipwitch.spec.in sipwitch.spec \
-	sipwitch-config.in sipwitch-config.1 sipwitch-config.h.cmake \
-	CMakeLists.txt directive.in cmake-abi.sh libsipwitch.pc.cmake \
-	sipwitch-config.cmake 
+	sipwitch-config.h.cmake CMakeLists.txt directive.in cmake-abi.sh \
+	libsipwitch.pc.cmake 
+
 #  *.pc.in *.spec.in *.spec
 
 SUBDIRS = common server utils inc test
@@ -21,11 +21,6 @@ DIST_SUBDIRS = common server utils inc test
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsipwitch.pc
-
-scriptdir = $(bindir)
-script_SCRIPTS = sipwitch-config
-
-man_MANS = sipwitch-config.1
 
 dist-hook:  cleandist
 

@@ -230,7 +230,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 file(GLOB runtime_src common/*.cpp)
 file(GLOB runtime_inc inc/sipwitch/*.h)
-file(GLOB sipwitch_man1 utils/*.1 *.1)
+file(GLOB sipwitch_man1 utils/*.1)
 file(GLOB sipwitch_man8 utils/*.8 server/*.8)
 file(GLOB sipwitch_conf server/*.conf)
 file(GLOB sipwitch_xml server/*.xml*)
@@ -293,11 +293,9 @@ if(UNIX)
         set(PACKAGE_LIBS "${PACKAGE_LIBS} -l${slib}")
     endforeach()
 
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sipwitch-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/sipwitch-config)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libsipwitch.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/libsipwitch.pc)
 
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libsipwitch.pc DESTINATION ${INSTALL_LIBDIR}/pkgconfig)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/sipwitch-config DESTINATION ${INSTALL_BINDIR})
 endif()
 
 install(FILES   ${sipwitch_conf} DESTINATION ${SYSCONFDIR})

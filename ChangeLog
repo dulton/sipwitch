@@ -8,6 +8,7 @@ Changes from 1.9.0 to 1.9.1
 - sipwitch setgroups support
 - fixed init for debian, added lintian overrides
 - removed obsolete systemd syslog.target
+- remove obsolete build config
 
 from 1.8.8 to 1.9.0
 - systemd notify support
