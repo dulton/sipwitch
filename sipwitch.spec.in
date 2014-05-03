@@ -16,47 +16,47 @@ License: GPLv3+
 URL: http://www.gnu.org/software/sipwitch
 Group: Applications/Communications
 Source: http://dev.gnutelephony.org/dist/tarballs/sipwitch-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: ucommon-devel >= 6.0.0
 BuildRequires: libeXosip2-devel >= 3.0.0
 BuildRequires: avahi-devel
 BuildRequires: openssl-devel
 BuildRequires: systemd-devel >= 200
+BuildRequires: cmake
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
-Requires: %{name}-runtime = %{version}-%{release}
+Requires: %{name}-runtime%{?_isa} = %{version}-%{release}
 
 %package runtime
 Group: Development/Libraries
 Summary: Runtime library support for sipwitch
 
 %package devel
-Requires: ucommon-devel >= 6.0.0
-Requires: %{name}-runtime = %{version}-%{release}
-Requires: libeXosip2-devel >= 3.0.0
+Requires: ucommon-devel%{?_isa} >= 6.0.0
+Requires: %{name}-runtime%{?_isa} = %{version}-%{release}
+Requires: libeXosip2-devel%{?_isa} >= 3.0.0
 Group: Development/Libraries
 Summary: Headers for building sipwitch plugins
 
 %package cgi
-Requires: %{name} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 Group: Applications/CGI
 Summary: cgi web interface to control sipwitch server
 
 %package plugin-zeroconf
-Requires: %{name} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 Summary: Zeroconf plugin for sipwitch
 
 %package plugin-scripting
-Requires: %{name} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 Summary: Scripting plugin for sipwitch
 
 %package plugin-forward
-Requires: %{name} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 Summary: Forward registration and routing plugin
 
 %package plugin-subscriber
-Requires: %{name} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 Summary: Subscriber gateway plugin for sipwitch
 
 %description
@@ -112,22 +112,23 @@ remote voip service provider.
 %prep
 %setup -q
 %build
-%configure --with-pkg-config --disable-static --with-initrddir=none
+%cmake \
+      -DSYSCONFDIR=%{_sysconfdir} \
+      -DINSTALL_MANDIR=%{_mandir} \
+      -DINSTALL_INCLUDEDIR=%{_includedir} \
+      -DINSTALL_BINDIR=%{_bindir} \
+      -DINSTALL_SBINDIR=%{_sbindir} \
+      -DINSTALL_LIBEXEC=%{_libexecdir} \
+      -DINSTALL_LIBDIR=%{_libdir} \
+      -DSYSTEM_CONFIG:BOOL=TRUE \
+	  .
 
 %{__make} %{?_smp_mflags}
 
 %install
-%{__rm} -rf %{buildroot}
-%{__make} DESTDIR=%{buildroot} INSTALL="install -p" install
-%{__rm} -f %{buildroot}/%{_libdir}/*.la
-%{__rm} -f %{buildroot}/%{_libdir}/sipwitch/*.la
-echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
-
-%clean
-%{__rm} -rf %{buildroot}
+%{__make} DESTDIR=%{buildroot} install
 
 %files
-%defattr(-,root,root,-)
 %doc README COPYING NEWS FEATURES SUPPORT TODO NOTES AUTHORS MODULES ChangeLog
 %{_mandir}/man1/sipwitch.1*
 %{_mandir}/man1/sippasswd.1*
@@ -143,37 +144,29 @@ echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/sipwitch
 %attr(0770,root,root) %dir %{_sysconfdir}/sipwitch.d
 %attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
-%attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sysconfig/sipwitch
+%attr(0660,root,root) %config(noreplace) %{_sysconfdir}/default/sipwitch
 %attr(0660,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.d/*.xml*
 
 %files cgi
-%defattr(-,root,root,-)
-%{_mandir}/man8/sipwitch-cgi.8*
-%{_bindir}/sipwitch-cgi
-%{_libdir}/cgi-bin/sipwitch
+%{_mandir}/man8/sipwitch.cgi.8*
+%{_prefix}/lib/cgi-bin/sipwitch.cgi
 
 %files runtime
-%defattr(-,root,root,-)
 %{_libdir}/*.so.*
 
 %files plugin-zeroconf
-%defattr(-,root,root,-)
 %{_libdir}/sipwitch/zeroconf.so
 
 %files plugin-forward
-%defattr(-,root,root,-)
 %{_libdir}/sipwitch/forward.so
 
 %files plugin-scripting
-%defattr(-,root,root,-)
 %{_libdir}/sipwitch/scripting.so
 
 %files plugin-subscriber
-%defattr(-,root,root,-)
 %{_libdir}/sipwitch/subscriber.so
 
 %files devel
-%defattr(-,root,root,-)
 %{_libdir}/*.so
 %{_includedir}/sipwitch/
 %{_libdir}/pkgconfig/*.pc
@@ -196,70 +189,4 @@ echo "PLUGINS=auto" >>%{buildroot}/%{_sysconfdir}/sysconfig/sipwitch
 /sbin/ldconfig
 
 %changelog
-* Sun Mar 14 2010 David Sugar <dyfet@gnutelephony.org> - 0.7.4-0
-- fixed sippasswd to send digest rather than realm to running server.
-- separated packaging and install of cgi webservice.
-- new runtime server debug and monitoring operations.
-
-* Fri Feb 12 2010 David Sugar <dyfet@gnutelephony.org> - 0.7.1-0
-- Moved lab.xml to lab.xml-example so not part of default config.
-- Removed config conflict when started in pure user mode.
-
-* Sun Feb 07 2010 David Sugar <dyfet@gnutelephony.org> - 0.7.0-0
-- NAT media functionality and internodal remote.
-- merger of domain and realm server definitions.
-- clearer source aliasing of remote calls between network domains.
-
-* Sat Jan 23 2010 David Sugar <dyfet@gnutelephony.org> - 0.6.2-0
-- use uuid for unset authentication realms.
-- saner default configuration file.
-
-* Wed Jan 20 2010 David Sugar <dyfet@gnutelephony.org> - 0.6.1-0
-- user account integration with sip accounts.
-- exec hook for packaging systems that done use fakeroot.
-
-* Sun Jan 17 2010 David Sugar <dyfet@gnutelephony.org> - 0.5.13-0
-- sip realm fully externalized and new siprealm utility added.
-
-* Wed Dec 09 2009 David Sugar <dyfet@gnutelephony.org> - 0.5.12-0
-- redefined internal user & service permissions and profiles.
-- fixed anonymous inbound.
-- added missing manpages.
-
-* Sun Nov 18 2009 David Sugar <dyfet@gnutelephony.org> - 0.5.9-0
-- removed snmp/mib from this package
-- removed unused swig support and complex packaging it required.
-
-* Fri Aug 14 2009 David Sugar <duyfet@gnutelephony.org> - 0.5.7-1
-- memory corruption issue in allocating subnet access objects fixed
-
-* Mon Jul 13 2009 Remi Collet <Fedora@FamilleCollet.com> - 0.5.6-1
-- rebuild for new PHP 5.3.0 ABI (20090626)
-- add PHP ABI check
-- add php configuration file (/etc/php.d/sipwitch.ini)
-
-* Sat Jul 04 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.6-0
-- split runtime from server to build plugins without requiring server.
-- removed separate rtp proxy, functionality will be integrated into server.
-
-* Wed Jun 10 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.5-0
-- upstream fixed in rel 0.5.5, no patches now needed for rpm distros.
-
-* Sun May 10 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.4-3
-- new generic init script layout as a patch until next upstream release.
-
-* Fri May 08 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.4-2
-- some fixups until upstream is changed, and new init scriptlets.
-
-* Wed May 06 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.4-1
-- temporary patch file added until upstream catches up, other cleanup.
-
-* Sat May 02 2009 - David Sugar <dyfet@gnutelephony.org> - 0.5.4-0
-- spec file updated for redhat/fedora submission.
-
-* Fri Jul 25 2008 - David Sugar <dyfet@gnutelephony.org> - 0.2.0-0
-- spec file updated for plugins and new library naming.
-
-* Mon Jul 21 2008 - David Sugar <dyfet@gnutelephony.org> - 0.1.0-0
-- initial spec file distribution.
 

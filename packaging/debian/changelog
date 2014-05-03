@@ -1,9 +1,10 @@
-sipwitch (1.9.1-0gt1) UNRELEASED; urgency=low
+sipwitch (1:1.9.1-1) UNRELEASED; urgency=low
 
   * Systemd syslog.target removed
   * Manpages and copyrights updated
   * Added lintian override
   * Added setusers for permission dropping
+  * Introduced epoch numbering for our local builds
 
  -- David Sugar <dyfet@gnutelephony.org>  Sun, 27 Apr 2014 11:11:26 -0400
 
