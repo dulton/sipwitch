@@ -171,8 +171,6 @@ remote voip service provider.
 %{_libdir}/*.so
 %{_includedir}/sipwitch/
 %{_libdir}/pkgconfig/*.pc
-%{_bindir}/sipwitch-config
-%{_mandir}/man1/sipwitch-config.*
 
 %post runtime
 /sbin/ldconfig
