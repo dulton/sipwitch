@@ -141,7 +141,7 @@ public:
         {return (String)(args->getsym(id));}
 
     inline static void config(shell *envp)
-        {args = envp;};
+        {args = envp;}
 };
 
 } // namespace sipwitch

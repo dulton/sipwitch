@@ -61,10 +61,6 @@
 #include <sipwitch/cdr.h>
 #endif
 
-#ifndef _SIPWITCH_VOIP_H_
-#include <sipwitch/voip.h>
-#endif
-
 #define CONFIG_KEY_SIZE 177
 
 namespace sipwitch {
@@ -111,7 +107,7 @@ public:
         void splice(keyclone *trunk);
 
         inline void reset(const char *tag)
-            {Id = (char *)tag;};
+            {Id = (char *)tag;}
     };
 
     /**
@@ -142,18 +138,18 @@ public:
         ~pointer();
 
         inline operator bool() const
-            {return node != NULL;};
+            {return node != NULL;}
 
         inline bool operator!() const
-            {return node == NULL;};
+            {return node == NULL;}
 
         void operator=(keynode *node);
 
         inline keynode *operator*() const
-            {return node;};
+            {return node;}
 
         inline keynode *operator->() const
-            {return node;};
+            {return node;}
     };
 
     /**
@@ -169,7 +165,7 @@ public:
         ~instance();
 
         inline const service *operator->() const
-            {return service::cfg;};
+            {return service::cfg;}
     };
 
     /**
@@ -215,16 +211,16 @@ public:
         virtual ~callback();
 
         inline static void *alloc(service *cfgp, size_t size)
-            {return cfgp->alloc(size);};
+            {return cfgp->alloc(size);}
 
         inline static char *dup(service *cfgp, const char *s)
-            {return cfgp->dup(s);};
+            {return cfgp->dup(s);}
 
         inline static bool is_configured(void)
-            {return service::cfg != NULL;};
+            {return service::cfg != NULL;}
 
         inline bool is_active(void) const
-            {return active_flag;};
+            {return active_flag;}
 
         virtual void cdrlog(cdr *call);
         virtual void errlog(shell::loglevel_t level, const char *text);

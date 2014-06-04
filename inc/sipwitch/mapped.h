@@ -125,16 +125,16 @@ public:
     } source;
 
     inline bool is_user(void) const
-        {return (type == USER);};
+        {return (type == USER);}
 
     inline bool is_profiled(void) const
-        {return (type == USER || type == SERVICE);};
+        {return (type == USER || type == SERVICE);}
 
     inline bool is_admin(void) const
-        {return (is_profiled() && (profile.features & USER_PROFILE_SUPERUSER));};
+        {return (is_profiled() && (profile.features & USER_PROFILE_SUPERUSER));}
 
     inline bool has_feature(unsigned short X) const
-        {return is_profiled() && (profile.features & X);};
+        {return is_profiled() && (profile.features & X);}
 };
 
 /**

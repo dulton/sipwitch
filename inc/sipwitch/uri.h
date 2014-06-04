@@ -91,7 +91,7 @@ public:
     void clear(void);
 
     inline struct sockaddr *operator*() const
-	    {return entry;};
+        {return entry;}
 
     inline operator bool() const
 	    {return entry != NULL;}
