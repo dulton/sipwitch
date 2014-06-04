@@ -16,8 +16,7 @@
 #include <sipwitch-config.h>
 #include <sipwitch/sipwitch.h>
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 #ifdef  ZEROCONF_AVAHI
 
@@ -262,4 +261,4 @@ modules::generic()
 
 zeroconf zeroconf::plugin;
 
-END_NAMESPACE
+} // end namespace

@@ -39,8 +39,7 @@
 #include <sipwitch/namespace.h>
 #endif
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 #define STAT_MAP    "sipwitch.stats"
 
@@ -127,6 +126,6 @@ public:
     static void release(void);
 };
 
-END_NAMESPACE
+} // namespace sipwitch
 
 #endif

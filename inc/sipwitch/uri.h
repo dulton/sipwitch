@@ -29,6 +29,10 @@
 #include <ucommon/string.h>
 #endif
 
+#ifndef _UCOMMON_PLATFORM_H_
+#include <ucommon/platform.h>
+#endif
+
 #ifndef _UCOMMON_SOCKET_H_
 #include <ucommon/socket.h>
 #endif
@@ -41,8 +45,7 @@
 #include <sipwitch/voip.h>
 #endif
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 /**
  * Some convenience methods for manipulating SIP uri's.
@@ -102,6 +105,6 @@ public:
 
 };
 
-END_NAMESPACE
+} // namespace sipwitch
 
 #endif

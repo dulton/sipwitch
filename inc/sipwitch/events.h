@@ -53,8 +53,7 @@
 #include <sipwitch/cdr.h>
 #endif
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 /**
  * Event message and supporting methods for plugins.  This defines what
@@ -203,6 +202,6 @@ public:
 
 typedef events event_t;
 
-END_NAMESPACE
+} // namespace sipwitch
 
 #endif

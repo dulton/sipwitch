@@ -70,8 +70,7 @@
 #define MAX_URI_SIZE        256
 #define MAX_SDP_BUFFER      1024
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 #define CALL_MAP        "sipwitch.calls"
 #define REGISTRY_MAP    "sipwitch.regs"
@@ -157,6 +156,6 @@ public:
     int cid;
 };
 
-END_NAMESPACE
+} // namespace sipwitch
 
 #endif

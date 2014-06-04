@@ -20,25 +20,25 @@
 #include <sys/poll.h>
 #endif
 
-NAMESPACE_SIPWITCH
+namespace sipwitch {
 
 #ifdef HAVE_SIGWAIT
 
-signals signals::thread;
+psignals psignals::thread;
 
-signals::signals() :
+psignals::psignals() :
 JoinableThread()
 {
     shutdown = started = false;
 }
 
-signals::~signals()
+psignals::~psignals()
 {
     if(!shutdown)
         cancel();
 }
 
-void signals::cancel(void)
+void psignals::cancel(void)
 {
     if(started) {
         shutdown = true;
@@ -50,7 +50,7 @@ void signals::cancel(void)
     }
 }
 
-void signals::run(void)
+void psignals::run(void)
 {
     int signo;
     unsigned period = 900;
@@ -107,11 +107,11 @@ void signals::run(void)
     shell::log(DEBUG1, "stopping signal handler");
 }
 
-void signals::service(const char *name)
+void psignals::service(const char *name)
 {
 }
 
-void signals::setup(void)
+void psignals::setup(void)
 {
     sigemptyset(&thread.sigs);
     sigaddset(&thread.sigs, SIGALRM);
@@ -124,12 +124,12 @@ void signals::setup(void)
     signal(SIGPIPE, SIG_IGN);
 }
 
-void signals::start(void)
+void psignals::start(void)
 {
     thread.background();
 }
 
-void signals::stop(void)
+void psignals::stop(void)
 {
     thread.cancel();
 }
@@ -161,7 +161,7 @@ static void WINAPI handler(DWORD sigint)
     }
 }
 
-void signals::service(const char *name)
+void psignals::service(const char *name)
 {
     memset(&status, 0, sizeof(SERVICE_STATUS));
     status.dwServiceType = SERVICE_WIN32;
@@ -170,11 +170,11 @@ void signals::service(const char *name)
     hStatus = ::RegisterServiceCtrlHandler(name, &handler);
 }
 
-void signals::setup(void)
+void psignals::setup(void)
 {
 }
 
-void signals::start(void)
+void psignals::start(void)
 {
     if(!hStatus)
         return;
@@ -183,7 +183,7 @@ void signals::start(void)
     ::SetServiceStatus(hStatus, &status);
 }
 
-void signals::stop(void)
+void psignals::stop(void)
 {
     if(!hStatus)
         return;
@@ -194,19 +194,19 @@ void signals::stop(void)
 
 #else
 
-void signals::service(const char *name)
+void psignals::service(const char *name)
 {
 }
 
-void signals::setup(void)
+void psignals::setup(void)
 {
 }
 
-void signals::start(void)
+void psignals::start(void)
 {
 }
 
-void signals::stop(void)
+void psignals::stop(void)
 {
 }
 
@@ -343,5 +343,5 @@ void notify::stop(void)
 
 #endif
 
-END_NAMESPACE
+} // end namespace
 

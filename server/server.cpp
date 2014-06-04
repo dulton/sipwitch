@@ -36,8 +36,7 @@
 #include <sys/sockio.h>
 #endif
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 static mempager mempool(PAGING_SIZE);
 static bool running = true;
@@ -1354,4 +1353,4 @@ void server::printlog(const char *fmt, ...)
     va_end(vargs);
 }
 
-END_NAMESPACE
+} // end namespace

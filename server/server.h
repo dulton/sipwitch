@@ -34,8 +34,7 @@
 #define HOUR_TIMEOUT    (MINUTE_TIMEOUT * 60l)
 #define DAY_TIMEOUT     (HOUR_TIMEOUT * 24l)
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 #define PAGING_SIZE (2048l * sizeof(void *))
 
@@ -760,7 +759,7 @@ public:
 
 #ifdef HAVE_SIGWAIT
 
-class __LOCAL signals : private JoinableThread
+class __LOCAL psignals : private JoinableThread
 {
 private:
     bool shutdown;
@@ -771,10 +770,10 @@ private:
     void run(void);
     void cancel(void);
 
-    signals();
-    ~signals();
+    psignals();
+    ~psignals();
 
-    static signals thread;
+    static psignals thread;
 
 public:
     static void service(const char *name);
@@ -784,7 +783,7 @@ public:
 };
 
 #else
-class __LOCAL signals
+class __LOCAL psignals
 {
 public:
     static void service(const char *name);
@@ -823,5 +822,5 @@ public:
 
 #endif
 
-END_NAMESPACE
+} // namespace sipwitch
 

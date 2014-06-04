@@ -18,8 +18,7 @@
 #include <ucommon/export.h>
 #include <sipwitch/voip.h>
 
-using namespace SIPWITCH_NAMESPACE;
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 static int family = AF_INET;
 
@@ -943,4 +942,4 @@ void voip::attach(msg_t msg, const char *type, const char *body)
     attach(msg, type, body, strlen(body));
 }
 
-
+} // end namespace

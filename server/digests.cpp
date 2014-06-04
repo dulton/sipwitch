@@ -17,8 +17,7 @@
 
 #define     INDEX_KEYSIZE   177
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 class __LOCAL key : public LinkedObject
 {
@@ -133,4 +132,4 @@ void digests::load(void)
     fclose(fp);
 }
 
-END_NAMESPACE
+} // end namespace

@@ -16,8 +16,7 @@
 #include <sipwitch-config.h>
 #include <sipwitch/sipwitch.h>
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 static const char *dirpath = NULL;
 static char prior[65] = "down";
@@ -107,4 +106,4 @@ void scripting::expiring(MappedRegistry *rr)
     control::libexec("%s/sipdown %s %d", dirpath, rr->userid, rr->ext);
 }
 
-END_NAMESPACE
+} // end namespace

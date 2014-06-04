@@ -30,8 +30,7 @@
 
 #endif
 
-using namespace SIPWITCH_NAMESPACE;
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 static shell::flagopt helpflag('h',"--help",    _TEXT("display this list"));
 static shell::flagopt althelp('?', NULL, NULL);
@@ -178,42 +177,40 @@ static bool errlog(shell::loglevel_t level, const char *text)
     return false;
 }
 
-namespace SIPWITCH_NAMESPACE {
-
-    static void up(const char *pidfile)
-    {
-        if(pidfile) {
-            ::remove(pidfile);
-            FILE *fp = fopen(pidfile, "w");
-            if(fp) {
-                fprintf(fp, "    %ld\n", (long)getpid());
-                fclose(fp);
-                fp = NULL;
-            }
+static void up(const char *pidfile)
+{
+    if(pidfile) {
+        ::remove(pidfile);
+        FILE *fp = fopen(pidfile, "w");
+        if(fp) {
+            fprintf(fp, "    %ld\n", (long)getpid());
+            fclose(fp);
+            fp = NULL;
         }
-
-        cache::init();
-        server::reload();
-        server::startup();
-
-        if(is(trace))
-            stack::enableDumping();
-
-        signals::start();
-        events::start();
-        notify::start();
-        server::run();
-
-        events::terminate("server shutdown");
-        notify::stop();
-        signals::stop();
-        service::shutdown();
-        control::release();
-
-        if(pidfile)
-            ::remove(pidfile);
     }
+
+    cache::init();
+    server::reload();
+    server::startup();
+
+    if(is(trace))
+        stack::enableDumping();
+
+    psignals::start();
+    events::start();
+    notify::start();
+    server::run();
+
+    events::terminate("server shutdown");
+    notify::stop();
+    psignals::stop();
+    service::shutdown();
+    control::release();
+
+    if(pidfile)
+    ::remove(pidfile);
 }
+
 
 static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = NULL)
 {
@@ -588,7 +585,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
         shell::log("sipwitch", level, server::logmode, &errlog);
 
     server::plugins(plugins, *loading);
-    signals::setup();
+    psignals::setup();
 
     const char *home = getenv("HOME");
 
@@ -626,13 +623,19 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 #endif
 }
 
+} // end namespace
+
+using namespace sipwitch;
+
 // stub code for windows service daemon...
 
 static SERVICE_MAIN(main, argc, argv)
 {
-    signals::service("sipwitch");
+    psignals::service("sipwitch");
     init(argc, argv, true);
 }
+
+// program main
 
 PROGRAM_MAIN(argc, argv)
 {

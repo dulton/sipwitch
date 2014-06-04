@@ -18,8 +18,7 @@
 #include <ctype.h>
 #include <sys/stat.h>
 
-using namespace UCOMMON_NAMESPACE;
-using namespace SIPWITCH_NAMESPACE;
+using namespace sipwitch;
 
 #define RPC_MAX_PARAMS 96
 

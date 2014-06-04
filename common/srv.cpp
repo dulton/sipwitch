@@ -42,8 +42,7 @@ typedef union {
 
 #endif
 
-using namespace SIPWITCH_NAMESPACE;
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 srv::srv(const char *uri) : Socket::address()
 {
@@ -375,4 +374,4 @@ voip::context_t srv::route(const char *uri, char *buf, size_t size)
     return ctx;
 }
 
-
+} // end namespace

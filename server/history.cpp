@@ -15,7 +15,7 @@
 
 #include "server.h"
 
-NAMESPACE_SIPWITCH
+namespace sipwitch {
 
 static mutex_t histlock;
 static OrderedIndex histindex;
@@ -101,5 +101,5 @@ void history::out(void)
     fclose(fp);
 }
 
-END_NAMESPACE
+} // end namespace
 

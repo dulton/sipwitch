@@ -29,6 +29,10 @@
 #include <ucommon/string.h>
 #endif
 
+#ifndef _UCOMMON_PLATFORM_H_
+#include <ucommon/platform.h>
+#endif
+
 #ifndef _UCOMMON_SOCKET_H_
 #include <ucommon/socket.h>
 #endif
@@ -41,8 +45,7 @@
 #include <sipwitch/mapped.h>
 #endif
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 /**
  * URI cache for tags, local, and remote id's.  This is used by both the
@@ -89,7 +92,7 @@ public:
     struct sockaddr_internet address;
 
     inline void set(struct sockaddr *addr)
-        {memcpy(&address, addr, sizeof(address));};
+        {memcpy(&address, addr, sizeof(address));}
 
     /**
      * Add or refresh user in cache.
@@ -114,6 +117,6 @@ public:
     static void release(UserCache *entry);
 };
 
-END_NAMESPACE
+} // namespace sipwitch
 
 #endif

@@ -15,8 +15,7 @@
 
 #include "server.h"
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 static mutex_t msglock;
 static unsigned keysize = 177;
@@ -361,4 +360,4 @@ void messages::automatic(void)
     }
 }
 
-END_NAMESPACE
+} // end namespace

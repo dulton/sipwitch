@@ -25,8 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-using namespace SIPWITCH_NAMESPACE;
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 static const char *replytarget = NULL;
 
@@ -41,6 +40,7 @@ shell_t *control::args = NULL;
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <limits.h>
+#include <unistd.h>
 #include <pwd.h>
 
 static FILE *fifo = NULL;
@@ -290,7 +290,7 @@ bool control::libexec(const char *fmt, ...)
     ::signal(SIGINT, SIG_DFL);
     ::signal(SIGCHLD, SIG_DFL);
     ::signal(SIGPIPE, SIG_DFL);
-    int fd = ::open("/dev/null", O_RDWR);
+    int fd = open("/dev/null", O_RDWR);
     dup2(fd, 0);
     dup2(fd, 2);
     dup2(fileno(fifo), 1);
@@ -322,7 +322,7 @@ bool control::send(const char *fmt, ...)
         return false;
 
 #else
-    fd = ::open(env("control"), O_WRONLY | O_NONBLOCK);
+    fd = open(env("control"), O_WRONLY | O_NONBLOCK);
     if(fd < 0)
         return false;
 #endif
@@ -388,3 +388,4 @@ FILE *control::output(const char *id)
 #endif
 }
 
+} // namespace sipwitch

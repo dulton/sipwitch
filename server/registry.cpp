@@ -15,8 +15,7 @@
 
 #include "server.h"
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 static volatile unsigned active_routes = 0;
 static volatile unsigned active_entries = 0;
@@ -1552,4 +1551,4 @@ registry::target *registry::target::indexing::getTarget(void)
     return reinterpret_cast<target *>(cp);
 }
 
-END_NAMESPACE
+} // end namespace

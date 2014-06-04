@@ -22,8 +22,7 @@
 #include <sipwitch/modules.h>
 #include <sipwitch/events.h>
 
-using namespace SIPWITCH_NAMESPACE;
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 class __LOCAL thread : public DetachedThread, public Conditional
 {
@@ -159,3 +158,4 @@ void cdr::stop(void)
         Thread::sleep(20);
 }
 
+} // end namespace

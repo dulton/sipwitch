@@ -21,8 +21,7 @@
 #include <pwd.h>
 #endif
 
-using namespace UCOMMON_NAMESPACE;
-using namespace SIPWITCH_NAMESPACE;
+using namespace sipwitch;
 
 #ifdef  _MSWINDOWS_
 #include <io.h>

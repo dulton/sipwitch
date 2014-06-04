@@ -28,8 +28,7 @@
 
 #define RUNLEVELS   (sizeof(callback::runlevels) / sizeof(LinkedObject *))
 
-using namespace SIPWITCH_NAMESPACE;
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 LinkedObject *service::callback::runlevels[4] = {NULL, NULL, NULL, NULL};
 unsigned service::callback::count = 0;
@@ -1040,4 +1039,4 @@ bool service::match(const char *digits, const char *match, bool partial)
     return true;
 }
 
-
+} // end namespace

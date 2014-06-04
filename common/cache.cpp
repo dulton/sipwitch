@@ -19,10 +19,9 @@
 #include <sipwitch/cache.h>
 #include <sipwitch/control.h>
 
-using namespace SIPWITCH_NAMESPACE;
-using namespace UCOMMON_NAMESPACE;
-
 #define USER_KEY_SIZE   177
+
+namespace sipwitch {
 
 static mempager cache_heap(16384);
 static LinkedObject *user_freelist = NULL;
@@ -193,3 +192,5 @@ update:
 release:
     user_lock.commit();
 }
+
+} // end namespace

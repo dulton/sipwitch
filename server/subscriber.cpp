@@ -18,8 +18,7 @@
 #include <ucommon/secure.h>
 #include <stddef.h>
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 static class __LOCAL subscriber : private modules::sipwitch
 {
@@ -241,4 +240,4 @@ bool subscriber::authenticate(voip::reg_t id, const char *remote_realm)
     return true;
 }
 
-END_NAMESPACE
+} // end namespace

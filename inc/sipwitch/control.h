@@ -31,6 +31,10 @@
 #include <ucommon/thread.h>
 #endif
 
+#ifndef _UCOMMON_SHELL_H
+#include <ucommon/shell.h>
+#endif
+
 #ifndef _UCOMMON_STRING_H_
 #include <ucommon/string.h>
 #endif
@@ -39,8 +43,7 @@
 #include <sipwitch/namespace.h>
 #endif
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 #define DEBUG1  shell::DEBUG0
 #define DEBUG2  (shell::loglevel_t(((unsigned)shell::DEBUG0 + 1)))
@@ -54,7 +57,7 @@ using namespace UCOMMON_NAMESPACE;
 class __EXPORT control
 {
 private:
-    static shell_t *args;
+    static shell *args;
 
 public:
     /**
@@ -141,6 +144,6 @@ public:
         {args = envp;};
 };
 
-END_NAMESPACE
+} // namespace sipwitch
 
 #endif

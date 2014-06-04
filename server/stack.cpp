@@ -15,8 +15,7 @@
 
 #include "server.h"
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 static volatile unsigned allocated_segments = 0;
 static volatile unsigned active_segments = 0;
@@ -1661,4 +1660,4 @@ next:
     return icount;
 }
 
-END_NAMESPACE
+} // end namespace

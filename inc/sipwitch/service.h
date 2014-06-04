@@ -67,8 +67,7 @@
 
 #define CONFIG_KEY_SIZE 177
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 /**
  * System configuration instance and service functions.  This provides an
@@ -362,7 +361,6 @@ protected:
 #define MODULE_RUNLEVEL (RUNLEVELS - 1)
 #define GENERIC_RUNLEVEL (RUNLEVELS - 2)
 
-
-END_NAMESPACE
+} // namespace sipwitch
 
 #endif

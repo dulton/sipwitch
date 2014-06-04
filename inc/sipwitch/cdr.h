@@ -44,8 +44,7 @@
 #include <sipwitch/mapped.h>
 #endif
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 /**
  * Interface class for call detail records.  This is passed internally to
@@ -137,6 +136,6 @@ public:
     static void stop(void);
 };
 
-END_NAMESPACE
+} // namespace sipwitch
 
 #endif

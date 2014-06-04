@@ -15,8 +15,7 @@
 
 #include "server.h"
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 static unsigned tpriority = 0;
 static unsigned baseport = 5062;
@@ -718,4 +717,4 @@ char *media::rewrite(media::sdp *parser)
     return parser->result;
 }
 
-END_NAMESPACE
+} // end namespace

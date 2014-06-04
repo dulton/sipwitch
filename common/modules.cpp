@@ -24,8 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-using namespace SIPWITCH_NAMESPACE;
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 modules::sipwitch::sipwitch() :
 service::callback(MODULE_RUNLEVEL)
@@ -114,4 +113,5 @@ void modules::cdrlog(FILE *fp, cdr *call)
         call->duration, call->ident, call->dialed, call->joined, call->display);
 }
 
+} // end namespace
 

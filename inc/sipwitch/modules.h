@@ -45,8 +45,7 @@
 #include <sipwitch/uri.h>
 #endif
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 /**
  * Common interfaces and clases for plugins.
@@ -191,6 +190,6 @@ public:
     static void errlog(shell::loglevel_t level, const char *text);
 };
 
-END_NAMESPACE
+} // namespace sipwitch
 
 #endif

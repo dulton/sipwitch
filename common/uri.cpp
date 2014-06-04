@@ -19,8 +19,7 @@
 #include <sipwitch/uri.h>
 #include <sipwitch/service.h>
 
-using namespace SIPWITCH_NAMESPACE;
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 void uri::serviceid(const char *addr, char *buf, size_t size)
 {
@@ -224,3 +223,4 @@ void uri::identity(struct sockaddr *addr, char *buf, const char *user, size_t si
     Socket::query(addr, buf + len, size - len);
 }
 
+} // end namespace

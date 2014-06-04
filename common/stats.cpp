@@ -19,8 +19,7 @@
 #include <sipwitch/stats.h>
 #include <sipwitch/control.h>
 
-using namespace SIPWITCH_NAMESPACE;
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 static unsigned used = 0, total = 7;
 static stats *base = NULL;
@@ -153,3 +152,4 @@ void stats::period(FILE *fp)
     }
 }
 
+} // end namespace

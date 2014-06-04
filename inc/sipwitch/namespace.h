@@ -22,6 +22,10 @@
 #ifndef _SIPWITCH_NAMESPACE_H_
 #define _SIPWITCH_NAMESPACE_H_
 
+namespace sipwitch {
+using namespace ucommon;
+}
+
 #define SIPWITCH_NAMESPACE   sipwitch
 #define NAMESPACE_SIPWITCH   namespace sipwitch {
 

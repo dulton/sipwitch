@@ -15,8 +15,7 @@
 
 #include "server.h"
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 stack::call::call() : LinkedList(), segments()
 {
@@ -833,4 +832,4 @@ cdr *stack::call::log(void)
     return node;
 }
 
-END_NAMESPACE
+} // end namespace

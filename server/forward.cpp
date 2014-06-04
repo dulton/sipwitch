@@ -16,8 +16,7 @@
 #include <sipwitch-config.h>
 #include <sipwitch/sipwitch.h>
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 #define INDEX_SIZE  177
 
@@ -426,4 +425,4 @@ void forward::registration(int id, modules::regmode_t mode)
     }
 }
 
-END_NAMESPACE
+} // end namespace

@@ -15,8 +15,7 @@
 
 #include "server.h"
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 static volatile bool warning_registry = false;
 static bool shutdown_flag = false;
@@ -2255,4 +2254,4 @@ void thread::run(void)
     }
 }
 
-END_NAMESPACE
+} // end namespace

@@ -30,8 +30,7 @@
 #include <fcntl.h>
 #endif
 
-using namespace SIPWITCH_NAMESPACE;
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 static mutex_t private_locking;
 
@@ -390,4 +389,4 @@ void events::terminate(const char *reason)
     ipc = INVALID_SOCKET;
 }
 
-
+} // end namespace

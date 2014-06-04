@@ -27,12 +27,15 @@
 #undef WARNING
 #undef CONTACT
 
-#ifndef __SIPWITCH_NAMESPACE_H_
+#ifndef _UCOMMON_PLATFORM_H_
+#include <ucommon/platform.h>
+#endif
+
+#ifndef _SIPWITCH_NAMESPACE_H_
 #include <sipwitch/namespace.h>
 #endif
 
-NAMESPACE_SIPWITCH
-using namespace UCOMMON_NAMESPACE;
+namespace sipwitch {
 
 #if defined(EXOSIP_OPT_BASE_OPTION) && !defined(EXOSIP_OPT_DONT_SEND_101)
 #define EXOSIP_API4
@@ -151,7 +154,6 @@ public:
 #define P_SIPWITCH_NODE		"P-sipwitch-node"	// internodal calling
 #define	P_SIPWITCH_FEATURE	"P-sipwitch-feat"	// feature code reply
 
-
-END_NAMESPACE
+} // namespace sipwitch
 
 #endif

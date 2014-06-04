@@ -30,8 +30,7 @@
 #include <sys/un.h>
 #endif
 
-using namespace SIPWITCH_NAMESPACE;
-using namespace UCOMMON_NAMESPACE;
+using namespace sipwitch;
 
 static string_t statmap = STAT_MAP;
 static string_t callmap = CALL_MAP;

@@ -47,7 +47,7 @@ static struct eXosip_t *context = NULL;
 #define OPTION_CONTEXT
 #endif
 
-using namespace UCOMMON_NAMESPACE;
+using namespace ucommon;
 
 #if defined(_MSWINDOWS_) && defined(__GNUC__)
 // binds addrinfo for mingw32 linkage since otherwise mingw32 cannot
