@@ -92,16 +92,16 @@ public:
         void operator=(mapped *ptr);
 
         inline operator bool() const
-            {return entry != NULL;};
+            {return entry != NULL;}
 
         inline bool operator!() const
-            {return entry == NULL;};
+            {return entry == NULL;}
 
         inline mapped *operator->() const
-            {return entry;};
+            {return entry;}
 
         inline mapped *operator*() const
-            {return entry;};
+            {return entry;}
     };
 
     class __LOCAL target : public LinkedObject
@@ -175,22 +175,22 @@ public:
     registry();
 
     inline static const char *getRealm(void)
-        {return (const char *)reg.realm;};
+        {return (const char *)reg.realm;}
 
     inline static const char *getDigest(void)
-        {return (const char *)reg.digest;};
+        {return (const char *)reg.digest;}
 
     inline static time_t getExpires(void)
-        {return reg.expires;};
+        {return reg.expires;}
 
     inline static unsigned getPrefix(void)
-        {return reg.prefix;};
+        {return reg.prefix;}
 
     inline static unsigned getRange(void)
-        {return reg.range;};
+        {return reg.range;}
 
     inline static unsigned getRoutes(void)
-        {return reg.routes;};
+        {return reg.routes;}
 
     static const char *getDomain(void);
     static void incUse(mapped *rr, stats::stat_t stat);
@@ -277,10 +277,10 @@ private:
         enum {NONE, DIGEST} authtype;
 
         inline bool isSource(void) const
-            {return (this == parent->source);};
+            {return (this == parent->source);}
 
         inline bool isTarget(void) const
-            {return (this == parent->target);};
+            {return (this == parent->target);}
     };
 
     class __LOCAL segment : public OrderedObject
@@ -294,7 +294,7 @@ private:
         session sid;
 
         inline session *get(void)
-            {return &sid;};
+            {return &sid;}
     };
 
     class __LOCAL call : public LinkedList
@@ -406,25 +406,25 @@ public:
         struct sockaddr_storage iface;
 
         const char *getId(void)
-            {return netname;};
+            {return netname;}
 
         inline struct sockaddr *getInterface(void)
-            {return (struct sockaddr *)&iface;};
+            {return (struct sockaddr *)&iface;}
 
         inline operator bool()
-            {return active;};
+            {return active;}
 
         inline bool operator!()
-            {return !active;};
+            {return !active;}
 
         inline void up(void)
-            {active = true;};
+            {active = true;}
 
         inline void down(void)
-            {active = false;};
+            {active = false;}
 
         inline bool offline(void)
-            {return active == false;};
+            {return active == false;}
     };
 
     stack();
@@ -459,16 +459,16 @@ public:
     static int inviteLocal(stack::session *session, registry::mapped *rr, destination_t dest);
 
     inline static timeout_t ringTimeout(void)
-        {return stack::sip.ring_timer;};
+        {return stack::sip.ring_timer;}
 
     inline static timeout_t cfnaTimeout(void)
-        {return stack::sip.cfna_timer;};
+        {return stack::sip.cfna_timer;}
 
     inline static timeout_t resetTimeout(void)
-        {return stack::sip.reset_timer;};
+        {return stack::sip.reset_timer;}
 
     inline static unsigned inviteExpires(void)
-        {return stack::sip.invite_expires;};
+        {return stack::sip.invite_expires;}
 };
 
 class __LOCAL server : public service
@@ -678,7 +678,7 @@ public:
         sdp(const char *source, char *target, size_t len = MAX_SDP_BUFFER);
 
         inline struct sockaddr *get(void)
-            {return (struct sockaddr *)&local;};
+            {return (struct sockaddr *)&local;}
 
         void set(const char *source, char *target, size_t len = MAX_SDP_BUFFER);
         char *get(char *buffer, size_t len);

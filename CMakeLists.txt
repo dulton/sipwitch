@@ -13,7 +13,7 @@ PROJECT(sipwitch)
 INCLUDE(CheckIncludeFiles)
 INCLUDE(CheckFunctionExists)
 INCLUDE(FindPkgConfig)
-set (VERSION 1.9.1)
+set (VERSION 1.9.2)
 set (PACKAGE "sipwitch")
 
 set(RC_VERSION ${VERSION})

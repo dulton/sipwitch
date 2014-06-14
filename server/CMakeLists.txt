@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 #
 
-set(server_src server.cpp registry.cpp stack.cpp thread.cpp call.cpp messages.cpp media.cpp system.cpp signals.cpp history.cpp digests.cpp)
+set(server_src server.cpp registry.cpp stack.cpp thread.cpp call.cpp messages.cpp media.cpp system.cpp psignals.cpp history.cpp digests.cpp)
 set(server_inc server.h)
 
 if(NOT HAVE_PLUGINS)
