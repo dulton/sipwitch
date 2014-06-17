@@ -32,9 +32,9 @@ DAEMON="/usr/sbin/sipw"
 NAME="sipwitch"
 DESC="sipwitch"
 FIFO="/var/run/sipwitch/control"
-OPTIONS="-b"
 PRELOAD=""
 PLUGINS=""
+OPTIONS=""
 GROUP=""
 CONCURRENCY=""
 PRIORITY=""
@@ -106,7 +106,7 @@ start)
     fi
 
     echo -n "Starting $DESC: "
-    $DAEMON $OPTIONS
+    $DAEMON -b $OPTIONS
     echo "$NAME."
     ;;
 stop)
@@ -124,7 +124,7 @@ condrestart|try-restart)
     if [ -p $FIFO ] ; then
         echo "down" >$FIFO
         sleep 3
-        $DAEMON $OPTIONS
+        $DAEMON -b $OPTIONS
     fi
     ;;
 reload)
@@ -140,7 +140,7 @@ restart|force-reload)
         echo "down" >$FIFO
         sleep 3
     fi
-    $DAEMON $OPTIONS
+    $DAEMON -b $OPTIONS
     echo "$NAME."
     ;;
 *)

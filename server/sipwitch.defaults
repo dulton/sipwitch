@@ -4,6 +4,9 @@
 # install specifc plugins, or use "auto" to auto-load whatever is installed...
 #PLUGINS="zeroconf scripting subscriber forward"
 
+# options for server init (also used by systemd...)
+OPTIONS="--public"
+
 # runtime priority, recommended realtime for high capacity
 #PRIORITY="1"
 
@@ -26,5 +29,5 @@
 # sudo, etc, or - to disable
 #SIPADMIN="sipadmin"
 
-# specify security model, desktop or server.
+# specify security model, desktop or server, used in old init scripts..
 #SECURITY="desktop"

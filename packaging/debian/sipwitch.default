@@ -4,8 +4,11 @@
 # this can be set to 0 to disable automatic startup
 START=1
 
-# specify desktop or server security model
-SECURITY=desktop
+# specify desktop or server security model, used in old init scripts...
+#SECURITY=public
+
+# basic options options settings for init or systemd...
+OPTIONS="--public"
 
 # install specifc plugins, or use "auto" to auto-load whatever is installed...
 PLUGINS="auto"
