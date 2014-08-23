@@ -977,6 +977,25 @@ void server::reload(void)
             shell::log(shell::ERR, "cannot load provisioning cache");
     }
 
+    // scan for user records individually also...
+    const char *dirpath = _STR(control::path("cache"));
+    char filename[65];
+    dir_t dir(dirpath);
+    while(node && is(dir) && dir.read(filename, sizeof(filename)) > 0) {
+        const char *ext = strrchr(filename, '.');
+        if(!ext || !String::equal(ext, ".xml"))
+            continue;
+        if(!String::equal(filename, "user-", 5))
+            continue; 
+        snprintf(buf, sizeof(buf), "%s/%s", dirpath, filename);
+        fp = fopen(buf, "r");
+        if(!fp)
+            continue;
+        if(!cfgp->load(fp, node))
+            shell::log(shell::ERR, "cannot load user cache %s", filename);
+    }
+    dir.close();
+
     node = cfgp->getPath("provider");
     if(node)
         fp = fopen(_STR(control::path("cache") + "/provider.xml"), "r");
@@ -1022,7 +1041,7 @@ caddr_t server::allocate(size_t size, LinkedObject **list, volatile unsigned *co
     return mp;
 }
 
-#ifdef  _MSWINDOWS_
+#ifdef _MSWINDOWS_
 #define LIB_PREFIX  "_libs"
 #else
 #define LIB_PREFIX  ".libs"
