@@ -214,9 +214,11 @@ void psignals::stop(void)
 
 #ifdef  HAVE_SYS_INOTIFY_H
 
-static const char *dirpath;
+static const char *dirpath = NULL;
+static const char *cachepath = NULL;
 static fd_t watcher = -1;
 static uint32_t dirnode;
+static uint32_t cachenode;
 
 notify notify::thread;
 
@@ -232,6 +234,7 @@ notify::~notify()
 void notify::start(void)
 {
     dirpath = control::env("users");
+    cachepath = control::env("cache");
 
     if(!dirpath)
         dirpath = control::env("prefix");
@@ -253,6 +256,10 @@ void notify::run(void)
 
     watcher = inotify_init();
     dirnode = inotify_add_watch(watcher, dirpath, IN_CLOSE_WRITE|IN_MOVED_TO|IN_MOVED_FROM|IN_DELETE|IN_DONT_FOLLOW);
+    if(cachepath) {
+        cachenode = inotify_add_watch(watcher, cachepath, IN_CLOSE_WRITE|IN_MOVED_TO|IN_MOVED_FROM|IN_DELETE|IN_DONT_FOLLOW);
+        shell::log(DEBUG1, "notify watching cache %s", cachepath);
+    }
 
     while(watcher != -1) {
         // we want 500 ms of inactivity before actual updating...
@@ -307,11 +314,6 @@ void notify::run(void)
                 if(ext && eq_case(ext, ".xml")) {
                     shell::log(DEBUG2, "%s updated", event->name);
                     ++updates;
-                }
-                else if(eq(event->name, "reload")) {
-                    shell::log(DEBUG2, "reload requested");
-                    control::send("reload");
-                    updates = 0;
                 }
                 offset += sizeof(struct inotify_event) + event->len;
             }
