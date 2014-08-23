@@ -952,12 +952,37 @@ void server::reload(void)
     // separate user editable local provisioning in /etc/sipwitch.d from
     // such global data as part of a complete solution.
 
+    node = cfgp->getPath("access");
+    if(node)
+        fp = fopen(_STR(control::path("cache") + "/policy.xml"), "r");
+    if(node && fp) {
+        if(!cfgp->load(fp, node))
+             shell::log(shell::ERR, "cannot load policy cache");
+    }
+
     node = cfgp->getPath("provision");
+
+    // can load profiles separate from user provisioning...
+    if(node)
+        fp = fopen(_STR(control::path("cache") + "/profile.xml"), "r");
+    if(node && fp) {
+        if(!cfgp->load(fp, node))
+             shell::log(shell::ERR, "cannot load profile cache");
+    }
+
     if(node)
         fp = fopen(_STR(control::path("cache") + "/provision.xml"), "r");
     if(node && fp) {
         if(!cfgp->load(fp, node))
             shell::log(shell::ERR, "cannot load provisioning cache");
+    }
+
+    node = cfgp->getPath("provider");
+    if(node)
+        fp = fopen(_STR(control::path("cache") + "/provider.xml"), "r");
+    if(node && fp) {
+        if(!cfgp->load(fp, node))
+             shell::log(shell::ERR, "cannot load provider cache");
     }
 
     node = cfgp->getPath("routing");
