@@ -19,7 +19,7 @@ add_executable(sipwitch-server ${server_src} ${server_inc})
 add_dependencies(sipwitch-server sipwitch usecure ucommon eXosip2)
 target_link_libraries(sipwitch-server sipwitch usecure ucommon ${EXOSIP2_LIBS} ${USES_UCOMMON_LIBRARIES} ${USES_SYSTEMD_LIBRARIES})
 set_target_properties(sipwitch-server PROPERTIES OUTPUT_NAME sipw)
-install(TARGETS sipwitch-server DESTINATION ${INSTALL_SBINDIR})
+install(TARGETS sipwitch-server DESTINATION ${CMAKE_INSTALL_SBINDIR})
 
 if(HAVE_PLUGINS)
     add_library(sipwitch-forward MODULE forward.cpp)

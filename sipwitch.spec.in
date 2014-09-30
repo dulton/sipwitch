@@ -113,15 +113,8 @@ remote voip service provider.
 %setup -q
 %build
 %cmake \
-      -DSYSCONFDIR=%{_sysconfdir} \
-      -DINSTALL_MANDIR=%{_mandir} \
-      -DINSTALL_INCLUDEDIR=%{_includedir} \
-      -DINSTALL_BINDIR=%{_bindir} \
-      -DINSTALL_SBINDIR=%{_sbindir} \
-      -DINSTALL_LIBEXEC=%{_libexecdir} \
-      -DINSTALL_LIBDIR=%{_libdir} \
-	  -DINSTALL_CGIBIN=/var/www/cgi-bin \
-	  -DINSTALL_UNITDIR=%{_unitdir} \
+	  -DCMAKE_INSTALL_CGIBINDIR=/var/www/cgi-bin \
+	  -DCMAKE_INSTALL_UNITDIR=%{_unitdir} \
       -DSYSTEM_CONFIG:BOOL=TRUE \
 	  .
 
