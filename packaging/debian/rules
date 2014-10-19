@@ -8,6 +8,7 @@ CXXFLAGS = $(shell dpkg-buildflags --get CXXFLAGS)
 CFLAGS = $(shell dpkg-buildflags --get CFLAGS)
 LDFLAGS += -Wl,-z,defs -Wl,--as-needed
 
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 DEB_CONFIGURE_EXTRA_FLAGS = --with-initrddir=none 
 DEB_DH_INSTALL_ARGS := --sourcedir=debian/tmp
 DEB_DH_STRIP_ARGS := --dbg-package=sipwitch-dbg

@@ -1,3 +1,9 @@
+Changes from 1.9.2 to 1.9.3
+- modernized and simplified cmake
+- added user scan to cache and autoload on cache changes
+- better standardize defaults for systemd usage
+- updated file naming
+
 Changes from 1.9.1 to 1.9.2
 - namespace usage cleanup
 - make sure we can relocate systemd unitdir...

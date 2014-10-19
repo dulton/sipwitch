@@ -1,8 +1,8 @@
 Source: sipwitch
 Priority: optional
 Maintainer: David Sugar <dyfet@gnutelephony.org>
-Build-Depends: debhelper (>= 7.0.50),
-               dpkg-dev (>= 1.13.19),
+Build-Depends: debhelper (>= 9),
+               dpkg-dev (>= 1.16.0),
                libavahi-client-dev,
                libexosip2-dev (>= 3),
                libucommon-dev (>= 1:6.0.0),
@@ -48,8 +48,9 @@ Description: Debugging symbols for sipwitch
 
 Package: libsipwitch1
 Section: libs
+Multi-Arch: same
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${misc:Pre-Depends}
 Description: Runtime library for sipwitch server
  This is the runtime library used by GNU SIP Witch and plugins.  This runtime
  library may also be used by other sipwitch related daemons in the future and
