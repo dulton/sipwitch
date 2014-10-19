@@ -23,6 +23,8 @@ set(RC_VERSION "${RC_VERSION},0")
 
 if(UNIX)
     execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} COMMAND "./cmake-abi.sh" OUTPUT_VARIABLE LIB_VERSION)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -fPIE -fstack-protector -D_FORTIFY_SOURCE=2 --param ssp-buffer-size=4 -pie")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pie -z relro -z now")
 else()
     set(LIB_VERSION ${VERSION})
 endif()
