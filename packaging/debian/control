@@ -58,7 +58,8 @@ Description: Runtime library for sipwitch server
 
 Package: sipwitch-plugin-zeroconf
 Architecture: any
-Depends: sipwitch (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Multi-Arch: same
+Depends: sipwitch (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, ${misc:Pre-Depends}
 Description: Zeroconf plugin for sipwitch
  This plugin activates zeroconf network services for sipwitch and publishes
  sipwitch as a sip service.  In theory zeroconf aware SIP user agents should
@@ -66,7 +67,8 @@ Description: Zeroconf plugin for sipwitch
 
 Package: sipwitch-plugin-forward
 Architecture: any
-Depends: sipwitch (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Multi-Arch: same
+Depends: sipwitch (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends}, ${misc:Pre-Depends}
 Description: Forward registration and redirection module for sipwitch
  This plugin enables you to cross-register secure extensions with sipwitch
  and with an insecure IP-PBX such as Asterisk.  Secure destinations called
@@ -75,7 +77,8 @@ Description: Forward registration and redirection module for sipwitch
 
 Package: sipwitch-plugin-scripting
 Architecture: any
-Depends: sipwitch (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Multi-Arch: same
+Depends: sipwitch (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends}, ${misc:Pre-Depends}
 Description: Scripting plugin for sipwitch
  This plugin enables shell scripting in connection with specific sipwitch
  events.  Typical events include when a user registers with or de-registeres
@@ -84,7 +87,8 @@ Description: Scripting plugin for sipwitch
 
 Package: sipwitch-plugin-subscriber
 Architecture: any
-Depends: sipwitch (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+Multi-Arch: same
+Depends: sipwitch (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends}, ${misc:Pre-Depends}
 Description: Subscriber gateway plugin for sipwitch
  This module is meant to eventually offer generic support for premise
  routers when used by providers to offer sip/voip service to a subscriber.
@@ -97,6 +101,7 @@ Description: Subscriber gateway plugin for sipwitch
 
 Package: sipwitch
 Architecture: any
+Multi-Arch: foreign
 Depends: libsipwitch1 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}, adduser
 Description: secure peer-to-peer VoIP server for the SIP protocol
  GNU SIP Witch is a secure peer-to-peer VoIP server.  Calls can be made even
