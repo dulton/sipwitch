@@ -503,12 +503,14 @@ void server::confirm(void)
 
         if(!pwd) {
             node->setPointer((char *)"invalid");
-            goto skip;
+            node.next();
+            continue;
         }
 
         if(create(id, *node)) {
             node->setPointer((char *)"duplicate");
-            goto skip;
+            node.next();
+            continue;
         }
 
         id = pwd->pw_gecos;
@@ -550,8 +552,10 @@ void server::confirm(void)
         shell::debug(2, "adding %s %s", node->getId(), pwd->pw_name);
 
         clone = (keyclone *)getPath(tempname);
-        if(!clone)
-            goto skip;
+        if(!clone) {
+            node.next();
+            continue;
+        }
 
         temp = clone->getFirst();
         while(is(temp)) {
@@ -561,7 +565,6 @@ void server::confirm(void)
             temp.next();
         }
 
-skip:
         node.next();
     }
 

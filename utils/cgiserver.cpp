@@ -469,7 +469,7 @@ retry:
     if(fd < 0) {
         opid = pidfile();
         if(!opid || opid == 1) {
-            remove(buf);
+            remove(DEFAULT_VARPATH "/run/sipwitch/cgilock");
             goto retry;
         }
         if(count) {
