@@ -318,13 +318,17 @@ bool control::send(const char *fmt, ...)
     va_start(vargs, fmt);
 #ifdef  _MSWINDOWS_
     fd = CreateFile(env("control"), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if(fd == INVALID_HANDLE_VALUE)
+    if(fd == INVALID_HANDLE_VALUE) {
+        va_end(vargs);
         return false;
+    }
 
 #else
     fd = open(env("control"), O_WRONLY | O_NONBLOCK);
-    if(fd < 0)
+    if(fd < 0) {
+        va_end(vargs);
         return false;
+    }
 #endif
 
     vsnprintf(buf, sizeof(buf) - 1, fmt, vargs);
