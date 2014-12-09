@@ -74,7 +74,7 @@ bool digests::set(const char *id, const char *hash)
 {
     assert(id != NULL && hash != NULL);
 
-    caddr_t mp;
+    void *mp;
     size_t len = strlen(hash);
 
     private_lock.access();
@@ -91,7 +91,7 @@ bool digests::set(const char *id, const char *hash)
         }
         keys.next();
     }
-    mp = (caddr_t)private_cache.alloc(sizeof(key));
+    mp = private_cache.alloc(sizeof(key));
     new(mp) key(id, hash);
     private_lock.commit();
     return true;

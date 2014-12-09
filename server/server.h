@@ -27,7 +27,8 @@
 #undef alloca
 #endif
 
-#include <ctype.h>
+#include <cctype>
+#include <new>
 
 #define SECOND_TIMEOUT  (1000l)
 #define MINUTE_TIMEOUT  (SECOND_TIMEOUT * 60l)
@@ -514,7 +515,7 @@ public:
     static void plugins(const char *argv0, const char *names);
     static void run(void);
     static void stop(void);
-    static caddr_t allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
+    static void *allocate(size_t size, LinkedObject **list, volatile unsigned *count = NULL);
     static unsigned allocate(void);
 
     static bool announce(MappedRegistry *rr, const char *msgtype, const char *event, const char *expires, const char *body);

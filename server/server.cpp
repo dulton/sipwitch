@@ -232,7 +232,7 @@ void server::confirm(void)
     FILE *fp;
     char buf[128];
     char filename[65];
-    caddr_t mp;
+    void *mp;
     profile *pp, *ppd;
     const char *state = root.getPointer();
     const char *realm = registry::getRealm();
@@ -255,41 +255,41 @@ void server::confirm(void)
         memset(extmap, 0, sizeof(keynode *) * range);
     }
     profiles = NULL;
-    mp = (caddr_t)alloc(sizeof(profile));
+    mp = alloc(sizeof(profile));
     ppd = new(mp) profile(&profiles);
     String::set(ppd->value.id, sizeof(ppd->value.id), "*");
     ppd->value.level = 1;
     ppd->value.features = USER_PROFILE_DEFAULT;
 
-    mp = (caddr_t)alloc(sizeof(profile));
+    mp = alloc(sizeof(profile));
     pp = new(mp) profile(&profiles);
     memcpy(&pp->value, &ppd->value, sizeof(profile_t));
     String::set(pp->value.id, sizeof(pp->value.id), "restricted");
     pp->value.level = 0;
     pp->value.features = USER_PROFILE_RESTRICTED;
 
-    mp = (caddr_t)alloc(sizeof(profile));
+    mp = alloc(sizeof(profile));
     pp = new(mp) profile(&profiles);
     memcpy(&pp->value, &ppd->value, sizeof(profile_t));
     String::set(pp->value.id, sizeof(pp->value.id), "local");
     pp->value.level = 1;
     pp->value.features = USER_PROFILE_LOCAL;
 
-    mp = (caddr_t)alloc(sizeof(profile));
+    mp = alloc(sizeof(profile));
     pp = new(mp) profile(&profiles);
     memcpy(&pp->value, &ppd->value, sizeof(profile_t));
     String::set(pp->value.id, sizeof(pp->value.id), "device");
     pp->value.level = 0;
     pp->value.features = USER_PROFILE_DEVICE;
 
-    mp = (caddr_t)alloc(sizeof(profile));
+    mp = alloc(sizeof(profile));
     pp = new(mp) profile(&profiles);
     memcpy(&pp->value, &ppd->value, sizeof(profile_t));
     String::set(pp->value.id, sizeof(pp->value.id), "service");
     pp->value.level = 0;
     pp->value.features = USER_PROFILE_SERVICE;
 
-    mp = (caddr_t)alloc(sizeof(profile));
+    mp = alloc(sizeof(profile));
     pp = new(mp) profile(&profiles);
     memcpy(&pp->value, &ppd->value, sizeof(profile_t));
     String::set(pp->value.id, sizeof(pp->value.id), "admin");
@@ -334,10 +334,10 @@ void server::confirm(void)
 
     dir.close();
 
-    mp = (caddr_t)alloc(sizeof(stack::subnet));
+    mp = alloc(sizeof(stack::subnet));
     new(mp) stack::subnet(&acl, "127.0.0.0/8", "loopback");
 
-    mp = (caddr_t)alloc(sizeof(stack::subnet));
+    mp = alloc(sizeof(stack::subnet));
     new(mp) stack::subnet(&acl, "::1", "loopback");
 
 #if defined(HAVE_NET_IF_H) || defined(HAVE_PWD_H)
@@ -372,7 +372,7 @@ void server::confirm(void)
         if(ioctl(ifd, SIOCGIFNETMASK, ifr) == 0) {
             saddr = (struct sockaddr_in *)&(ifr->ifr_addr);
             String::add(buf, sizeof(buf), inet_ntoa(saddr->sin_addr));
-            mp = (caddr_t)alloc(sizeof(stack::subnet));
+            mp = alloc(sizeof(stack::subnet));
             new(mp) stack::subnet(&acl, buf, ifr->ifr_name);
         }
     }
@@ -384,7 +384,7 @@ void server::confirm(void)
         id = node->getId();
         leaf = NULL;
         if(id && node->getPointer()) {
-            mp = (caddr_t)alloc(sizeof(stack::subnet));
+            mp = alloc(sizeof(stack::subnet));
             new(mp) stack::subnet(&acl, node->getPointer(), id);
         }
         node.next();
@@ -402,7 +402,7 @@ void server::confirm(void)
             id = NULL;
 
         if(leaf && id && !strcmp(node->getId(), "profile")) {
-            mp = (caddr_t)alloc(sizeof(profile));
+            mp = alloc(sizeof(profile));
             pp = new(mp) profile(&profiles);
             memcpy(&pp->value, &ppd->value, sizeof(profile_t));
             String::set(pp->value.id, sizeof(pp->value.id), id);
@@ -429,7 +429,7 @@ void server::confirm(void)
                 secret = leaf->getPointer();
             if(leaf && secret && *secret && !node->leaf("digest")) {
                 if(digest.puts((string_t)id + ":" + (string_t)realm + ":" + (string_t)secret)) {
-                    mp = (caddr_t)alloc(sizeof(keynode));
+                    mp = alloc(sizeof(keynode));
                     leaf = new(mp) keynode(node, (char *)"digest");
                     leaf->setPointer(dup(*digest));
                 }
@@ -1027,18 +1027,18 @@ unsigned server::allocate(void)
     return mempool.pages();
 }
 
-caddr_t server::allocate(size_t size, LinkedObject **list, volatile unsigned *count)
+void *server::allocate(size_t size, LinkedObject **list, volatile unsigned *count)
 {
     assert(size > 0);
-    caddr_t mp;
+    void *mp;
     if(list && *list) {
-        mp = (caddr_t)*list;
+        mp = *list;
         *list = (*list)->getNext();
     }
     else {
         if(count)
             ++(*count);
-        mp = (caddr_t)mempool.alloc(size);
+        mp = mempool.alloc(size);
     }
     memset(mp, 0, size);
     return mp;

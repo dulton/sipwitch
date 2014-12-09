@@ -18,6 +18,7 @@
 #include <ucommon/export.h>
 #include <sipwitch/cache.h>
 #include <sipwitch/control.h>
+#include <new>
 
 #define USER_KEY_SIZE   177
 
@@ -172,7 +173,7 @@ void UserCache::add(const char *id, struct sockaddr *addr, time_t create, unsign
         user_freelist = cp->Next;
     }
     else {
-        caddr_t mp = (caddr_t)cache_heap.alloc(sizeof(UserCache));
+        void *mp = cache_heap.alloc(sizeof(UserCache));
         cp = new(mp) UserCache;
     }
 

@@ -25,6 +25,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <new>
 
 #define RUNLEVELS   (sizeof(callback::runlevels) / sizeof(LinkedObject *))
 
@@ -425,11 +426,11 @@ service::keynode *service::addNode(keynode *base, const char *id, const char *va
     assert(base != NULL);
     assert(id != NULL && *id != 0);
 
-    caddr_t mp;
+    void *mp;
     keynode *node;
     char *cp;
 
-    mp = (caddr_t)memalloc::alloc(sizeof(keynode));
+    mp = memalloc::alloc(sizeof(keynode));
     cp = dup(id);
     node = new(mp) keynode(base, cp);
     if(value)
