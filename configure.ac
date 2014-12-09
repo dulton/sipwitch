@@ -145,15 +145,11 @@ fi
 AC_ARG_WITH(pkg-config,
     AC_HELP_STRING([--with-pkg-config],[enable support for pkg-config]),[
     PKG_CHECK_MODULES(UCOMMON, ucommon >= $UCOMMON_REQUIRES)
-    UCOMMON_CLINK=`pkg-config --variable=clink ucommon`
-    UCOMMON_MODEL=`pkg-config --variable=model ucommon`
 ],[
     AC_PATH_PROG([UCOMMON],[ucommon-config],[none])
     if test $UCOMMON = "none" ; then
         AC_ERROR("required ucommon library missing")
     fi
-    UCOMMON_CLINK=`$UCOMMON --clink`
-    UCOMMON_MODEL=`$UCOMMON --model`
     UCOMMON_CFLAGS=`$UCOMMON --cflags`
     UCOMMON_LIBS=`$UCOMMON --libs`
 ])
@@ -245,34 +241,8 @@ else
     fi
 fi
 
-if test "$UCOMMON_MODEL" = "CC" ; then
-    LIBTOOL='$(SHELL) $(top_srcdir)/cmodel.sh'" ${LIBTOOL}" ; fi
-
 AC_CHECK_HEADERS(sys/resource.h syslog.h net/if.h sys/sockio.h ioctl.h pwd.h sys/inotify.h)
 AC_CHECK_FUNCS(setrlimit setgroups setpgrp setrlimit getuid mkfifo gethostname symlink)
-
-AC_LANG_CPLUSPLUS
-COMPILER_FLAGS=""
-
-for flag in $CXXFLAGS ; do
-    case "$flag" in
-    -f*exceptions|-f*rtti|-f*check-new|-f*enforce-eh-specs|-finline|-f*except)
-        if test "$UCOMMON_MODEL" = "CXX" ; then
-            COMPILER_FLAGS="$COMPILER_FLAGS $flag" ; fi
-        ;;
-    -fvisibility=*)
-        ;;
-    -I*)
-        idir=`echo $flag | sed -e "s/^-I//"`
-        COMPILER_FLAGS="$COMPILER_FLAGS $flag"
-        INCLUDE_FLAGS="$INCLUDE_FLAGS $flag"
-        ;;
-    *)
-        COMPILER_FLAGS="$COMPILER_FLAGS $flag"
-        ;;
-    esac
-done
-export CXXFLAGS="$COMPILER_FLAGS"
 
 SIPWITCH_FLAGS="$EXPORT_FLAGS $EXOSIP2_CFLAGS $LIBOSIP2_CFLAGS $UCOMMON_CFLAGS"
 SIPWITCH_LIBS="$EXPORT_LIBS $UCOMMON_LIBS $ac_with_malloc"
@@ -290,8 +260,6 @@ for lib in $UCOMMON_LIBS ; do
 done
 USECURE_LINK="$slibs $ulibs"
 UCOMMON_LINK="$ulibs"
-if test "$UCOMMON_MODEL" = "CC" ; then
-    SIPWITCH_LIBS="$SIPWITCH_LIBS $UCOMMON_CLINK" ; fi
 
 if test "$localstatedir" = '${prefix}/var' ; then
     localstatedir="/var" ; fi
@@ -394,8 +362,6 @@ AC_SUBST(NETWORK_UP)
 AC_SUBST(NETWORK_DOWN)
 AC_SUBST(NETWORK_RELOAD)
 AC_SUBST(UCOMMON_REQUIRES)
-AC_SUBST(UCOMMON_MODEL)
-AC_SUBST(UCOMMON_CLINK)
 AC_SUBST(DAEMON_LIBS)
 AC_SUBST(EXPORT_FLAGS)
 AC_SUBST(EXPORT_LIBS)
