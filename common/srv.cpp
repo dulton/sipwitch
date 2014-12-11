@@ -138,9 +138,7 @@ void srv::set(const char *uri)
 
     linked_pointer<modules::generic> cb = service::getGenerics();
     while(is(cb)) {
-        printf("BEFORE FOR %s %p\n", uri, *cb);
         srvlist = cb->resolve(uri, &hint);
-        printf("AFTER LIST\n");
         if(srvlist) {
             count = 1;
             entry = (struct sockaddr *)&srvlist[0].addr;
