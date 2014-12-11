@@ -1,3 +1,7 @@
+Changes from 1.9.3 to 1.9.4
+- updated memory management and older cmodel removed
+- some code cleanup including va_args stuff...
+
 Changes from 1.9.2 to 1.9.3
 - modernized and simplified cmake
 - added user scan to cache and autoload on cache changes
