@@ -434,7 +434,7 @@ size_t media::sdp::put(char *buffer)
 }
 
 media::media() :
-service::callback(2)
+service::callback(1)
 {
 }
 
