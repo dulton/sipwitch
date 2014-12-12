@@ -1,3 +1,9 @@
+sipwitch (1:1.9.6-1) UNRELEASED; urgency=medium
+
+  * More interal runlevel fixes
+
+ -- David Sugar <dyfet@gnutelephony.org>  Fri, 12 Dec 2014 10:28:36 -0400
+
 sipwitch (1:1.9.5-1) UNRELEASED; urgency=medium
 
   * Media proxy wrong server runlevel

@@ -14,7 +14,7 @@ INCLUDE(CheckIncludeFiles)
 INCLUDE(CheckFunctionExists)
 INCLUDE(FindPkgConfig)
 INCLUDE(GNUInstallDirs)
-set (VERSION 1.9.5)
+set (VERSION 1.9.6)
 set (PACKAGE "sipwitch")
 
 set(RC_VERSION ${VERSION})
