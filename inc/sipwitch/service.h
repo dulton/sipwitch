@@ -207,7 +207,7 @@ public:
         static unsigned sip_range;
         static char session_uuid[40];
 
-        callback(int level = 0);
+        callback(int level = 0);    // default is priority
         virtual ~callback();
 
         inline static void *alloc(service *cfgp, size_t size)
@@ -354,6 +354,8 @@ protected:
 };
 
 #define RUNLEVELS   (sizeof(callback::runlevels) / sizeof(LinkedObject *))
+#define PRIORITY_RUNLEVEL   0
+#define DEFAULT_RUNLEVEL    1
 #define MODULE_RUNLEVEL (RUNLEVELS - 1)
 #define GENERIC_RUNLEVEL (RUNLEVELS - 2)
 

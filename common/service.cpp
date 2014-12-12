@@ -142,8 +142,6 @@ void service::pointer::operator=(keynode *p)
 service::callback::callback(int rl) :
 OrderedObject()
 {
-    if(rl == 2)
-        abort();
     crit(rl < (int)RUNLEVELS, "service runlevel invalid");
     if(rl < 0) {
         rl += RUNLEVELS;
