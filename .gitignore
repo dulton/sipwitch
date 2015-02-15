@@ -46,6 +46,7 @@ ui_*.h
 *.pc
 *.spec
 *.rpm
+*.deb
 *.tar.gz
 *.shar.gz
 *.changes
