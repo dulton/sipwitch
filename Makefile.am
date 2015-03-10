@@ -21,9 +21,13 @@ DIST_SUBDIRS = common server utils inc test
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsipwitch.pc
 
-srpm:
+srpm:	dist
 	rm -f *.rpm
 	rpmbuild  -bs --nodeps --define "_sourcedir ." --define "_srcrpmdir ." --sign sipwitch.spec
+
+deb:	dist
+	rm -f *.deb *.debian.tar.gz *.dsc *.changes
+	cape-source --sign sipwitch-${VERSION}.tar.gz .
 
 dist-hook:  cleandist
 
