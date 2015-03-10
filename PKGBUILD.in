@@ -5,22 +5,22 @@
 
 # Maintainer: David Sugar <dyfet@gnutelephony.org>
 pkgname=sipwitch
-pkgver=1.9.0
-pkgrel=1
-#epoch=
+pkgver=@VERSION@
+pkgrel=0
+epoch=9
 pkgdesc="A federated call server for the SIP protocol"
 arch=('x86_64' 'i686')
 url="http://www.gnutelephony.org"
 license=('GPL3')
 groups=()
-depends=('ucommon>=6.0.0' 'avahi' 'libexosip2' 'pkgconfig')
+depends=('ucommon>=@USES_UCOMMON_REQUIRED@' 'avahi' 'libeXosip2' 'pkgconfig')
 makedepends=()
 options=()
 install=sipwitch.install
 changelog=
-source=(ftp://ftp.gnu.org/gnu/sipwitch/$pkgname-$pkgver.tar.gz)
+source=("$pkgname-$pkgver.tar.gz")
 noextract=()
-md5sums=('9813083c7cbd473cab740672185b41f2')
+md5sums=('SKIP')
 
 build() {
 	cd "$srcdir/$pkgname-$pkgver"

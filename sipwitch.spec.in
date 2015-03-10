@@ -1,4 +1,8 @@
-# Copyright (c) 2008, 2009, 2010 David Sugar, Tycho Softworks.
+#
+# spec file for package sipwitch
+#
+# Copyright (c) 2008-2014 David Sugar, Tycho Softworks.
+#
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without
 # modifications, as long as this notice is preserved.
@@ -8,40 +12,50 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-Name: sipwitch
-Summary: A secure peer-to-peer VoIP server for the SIP protocol
-Version: @VERSION@
-Release: 0%{?dist}
-License: GPLv3+
-URL: http://www.gnu.org/software/sipwitch
-Group: Applications/Communications
-Source: http://dev.gnutelephony.org/dist/tarballs/sipwitch-%{version}.tar.gz
-BuildRequires: ucommon-devel >= 6.0.0
-BuildRequires: libeXosip2-devel >= 3.0.0
-BuildRequires: avahi-devel
-BuildRequires: openssl-devel
-BuildRequires: systemd-devel >= 200
-BuildRequires: cmake
+%define libname libsipwitch1
+
+Name:           sipwitch
+Summary:        A secure peer-to-peer VoIP server for the SIP protocol
+Version:        @VERSION@
+Release:        1
+License:        GPL-3.0+
+URL:            http://www.gnu.org/software/sipwitch
+Group:          Productivity/Telephony/SIP/Servers
+Source0:        %{name}-%{version}.tar.gz
+Source1:		%{name}-rpmlintrc
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
+BuildRequires:  ucommon-devel >= @USES_UCOMMON_REQUIRED@
+BuildRequires:  libeXosip2-devel >= 3.0.0
+BuildRequires:  libavahi-devel
+BuildRequires:  libopenssl-devel
+BuildRequires:  systemd-devel
+BuildRequires:  cmake
+%if 0%{?suse_version} >= 1210
+BuildRequires:  systemd
+%endif
+Recommends:     logrotate cron
+Requires(pre):  permissions
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
-Requires: %{name}-runtime%{?_isa} = %{version}-%{release}
+Requires:       %{libname}%{?_isa} = %{version}-%{release}
+%{?systemd_requires}
 
-%package runtime
-Group: Development/Libraries
+%package -n %libname
+Group: Development/Libraries/C and C++
 Summary: Runtime library support for sipwitch
 
 %package devel
 Requires: ucommon-devel%{?_isa} >= 6.0.0
-Requires: %{name}-runtime%{?_isa} = %{version}-%{release}
+Requires: %{libname}%{?_isa} = %{version}-%{release}
 Requires: libeXosip2-devel%{?_isa} >= 3.0.0
-Group: Development/Libraries
+Group: Development/Libraries/C and C++
 Summary: Headers for building sipwitch plugins
 
 %package cgi
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Group: Applications/CGI
-Summary: cgi web interface to control sipwitch server
+Group: Productivity/Networking/Web/Utilities
+Summary: Cgi web interface to control sipwitch server
 
 %package plugin-zeroconf
 Requires: %{name}%{?_isa} = %{version}-%{release}
@@ -74,7 +88,7 @@ found or added to the core distribution directly.  This may also be for
 developing external application services which need to communicate with a
 running sipwitch daemon instance.
 
-%description runtime
+%description -n %libname
 Runtime library required for sipwitch development and for using the server.
 This is available as a separate package so that one building sipwitch plugins
 with the required devel package does not also require installing a server
@@ -113,17 +127,21 @@ remote voip service provider.
 %setup -q
 %build
 %cmake \
-	  -DCMAKE_INSTALL_CGIBINDIR=/var/www/cgi-bin \
-	  -DCMAKE_INSTALL_UNITDIR=%{_unitdir} \
-      -DSYSTEM_CONFIG:BOOL=TRUE \
-	  .
+      -DCMAKE_INSTALL_SYSCONFDIR:PATH=%{_sysconfdir} \
+	  -DCMAKE_INSTALL_LOCALSTATEDIR:PATH=%{_localstatedir} \
+	  -DCMAKE_INSTALL_CGIBINDIR:PATH=/srv/www/cgi-bin \
+	  -DSYSTEM_CONFIG:BOOL=TRUE
 
 %{__make} %{?_smp_mflags}
 
 %install
-%{__make} DESTDIR=%{buildroot} install
+%cmake_install
+
+%clean
+%{__rm} -rf %{buildroot}
 
 %files
+%defattr(-,root,root,-)
 %doc README COPYING NEWS FEATURES SUPPORT TODO NOTES AUTHORS MODULES ChangeLog
 %{_mandir}/man1/sipwitch.1*
 %{_mandir}/man1/sippasswd.1*
@@ -132,10 +150,10 @@ remote voip service provider.
 %{_sbindir}/sipw
 %{_bindir}/sipquery
 %{_bindir}/sipwitch
-%attr(04755,root,root) %{_bindir}/sippasswd
+%attr(0755,root,root) %{_bindir}/sippasswd
 %dir %{_libdir}/sipwitch
 %config(noreplace) %{_sysconfdir}/logrotate.d/sipwitch
-%attr(0755,root,root) %{_unitdir}/sipwitch.service
+%attr(0644,root,root) %{_prefix}/lib/systemd/system/sipwitch.service
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/sipwitch
 %attr(0775,root,root) %dir %{_sysconfdir}/sipwitch.d
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
@@ -143,43 +161,53 @@ remote voip service provider.
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.d/*.xml*
 
 %files cgi
+%defattr(-,root,root,-)
 %{_mandir}/man8/sipwitch.cgi.8*
-/var/www/cgi-bin/sipwitch.cgi
+/srv/www/cgi-bin/sipwitch.cgi
 
-%files runtime
+%files -n %libname
+%defattr(-,root,root,-)
 %{_libdir}/*.so.*
 
 %files plugin-zeroconf
+%defattr(-,root,root,-)
 %{_libdir}/sipwitch/zeroconf.so
 
 %files plugin-forward
+%defattr(-,root,root,-)
 %{_libdir}/sipwitch/forward.so
 
 %files plugin-scripting
+%defattr(-,root,root,-)
 %{_libdir}/sipwitch/scripting.so
 
 %files plugin-subscriber
+%defattr(-,root,root,-)
 %{_libdir}/sipwitch/subscriber.so
 
 %files devel
+%defattr(-,root,root,-)
 %{_libdir}/*.so
 %{_includedir}/sipwitch/
 %{_libdir}/pkgconfig/*.pc
 
-%post runtime
-/sbin/ldconfig
+%post -n %libname -p /sbin/ldconfig
+
+%postun -n %libname -p /sbin/ldconfig
+
+%pre
+%service_add_pre sipwitch.service
 
 %post
-%systemd_post sipwitch.service
+%service_add_post sipwitch.service
+%{__chmod} 04755 %{_bindir}/sippasswd
+%set_permissions /usr/bin/sippasswd
 
 %preun
-%systemd_preun sipwitch.service
+%service_del_preun sipwitch.service
 
 %postun
-%systemd_postun_with_restart sipwitch.service 
-
-%postun runtime
-/sbin/ldconfig
+%service_del_postun sipwitch.service
 
 %changelog
 

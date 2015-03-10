@@ -1,7 +1,7 @@
 Name: libsipwitch
 Description: Sip Witch supporting library for plugins
 Version: @VERSION@
-Requires: ucommon >= @UCOMMON_REQUIRES@
-Libs:  -lsipwitch @EXPORT_LIBS@ 
-Cflags: @EXPORT_FLAGS@
+Requires: ucommon >= @USES_UCOMMON_REQUIRED@
+Libs:  -lsipwitch @PKG_SIPWITCH_LIBS@ 
+Cflags: @PKG_SIPWITCH_FLAGS@
  

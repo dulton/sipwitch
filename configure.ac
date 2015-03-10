@@ -12,7 +12,7 @@ AC_INIT([sipwitch],[1.9.6])
 AC_CONFIG_SRCDIR([autogen.sh])
 
 LT_VERSION="1:23:0"
-UCOMMON_REQUIRES="6.0.0"
+USES_UCOMMON_REQUIRED="6.0.0"
 
 AC_CONFIG_AUX_DIR(autoconf)
 AC_CANONICAL_SYSTEM
@@ -54,8 +54,8 @@ fi
 export PKG_CONFIG_PATH
 
 INCLUDE_FLAGS=""
-EXPORT_LIBS=""
-EXPORT_FLAGS=""
+PKG_SIPWITCH_LIBS=""
+PKG_SIPWITCH_FLAGS=""
 SIPWITCH_LIBS=""
 SIPWITCH_FLAGS=""
 SERVER_FLAGS=""
@@ -144,7 +144,7 @@ fi
 
 AC_ARG_WITH(pkg-config,
     AC_HELP_STRING([--with-pkg-config],[enable support for pkg-config]),[
-    PKG_CHECK_MODULES(UCOMMON, ucommon >= $UCOMMON_REQUIRES)
+    PKG_CHECK_MODULES(UCOMMON, ucommon >= $USES_UCOMMON_REQUIRED)
 ],[
     AC_PATH_PROG([UCOMMON],[ucommon-config],[none])
     if test $UCOMMON = "none" ; then
@@ -244,8 +244,8 @@ fi
 AC_CHECK_HEADERS(sys/resource.h syslog.h net/if.h sys/sockio.h ioctl.h pwd.h sys/inotify.h)
 AC_CHECK_FUNCS(setrlimit setgroups setpgrp setrlimit getuid mkfifo gethostname symlink)
 
-SIPWITCH_FLAGS="$EXPORT_FLAGS $EXOSIP2_CFLAGS $LIBOSIP2_CFLAGS $UCOMMON_CFLAGS"
-SIPWITCH_LIBS="$EXPORT_LIBS $UCOMMON_LIBS $ac_with_malloc"
+SIPWITCH_FLAGS="$PKG_SIPWITCH_FLAGS $EXOSIP2_CFLAGS $LIBOSIP2_CFLAGS $UCOMMON_CFLAGS"
+SIPWITCH_LIBS="$PKG_SIPWITCH_LIBS $UCOMMON_LIBS $ac_with_malloc"
 ulibs=""
 slibs=""
 for lib in $UCOMMON_LIBS ; do
@@ -295,15 +295,15 @@ case "$SIPWITCH_FLAGS -I/usr/include" in
 *-I${default_incpath}*)
     ;;
 *)
-    EXPORT_FLAGS="$EXPORT_FLAGS -I$default_incpath"
+    PKG_SIPWITCH_FLAGS="$PKG_SIPWITCH_FLAGS -I$default_incpath"
     ;;
 esac
 
-case "-L/usr/lib $EXPORT_LIBS" in
+case "-L/usr/lib $PKG_SIPWITCH_LIBS" in
 *-L${default_libpath}*)
     ;;
 *)
-    EXPORT_LIBS="-L$default_libpath $EXPORT_LIBS"
+    PKG_SIPWITCH_LIBS="-L$default_libpath $PKG_SIPWITCH_LIBS"
     ;;
 esac
 
@@ -361,10 +361,10 @@ AC_SUBST(INITRDDIR)
 AC_SUBST(NETWORK_UP)
 AC_SUBST(NETWORK_DOWN)
 AC_SUBST(NETWORK_RELOAD)
-AC_SUBST(UCOMMON_REQUIRES)
+AC_SUBST(USES_UCOMMON_REQUIRED)
 AC_SUBST(DAEMON_LIBS)
-AC_SUBST(EXPORT_FLAGS)
-AC_SUBST(EXPORT_LIBS)
+AC_SUBST(PKG_SIPWITCH_FLAGS)
+AC_SUBST(PKG_SIPWITCH_LIBS)
 AC_SUBST(INCLUDE_FLAGS)
 AC_SUBST(UCOMMON_LINK)
 AC_SUBST(USECURE_LINK)
@@ -377,5 +377,5 @@ AC_SUBST(MODFLAGS)
 AC_SUBST(DLOPEN)
 AC_OUTPUT(Makefile common/Makefile inc/Makefile inc/sipwitch/Makefile
 server/Makefile utils/Makefile test/Makefile
-libsipwitch.pc sipwitch.spec directive)
+libsipwitch.pc sipwitch.spec directive PKGBUILD)
 

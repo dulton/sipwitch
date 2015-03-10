@@ -1,11 +1,11 @@
 Source: sipwitch
 Priority: optional
 Maintainer: David Sugar <dyfet@gnutelephony.org>
-Build-Depends: debhelper (>= 9),
+Build-Depends: debhelper (>= 9), cmake (>= 2.6.0),
                dpkg-dev (>= 1.16.0),
                libavahi-client-dev,
                libexosip2-dev (>= 3),
-               libucommon-dev (>= 1:6.0.0),
+               libucommon-dev (>= 1:6.3.1),
                pkg-config, dh-systemd (>= 1.3), 
                libsystemd-daemon-dev (>= 44)
 Standards-Version: 3.9.1

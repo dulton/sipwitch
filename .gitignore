@@ -1,6 +1,7 @@
 build/
 autoconf/
 CMakeFiles/
+PKGBUILD
 autom4te.cache/
 demo-*
 directive
