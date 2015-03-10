@@ -352,6 +352,8 @@ fi
 
 AM_CONDITIONAL(ZEROCONF, test ! -z "$zeroconf")
 
+PKG_SIPWITCH_LIBS="$PKG_SIPWITCH_LIBS $SIPWITCH_EXOSIP2"
+
 AC_SUBST(cgibindir)
 AC_SUBST(plugindir)
 AC_SUBST(translatedir)
