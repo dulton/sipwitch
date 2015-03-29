@@ -32,8 +32,10 @@ BuildRequires:  systemd-devel
 BuildRequires:  cmake
 %if 0%{?suse_version} >= 1210
 BuildRequires:  systemd
-%endif
 Recommends:     logrotate cron
+%else
+Requires:		logrotate cron
+%endif
 Requires(pre):  permissions
 Requires(post): systemd
 Requires(preun): systemd

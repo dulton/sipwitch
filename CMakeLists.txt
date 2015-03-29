@@ -146,7 +146,6 @@ STRING(COMPARE EQUAL "${BUILD_RUNTIME_TYPE}" "SHARED" HAVE_PLUGINS)
 pc_flags(PKG_SIPWITCH_FLAGS ${EXOSIP2_FLAGS})
 pc_libs(PKG_SIPWITCH_LIBS ${EXOSIP2_LIBS})
 
-
 create_headers()
 create_specfile()
 create_scripts(noinst_scr PKGBUILD)
@@ -225,43 +224,6 @@ else()
     install(TARGETS sipwitch-passwd DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-if(CMAKE_GENERATOR MATCHES "Unix Makefiles")
-    add_custom_target(cleandist
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}[-_]*.gz"
-        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}_*.dsc"
-        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}-*.rpm"
-        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}[-_]*.deb"
-        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/*${PACKAGE}*[-_]*.deb"
-        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}-*.zip"
-        COMMAND rm -f "${CMAKE_CURRENT_BINARY_DIR}/*${PACKAGE}*.changes"
-    )
-
-    add_custom_target(srpm
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        COMMAND rm -f *.rpm
-        COMMAND rpmbuild  -bs --nodeps --define "_sourcedir ." --define "_srcrpmdir ." --sign ${PACKAGE}.spec
-    )
-
-    add_custom_target(dist
-        DEPENDS cleandist
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        COMMAND git archive --format tar --output="${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}-${VERSION}.tar" --prefix="${PACKAGE}-${VERSION}/" HEAD
-        COMMAND gzip "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}-${VERSION}.tar"
-    )
-
-    add_custom_target(uninstall
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        COMMAND xargs <install_manifest.txt
-    )
-
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/packaging/debian/")
-        add_custom_target(deb
-            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-            COMMAND rm -f *.deb *.debian.tar.gz *.dsc *.changes
-            COMMAND cape-source --sign ${PACKAGE}-${VERSION}.tar.gz packaging
-        )
-    endif()
-endif()
+add_make_uninstall_target()
 
 
