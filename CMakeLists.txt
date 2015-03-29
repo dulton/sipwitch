@@ -1,4 +1,5 @@
-# Copyright (C) 2011 David Sugar, Tycho Softworks.
+# Copyright (C) 2011-2014 David Sugar, Tycho Softworks.
+# Copyright (C) 2015 Cherokees of Idaho.
 #
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without
@@ -10,7 +11,7 @@
 
 cmake_minimum_required(VERSION 2.6)
 PROJECT(sipwitch)
-set (VERSION 1.9.6)
+set (VERSION 1.9.7)
 set (USES_UCOMMON_REQUIRED 6.3.1)
 
 INCLUDE(CheckIncludeFiles)

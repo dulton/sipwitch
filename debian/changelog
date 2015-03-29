@@ -1,3 +1,10 @@
+sipwitch (1:1.9.7-1) UNRELEASED; urgency=low
+
+  * Updated for new ucommon macros
+  * Copyright assignment to Cherokees of Idaho
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 29 Mar 2015 08:47:29 -0400
+
 sipwitch (1:1.9.6-1) UNRELEASED; urgency=medium
 
   * More interal runlevel fixes

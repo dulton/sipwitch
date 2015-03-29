@@ -1,4 +1,5 @@
-// Copyright (C) 2008-2009 David Sugar, Tycho Softworks.
+// Copyright (C) 2008-2014 David Sugar, Tycho Softworks.
+// Copyright (C) 2015 Cherokees of Idaho.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

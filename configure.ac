@@ -1,4 +1,5 @@
-# Copyright (C) 2006-2010 David Sugar, Tycho Softworks.
+# Copyright (C) 2006-2014 David Sugar, Tycho Softworks.
+# Copyright (C) 2015 Cherokees of Idaho.
 #
 # This file is free software; as a special exception the author gives
 # unlimited permission to copy and/or distribute it, with or without
@@ -8,7 +9,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-AC_INIT([sipwitch],[1.9.6])
+AC_INIT([sipwitch],[1.9.7])
 AC_CONFIG_SRCDIR([autogen.sh])
 
 LT_VERSION="1:23:0"
