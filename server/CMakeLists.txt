@@ -25,7 +25,7 @@ install(TARGETS sipwitch-server DESTINATION ${CMAKE_INSTALL_SBINDIR})
 if(HAVE_PLUGINS)
     add_library(sipwitch-forward MODULE forward.cpp)
     add_dependencies(sipwitch-forward sipwitch ucommon)
-    target_link_libraries(sipwitch-forward sipwitch ${USES_UCOMMON_LIBRARIES})
+    target_link_libraries(sipwitch-forward sipwitch usecure ucommon ${USES_UCOMMON_LIBRARIES})
     set_target_properties(sipwitch-forward PROPERTIES OUTPUT_NAME forward SUFFIX ${MODULE_EXT} PREFIX "")
 
     add_library(sipwitch-scripting MODULE scripting.cpp)
