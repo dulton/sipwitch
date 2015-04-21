@@ -25,10 +25,10 @@
 
 namespace sipwitch {
 
-class __LOCAL thread : public DetachedThread, public Conditional
+class __LOCAL cdrthread : public DetachedThread, public Conditional
 {
 public:
-    thread();
+    cdrthread();
 
     inline void lock(void)
         {Conditional::lock();};
@@ -48,20 +48,20 @@ static LinkedObject *freelist = NULL;
 static LinkedObject *runlist = NULL;
 static Mutex private_lock;
 static memalloc private_heap;
-static thread run;
+static cdrthread run;
 static bool running = false;
 static bool down = false;
 static bool logging = false;
 
-thread::thread() : DetachedThread(), Conditional()
+cdrthread::cdrthread() : DetachedThread(), Conditional()
 {
 }
 
-void thread::exit(void)
+void cdrthread::exit(void)
 {
 }
 
-void thread::run(void)
+void cdrthread::run(void)
 {
     running = true;
     linked_pointer<cdr> cp;
