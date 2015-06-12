@@ -145,6 +145,11 @@ UserCache *UserCache::find(const char *id)
     return NULL;
 }
 
+void UserCache::release(void)
+{
+    LinkedObject::release();
+}
+
 void UserCache::release(UserCache *entry)
 {
     if(entry)

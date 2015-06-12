@@ -306,6 +306,11 @@ service::callback(1), mapped_array<MappedCall>(), OrderedIndex()
     invite_expires = 120;
 }
 
+void stack::release(void)
+{
+    LinkedObject::release();
+}
+
 void stack::disableDumping(void)
 {
     stack::sip.dumping = false;
@@ -1405,7 +1410,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
 
 bool stack::forward(stack::call *cr)
 {
-    unsigned count = cr->invited;
+    unsigned invited = cr->invited;
 
 repeat:
     service::usernode user;
@@ -1453,7 +1458,7 @@ repeat:
     if(rr) {
         cr->forwarding = "na";
         inviteLocal(cr->source, rr, FORWARDED);
-        if(cr->forwarding && !String::equal("na", cr->forwarding) && cr->invited == count) {
+        if(cr->forwarding && !String::equal("na", cr->forwarding) && cr->invited == invited) {
             registry::detach(rr);
             goto repeat;
         }
@@ -1478,7 +1483,7 @@ failed:
     return false;
 
 test:
-    if(cr->invited > count)
+    if(cr->invited > invited)
         return true;
 
     return false;

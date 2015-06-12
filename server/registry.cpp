@@ -455,7 +455,7 @@ unsigned registry::cleanup(time_t period)
     unsigned regcount = 0;
     time_t now;
     bool expired;
-    unsigned count = 0;
+    unsigned expcount = 0;
 
     while(regcount < mapped_entries) {
         expired = false;
@@ -474,11 +474,11 @@ unsigned registry::cleanup(time_t period)
         locking.commit();
         Thread::yield();
         if(expired) {
-            ++count;
+            ++expcount;
             server::expire(&save);
         }
     }
-    return count;
+    return expcount;
 }
 
 void registry::reload(service *cfg)
@@ -489,7 +489,6 @@ void registry::reload(service *cfg)
     static const char *oldrealm = "-";
     const char *key = NULL, *value;
     linked_pointer<service::keynode> sp = cfg->getList("registry");
-    fsys_t fd;
 
     digest = (char *)"MD5";
     realm = NULL;

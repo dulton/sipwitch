@@ -151,7 +151,7 @@ event_thread::event_thread() : JoinableThread()
 void event_thread::run(void)
 {
     socket_t client;
-    events msg;
+    events evt;
 
     time(&started);
 
@@ -166,18 +166,18 @@ void event_thread::run(void)
         events::sync();
         shell::log(DEBUG3, "connecting client events for %ld", (long)client);
 
-        msg.type = events::WELCOME;
-        msg.server.started = started;
-        String::set(msg.server.version, sizeof(msg.server.version), VERSION);
+        evt.type = events::WELCOME;
+        evt.msg.server.started = started;
+        String::set(evt.msg.server.version, sizeof(evt.msg.server.version), VERSION);
         private_locking.acquire();
-        String::set(msg.server.state, sizeof(msg.server.state), *saved_state);
-        String::set(msg.server.realm, sizeof(msg.server.realm), *saved_realm);
+        String::set(evt.msg.server.state, sizeof(evt.msg.server.state), *saved_state);
+        String::set(evt.msg.server.realm, sizeof(evt.msg.server.realm), *saved_realm);
         private_locking.release();
-        ::send(client, (const char *)&msg, sizeof(msg), 0);
+        ::send(client, (const char *)&evt, sizeof(evt), 0);
 
-        String::set(msg.contact, sizeof(msg.contact), *service::getContact());
-        msg.type = events::CONTACT;
-        ::send(client, (const char *)&msg, sizeof(msg), 0);
+        String::set(evt.msg.contact, sizeof(evt.msg.contact), *service::getContact());
+        evt.type = events::CONTACT;
+        ::send(client, (const char *)&evt, sizeof(evt), 0);
 
         dispatch::add(client);
     }
@@ -246,146 +246,146 @@ failed:
 
 void events::connect(cdr *rec)
 {
-    events msg;
-    msg.type = CALL;
-    msg.call.started = rec->starting;
-    String::set(msg.call.reason, sizeof(msg.call.reason), rec->reason);
-    String::set(msg.call.network, sizeof(msg.call.network), rec->network);
-    String::set(msg.call.caller, sizeof(msg.call.caller), rec->ident);
-    String::set(msg.call.dialed, sizeof(msg.call.dialed), rec->dialed);
-    String::set(msg.call.display, sizeof(msg.call.display), rec->display);
-    dispatch::send(&msg);
+    events evt;
+    evt.type = CALL;
+    evt.msg.call.started = rec->starting;
+    String::set(evt.msg.call.reason, sizeof(evt.msg.call.reason), rec->reason);
+    String::set(evt.msg.call.network, sizeof(evt.msg.call.network), rec->network);
+    String::set(evt.msg.call.caller, sizeof(evt.msg.call.caller), rec->ident);
+    String::set(evt.msg.call.dialed, sizeof(evt.msg.call.dialed), rec->dialed);
+    String::set(evt.msg.call.display, sizeof(evt.msg.call.display), rec->display);
+    dispatch::send(&evt);
 }
 
 void events::drop(cdr *rec)
 {
-    events msg;
-    msg.type = DROP;
-    String::set(msg.call.caller, sizeof(msg.call.caller), rec->ident);
-    String::set(msg.call.dialed, sizeof(msg.call.dialed), rec->dialed);
-    String::set(msg.call.display, sizeof(msg.call.display), rec->display);
-    dispatch::send(&msg);
+    events evt;
+    evt.type = DROP;
+    String::set(evt.msg.call.caller, sizeof(evt.msg.call.caller), rec->ident);
+    String::set(evt.msg.call.dialed, sizeof(evt.msg.call.dialed), rec->dialed);
+    String::set(evt.msg.call.display, sizeof(evt.msg.call.display), rec->display);
+    dispatch::send(&evt);
 
 }
 
 void events::activate(MappedRegistry *rr)
 {
-    events msg;
+    events evt;
 
-    msg.type = ACTIVATE;
-    String::set(msg.user.id, sizeof(msg.user.id), rr->userid);
-    msg.user.extension  = rr->ext;
-    dispatch::send(&msg);
+    evt.type = ACTIVATE;
+    String::set(evt.msg.user.id, sizeof(evt.msg.user.id), rr->userid);
+    evt.msg.user.extension  = rr->ext;
+    dispatch::send(&evt);
 }
 
 void events::release(MappedRegistry *rr)
 {
-    events msg;
+    events evt;
 
-    msg.type = RELEASE;
-    String::set(msg.user.id, sizeof(msg.user.id), rr->userid);
-    msg.user.extension  = rr->ext;
-    dispatch::send(&msg);
+    evt.type = RELEASE;
+    String::set(evt.msg.user.id, sizeof(evt.msg.user.id), rr->userid);
+    evt.msg.user.extension  = rr->ext;
+    dispatch::send(&evt);
 }
 
 void events::realm(const char *str)
 {
-    events msg;
+    events evt;
 
     private_locking.acquire();
     saved_realm = str;
     private_locking.release();
-    msg.type = REALM;
-    String::set(msg.server.realm, sizeof(msg.server.realm), str);
-    dispatch::send(&msg);
+    evt.type = REALM;
+    String::set(evt.msg.server.realm, sizeof(evt.msg.server.realm), str);
+    dispatch::send(&evt);
 }
 
 void events::state(const char *str)
 {
-    events msg;
+    events evt;
 
     private_locking.acquire();
     saved_state = str;
     private_locking.release();
-    msg.type = STATE;
-    String::set(msg.server.state, sizeof(msg.server.state), str);
-    dispatch::send(&msg);
+    evt.type = STATE;
+    String::set(evt.msg.server.state, sizeof(evt.msg.server.state), str);
+    dispatch::send(&evt);
 }
 
 void events::sync(unsigned sync_period)
 {
-    events msg;
-    msg.type = SYNC;
-    msg.period = sync_period;
-    dispatch::send(&msg);
+    events evt;
+    evt.type = SYNC;
+    evt.msg.period = sync_period;
+    dispatch::send(&evt);
 }
 
 void events::notice(const char *reason)
 {
-    events msg;
+    events evt;
 
-    msg.type = NOTICE;
-    String::set(msg.reason, sizeof(msg.reason), reason);
-    dispatch::send(&msg);
+    evt.type = NOTICE;
+    String::set(evt.msg.reason, sizeof(evt.msg.reason), reason);
+    dispatch::send(&evt);
 }
 
 void events::warning(const char *reason)
 {
-    events msg;
+    events evt;
 
-    msg.type = WARNING;
-    String::set(msg.reason, sizeof(msg.reason), reason);
-    dispatch::send(&msg);
+    evt.type = WARNING;
+    String::set(evt.msg.reason, sizeof(evt.msg.reason), reason);
+    dispatch::send(&evt);
 }
 
 void events::failure(const char *reason)
 {
-    events msg;
+    events evt;
 
-    msg.type = FAILURE;
-    String::set(msg.reason, sizeof(msg.reason), reason);
-    dispatch::send(&msg);
+    evt.type = FAILURE;
+    String::set(evt.msg.reason, sizeof(evt.msg.reason), reason);
+    dispatch::send(&evt);
 }
 
 void events::reload(void)
 {
-    events msg;
+    events evt;
 
-    msg.type = CONTACT;
-    String::set(msg.contact, sizeof(msg.contact), *service::getContact());
-    dispatch::send(&msg);
+    evt.type = CONTACT;
+    String::set(evt.msg.contact, sizeof(evt.msg.contact), *service::getContact());
+    dispatch::send(&evt);
 
-    msg.type = PUBLISH;
+    evt.type = PUBLISH;
     volatile char *addr = service::callback::sip_publish;
     if(addr) {
         string_t uri = str("sip:") + (const char *)addr;
-        String::set(msg.contact, sizeof(msg.contact), *uri);
-        dispatch::send(&msg);
+        String::set(evt.msg.contact, sizeof(evt.msg.contact), *uri);
+        dispatch::send(&evt);
     }
 }
 
 void events::publish(const char *addr)
 {
-    events msg;
+    events evt;
 
-    msg.type = PUBLISH;
+    evt.type = PUBLISH;
     string_t uri = str("sip:") + addr;
-    String::set(msg.contact, sizeof(msg.contact), *uri);
-    dispatch::send(&msg);
+    String::set(evt.msg.contact, sizeof(evt.msg.contact), *uri);
+    dispatch::send(&evt);
 }
 
 void events::terminate(const char *reason)
 {
-    events msg;
+    events evt;
 
     if(ipc == INVALID_SOCKET)
         return;
 
-    msg.type = TERMINATE;
-    String::set(msg.reason, sizeof(msg.reason), reason);
+    evt.type = TERMINATE;
+    String::set(evt.msg.reason, sizeof(evt.msg.reason), reason);
 
     Socket::release(ipc);
-    dispatch::stop(&msg);
+    dispatch::stop(&evt);
     ::remove(control::env("events"));
     ipc = INVALID_SOCKET;
 }

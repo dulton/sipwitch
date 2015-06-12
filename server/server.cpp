@@ -655,7 +655,7 @@ void server::listPolicy(FILE *fp)
             ha = pp->getNetmask();
             memcpy(&ipv6->sin6_addr, &ha, sizeof(ipv6->sin6_addr));
             ipv6->sin6_family = AF_INET6;
-            Socket::query((struct sockaddr *)ipv4, bmask, sizeof(bmask));
+            Socket::query((struct sockaddr *)ipv6, bmask, sizeof(bmask));
             break;
 #endif
         case AF_INET:

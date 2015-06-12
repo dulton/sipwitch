@@ -392,6 +392,8 @@ private:
     timeout_t ring_timer, cfna_timer, reset_timer;
     unsigned invite_expires;
 
+    void release(void);
+
 public:
     static stack sip;
 
@@ -696,6 +698,9 @@ public:
     // proxy socket class
     class __LOCAL proxy : public LinkedObject
     {
+    private:
+        void release(void);
+
     public:
         socket_t so;
         time_t expires;
@@ -742,6 +747,8 @@ private:
 
     // see if connected directly or if requires proxy
     static bool isProxied(const char *source, const char *target, struct sockaddr_storage *peering);
+
+    void release(void);
 };
 
 class __LOCAL history : public OrderedObject, public control

@@ -144,6 +144,11 @@ media::proxy::~proxy()
     Socket::release(so);
 }
 
+void media::proxy::release()
+{
+    LinkedObject::release();
+}
+
 void media::proxy::copy(void)
 {
     char buffer[1024];
@@ -299,7 +304,7 @@ void media::sdp::check_media(char *buffer, size_t len)
     char tmp[128];
     char mtype[32];
     unsigned tport;
-    unsigned count = 1;
+    unsigned tcount = 1;
     media::proxy *pp;
 
     if(strnicmp(buffer, "m=", 2))
@@ -318,16 +323,16 @@ void media::sdp::check_media(char *buffer, size_t len)
 
     ep = strchr(cp, '/');
     if(ep)
-        count = atoi(ep + 1);
+        tcount = atoi(ep + 1);
 
     // at the moment we can only do rtp/rtcp pairs...
-    if(count > 2) {
+    if(tcount > 2) {
         result = NULL;
         return;
     }
 
-    mediacount = count;
-    count = align(count);
+    mediacount = tcount;
+    tcount = align(tcount);
 
     ep = strchr(cp, ' ');
     if(!ep)
@@ -336,12 +341,12 @@ void media::sdp::check_media(char *buffer, size_t len)
         ++ep;
 
     mediaport = tport;
-    mediacount = count;
+    mediacount = tcount;
     tport = 0;
 
     lock.acquire();
     String::set(tmp, sizeof(tmp), ep);
-    while(count--) {
+    while(tcount--) {
         pp = media::get(this);
         if(!pp) {
             result = NULL;
@@ -418,25 +423,30 @@ invalid:
 
 size_t media::sdp::put(char *buffer)
 {
-    size_t count = 0;
+    size_t outsize = 0;
 
     if(!outdata)
         return 0;
 
     while(*buffer && outpos < (MAX_SDP_BUFFER - 2)) {
-        ++count;
+        ++outsize;
         *(outdata++) = *(buffer++);
     }
 
     *(outdata++) = '\r';
     *(outdata++) = '\n';
     *outdata = 0;
-    return count + 2;
+    return outsize + 2;
 }
 
 media::media() :
 service::callback(DEFAULT_RUNLEVEL)
 {
+}
+
+void media::release(void)
+{
+    LinkedObject::release();
 }
 
 void media::reload(service *cfg)

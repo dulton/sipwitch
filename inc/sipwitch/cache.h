@@ -83,6 +83,9 @@ public:
  */
 class __EXPORT UserCache : public Cache
 {
+private:
+    void release(void);
+
 protected:
     UserCache();
 
@@ -112,7 +115,7 @@ public:
     static UserCache *find(const char *id);
 
     /**
-     * Release a found user record.
+     * Detach a found user record.
      * @param entry to release or NULL if none.
      */
     static void release(UserCache *entry);
