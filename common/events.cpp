@@ -312,11 +312,11 @@ void events::state(const char *str)
     dispatch::send(&msg);
 }
 
-void events::sync(unsigned period)
+void events::sync(unsigned sync_period)
 {
     events msg;
     msg.type = SYNC;
-    msg.period = period;
+    msg.period = sync_period;
     dispatch::send(&msg);
 }
 

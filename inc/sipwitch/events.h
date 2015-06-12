@@ -106,7 +106,7 @@ public:
         char contact[160];
         char reason[160];
         unsigned period;
-    };
+    } msg;
 
     /**
      * Start server event system by binding event session listener.

@@ -481,64 +481,64 @@ static void showevents(char **argv)
     while(::recv(ipc, (char *)&event, sizeof(event), 0) == sizeof(event)) {
         switch(event.type) {
         case events::FAILURE:
-            printf("failure: %s\n", event.reason);
+            printf("failure: %s\n", event.msg.reason);
             break;
         case events::WARNING:
-            printf("warning: %s\n", event.reason);
+            printf("warning: %s\n", event.msg.reason);
             break;
         case events::NOTICE:
-            printf("notice:  %s\n", event.reason);
+            printf("notice:  %s\n", event.msg.reason);
             break;
         case events::CONTACT:
-            if(!eq(contact, event.contact)) {
-                printf("contact: %s\n", event.contact);
-                contact ^= event.contact;
+            if(!eq(contact, event.msg.contact)) {
+                printf("contact: %s\n", event.msg.contact);
+                contact ^= event.msg.contact;
             }
             break;
         case events::PUBLISH:
-            if(!eq(publish, event.contact)) {
-                printf("publish: %s\n", event.contact);
-                publish ^= event.contact;
+            if(!eq(publish, event.msg.contact)) {
+                printf("publish: %s\n", event.msg.contact);
+                publish ^= event.msg.contact;
             }
             break;
         case events::WELCOME:
             printf("server version %s %s\n",
-                event.server.version, event.server.state);
+                event.msg.server.version, event.msg.server.state);
             break;
         case events::TERMINATE:
-            printf("exiting: %s\n", event.reason);
+            printf("exiting: %s\n", event.msg.reason);
             exit(0);
         case events::CALL:
             printf("connecting %s to %s on %s\n",
-                event.call.caller, event.call.dialed, event.call.network);
+                event.msg.call.caller, event.msg.call.dialed, event.msg.call.network);
             break;
         case events::DROP:
             printf("disconnect %s from %s, reason=%s\n",
-                event.call.caller, event.call.dialed, event.call.reason);
+                event.msg.call.caller, event.msg.call.dialed, event.msg.call.reason);
             break;
         case events::RELEASE:
-            if(event.user.extension)
+            if(event.msg.user.extension)
                 printf("releasing %s, extension %d\n",
-                    event.user.id, event.user.extension);
+                    event.msg.user.id, event.msg.user.extension);
             else
-                printf("releasing %s\n", event.user.id);
+                printf("releasing %s\n", event.msg.user.id);
             break;
         case events::ACTIVATE:
-            if(event.user.extension)
+            if(event.msg.user.extension)
                 printf("activating %s, extension %d\n",
-                    event.user.id, event.user.extension);
+                    event.msg.user.id, event.msg.user.extension);
             else
-                printf("activating %s\n", event.user.id);
+                printf("activating %s\n", event.msg.user.id);
             break;
         case events::STATE:
-            printf("changing state to %s\n", event.server.state);
+            printf("changing state to %s\n", event.msg.server.state);
             break;
         case events::REALM:
-            printf("changing realm to %s\n", event.server.realm);
+            printf("changing realm to %s\n", event.msg.server.realm);
             break;
         case events::SYNC:
-            if(event.period)
-                printf("housekeeping period %d\n", event.period);
+            if(event.msg.period)
+                printf("housekeeping period %d\n", event.msg.period);
             break;
         }
     }
