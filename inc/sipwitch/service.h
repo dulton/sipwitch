@@ -158,9 +158,6 @@ public:
      */
     class __EXPORT instance
     {
-    private:
-        int state;
-
     public:
         instance();
         ~instance();
