@@ -1403,7 +1403,7 @@ static void post(FILE *inp = stdin)
     char *cp;
     char *value;
     char *map = NULL;
-    char *method;
+    char *method = NULL;
     bool name_flag = false;
 
     params.argc = 0;
