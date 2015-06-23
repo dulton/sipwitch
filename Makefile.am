@@ -31,6 +31,9 @@ deb:	dist
 	rm -f *.deb *.debian.tar.gz *.dsc *.changes
 	cape-source --sign sipwitch-${VERSION}.tar.gz .
 
+lint:
+	cppcheck --force -q .
+
 dist-hook:  cleandist
 
 cleandist:

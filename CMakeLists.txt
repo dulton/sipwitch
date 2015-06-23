@@ -225,6 +225,7 @@ else()
     install(TARGETS sipwitch-passwd DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
+add_make_lint_target()
 add_make_uninstall_target()
 
 
