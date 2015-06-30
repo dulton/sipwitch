@@ -11,15 +11,15 @@
 
 MAINTAINERCLEANFILES = Makefile.in Makefile
 AM_CXXFLAGS = -I$(top_srcdir)/inc @SIPWITCH_FLAGS@
-EXTRA_DIST = sipwitch.1 sipquery.1 sippasswd.1 sipwitch.cgi.8
+EXTRA_DIST = sipwitchctl.1 sipquery.1 sippasswd.1 sipwitch.cgi.8
 
 man_MANS = sipwitch.1 sipquery.1 sippasswd.1 sipwitch.cgi.8
 
-bin_PROGRAMS = sipquery sipwitch sippasswd 
+bin_PROGRAMS = sipquery sipwitchctl sippasswd 
 cgibin_PROGRAMS = sipwitch.cgi
 
-sipwitch_SOURCES = sipwitch.cpp
-sipwitch_LDADD = @LDFLAGS@ @SIPWITCH_LIBS@
+sipwitchctl_SOURCES = sipwitch.cpp
+sipwitchctl_LDADD = @LDFLAGS@ @SIPWITCH_LIBS@
 
 sipquery_SOURCES = sipquery.cpp
 sipquery_LDADD = @LDFLAGS@ @SIPWITCH_EXOSIP2@ @SIPWITCH_LIBS@

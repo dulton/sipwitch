@@ -146,13 +146,13 @@ remote voip service provider.
 %files
 %defattr(-,root,root,-)
 %doc README COPYING NEWS FEATURES SUPPORT TODO NOTES AUTHORS MODULES ChangeLog
-%{_mandir}/man1/sipwitch.1*
+%{_mandir}/man1/sipwitchctl.1*
 %{_mandir}/man1/sippasswd.1*
 %{_mandir}/man1/sipquery.1*
 %{_mandir}/man8/sipw.8*
 %{_sbindir}/sipw
 %{_bindir}/sipquery
-%{_bindir}/sipwitch
+%{_bindir}/sipwitchctl
 %attr(0755,root,root) %{_bindir}/sippasswd
 %dir %{_libdir}/sipwitch
 %config(noreplace) %{_sysconfdir}/logrotate.d/sipwitch
