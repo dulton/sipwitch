@@ -1,5 +1,5 @@
 usr/bin/sipquery
-usr/bin/sipwitchctl
+usr/bin/sipwcontrol
 usr/bin/sippasswd
 usr/sbin/*
 etc/sipwitch.conf
@@ -7,7 +7,7 @@ etc/sipwitch.d/*.xml*
 etc/network/if-up.d/sipwitch
 etc/network/if-down.d/sipwitch
 usr/share/man/man8/sipw.8*
-usr/share/man/man1/sipwitchctl.1*
+usr/share/man/man1/sipwcontrol.1*
 usr/share/man/man1/sippasswd.1*
 usr/share/man/man1/sipquery.1*
 

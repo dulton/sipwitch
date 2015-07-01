@@ -188,7 +188,7 @@ endif()
 add_executable(sipwitch-control utils/sipwitch.cpp)
 set_source_dependencies(sipwitch-control usecure ucommon)
 target_link_libraries(sipwitch-control usecure ucommon ${USES_UCOMMON_LIBRARIES})
-set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipwitchctl)
+set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipwcontrol)
 
 if(CMAKE_SYSTEM_NAME STREQUAL Linux)
     # in DEBIAN we would set this off, in opensuse/rpm based, on...
