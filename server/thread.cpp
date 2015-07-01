@@ -705,10 +705,11 @@ bool thread::authorize(void)
     time_t now;
     unsigned level;
     profile_t *pro;
-    const char *target = dialing;
+    const char *target = NULL;
     char dbuf[MAX_USERID_SIZE];
     registry::pattern *pp;
-    unsigned to_port = stack::sip_port, local_port = stack::sip_port;
+//    unsigned to_port = stack::sip_port;
+    unsigned local_port = stack::sip_port;
     const char *sep1 = "", *sep2 = "";
     const char *refer = NULL;
     const char *uri_host;
@@ -779,14 +780,14 @@ bool thread::authorize(void)
         local_port = atoi(uri->port);
     if(from->url->port)
         from_port = atoi(from->url->port);
-    if(to->url->port && to->url->port[0])
-        to_port = atoi(to->url->port);
+//    if(to->url->port && to->url->port[0])
+//        to_port = atoi(to->url->port);
     if(!local_port)
         local_port = 5060;
     if(!from_port)
         from_port = 5060;
-    if(!to_port)
-        to_port = 5060;
+//    if(!to_port)
+//        to_port = 5060;
 
 /*  shell::debug(3, "request from=%s:%s@%s:%d, uri=%s:%s@%s:%d, to=%s:%s@%s:%d\n",
         from->url->scheme, from->url->username, from->url->host, from_port,

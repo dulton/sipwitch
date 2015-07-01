@@ -156,6 +156,7 @@ void srv::set(const char *uri)
     uint16_t acount, qcount;
     unsigned char *mp, *ep, *cp;
     uint16_t type, weight, priority, hport, dlen;
+    srv::address *current = NULL;
 
     if(nosrv)
         goto nosrv;
@@ -232,7 +233,6 @@ void srv::set(const char *uri)
 
         if(sp) {
             uint16_t rand;
-            srv::address *current = NULL;
 
             Random::fill((unsigned char *)&rand, sizeof(rand));
             rand &= 0x7fff;
@@ -338,11 +338,9 @@ voip::context_t srv::route(const char *uri, char *buf, size_t size)
         ctx = service::callback::tls_context;
     }
     else if(eq(uri, "tcp:", 4)) {
-        uri += 4;
         ctx = service::callback::tcp_context;
     }
     else if(eq(uri, "udp:", 4)) {
-        uri += 4;
         ctx = service::callback::udp_context;
     }
 

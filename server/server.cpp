@@ -492,7 +492,6 @@ void server::confirm(void)
 
     node = base->getFirst();
     while(is(node)) {
-        ifcount = 0;
         id = NULL;
         leaf = node->leaf("id");
         if(leaf && leaf->getPointer())

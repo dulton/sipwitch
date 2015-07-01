@@ -72,8 +72,8 @@ public:
     class address
     {
     public:
-	struct sockaddr_storage addr;
-	uint16_t weight, priority;
+	    struct sockaddr_storage addr;
+	    uint16_t weight, priority;
     };
 
 protected:

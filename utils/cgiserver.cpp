@@ -836,7 +836,7 @@ skip:
     }
 
     if(*fmt == '$' || end_flag)
-        count += xmlformat(buffer + count, max - count,
+        xmlformat(buffer + count, max - count,
             " </param></params>\r\n"
             "</methodResponse>\r\n");
 
@@ -879,7 +879,7 @@ static void fault(int code, const char *string)
         "  <member><name>faultString</name>\r\n"
         "   <value><string>", code);
     count += xmltext(buffer + count, sizeof(buffer) - count, string);
-    count += xmlformat(buffer + count, sizeof(buffer) - count,
+    xmlformat(buffer + count, sizeof(buffer) - count,
         "</string></value></member>\r\n"
         " </struct></value></fault>\r\n"
         "</methodResponse>\r\n");
