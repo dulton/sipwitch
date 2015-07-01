@@ -28,7 +28,7 @@ sipwitch-config.h
 sipwitch-config.h.in
 sippasswd
 sipquery
-sipwitchctl
+sipcontrol
 moc_*.c*
 qrc_*.c*
 ui_*.c*
