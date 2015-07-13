@@ -310,7 +310,7 @@ struct sockaddr *srv::next(void)
         if(!node || np->priority < node->priority || np->weight > node->weight)
             node = np;
     }
-    if(!np) {
+    if(!node) {
         entry = NULL;
         return NULL;
     }

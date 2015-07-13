@@ -274,8 +274,10 @@ void service::publish(const char *addr)
     Socket::address resolver;
     struct sockaddr *host;
 
-    if(!addr)
+    if(!addr) {
         memset(&peering, 0, sizeof(peering));
+        return;
+    }
 
     int i = 0;
     resolver.set(addr, i);
