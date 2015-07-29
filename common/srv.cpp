@@ -67,6 +67,51 @@ srv::srv() : Socket::address()
     count = 0;
 }
 
+uint16_t srv::after(uint16_t prior)
+{
+    uint16_t next = 0;
+    uint16_t current;
+
+    unsigned index = 0;
+    while(index < count) {
+        current = srvlist[index++].priority;
+        if(current > prior && current < next)
+            next = current;
+    }
+    return next;
+}
+
+uint32_t srv::total(uint16_t priority)
+{
+    uint32_t result = 0;
+    unsigned index = 0;
+
+    while(index < count) {
+        if(srvlist[index].priority == priority) {
+            result += srvlist[index].weight;
+        }
+        ++index;
+    }
+    return result;
+}        
+
+struct sockaddr *srv::find(uint16_t priority, uint32_t weight)
+{
+    uint32_t total = 0;
+    unsigned index = 0;
+
+    while(index < count) {
+        if(srvlist[index].priority == priority) {
+            total += srvlist[index].weight;
+            if(total >= weight) {
+                return (struct sockaddr *)&srvlist[index].addr;
+            }
+        }
+        ++index;
+    }
+    return NULL;
+}
+
 void srv::set(const char *uri)
 {
     int protocol = IPPROTO_UDP;
