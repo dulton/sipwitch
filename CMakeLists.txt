@@ -192,10 +192,10 @@ if(UNIX AND CMAKE_COMPILER_IS_GNUCXX)
     set_target_properties(sipwitch-passwd PROPERTIES COMPILE_FLAGS "${CMAKE_COMPILE_SETUID_FLAGS}" LINK_FLAGS "${CMAKE_LINK_SETUID_FLAGS}" POSITION_INDEPENDENT_CODE TRUE )
 endif()
 
-add_executable(sipwitch-control utils/sipwcontrol.cpp)
+add_executable(sipwitch-control utils/sipcontrol.cpp)
 set_source_dependencies(sipwitch-control usecure ucommon)
 target_link_libraries(sipwitch-control usecure ucommon ${USES_UCOMMON_LIBRARIES})
-set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipwcontrol)
+set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipcontrol)
 
 if(CMAKE_SYSTEM_NAME STREQUAL Linux)
     # in DEBIAN we would set this off, in opensuse/rpm based, on...
