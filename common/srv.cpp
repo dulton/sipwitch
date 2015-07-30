@@ -24,6 +24,11 @@
 #ifdef  HAVE_RESOLV_H
 extern "C" {
 #include <resolv.h>
+
+#if defined(__APPLE__) && defined(__MACH__)
+#include <arpa/nameser_compat.h>
+#endif
+
 }
 
 #if PACKETSZ > 1024

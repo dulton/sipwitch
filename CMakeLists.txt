@@ -127,6 +127,13 @@ if(WIN32 AND NOT CYGWIN)
     set(EXOSIP2_LIBS ${EXOSIP2_LIBS} iphlpapi dnsapi ws2_32 crypt32)
 endif()
 
+if(APPLE)
+    find_library(CORE_FOUNDATION CoreFoundation)
+    find_library(CORE_SERVICES CoreServices)
+    find_library(APPLE_SECURITY Security)
+    set(EXOSIP2_LIBS ${EXOSIP2_LIBS} ${APPLE_SECURITY} ${CORE_SERVICES} ${CORE_FOUNDATION})
+endif()
+
 check_function_exists(setrlimit HAVE_SETRLIMIT)
 check_function_exists(setgroups HAVE_SETGROUPS)
 check_function_exists(setpgrp HAVE_SETPGRP)
