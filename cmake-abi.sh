@@ -20,4 +20,4 @@ if test -x "/bin/echo" ; then
 elif test -x "/usr/bin/echo" ; then
 	echo="/usr/bin/echo"
 fi	
-$echo -n $release.$compat.$abi
+$echo $release.$compat.$abi

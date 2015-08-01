@@ -314,7 +314,7 @@ void forward::activating(MappedRegistry *rr)
         len = strlen(contact);
         Socket::query((struct sockaddr *)&rr->contact, contact + len, sizeof(contact) - len);
         len = strlen(contact);
-        snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::service((struct sockaddr *)&rr->contact));
+        snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::address::getPort((struct sockaddr *)&rr->contact));
         shell::debug(3, "registering %s with %s", contact, server);
         voip::msg_t msg = NULL;
         rr->rid = voip::make_registry_request(context, uri, reg, contact, (unsigned)expires, &msg);
@@ -342,7 +342,7 @@ bool forward::announce(MappedRegistry *rr, const char *msgtype, const char *even
     len = strlen(contact);
     Socket::query((struct sockaddr *)&rr->contact, contact + len, sizeof(contact) - len);
     len = strlen(contact);
-    snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::service((struct sockaddr *)&rr->contact));
+    snprintf(contact + len, sizeof(contact) - len, ":%d", Socket::address::getPort((struct sockaddr *)&rr->contact));
     shell::debug(3, "publishing %s with %s", contact, server);
 
     voip::publish(context, uri_to, contact, event, expiration, msgtype, body);

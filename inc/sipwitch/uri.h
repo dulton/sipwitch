@@ -102,6 +102,12 @@ public:
 
     struct sockaddr *next(void);
 
+    uint16_t after(uint16_t priority = 0);
+
+    uint32_t total(uint16_t priority);
+
+    struct sockaddr *find(uint16_t priority, uint32_t weight);
+
     voip::context_t route(const char *uri, char *buf, size_t size);
 
 };

@@ -1,6 +1,7 @@
 build/
 autoconf/
 CMakeFiles/
+CTestTestfile.cmake
 PKGBUILD
 autom4te.cache/
 demo-*
@@ -22,6 +23,7 @@ libtool
 stamp-h1
 server/*.test
 server/sipw
+sipwcontrol
 sipwitch.cgi
 sipwitch-config
 sipwitch-config.h
@@ -37,6 +39,7 @@ ui_*.h
 *.depends
 *.a
 *.o
+*.dylib
 *.lo
 *.la
 *.so*

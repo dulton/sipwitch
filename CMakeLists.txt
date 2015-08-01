@@ -127,6 +127,13 @@ if(WIN32 AND NOT CYGWIN)
     set(EXOSIP2_LIBS ${EXOSIP2_LIBS} iphlpapi dnsapi ws2_32 crypt32)
 endif()
 
+if(APPLE)
+    find_library(CORE_FOUNDATION CoreFoundation)
+    find_library(CORE_SERVICES CoreServices)
+    find_library(APPLE_SECURITY Security)
+    set(EXOSIP2_LIBS ${EXOSIP2_LIBS} ${APPLE_SECURITY} ${CORE_SERVICES} ${CORE_FOUNDATION})
+endif()
+
 check_function_exists(setrlimit HAVE_SETRLIMIT)
 check_function_exists(setgroups HAVE_SETGROUPS)
 check_function_exists(setpgrp HAVE_SETPGRP)
@@ -180,10 +187,10 @@ target_link_libraries(sipwitch-passwd usecure ucommon ${USES_UCOMMON_LIBRARIES})
 target_setuid_properties(sipwitch-passwd)
 set_target_properties(sipwitch-passwd PROPERTIES OUTPUT_NAME sippasswd)
 
-add_executable(sipwitch-control utils/sipwcontrol.cpp)
+add_executable(sipwitch-control utils/sipcontrol.cpp)
 set_source_dependencies(sipwitch-control usecure ucommon)
 target_link_libraries(sipwitch-control usecure ucommon ${USES_UCOMMON_LIBRARIES})
-set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipwcontrol)
+set_target_properties(sipwitch-control PROPERTIES OUTPUT_NAME sipcontrol)
 
 if(CMAKE_SYSTEM_NAME STREQUAL Linux)
     # in DEBIAN we would set this off, in opensuse/rpm based, on...
