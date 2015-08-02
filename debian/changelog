@@ -1,3 +1,10 @@
+sipwitch (1:1.9.9-1) UNRELEASED; urgency=low
+
+  * General code cleanup and build improvements
+  * sipcontrol now control interface
+
+ -- David Sugar <dyfet@gnutelephony.org>  Sun, 02 Aug 2015 10:00:41 -0400
+
 sipwitch (1:1.9.8-1) UNRELEASED; urgency=low
 
   * General code cleanup
