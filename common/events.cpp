@@ -34,6 +34,7 @@
 namespace sipwitch {
 
 static mutex_t private_locking;
+static bool shutdown_flag = false;
 
 class __LOCAL dispatch : public LinkedObject
 {
@@ -156,12 +157,22 @@ void event_thread::run(void)
     time(&started);
 
     shell::log(DEBUG1, "starting event dispatcher");
+    shutdown_flag = false;
 
     for(;;) {
         // when shutdown closes ipc, we exit the thread...
         client = ::accept(ipc, NULL, NULL);
-        if(client < 0)
+        if(shutdown_flag) {
+            if(ipc != INVALID_SOCKET) {
+                Socket::release(ipc);
+                ipc = INVALID_SOCKET;
+            }
             break;
+        }
+        if(client < 0) {
+            shell::log(shell::ERR, "event accept failed; error=%ld", (long)client);
+            continue;
+        }
 
         events::sync();
         shell::log(DEBUG3, "connecting client events for %ld", (long)client);
@@ -378,12 +389,13 @@ void events::terminate(const char *reason)
 {
     events evt;
 
-    if(ipc == INVALID_SOCKET)
+    if(shutdown_flag || ipc == INVALID_SOCKET)
         return;
 
     evt.type = TERMINATE;
     String::set(evt.msg.reason, sizeof(evt.msg.reason), reason);
 
+    shutdown_flag = true;
     Socket::release(ipc);
     dispatch::stop(&evt);
     ::remove(control::env("events"));

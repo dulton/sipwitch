@@ -137,7 +137,7 @@ static void mapinit(void)
         if(pwd)
             userid = pwd->pw_name;
         if(!pwd || !userid)
-            shell::errexit(4, "*** sipwcontrol: maps: invalid login\n");
+            shell::errexit(4, "*** sipcontrol: maps: invalid login\n");
 
         statmap = str(STAT_MAP "-") + str(userid);
         callmap = str(CALL_MAP "-") + str(userid);
@@ -159,7 +159,7 @@ static void showrealm(void)
 
     if(!is(fs))
 error:
-        shell::errexit(1, "*** sipwcontrol: realm: no public realm known\n");
+        shell::errexit(1, "*** sipcontrol: realm: no public realm known\n");
 
     memset(buffer, 0, sizeof(buffer));
     fs.read(buffer, sizeof(buffer) - 1);
@@ -190,7 +190,7 @@ static void compute(char **argv)
 
     user = argv[1];
     if(!user)
-        shell::errexit(3, "*** sipwcontrol: digest: userid missing\n");
+        shell::errexit(3, "*** sipcontrol: digest: userid missing\n");
 
     secret = getpass("Enter new SIP secret: ");
     if(!secret || !*secret) {
@@ -210,7 +210,7 @@ static void compute(char **argv)
             fs.open(DEFAULT_VARPATH "/lib/sipwitch/uuid", fsys::RDONLY);
 
         if(!is(fs))
-            shell::errexit(4, "*** sipwcontrol: digest: no public realm known\n");
+            shell::errexit(4, "*** sipcontrol: digest: no public realm known\n");
 
         memset(buffer, 0, sizeof(buffer));
         fs.read(buffer, sizeof(buffer) - 1);
@@ -233,7 +233,7 @@ static void compute(char **argv)
     if(digest.puts((string_t)user + ":" + (string_t)realm + ":" + (string_t)secret))
         digestbuf = *digest;
     else
-        shell::errexit(6, "** sipwcontrol: digest: unsupported computation");
+        shell::errexit(6, "** sipcontrol: digest: unsupported computation");
 
     printf("%s\n", *digestbuf);
     exit(0);
@@ -303,7 +303,7 @@ static void realm(char **argv)
         fs.close();
     }
     else
-        shell::errexit(3, "*** sipwcontrol: realm: root permission required\n");
+        shell::errexit(3, "*** sipcontrol: realm: root permission required\n");
 
     // if server is up, also sync server with realm change...
     fp = fopen(control, "w");
@@ -320,7 +320,7 @@ exit:
 static void status(char **argv)
 {
     if(argv[1])
-        shell::errexit(1, "*** sipwcontrol: status: no arguments used\n");
+        shell::errexit(1, "*** sipcontrol: status: no arguments used\n");
 
     mapinit();
 
@@ -330,7 +330,7 @@ static void status(char **argv)
     const volatile MappedCall *map;
 
     if(!count)
-        shell::errexit(10, "*** sipwcontrol: status: offline\n");
+        shell::errexit(10, "*** sipcontrol: status: offline\n");
 
     while(index < count) {
         map = (const volatile MappedCall *)(calls(index++));
@@ -347,7 +347,7 @@ static void status(char **argv)
 static void calls(char **argv)
 {
     if(argv[1])
-        shell::errexit(1, "*** sipwcontrol: calls: no arguments used\n");
+        shell::errexit(1, "*** sipcontrol: calls: no arguments used\n");
 
     mapinit();
 
@@ -358,7 +358,7 @@ static void calls(char **argv)
     time_t now;
 
     if(!count)
-        shell::errexit(10, "*** sipwcontrol: calls: offline\n");
+        shell::errexit(10, "*** sipcontrol: calls: offline\n");
 
     time(&now);
     while(index < count) {
@@ -380,7 +380,7 @@ static void periodic(char **argv)
     char text[80];
 
     if(argv[1])
-        shell::errexit(1, "*** sipwcontrol: pstats: no arguments used\n");
+        shell::errexit(1, "*** sipcontrol: pstats: no arguments used\n");
 
     mapinit();
 
@@ -390,7 +390,7 @@ static void periodic(char **argv)
     const volatile stats *map;
 
     if(!count)
-        shell::errexit(10, "*** sipwcontrol: pstats: offline\n");
+        shell::errexit(10, "*** sipcontrol: pstats: offline\n");
 
     while(index < count) {
         map = (const volatile stats *)(sta(index++));
@@ -431,10 +431,10 @@ static void showevents(char **argv)
     static string_t publish = "-";
 
     if(argv[1])
-        shell::errexit(1, "*** sipwcontrol: events: no arguments used\n");
+        shell::errexit(1, "*** sipcontrol: events: no arguments used\n");
 
     if(ipc == INVALID_SOCKET)
-        shell::errexit(9, "*** sipwcontrol: events: cannot create event socket\n");
+        shell::errexit(9, "*** sipcontrol: events: cannot create event socket\n");
 
     memset(&addr, 0, sizeof(addr));
 
@@ -448,7 +448,7 @@ static void showevents(char **argv)
 
     HKEY keys = HKEY_LOCAL_MACHINE, subkey;
     if(RegOpenKeyEx(keys, "SOFTWARE\\sipwitch", 0, KEY_READ, &subkey) != ERROR_SUCCESS)
-        shell::errexit(10, "*** sipwcontrol: events: no service found\n");
+        shell::errexit(10, "*** sipcontrol: events: no service found\n");
     while((RegEnumValue(subkey, index++, keyname, &size, NULL, &vtype, (BYTE *)keyvalue, &vsize) == ERROR_SUCCESS) && (vtype == REG_DWORD) && (keyname[0] != 0)) {
         dp = (DWORD *)&keyvalue;
         if(eq("port", keyname))
@@ -460,12 +460,12 @@ static void showevents(char **argv)
     }
     RegCloseKey(subkey);
     if(!port)
-        shell::errexit(10, "*** sipwcontrol: events: server missing\n");
+        shell::errexit(10, "*** sipcontrol: events: server missing\n");
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     addr.sin_port = htons((unsigned short)port);
     if(::connect(ipc, (struct sockaddr *)&addr, sizeof(addr)) < 0)
-        shell::errexit(10, "*** sipwcontrol: events: server offline\n");
+        shell::errexit(10, "*** sipcontrol: events: server offline\n");
 #else
     addr.sun_family = AF_UNIX;
     String::set(addr.sun_path, sizeof(addr.sun_path), DEFAULT_VARPATH "/run/sipwitch/events");
@@ -473,13 +473,13 @@ static void showevents(char **argv)
         if(pwd)
             userid = pwd->pw_name;
         if(!pwd || !userid)
-            shell::errexit(4, "*** sipwcontrol: events: invalid login\n");
+            shell::errexit(4, "*** sipcontrol: events: invalid login\n");
 
         memset(&addr, 0, sizeof(addr));
         addr.sun_family = AF_UNIX;
         snprintf(addr.sun_path, sizeof(addr.sun_path), "/tmp/sipwitch-%s/events", userid);
         if(::connect(ipc, (struct sockaddr *)&addr, SUN_LEN(&addr)) < 0)
-            shell::errexit(10, "*** sipwcontrol: events: server offline\n");
+            shell::errexit(10, "*** sipcontrol: events: server offline\n");
     }
 #endif
 
@@ -548,7 +548,7 @@ static void showevents(char **argv)
             break;
         }
     }
-    shell::errexit(11, "*** sipwcontrol: events: connection lost\n");
+    shell::errexit(11, "*** sipcontrol: events: connection lost\n");
 }
 
 static void dumpstats(char **argv)
@@ -557,7 +557,7 @@ static void dumpstats(char **argv)
     time_t now;
 
     if(argv[1])
-        shell::errexit(1, "*** sipwcontrol: stats: no arguments used\n");
+        shell::errexit(1, "*** sipcontrol: stats: no arguments used\n");
 
     mapinit();
 
@@ -568,7 +568,7 @@ static void dumpstats(char **argv)
     unsigned current;
 
     if(!count)
-        shell::errexit(10, "*** sipwcontrol: stats: offline\n");
+        shell::errexit(10, "*** sipcontrol: stats: offline\n");
 
     time(&now);
     while(index < count) {
@@ -618,10 +618,10 @@ static void registry(char **argv)
     const char *type;
 
     if(argv[1])
-        shell::errexit(1, "*** sipwcontrol: registry: too many arguments\n");
+        shell::errexit(1, "*** sipcontrol: registry: too many arguments\n");
 
     if(!count)
-        shell::errexit(10, "*** sipwcontrol: registry: offline\n");
+        shell::errexit(10, "*** sipcontrol: registry: offline\n");
 
     time(&now);
     while(index < count) {
@@ -695,7 +695,7 @@ static void command(char **argv, unsigned timeout)
         if(pwd)
             userid = pwd->pw_name;
         if(!pwd || !userid)
-            shell::errexit(4, "*** sipwcontrol: events: invalid login\n");
+            shell::errexit(4, "*** sipcontrol: events: invalid login\n");
 
         snprintf(buffer, sizeof(buffer), "/tmp/sipwitch-%s/control", userid);
         fd = ::open(buffer, O_WRONLY | O_NONBLOCK);
@@ -703,7 +703,7 @@ static void command(char **argv, unsigned timeout)
 #endif
 
     if(fd == INVALID_HANDLE_VALUE)
-        shell::errexit(10, "*** sipwcontrol: command: offline\n");
+        shell::errexit(10, "*** sipcontrol: command: offline\n");
 
 #ifndef _MSWINDOWS_
     if(timeout)
@@ -719,14 +719,14 @@ static void command(char **argv, unsigned timeout)
 
 #ifdef  _MSWINDOWS_
     if(!WriteFile(fd, buffer, (DWORD)strlen(buffer) + 1, NULL, NULL))
-        shell::errexit(11, "*** sipwcontrol: control failed\n");
+        shell::errexit(11, "*** sipcontrol: control failed\n");
 #else
     len = strlen(buffer);
     buffer[len++] = '\n';
     buffer[len] = 0;
 
     if(::write(fd, buffer, len) < (int)len)
-        shell::errexit(11, "*** sipwcontrol: control failed\n");
+        shell::errexit(11, "*** sipcontrol: control failed\n");
 
     if(!timeout)
         exit(0);
@@ -742,9 +742,9 @@ static void command(char **argv, unsigned timeout)
         exit(0);
     }
     if(signo == SIGALRM)
-        shell::errexit(12, "*** sipwcontrol: command: timed out\n");
+        shell::errexit(12, "*** sipcontrol: command: timed out\n");
 
-    shell::errexit(20, "*** sipwcontrol: command: request failed\n");
+    shell::errexit(20, "*** sipcontrol: command: request failed\n");
 #endif
 }
 
@@ -760,7 +760,7 @@ static void version(void)
 
 static void usage(void)
 {
-    printf("usage: sipwcontrol command\n"
+    printf("usage: sipcontrol command\n"
         "Commands:\n"
         "  abort                    Force daemon abort\n"
         "  activate <ext> <ipaddr>  Assign registration\n"
@@ -806,7 +806,7 @@ static void usage(void)
 static void single(char **argv, int timeout)
 {
     if(argv[1])
-        shell::errexit(1, "*** sipwcontrol: %s: too many arguments\n", *argv);
+        shell::errexit(1, "*** sipcontrol: %s: too many arguments\n", *argv);
 
     command(argv, timeout);
 }
@@ -814,10 +814,10 @@ static void single(char **argv, int timeout)
 static void level(char **argv, int timeout)
 {
     if(!argv[1])
-        shell::errexit(1, "*** sipwcontrol: %s: level missing\n", *argv);
+        shell::errexit(1, "*** sipcontrol: %s: level missing\n", *argv);
 
     if(argv[2])
-        shell::errexit(1, "*** sipwcontrol: %s: too many arguments\n", *argv);
+        shell::errexit(1, "*** sipcontrol: %s: too many arguments\n", *argv);
 
     command(argv, timeout);
 }
@@ -825,10 +825,10 @@ static void level(char **argv, int timeout)
 static void period(char **argv)
 {
     if(!argv[1])
-        shell::errexit(1, "*** sipwcontrol: period: interval missing\n");
+        shell::errexit(1, "*** sipcontrol: period: interval missing\n");
 
     if(argv[2])
-        shell::errexit(1, "*** sipwcontrol: period: too many arguments\n");
+        shell::errexit(1, "*** sipcontrol: period: too many arguments\n");
 
     command(argv, 10);
 }
@@ -836,10 +836,10 @@ static void period(char **argv)
 static void address(char **argv)
 {
     if(!argv[1])
-        shell::errexit(1, "*** sipwcontrol: address: ipaddr missing\n");
+        shell::errexit(1, "*** sipcontrol: address: ipaddr missing\n");
 
     if(argv[2])
-        shell::errexit(1, "*** sipwcontrol: address: too many arguments\n");
+        shell::errexit(1, "*** sipcontrol: address: too many arguments\n");
 
     command(argv, 10);
 }
@@ -847,10 +847,10 @@ static void address(char **argv)
 static void state(char **argv)
 {
     if(!argv[1])
-        shell::errexit(1, "*** sipwcontrol: state: value missing\n");
+        shell::errexit(1, "*** sipcontrol: state: value missing\n");
 
     if(argv[2])
-        shell::errexit(1, "*** sipwcontrol: state: too many arguments\n");
+        shell::errexit(1, "*** sipcontrol: state: too many arguments\n");
 
     command(argv, 10);
 }
@@ -858,10 +858,10 @@ static void state(char **argv)
 static void iface(char **argv)
 {
     if(!argv[1])
-        shell::errexit(1, "*** sipwcontrol: %s: interface missing\n", *argv);
+        shell::errexit(1, "*** sipcontrol: %s: interface missing\n", *argv);
 
     if(argv[2])
-        shell::errexit(1, "*** sipwcontrol: %s: too many arguments\n", *argv);
+        shell::errexit(1, "*** sipcontrol: %s: too many arguments\n", *argv);
 
     command(argv, 20);
 }
@@ -869,10 +869,10 @@ static void iface(char **argv)
 static void drop(char **argv)
 {
     if(!argv[1])
-        shell::errexit(1, "*** sipwcontrol: drop: user or callid missing\n");
+        shell::errexit(1, "*** sipcontrol: drop: user or callid missing\n");
 
     if(argv[2])
-        shell::errexit(1, "*** sipwcontrol: drop: too many arguments\n");
+        shell::errexit(1, "*** sipcontrol: drop: too many arguments\n");
 
     command(argv, 10);
 }
@@ -880,10 +880,10 @@ static void drop(char **argv)
 static void release(char **argv)
 {
     if(!argv[1])
-        shell::errexit(1, "*** sipwcontrol: release: extension missing\n");
+        shell::errexit(1, "*** sipcontrol: release: extension missing\n");
 
     if(argv[2])
-        shell::errexit(1, "*** sipwcontrol: release: too many arguments\n");
+        shell::errexit(1, "*** sipcontrol: release: too many arguments\n");
 
     command(argv, 10);
 }
@@ -891,13 +891,13 @@ static void release(char **argv)
 static void activate(char **argv)
 {
     if(!argv[1])
-        shell::errexit(1, "*** sipwcontrol: activate: extension missing\n");
+        shell::errexit(1, "*** sipcontrol: activate: extension missing\n");
 
     if(!argv[2])
-        shell::errexit(1, "*** sipwcontrol: activate: ipaddr missing\n");
+        shell::errexit(1, "*** sipcontrol: activate: ipaddr missing\n");
 
     if(argv[3])
-        shell::errexit(1, "*** sipwcontrol: activate: too many arguments\n");
+        shell::errexit(1, "*** sipcontrol: activate: too many arguments\n");
 
     command(argv, 10);
 }
@@ -907,13 +907,13 @@ static void message(char **argv)
     char buffer[500];
 
     if(!argv[1])
-        shell::errexit(1, "*** sipwcontrol: message: extension missing\n");
+        shell::errexit(1, "*** sipcontrol: message: extension missing\n");
 
     if(!argv[2])
-        shell::errexit(1, "*** sipwcontrol: message: \"text\" missing\n");
+        shell::errexit(1, "*** sipcontrol: message: \"text\" missing\n");
 
     if(argv[3])
-        shell::errexit(1, "*** sipwcontrol: message: too many arguments\n");
+        shell::errexit(1, "*** sipcontrol: message: too many arguments\n");
 
     if(argv[2][0] != '{') {
         snprintf(buffer, sizeof(buffer), "{%s}", argv[2]);
@@ -930,9 +930,9 @@ static void grant(char **argv)
     fsys::fileinfo_t ino;
 
     if(!argv[1])
-        shell::errexit(1, "*** sipwcontrol: grant: no group specified\n");
+        shell::errexit(1, "*** sipcontrol: grant: no group specified\n");
     if(argv[2])
-        shell::errexit(1, "*** sipwcontrol: grant: not more than one group\n");
+        shell::errexit(1, "*** sipcontrol: grant: not more than one group\n");
 
     grp = getgrnam(argv[1]);
     if(grp)
@@ -940,24 +940,24 @@ static void grant(char **argv)
     else if(atol(argv[1]))
         gid = atol(argv[1]);
     else
-        shell::errexit(2, "*** sipwcontrol: grant: %s: unknown group", argv[1]);
+        shell::errexit(2, "*** sipcontrol: grant: %s: unknown group", argv[1]);
 
     fsys::info(DEFAULT_VARPATH "/lib/sipwitch", &ino);
     chmod(DEFAULT_VARPATH "/lib/sipwitch", ino.st_mode | 070);
     if(chown(DEFAULT_VARPATH "/lib/sipwitch", ino.st_uid, gid))
-        shell::errexit(2, "*** sipwcontrol: grant: %s: cannot change owner", argv[1]);
+        shell::errexit(2, "*** sipcontrol: grant: %s: cannot change owner", argv[1]);
 
     fsys::info(DEFAULT_VARPATH "/cache/sipwitch", &ino);
     chmod(DEFAULT_VARPATH "/cache/sipwitch", ino.st_mode | 070);
     if(chown(DEFAULT_VARPATH "/cache/sipwitch", ino.st_uid, gid))
-        shell::errexit(2, "*** sipwcontrol: grant: %s: cannot change owner", argv[1]);
+        shell::errexit(2, "*** sipcontrol: grant: %s: cannot change owner", argv[1]);
 
     exit(0);
 }
 #else
 static void grant(char **argv)
 {
-    shell::errexit(9, "*** sipwcontrol: grant: unsupported platform");
+    shell::errexit(9, "*** sipcontrol: grant: unsupported platform");
 }
 #endif
 
@@ -965,12 +965,12 @@ static void grant(char **argv)
 
 static void enable(char **argv)
 {
-    shell::errexit(9, "*** sipwcontrol: enable: unsupported platform");
+    shell::errexit(9, "*** sipcontrol: enable: unsupported platform");
 }
 
 static void disable(char **argv)
 {
-    shell::errexit(9, "*** sipwcontrol: disable: unsupported platform");
+    shell::errexit(9, "*** sipcontrol: disable: unsupported platform");
 }
 
 #else
@@ -980,7 +980,7 @@ static void enable(char **argv)
     char source[128], target[128];
 
     if(!argv[1])
-        shell::errexit(1, "*** sipwcontrol: enable: no configs specified\n");
+        shell::errexit(1, "*** sipcontrol: enable: no configs specified\n");
 
     while(*(++argv)) {
         snprintf(source, sizeof(source), "%s/sipwitch.d/%s.xml", DEFAULT_CFGPATH, *argv);
@@ -995,7 +995,7 @@ static void disable(char **argv)
     char target[128];
 
     if(!argv[1])
-        shell::errexit(1, "*** sipwcontrol: disable: no configs specified\n");
+        shell::errexit(1, "*** sipcontrol: disable: no configs specified\n");
 
     while(*(++argv)) {
         snprintf(target, sizeof(target), "%s/lib/sipwitch/%s.xml", DEFAULT_VARPATH, *argv);
@@ -1068,9 +1068,9 @@ PROGRAM_MAIN(argc, argv)
         showevents(argv);
 
     if(!argv[1])
-        shell::errexit(1, "use: sipwcontrol command [arguments...]\n");
+        shell::errexit(1, "use: sipcontrol command [arguments...]\n");
     else
-        shell::errexit(1, "*** sipwcontrol: %s: unknown command or option\n", argv[0]);
+        shell::errexit(1, "*** sipcontrol: %s: unknown command or option\n", argv[0]);
     PROGRAM_EXIT(1);
 }
 
