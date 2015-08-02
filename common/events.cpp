@@ -35,6 +35,12 @@ namespace sipwitch {
 
 static mutex_t private_locking;
 static bool shutdown_flag = false;
+#ifdef  _MSWINDOWS_
+static struct sockaddr_in ipc_addr;
+#else
+static struct sockaddr_un ipc_addr;
+#endif
+static socket_t ipc_socket = INVALID_SOCKET;
 
 class __LOCAL dispatch : public LinkedObject
 {
@@ -65,8 +71,6 @@ public:
     event_thread();
 
 } _thread_;
-
-static socket_t ipc = INVALID_SOCKET;
 
 dispatch::dispatch() : LinkedObject()
 {
@@ -119,7 +123,7 @@ void dispatch::send(events *msg)
 {
     fd_set detect;
     struct timeval timeout;
-    if(ipc == INVALID_SOCKET)
+    if(ipc_socket == INVALID_SOCKET)
         return;
 
     private_locking.acquire();
@@ -161,11 +165,11 @@ void event_thread::run(void)
 
     for(;;) {
         // when shutdown closes ipc, we exit the thread...
-        client = ::accept(ipc, NULL, NULL);
+        client = ::accept(ipc_socket, NULL, NULL);
         if(shutdown_flag) {
-            if(ipc != INVALID_SOCKET) {
-                Socket::release(ipc);
-                ipc = INVALID_SOCKET;
+            if(ipc_socket != INVALID_SOCKET) {
+                Socket::release(ipc_socket);
+                ipc_socket = INVALID_SOCKET;
             }
             break;
         }
@@ -198,35 +202,33 @@ void event_thread::run(void)
 
 bool events::start(void)
 {
-    if(ipc != INVALID_SOCKET)
+    if(ipc_socket != INVALID_SOCKET)
         return false;
 
 #ifdef  _MSWINDOWS_
-    struct sockaddr_in abuf;
-    ipc = ::socket(AF_INET, SOCK_STREAM, 0);
+    ipc_socket = ::socket(AF_INET, SOCK_STREAM, 0);
 #else
-    struct sockaddr_un abuf;
-    ipc = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    ipc_socket = ::socket(AF_UNIX, SOCK_STREAM, 0);
 #endif
 
-    if(ipc == INVALID_SOCKET)
+    if(ipc_socket == INVALID_SOCKET)
         return false;
 
-    memset(&abuf, 0, sizeof(abuf));
+    memset(&ipc_addr, 0, sizeof(ipc_addr));
 #ifdef  _MSWINDOWS_
     DWORD port;
     HKEY keys, subkey;
     socklen_t alen;
 
-    abuf.sin_family = AF_INET;
-    abuf.sin_addr.s_addr = inet_addr("127.0.0.1");
-    abuf.sin_port = 0;
-    if(::bind(ipc, (struct sockaddr *)&abuf, sizeof(abuf)) < 0)
+    ipc_addr.sin_family = AF_INET;
+    ipc_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    ipc_addr.sin_port = 0;
+    if(::bind(ipc_socket, (struct sockaddr *)&ipc_addr, sizeof(ipc_addr)) < 0)
         goto failed;
 
-    alen = sizeof(abuf);
-    ::getsockname(ipc, (struct sockaddr *)&abuf, &alen);
-    port = ntohs(abuf.sin_port);
+    alen = sizeof(ipc_addr);
+    ::getsockname(ipc_socket, (struct sockaddr *)&ipc_addr, &alen);
+    port = ntohs(ipc_addr.sin_port);
     keys = HKEY_LOCAL_MACHINE;
     if(RegCreateKeyEx(keys, "SOFTWARE\\sipwitch", 0L, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &subkey, NULL) == ERROR_SUCCESS) {
         RegSetValueEx(subkey, "port", 0L, REG_DWORD, (const BYTE *)&port, sizeof(port));
@@ -235,23 +237,23 @@ bool events::start(void)
         RegCloseKey(subkey);
     }
 #else
-    abuf.sun_family = AF_UNIX;
-    String::set(abuf.sun_path, sizeof(abuf.sun_path), control::env("events"));
+    ipc_addr.sun_family = AF_UNIX;
+    String::set(ipc_addr.sun_path, sizeof(ipc_addr.sun_path), control::env("events"));
 
     ::remove(control::env("events"));
-    if(::bind(ipc, (struct sockaddr *)&abuf, SUN_LEN(&abuf)) < 0)
+    if(::bind(ipc_socket, (struct sockaddr *)&ipc_addr, SUN_LEN(&ipc_addr)) < 0)
         goto failed;
 #endif
 
-    if(::listen(ipc, 10) < 0)
+    if(::listen(ipc_socket, 10) < 0)
         goto failed;
 
     _thread_.start();
     return true;
 
 failed:
-    Socket::release(ipc);
-    ipc = INVALID_SOCKET;
+    Socket::release(ipc_socket);
+    ipc_socket = INVALID_SOCKET;
     return false;
 }
 
@@ -389,17 +391,26 @@ void events::terminate(const char *reason)
 {
     events evt;
 
-    if(shutdown_flag || ipc == INVALID_SOCKET)
+    if(shutdown_flag || ipc_socket == INVALID_SOCKET)
         return;
 
+    shutdown_flag = true;
     evt.type = TERMINATE;
     String::set(evt.msg.reason, sizeof(evt.msg.reason), reason);
 
-    shutdown_flag = true;
-    Socket::release(ipc);
     dispatch::stop(&evt);
+    socket_t tmp;
+#ifdef  _MSWINDOWS_
+    tmp = ::socket(AF_INET, SOCK_STREAM, 0);
+    ::connect(tmp, (struct sockaddr *)&ipc_addr, sizeof(ipc_addr));
+#else
+    tmp = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    ::connect(tmp, (struct sockaddr *)&ipc_addr, SUN_LEN(&ipc_addr));
+#endif
+    Socket::release(tmp);
+
     ::remove(control::env("events"));
-    ipc = INVALID_SOCKET;
+    //ipc_socket = INVALID_SOCKET;
 }
 
 } // end namespace
