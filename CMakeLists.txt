@@ -11,8 +11,8 @@
 
 cmake_minimum_required(VERSION 2.6)
 PROJECT(sipwitch)
-set (VERSION 1.9.9)
-set (USES_UCOMMON_REQUIRED 6.4.4)
+set (VERSION 1.10.0)
+set (USES_UCOMMON_REQUIRED 6.6.0)
 
 INCLUDE(CheckIncludeFiles)
 INCLUDE(CheckFunctionExists)

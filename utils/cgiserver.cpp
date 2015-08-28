@@ -1812,7 +1812,7 @@ use:
 
         DateTime::release(dt);
         Socket::query((struct sockaddr *)&buffer.contact, buf, sizeof(buf));
-        port = Socket::service((struct sockaddr *)&buffer.contact);
+        port = Socket::port((struct sockaddr *)&buffer.contact);
         printf("  <address>%s</address>\n", buf);
         printf("  <service>%u</service>\n", port);
         printf(" </registry>\n");
