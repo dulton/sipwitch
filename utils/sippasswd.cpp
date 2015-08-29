@@ -130,7 +130,7 @@ PROGRAM_MAIN(argc, argv)
         exit(0);
     }
 
-    digest_t digest = mode;
+    digest_t digest(mode);
 
     if(!digest.puts((string_t)user + ":" + (string_t)realm + ":" + (string_t)secret))
         shell::errexit(1, "*** sippasswd: cannot compute");

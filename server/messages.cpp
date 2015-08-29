@@ -248,7 +248,7 @@ int messages::remote(const char *to, message *msg, const char *digest)
         snprintf(authbuf, 1024, "%s:%s", im->sip_method, req);
         Random::uuid(nounce);
 
-        digest_t auth = "md5";
+        digest_t auth("md5");
         auth.puts(nounce);
         once = *auth;
         auth = registry::getDigest();

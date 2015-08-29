@@ -242,7 +242,7 @@ void server::confirm(void)
     unsigned number;
     const char *dirpath = ".";
     const char *fn;
-    digest_t digest = registry::getDigest();
+    digest_t digest(registry::getDigest());
 
     // add any missing keys
     getPath("devices");

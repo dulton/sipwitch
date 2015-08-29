@@ -229,7 +229,7 @@ static void compute(char **argv)
         realm = strdup(buffer);
     }
 
-    digest_t digest = mode;
+    digest_t digest(mode);
     if(digest.puts((string_t)user + ":" + (string_t)realm + ":" + (string_t)secret))
         digestbuf = *digest;
     else

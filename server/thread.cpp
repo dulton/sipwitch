@@ -1268,7 +1268,7 @@ bool thread::authenticate(void)
     int error = SIP_PROXY_AUTHENTICATION_REQUIRED;
     const char *cp;
     const char *hash = NULL;
-    digest_t calc = registry::getDigest();
+    digest_t calc(registry::getDigest());
 
     if(authorized.keys != NULL)
         return true;
@@ -1467,7 +1467,7 @@ void thread::validate(void)
     voip::msg_t reply = NULL;
     service::usernode user;
     const char *hash = NULL;
-    digest_t calc = registry::getDigest();
+    digest_t calc(registry::getDigest());
 
     if(!sevent->request || osip_message_get_authorization(sevent->request, 0, &auth) != 0 || !auth || !auth->username || !auth->response) {
         challenge();

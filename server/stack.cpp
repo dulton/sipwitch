@@ -1340,7 +1340,7 @@ int stack::inviteRemote(stack::session *s, const char *uri_target, const char *d
         snprintf(authbuf, 1024, "%s:%s", invite->sip_method, req);
         Random::uuid(nounce);
 
-        digest_t auth = "md5";
+        digest_t auth("md5");
         auth.puts(nounce);
         once = *auth;
         auth = registry::getDigest();
