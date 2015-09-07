@@ -1,3 +1,7 @@
+Changes from 1.9.9 to 1.9.10
+- updated for improved digest code
+- requires ucommon 6.6.0
+
 Changes from 1.9.8 to 1.9.9
 - fixed connect events terminate handling for broken platforms
 - setuid properties from cmake macro (may pref 6.4.3 for some platforms)

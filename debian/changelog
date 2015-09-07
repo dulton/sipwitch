@@ -1,3 +1,9 @@
+sipwitch (1:1.9.10-1) UNRELEASED; urgency=low
+
+  * Updated for ucommon 6.6 and 7.0 transition
+
+ -- David Sugar <dsugar@cherokeesofidaho.org>  Mon, 07 Sep 2015 14:27:42 -0400
+
 sipwitch (1:1.9.9-1) UNRELEASED; urgency=low
 
   * General code cleanup and build improvements
