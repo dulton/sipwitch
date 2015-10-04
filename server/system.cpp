@@ -531,7 +531,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 #endif
         umask(007);
         if(setgid(grp->gr_gid))
-			shell::error("*** sipw: %u: %s\n", grp->gr_gid,
+			shell::errlog("*** sipw: %u: %s\n", grp->gr_gid,
 				_TEXT("cannot set group"));
     }
 
@@ -544,7 +544,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
         umask(007);
         if(!grp) {
             if(setgid(pwd->pw_gid))
-				shell::error("*** sip: %u: %s\n", pwd->pw_gid,
+				shell::errlog("*** sip: %u: %s\n", pwd->pw_gid,
 					_TEXT("cannot set group"));
 		}
         uid = pwd->pw_uid;
@@ -608,7 +608,7 @@ static void init(int argc, char **argv, bool detached, shell::mainproc_t svc = N
 #ifdef  HAVE_PWD_H
     if(uid) {
         if(setuid(uid))
-			shell::error("*** sipw: %u: %s\n", uid,
+			shell::errlog("*** sipw: %u: %s\n", uid,
 				_TEXT("cannot set user"));
 	}
 #endif

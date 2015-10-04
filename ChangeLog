@@ -1,3 +1,7 @@
+Changes from 1.9.10 to 1.9.11
+- migration to errlog
+- requires ucommon 6.6.1
+
 Changes from 1.9.9 to 1.9.10
 - updated for improved digest code
 - requires ucommon 6.6.0
