@@ -635,7 +635,7 @@ void server::listPolicy(FILE *fp)
 #ifdef  AF_INET6
     struct sockaddr_in6 *ipv6;
 #endif
-    inethostaddr_t ha;
+    struct hostaddr_internet ha;
 
     locking.access();
     pp = ((server *)(cfg))->acl;
