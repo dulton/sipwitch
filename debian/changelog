@@ -1,3 +1,9 @@
+sipwitch (1:1.9.13-1) UNRELEASED; urgency=low
+
+  * Cleanup of struct sockaddr for ucommon 7 migration
+
+ -- David Sugar <dsugar@cherokeesofidaho.org>  Thu, 08 Oct 2015 04:52:04 -0400
+
 sipwitch (1:1.9.12-1) UNRELEASED; urgency=low
 
   * Updated for inet host struct

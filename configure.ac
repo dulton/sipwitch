@@ -9,10 +9,10 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-AC_INIT([sipwitch],[1.9.12])
+AC_INIT([sipwitch],[1.9.13])
 AC_CONFIG_SRCDIR([autogen.sh])
 
-LT_VERSION="1:28:0"
+LT_VERSION="1:29:0"
 USES_UCOMMON_REQUIRED="6.6.1"
 
 AC_CONFIG_AUX_DIR(autoconf)
