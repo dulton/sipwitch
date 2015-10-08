@@ -597,7 +597,7 @@ void server::release(stack::subnet *access)
         locking.release();
 }
 
-bool server::isLocal(struct sockaddr *addr)
+bool server::isLocal(const struct sockaddr *addr)
 {
     bool rtn = false;
 
@@ -683,7 +683,7 @@ void server::listPolicy(FILE *fp)
     locking.release();
 }
 
-stack::subnet *server::getPolicy(struct sockaddr *addr)
+stack::subnet *server::getPolicy(const struct sockaddr *addr)
 {
     assert(addr != NULL);
     assert(cfg != NULL);

@@ -279,7 +279,7 @@ void srv::set(const char *uri)
 			break;
 
         Socket::address resolv(hbuf, hport);
-        struct sockaddr *sp = resolv.getAddr();
+        const struct sockaddr *sp = resolv.getAddr();
 
         if(sp) {
             uint16_t rand;

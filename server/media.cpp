@@ -375,7 +375,7 @@ void media::sdp::check_connect(char *buffer, size_t len)
     char *cp = buffer + 4;
     char *ap;
     char ttl[16];
-    struct sockaddr *hp;
+    const struct sockaddr *hp;
 
     if(strnicmp(buffer, "c=in", 4))
         return;

@@ -205,7 +205,7 @@ bool uri::server(struct sockaddr *addr, char *buf, size_t size)
     return true;
 }
 
-void uri::identity(struct sockaddr *addr, char *buf, const char *user, size_t size)
+void uri::identity(const struct sockaddr *addr, char *buf, const char *user, size_t size)
 {
     assert(addr != NULL);
     assert(buf != NULL);

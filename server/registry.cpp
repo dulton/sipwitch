@@ -866,7 +866,7 @@ registry::mapped *registry::allocate(const char *id)
     return rr;
 }
 
-registry::mapped *registry::address(struct sockaddr *addr)
+registry::mapped *registry::address(const struct sockaddr *addr)
 {
     assert(addr != NULL);
 
@@ -900,7 +900,7 @@ registry::mapped *registry::contact(const char *uri)
     assert(uri != NULL && *uri != 0);
 
     mapped *rr = NULL;
-    struct sockaddr *addr = NULL;
+    const struct sockaddr *addr = NULL;
     Socket::address *target = NULL;
     char buffer[MAX_USERID_SIZE];
     char *cp;
@@ -929,7 +929,7 @@ registry::mapped *registry::contact(const char *uri)
     return rr;
 }
 
-registry::mapped *registry::contact(struct sockaddr *addr, const char *uid)
+registry::mapped *registry::contact(const struct sockaddr *addr, const char *uid)
 {
     assert(addr != NULL);
     assert(uid != NULL && *uid != 0);
@@ -1116,7 +1116,7 @@ unsigned registry::mapped::setTarget(Socket::address& target_addr, time_t lease,
     assert(target_contact != NULL && *target_contact != 0);
 
     Socket::address *origin = NULL;
-    struct sockaddr *ai, *oi = NULL;
+    const struct sockaddr *ai, *oi = NULL;
     linked_pointer<target> tp;
     socklen_t len;
     bool creating = false;
@@ -1392,7 +1392,7 @@ unsigned registry::mapped::addTarget(Socket::address& target_addr, time_t lease,
     assert(lease > 0);
 
     Socket::address *origin;
-    struct sockaddr *ai, *oi = NULL;
+    const struct sockaddr *ai, *oi = NULL;
     linked_pointer<target> tp;
     target *expired = NULL;
     time_t now;

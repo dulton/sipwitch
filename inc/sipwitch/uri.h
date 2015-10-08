@@ -61,7 +61,7 @@ public:
     static bool userid(const char *sipuri, char *buffer, size_t size);
     static bool hostid(const char *sipuri, char *buffer, size_t size);
     static unsigned short portid(const char *sipuri);
-    static void identity(struct sockaddr *address, char *buffer, const char *user, size_t size);
+    static void identity(const struct sockaddr *address, char *buffer, const char *user, size_t size);
     static void publish(const char *uri, char *buffer, const char *user, size_t size);
     static voip::context_t context(const char *uri);
 };

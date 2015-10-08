@@ -633,7 +633,7 @@ MappedCall *stack::get(void)
     return map;
 }
 
-void stack::getInterface(struct sockaddr *iface, struct sockaddr *dest)
+void stack::getInterface(struct sockaddr *iface, const struct sockaddr *dest)
 {
     assert(iface != NULL && dest != NULL);
 

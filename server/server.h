@@ -200,9 +200,9 @@ public:
     static unsigned getIndex(mapped *rr);
     static bool isExtension(const char *id);
     static bool isUserid(const char *id);
-    static mapped *address(struct sockaddr *addr);
+    static mapped *address(const struct sockaddr *addr);
     static mapped *contact(const char *uri);
-    static mapped *contact(struct sockaddr *addr, const char *uid);
+    static mapped *contact(const struct sockaddr *addr, const char *uid);
     static mapped *getExtension(const char *id);
     static mapped *allocate(const char *id);
     static mapped *access(const char *id);
@@ -433,7 +433,7 @@ public:
     stack();
 
     static const char *getScheme(void);
-    static void getInterface(struct sockaddr *iface, struct sockaddr *dest);
+    static void getInterface(struct sockaddr *iface, const struct sockaddr *dest);
     static session *create(voip::context_t context, voip::call_t cid, voip::did_t did, voip::tid_t tid);
     static session *create(voip::context_t context, call *cr, voip::call_t cid);
     static void destroy(session *s);
@@ -506,9 +506,9 @@ public:
     static void getDialing(const char *id, usernode& user);
     static keynode *getConfig(void);
     static void listPolicy(FILE *fp);
-    static stack::subnet *getPolicy(struct sockaddr *addr);
+    static stack::subnet *getPolicy(const struct sockaddr *addr);
     static stack::subnet *getSubnet(const char *id);
-    static bool isLocal(struct sockaddr *addr);
+    static bool isLocal(const struct sockaddr *addr);
     static void release(stack::subnet *access);
     static void release(keynode *node);
     static void release(usernode& user);
