@@ -49,7 +49,7 @@ Group: Development/Libraries/C and C++
 Summary: Runtime library support for sipwitch
 
 %package devel
-Requires: ucommon-devel%{?_isa} >= 6.6.1
+Requires: ucommon-devel%{?_isa} >= 6.6.2
 Requires: %{libname}%{?_isa} = %{version}-%{release}
 Requires: libeXosip2-devel%{?_isa} >= 3.0.0
 Group: Development/Libraries/C and C++
