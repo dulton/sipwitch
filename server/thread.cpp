@@ -1411,7 +1411,7 @@ bool thread::getsource(void)
     voip::param_t param;
     int vpos = 0;
 
-    if(is(via_address))
+    if(via_address.isValid())
         return true;
 
     via_host = NULL;
