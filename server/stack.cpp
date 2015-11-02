@@ -774,7 +774,7 @@ void stack::start(service *cfg)
     }
 
 #ifdef  HAVE_TLS
-    voip::create(&tls_context, agent, family);
+    voip::create(&tls_context, agent, sip_family);
 #endif
 
 #if defined(EXOSIP2_OPTION_SEND_101) && !defined(EXOSIP_API4)
