@@ -1,3 +1,9 @@
+sipwitch (1:1.9.15-1) UNRELEASED; urgency=low
+
+  * Updated for ucommon 7.0.0 release
+
+ -- David Sugar <dsugar@cherokeesofidaho.org>  Sun, 13 Dec 2015 07:19:48 -0400
+
 sipwitch (1:1.9.14-1) UNRELEASED; urgency=low
 
   * Updated for isvalid
