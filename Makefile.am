@@ -11,7 +11,7 @@
 
 AUTOMAKE_OPTIONS = no-dependencies dist-zip
 EXTRA_DIST = autogen.sh README *.pc.in FEATURES  TODO Doxyfile BUILDS \
-	SUPPORT NOTES MODULES sipwitch.spec.in sipwitch.spec PKGBUILD.in \
+	SUPPORT NOTES MODULES sipwitch.spec.in sipwitch.spec \
 	sipwitch-config.h.cmake CMakeLists.txt directive.in cmake-abi.sh \
 	sipwitch-rpmlintrc
 

@@ -161,7 +161,6 @@ pc_libs(PKG_SIPWITCH_LIBS ${EXOSIP2_LIBS})
 
 create_headers()
 create_specfile()
-create_scripts(noinst_scr PKGBUILD)
 create_pcfiles(pc_files libsipwitch)
 
 add_library(sipwitch ${BUILD_RUNTIME_TYPE} ${runtime_src} ${runtime_inc})
