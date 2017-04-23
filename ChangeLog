@@ -1,3 +1,6 @@
+Changes from 1.9.13 to 2.0.0
+- re-release with updated copyright
+
 Changes from 1.9.11 to 1.9.13
 - type cleanups for sockaddr, other cleanup for ucommon 7 prep
 

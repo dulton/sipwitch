@@ -1,3 +1,6 @@
+# Copyright (C) 2006-2014 David Sugar, Tycho Softworks.
+# Copyright (C) 2015-2017 Cherokees of Idaho.
+
 Name: libsipwitch
 Description: Sip Witch supporting library for plugins
 Version: @VERSION@
