@@ -13,51 +13,40 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-%define libname libsipwitch1
-
 Name:           sipwitch
 Summary:        A secure peer-to-peer VoIP server for the SIP protocol
 Version:        @VERSION@
 Release:        1
-License:        GPL-3.0+
+
+License:        GPLv3+
 URL:            http://www.gnu.org/software/sipwitch
-Group:          Productivity/Telephony/SIP/Servers
-Source0:        %{name}-%{version}.tar.gz
+Source0:        https://pub.cherokeesofidaho.org/tarballs/%{name}-%{version}.tar.gz
+
 Source1:		%{name}-rpmlintrc
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires:  ucommon-devel >= @USES_UCOMMON_REQUIRED@
 BuildRequires:  libeXosip2-devel >= 3.0.0
-BuildRequires:  libavahi-devel
-BuildRequires:  libopenssl-devel
+BuildRequires:  avahi-devel
+BuildRequires:  openssl-devel
 BuildRequires:  systemd-devel
 BuildRequires:  cmake
-%if 0%{?suse_version} >= 1210
-BuildRequires:  systemd
-Recommends:     logrotate cron
-%else
-Requires:		logrotate cron
-%endif
-Requires(pre):  permissions
+
+Requires:		%{name}-runtime%{?_isa} = %{version}-%{release}
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
-Requires:       %{libname}%{?_isa} = %{version}-%{release}
-%{?systemd_requires}
 
-%package -n %libname
-Group: Development/Libraries/C and C++
+%package runtime
 Summary: Runtime library support for sipwitch
 
 %package devel
 Requires: ucommon-devel%{?_isa} >= 6.6.2
-Requires: %{libname}%{?_isa} = %{version}-%{release}
+Requires: %{name}-%{runtime}%{?_isa} = %{version}-%{release}
 Requires: libeXosip2-devel%{?_isa} >= 3.0.0
-Group: Development/Libraries/C and C++
 Summary: Headers for building sipwitch plugins
 
 %package cgi
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Group: Productivity/Networking/Web/Utilities
 Summary: Cgi web interface to control sipwitch server
 
 %package plugin-zeroconf
@@ -91,7 +80,7 @@ found or added to the core distribution directly.  This may also be for
 developing external application services which need to communicate with a
 running sipwitch daemon instance.
 
-%description -n %libname
+%description runtime
 Runtime library required for sipwitch development and for using the server.
 This is available as a separate package so that one building sipwitch plugins
 with the required devel package does not also require installing a server
@@ -128,6 +117,7 @@ remote voip service provider.
 
 %prep
 %setup -q
+
 %build
 %cmake \
       -DCMAKE_INSTALL_SYSCONFDIR:PATH=%{_sysconfdir} \
@@ -138,25 +128,39 @@ remote voip service provider.
 %{__make} %{?_smp_mflags}
 
 %install
-%cmake_install
+%make_install
+
+%post
+%systemd_post sipwitch.service
+
+%preun
+%systemd_preun sipwitch.service
+
+%postun
+%systemd_postun_with_restart sipwitch.service
+
+%post runtime -p /sbin/ldconfig
+
+%postun runtime -p /sbin/ldconfig
 
 %clean
 %{__rm} -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc README COPYING NEWS FEATURES SUPPORT TODO NOTES AUTHORS MODULES ChangeLog
+%license COPYING
+%doc README NEWS FEATURES SUPPORT TODO NOTES AUTHORS MODULES ChangeLog
 %{_mandir}/man1/sipcontrol.1*
 %{_mandir}/man1/sippasswd.1*
 %{_mandir}/man1/sipquery.1*
 %{_mandir}/man8/sipw.8*
 %{_sbindir}/sipw
-%{_bindir}/sipquery
 %{_bindir}/sipcontrol
-%attr(0755,root,root) %{_bindir}/sippasswd
+%{_bindir}/sipquery
+%attr(04755,root,root) %{_bindir}/sippasswd
 %dir %{_libdir}/sipwitch
 %config(noreplace) %{_sysconfdir}/logrotate.d/sipwitch
-%attr(0644,root,root) %{_prefix}/lib/systemd/system/sipwitch.service
+%attr(0644,root,root) %{_unitdir}/sipwitch.service
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/sipwitch
 %attr(0775,root,root) %dir %{_sysconfdir}/sipwitch.d
 %attr(0664,root,root) %config(noreplace) %{_sysconfdir}/sipwitch.conf
@@ -168,7 +172,7 @@ remote voip service provider.
 %{_mandir}/man8/sipwitch.cgi.8*
 /srv/www/cgi-bin/sipwitch.cgi
 
-%files -n %libname
+%files runtime
 %defattr(-,root,root,-)
 %{_libdir}/*.so.*
 
@@ -193,24 +197,4 @@ remote voip service provider.
 %{_libdir}/*.so
 %{_includedir}/sipwitch/
 %{_libdir}/pkgconfig/*.pc
-
-%post -n %libname -p /sbin/ldconfig
-
-%postun -n %libname -p /sbin/ldconfig
-
-%pre
-%service_add_pre sipwitch.service
-
-%post
-%service_add_post sipwitch.service
-%{__chmod} 04755 %{_bindir}/sippasswd
-%set_permissions /usr/bin/sippasswd
-
-%preun
-%service_del_preun sipwitch.service
-
-%postun
-%service_del_postun sipwitch.service
-
-%changelog
 
