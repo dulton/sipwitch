@@ -2,7 +2,6 @@ build/
 autoconf/
 CMakeFiles/
 CTestTestfile.cmake
-PKGBUILD
 autom4te.cache/
 demo-*
 directive
