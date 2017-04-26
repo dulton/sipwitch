@@ -24,7 +24,6 @@ URL:            http://www.gnu.org/software/sipwitch
 Source0:        https://pub.cherokeesofidaho.org/tarballs/%{name}-%{version}.tar.gz
 
 Source1:		%{name}-rpmlintrc
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires:  ucommon-devel >= @USES_UCOMMON_REQUIRED@
 BuildRequires:  libeXosip2-devel >= 3.0.0
 BuildRequires:  avahi-devel
@@ -32,7 +31,7 @@ BuildRequires:  openssl-devel
 BuildRequires:  systemd-devel
 BuildRequires:  cmake
 
-Requires:		%{name}-runtime%{?_isa} = %{version}-%{release}
+Requires:		%{name}-runtime%{?_isa} = %{epoch}:%{version}-%{release}
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
@@ -42,28 +41,28 @@ Summary: Runtime library support for sipwitch
 
 %package devel
 Requires: ucommon-devel%{?_isa} >= 6.6.2
-Requires: %{name}-%{runtime}%{?_isa} = %{version}-%{release}
+Requires: %{name}-%{runtime}%{?_isa} = %{epoch}:%{version}-%{release}
 Requires: libeXosip2-devel%{?_isa} >= 3.0.0
 Summary: Headers for building sipwitch plugins
 
 %package cgi
-Requires: %{name}%{?_isa} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{epoch}:%{version}-%{release}
 Summary: Cgi web interface to control sipwitch server
 
 %package plugin-zeroconf
-Requires: %{name}%{?_isa} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{epoch}:%{version}-%{release}
 Summary: Zeroconf plugin for sipwitch
 
 %package plugin-scripting
-Requires: %{name}%{?_isa} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{epoch}:%{version}-%{release}
 Summary: Scripting plugin for sipwitch
 
 %package plugin-forward
-Requires: %{name}%{?_isa} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{epoch}:%{version}-%{release}
 Summary: Forward registration and routing plugin
 
 %package plugin-subscriber
-Requires: %{name}%{?_isa} = %{version}-%{release}
+Requires: %{name}%{?_isa} = %{epoch}:%{version}-%{release}
 Summary: Subscriber gateway plugin for sipwitch
 
 %description
